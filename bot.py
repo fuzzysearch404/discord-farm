@@ -4,12 +4,13 @@ import json
 import asyncpg
 from discord.ext import commands
 from utils import checks
-from utils.crop import croploader
+from utils.item import croploader
 
 extensions = (
     'cogs.admin',
     'cogs.test',
-    'cogs.main'
+    'cogs.main',
+    'cogs.shop'
 )
 unloaded = []
 with open("settings.json", "r", encoding="UTF8") as file:
@@ -32,6 +33,7 @@ class MyClient(commands.AutoShardedBot):
         self.add_command(self.reload)
         self.add_command(self.reloadsettings)
         self.add_command(self.reconnectdatabase)
+        self.allitems = {}
         self.loadvariables()
         self.loop.create_task(self.connectdb())
 
@@ -44,6 +46,7 @@ class MyClient(commands.AutoShardedBot):
 
     def loadcrops(self):
         self.crops = croploader()
+        self.allitems.update(self.crops)
 
     # Commands
 
