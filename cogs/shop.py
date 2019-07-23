@@ -37,15 +37,17 @@ class Shop(commands.Cog):
     @shop.command()
     async def crops(self, ctx):
         items = []
-        for crop in self.client.crops.values():
-            item = f"""{crop.emoji}**{crop.name2.capitalize()}**
-            {crop.cost}\ud83d\udcb0  vai  {crop.scost}\ud83d\udc8e
-            \ud83d\uded2 `%buy {crop.id}` \u2139 `%crop {crop.id}`\n"""
+        client = self.client
+        for cropseed in client.cropseeds.values():
+            crop = cropseed.getchild(client)
+            item = f"""{cropseed.emoji}**{cropseed.name2.capitalize()}** \ud83d\udd31{crop.level}
+            {cropseed.cost}{client.gold}  vai  {cropseed.scost}{client.gem}
+            \ud83d\uded2 `%buy {cropseed.id}` \u2139 `%info {cropseed.id}`\n"""
             items.append(item)
         try:
             p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
             p.embed.title = '\ud83c\udf3e Augu sēklas'
-            p.embed.color = 822472
+            p.embed.color = 82247
             await p.paginate()
         except Exception as e:
             print(e)

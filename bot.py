@@ -2,9 +2,9 @@ import discord
 import logging
 import json
 import asyncpg
+import utils.item as items
 from discord.ext import commands
 from utils import checks
-from utils.item import croploader
 
 extensions = (
     'cogs.admin',
@@ -33,6 +33,7 @@ class MyClient(commands.AutoShardedBot):
         self.add_command(self.reload)
         self.add_command(self.reloadsettings)
         self.add_command(self.reconnectdatabase)
+        self.initemojis()
         self.allitems = {}
         self.loadvariables()
         self.loop.create_task(self.connectdb())
@@ -42,11 +43,19 @@ class MyClient(commands.AutoShardedBot):
         self.db = await asyncpg.create_pool(**credentials)
 
     def loadvariables(self):
-        self.loadcrops()
+        self.loadcropseeds()
 
-    def loadcrops(self):
-        self.crops = croploader()
+    def loadcropseeds(self):
+        self.cropseeds = items.cropseedloader()
+        self.crops = items.croploader()
+        self.allitems.update(self.cropseeds)
         self.allitems.update(self.crops)
+
+    def initemojis(self):
+        self.gold = '<:gold:603145892811505665>'
+        self.xp = '<:xp:603145893029347329>'
+        self.gem = '<:diamond:603145893025415178>'
+        self.tile = '<:tile:603160625417420801>'
 
     # Commands
 

@@ -1,6 +1,7 @@
 {
-  "1" : {
-    "id":1,
+  "101" : {
+    "id":101,
+    "madefrom":1,
     "emoji":"\ud83c\udf40",
     "name":"salātlapa",
     "name2":"salāti",
@@ -16,8 +17,9 @@
     "xp":1,
     "img":"https://failiem.lv/thumb_show.php?i=sqpudehg"
   },
-  "2": {
-    "id":2,
+  "102": {
+    "id":102,
+    "madefrom":2,
     "emoji":"\ud83e\udd55",
     "name":"burkāns",
     "name2":"burkāni",
@@ -33,8 +35,9 @@
     "xp":1,
     "img":"https://failiem.lv/thumb_show.php?i=yswtb9r7"
   },
-  "3": {
-    "id":3,
+  "103": {
+    "id":103,
+    "madefrom":3,
     "emoji":"\ud83c\udf3d",
     "name":"kukurūza",
     "name2":"kukurūza",
@@ -50,8 +53,9 @@
     "xp":2,
     "img":"https://failiem.lv/thumb_show.php?i=3g3xaxbv"
   },
-  "4": {
-    "id":4,
+  "104": {
+    "id":104,
+    "madefrom":4,
     "emoji":"\ud83e\udd52",
     "name":"gurķis",
     "name2":"gurķi",
@@ -67,8 +71,9 @@
     "xp":2,
     "img":"https://failiem.lv/thumb_show.php?i=uhyvpshe"
   },
-  "5": {
-    "id":5,
+  "105": {
+    "id":105,
+    "madefrom":5,
     "emoji":"\ud83c\udf36",
     "name":"čilli",
     "name2":"čilli",

@@ -1,0 +1,2 @@
+'CREATE TABLE IF NOT EXISTS users(id decimal PRIMARY KEY, guildid bigint NOT NULL, userid bigint NOT NULL, xp bigint NOT NULL, money bigint NOT NULL, gems integer NOT NULL, tiles integer NOT NULL, usedtiles integer NOT NULL);'
+'CREATE TABLE IF NOT EXISTS inventory(itemid smallint PRIMARY KEY, userid decimal NOT NULL, amount integer NOT NULL);'

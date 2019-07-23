@@ -7,6 +7,9 @@ class Test(commands.Cog):
         self.client = client
         self.statusloop.start()
 
+    async def cog_check(self, ctx):
+        return ctx.author.id == 234622520739758080
+
     @commands.command()
     async def ping(self, ctx):
         await ctx.send('ponh')
@@ -21,7 +24,7 @@ class Test(commands.Cog):
         await self.client.wait_until_ready()
 
     def cog_unload(self):
-        self.refreshstatustask.cancel()
+        self.statusloop.cancel()
 
 
 def setup(client):

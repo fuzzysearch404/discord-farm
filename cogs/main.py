@@ -1,7 +1,17 @@
 import discord
+import utils.embeds as emb
+from utils import usertools
+from typing import Optional
 from discord.ext import commands
 from utils.time import secstotime
 from utils.item import finditembyname
+from utils.paginator import Pages
+from utils.convertors import MemberID
+
+DEFAULT_XP = 0
+DEFAULT_MONEY = 150
+DEFAULT_GEMS = 10
+DEFAULT_TILES = 3
 
 
 class Main(commands.Cog):
@@ -9,7 +19,83 @@ class Main(commands.Cog):
         self.client = client
 
     @commands.command()
-    async def info(self, ctx, possibleitem):
+    async def start(self, ctx):
+        connection = await self.client.db.acquire()
+        async with connection.transaction():
+            query = """INSERT INTO users(id, guildid, userid, xp,
+            money, gems, tiles, usedtiles)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+            ON CONFLICT DO NOTHING;"""
+            result = await self.client.db.execute(
+                query, usertools.generategameuserid(ctx.author), ctx.guild.id, ctx.author.id,
+                DEFAULT_XP, DEFAULT_MONEY, DEFAULT_GEMS, DEFAULT_TILES, DEFAULT_TILES
+            )
+        await self.client.db.release(connection)
+        if result[-1:] != '0':
+            await ctx.send('\ud83c\udd97')
+        else:
+            embed = emb.errorembed('Tev jau ir profils!')
+            await ctx.send(embed=embed)
+
+    @commands.command()
+    async def profile(self, ctx, member: Optional[MemberID] = None):
+        member = member or ctx.author
+        client = self.client
+        userprofile = await usertools.getprofile(client, member)
+        if not userprofile:
+            embed = emb.errorembed("Šim lietotājam nav spēles profila")
+            return await ctx.send(embed=embed)
+        level, lvlmax = usertools.getlevel(userprofile['xp'])
+        embed = discord.Embed(title=f'{member} ferma', colour=10521800)
+        embed.add_field(
+            name='\ud83d\udd30 Galvenā informācija',
+            value=f"""\ud83d\udd31 **{level}. līmenis** ({userprofile['xp']}/{lvlmax} {client.xp})
+            {userprofile['usedtiles']}/{userprofile['tiles']} {client.tile}
+            {userprofile['money']} {client.gold}
+            {userprofile['gems']} {client.gem}"""
+        )
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def inventory(self, ctx, member: Optional[MemberID] = None):
+        member = member or ctx.author
+        client = self.client
+        cropseeds = {}
+        inventory = await usertools.getinventory(client, member)
+        if not inventory:
+            embed = emb.errorembed("Šim lietotājam nav nekā glabātuvē")
+            return await ctx.send(embed=embed)
+        for item, value in inventory.items():
+            if item.type == 'cropseed':
+                cropseeds[item] = value
+        await self.embedinventory(ctx, member, cropseeds)
+
+    async def embedinventory(self, ctx, member, cropseeds):
+        items = []
+        iter, string = 0, ""
+
+        if cropseeds:
+            items.append('**Augu sēklas:**')
+            for key, value in cropseeds.items():
+                iter += 1
+                string += f'{key.emoji}**{key.name2.capitalize()}** x{value} '
+                if iter == 3:
+                    items.append(string)
+                    iter, string = 0, ""
+            if iter > 0:
+                items.append(string)
+                iter, string = 0, ""
+
+        try:
+            p = Pages(ctx, entries=items, per_page=10, show_entry_count=False)
+            p.embed.title = f'{member} glabātuve'
+            p.embed.color = 10521800
+            await p.paginate()
+        except Exception as e:
+            print(e)
+
+    @commands.command()
+    async def info(self, ctx, *, possibleitem):
         try:
             possibleitem = int(possibleitem)
         except ValueError:
@@ -19,25 +105,50 @@ class Main(commands.Cog):
             try:
                 item = self.client.allitems[possibleitem]
             except KeyError:
-                return await ctx.send("Neatradu tādu lietu\ud83e\udd14")
+                embed = emb.errorembed("Neatradu tādu lietu\ud83e\udd14")
+                return await ctx.send(embed=embed)
         elif isinstance(possibleitem, str):
             item = finditembyname(self.client, possibleitem)
             if not item:
-                return await ctx.send("Neatradu tādu lietu\ud83e\udd14")
+                embed = emb.errorembed("Neatradu tādu lietu\ud83e\udd14")
+                return await ctx.send(embed=embed)
 
-        if item.type == 'crop':
+        if item.type == 'cropseed':
+            await self.cropseedinfo(ctx, item)
+        elif item.type == 'crop':
             await self.cropinfo(ctx, item)
 
-    async def cropinfo(self, ctx, crop):
-        embed = discord.Embed(title=f'{crop.name.capitalize()} {crop.emoji}', description=f'**ID:** {crop.id}', colour=851836)
+    async def cropseedinfo(self, ctx, cropseed):
+        client = self.client
+        crop = cropseed.getchild(client)
+
+        embed = discord.Embed(
+            title=f'{cropseed.name.capitalize()} {cropseed.emoji}',
+            description=f'\ud83c\udf31**Sēklu ID:** {cropseed.id} \ud83c\udf3e**Auga ID:** {crop.id}',
+            colour=851836
+        )
         embed.add_field(name='\ud83d\udd31Nepiciešamais līmenis', value=crop.level)
-        embed.add_field(name='\ud83c\udf1fNovācot dod', value=f'{crop.xp} xp/gab.')
-        embed.add_field(name='\ud83d\udd70Dīgst, aug', value=secstotime(crop.grows))
-        embed.add_field(name='\ud83d\udd70Novācams', value=secstotime(crop.dies))
-        embed.add_field(name='\ud83d\udcb0Sēklu cena', value=f'{crop.cost}\ud83d\udcb0 vai {crop.scost}\ud83d\udc8e\n')
-        embed.add_field(name='\u2696Ražas apjoms', value=f'{crop.amount} gab.')
-        embed.add_field(name='\ud83d\uded2Tirgus cena', value=f'{crop.minprice} - {crop.maxprice} /gab. \ud83d\udcb0\n')
-        embed.add_field(name='\ud83d\udcc8Pašreizējā tirgus cena', value=f'{crop.marketprice}\ud83d\udcb0/gab.\n')
+        embed.add_field(name=f'{client.xp}Novācot dod', value=f'{crop.xp} xp/gab.')
+        embed.add_field(name='\ud83d\udd70Dīgst, aug', value=secstotime(cropseed.grows))
+        embed.add_field(name='\ud83d\udd70Novācams', value=secstotime(cropseed.dies))
+        embed.add_field(name='\ud83d\udcb0Sēklu cena', value=f'{cropseed.cost}{client.gold} vai {cropseed.scost}{client.gem}')
+        embed.add_field(name='\u2696Ražas apjoms', value=f'{cropseed.amount} gab.')
+
+        embed.set_thumbnail(url=crop.img)
+        await ctx.send(embed=embed)
+
+    async def cropinfo(self, ctx, crop):
+        client = self.client
+        cropseed = crop.getparent(client)
+
+        embed = discord.Embed(
+            title=f'{crop.name.capitalize()} {crop.emoji}',
+            description=f'\ud83c\udf3e**Auga ID:** {crop.id} \ud83c\udf31**Sēklu ID:** {cropseed.id}',
+            colour=851836
+        )
+        embed.add_field(name='\ud83d\udd31Nepiciešamais līmenis', value=crop.level)
+        embed.add_field(name='\ud83d\uded2Tirgus cena', value=f'{crop.minprice} - {crop.maxprice} /gab. {client.gold}')
+        embed.add_field(name='\ud83d\udcc8Pašreizējā tirgus cena', value=f'{crop.marketprice}{client.gold}/gab.\n')
 
         embed.set_thumbnail(url=crop.img)
         await ctx.send(embed=embed)
