@@ -199,7 +199,8 @@ class Shop(commands.Cog):
                 monquery, usergold['money'] - total, buyer['id']
             )
         await self.client.db.release(connection)
-        await ctx.send('ok!')
+        embed = emb.confirmembed(f"Tu nopirki {amount}x{item.emoji} par {total}{self.client.gold}")
+        await ctx.send(embed=embed)
 
     async def buywithgems(self, ctx, buyer, item, amount):
         total = item.scost * amount
@@ -214,6 +215,34 @@ class Shop(commands.Cog):
         if usergems['gems'] < total:
             embed = emb.errorembed('Tev nepietiek supernaudu.')
             return await ctx.send(embed=embed)
+
+        olditem = await usertools.checkinventoryitem(self.client, ctx.author, item)
+        if not olditem:
+            query = """INSERT INTO inventory(itemid, userid, amount)
+            VALUES($1, $2, $3);"""
+        else:
+            query = """UPDATE inventory SET amount = $1
+            WHERE userid = $2 AND itemid = $3;"""
+
+        gemquery = """UPDATE users SET gems = $1
+        WHERE id = $2;"""
+
+        connection = await self.client.db.acquire()
+        async with connection.transaction():
+            if olditem:
+                await self.client.db.execute(
+                    query, olditem['amount'] + amount, buyer['id'], item.id
+                    )
+            else:
+                await self.client.db.execute(
+                    query, item.id, buyer['id'], amount
+                )
+            await self.client.db.execute(
+                gemquery, usergems['gems'] - total, buyer['id']
+            )
+        await self.client.db.release(connection)
+        embed = emb.confirmembed(f"Tu nopirki {amount}x{item.emoji} par {total}{self.client.gem}")
+        await ctx.send(embed=embed)
 
 
 def setup(client):
