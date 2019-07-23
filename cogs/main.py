@@ -61,6 +61,7 @@ class Main(commands.Cog):
         member = member or ctx.author
         client = self.client
         cropseeds = {}
+        crops = {}
         inventory = await usertools.getinventory(client, member)
         if not inventory:
             embed = emb.errorembed("Šim lietotājam nav nekā glabātuvē")
@@ -68,15 +69,28 @@ class Main(commands.Cog):
         for item, value in inventory.items():
             if item.type == 'cropseed':
                 cropseeds[item] = value
-        await self.embedinventory(ctx, member, cropseeds)
+            if item.type == 'crop':
+                crops[item] = value
+        await self.embedinventory(ctx, member, cropseeds, crops)
 
-    async def embedinventory(self, ctx, member, cropseeds):
+    async def embedinventory(self, ctx, member, cropseeds, crops):
         items = []
         iter, string = 0, ""
 
         if cropseeds:
-            items.append('**Augu sēklas:**')
+            items.append('__**Augu sēklas:**__')
             for key, value in cropseeds.items():
+                iter += 1
+                string += f'{key.emoji}**{key.name2.capitalize()}** x{value} '
+                if iter == 3:
+                    items.append(string)
+                    iter, string = 0, ""
+            if iter > 0:
+                items.append(string)
+                iter, string = 0, ""
+        if crops:
+            items.append('__**Raža:**__')
+            for key, value in crops.items():
                 iter += 1
                 string += f'{key.emoji}**{key.name2.capitalize()}** x{value} '
                 if iter == 3:
