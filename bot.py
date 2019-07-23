@@ -3,6 +3,7 @@ import logging
 import json
 import asyncpg
 import utils.item as items
+import utils.embeds as emb
 from discord.ext import commands
 from utils import checks
 
@@ -10,7 +11,8 @@ extensions = (
     'cogs.admin',
     'cogs.test',
     'cogs.main',
-    'cogs.shop'
+    'cogs.shop',
+    'cogs.registration'
 )
 unloaded = []
 with open("settings.json", "r", encoding="UTF8") as file:
@@ -170,9 +172,12 @@ class MyClient(commands.AutoShardedBot):
                 await ctx.message.delete()
             except discord.HTTPException:
                 pass
-            await ctx.send('Tev nav tiesību izmantot šo komandu', delete_after=10)
+            embed = emb.errorembed("Tev nav spēles profila. Lieto `%start`")
+            await ctx.send(embed=embed)
             return
         if isinstance(error, commands.errors.CommandNotFound):
+            return
+        if isinstance(error, commands.errors.CommandOnCooldown):
             return
         raise error
 

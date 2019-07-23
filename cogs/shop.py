@@ -1,6 +1,9 @@
 import datetime
 import discord
+import utils.embeds as emb
+from utils.usertools import generategameuserid
 from utils.paginator import Pages
+from utils.item import finditem
 from discord.ext import commands, tasks
 
 
@@ -9,6 +12,13 @@ class Shop(commands.Cog):
         self.client = client
         self.refreshshop.start()
         self.lastrefresh = datetime.datetime.now()
+
+    async def cog_check(self, ctx):
+        query = """SELECT userid FROM users WHERE id = $1;"""
+        userid = await self.client.db.fetchrow(query, generategameuserid(ctx.author))
+        if not userid:
+            return False
+        return userid['userid'] == ctx.author.id
 
     @tasks.loop(seconds=3600)
     async def refreshshop(self):
@@ -51,6 +61,16 @@ class Shop(commands.Cog):
             await p.paginate()
         except Exception as e:
             print(e)
+
+    @commands.command()
+    async def buy(self, ctx, possibleitem):
+        item = await finditem(self.client, ctx, possibleitem)
+        if not item:
+            return
+
+        if not item.type or item.type == 'crop':
+            embed = emb.errorembed("Šī prece netiek pārdota mūsu bodē \ud83d\ude26")
+            return await ctx.send(embed=embed)
 
 
 def setup(client):

@@ -1,4 +1,5 @@
 import discord
+from utils.usertools import generategameuserid
 from discord.ext import commands, tasks
 
 
@@ -8,7 +9,11 @@ class Test(commands.Cog):
         self.statusloop.start()
 
     async def cog_check(self, ctx):
-        return ctx.author.id == 234622520739758080
+        query = """SELECT userid FROM users WHERE id = $1;"""
+        userid = await self.client.db.fetchrow(query, generategameuserid(ctx.author))
+        if not userid:
+            return False
+        return userid['userid'] == ctx.author.id
 
     @commands.command()
     async def ping(self, ctx):
