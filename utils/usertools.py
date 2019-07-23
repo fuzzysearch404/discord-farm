@@ -25,6 +25,13 @@ def geninventory(client, invlist):
     return found
 
 
+async def checkinventoryitem(client, member, item):
+    query = """SELECT * FROM inventory WHERE userid = $1
+    AND itemid = $2;"""
+    item = await client.db.fetchrow(query, generategameuserid(member), item.id)
+    return item
+
+
 def getlevel(xp):
     limit = [0, 10, 30, 100, 150, 220, 310, 400, 500, 620]
     level = 0

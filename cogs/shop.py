@@ -1,7 +1,8 @@
 import datetime
 import discord
+import asyncio
 import utils.embeds as emb
-from utils.usertools import generategameuserid
+from utils import usertools
 from utils.paginator import Pages
 from utils.item import finditem
 from discord.ext import commands, tasks
@@ -15,7 +16,7 @@ class Shop(commands.Cog):
 
     async def cog_check(self, ctx):
         query = """SELECT userid FROM users WHERE id = $1;"""
-        userid = await self.client.db.fetchrow(query, generategameuserid(ctx.author))
+        userid = await self.client.db.fetchrow(query, usertools.generategameuserid(ctx.author))
         if not userid:
             return False
         return userid['userid'] == ctx.author.id
@@ -63,13 +64,155 @@ class Shop(commands.Cog):
             print(e)
 
     @commands.command()
-    async def buy(self, ctx, possibleitem):
-        item = await finditem(self.client, ctx, possibleitem)
+    async def buy(self, ctx, *, possibleitem):
+        client = self.client
+
+        item = await finditem(client, ctx, possibleitem)
         if not item:
             return
 
         if not item.type or item.type == 'crop':
             embed = emb.errorembed("Šī prece netiek pārdota mūsu bodē \ud83d\ude26")
+            return await ctx.send(embed=embed)
+
+        buyer = await usertools.getprofile(client, ctx.author)
+        if usertools.getlevel(buyer['xp'])[0] < item.level:
+            embed = emb.errorembed("Pārāk zems līmenis, lai iegādātos šo preci")
+            return await ctx.send(embed=embed)
+
+        buyembed = discord.Embed(title='Pirkuma detaļas', colour=9309837)
+        buyembed.add_field(
+            name='Prece',
+            value=f'{item.emoji}**{item.name.capitalize()}**\nPreces ID: {item.id}'
+        )
+        buyembed.add_field(
+            name='Cena',
+            value=f'{client.gold}{item.cost} vai {client.gem}{item.scost}'
+        )
+        buyembed.add_field(
+            name='Daudzums',
+            value="""Ievadi daudzumu ar cipariem čatā.
+            Lai atceltu, ieraksti čatā `X`."""
+        )
+        buyembed.set_footer(
+            text=f"{ctx.author} Zelts: {buyer['money']} SN: {buyer['gems']}",
+            icon_url=ctx.author.avatar_url,
+        )
+        buyinfomessage = await ctx.send(embed=buyembed)
+
+        def check(m):
+            return m.author == ctx.author
+
+        try:
+            entry = await client.wait_for('message', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.')
+            await ctx.send(embed=embed, delete_after=15)
+            await buyinfomessage.delete()
+
+        try:
+
+            if entry is None:
+                return await buyinfomessage.delete()
+            elif entry.clean_content.lower() == 'x':
+                await buyinfomessage.delete()
+                return await entry.delete()
+
+            await entry.delete()
+        except discord.HTTPException:
+            pass
+
+        try:
+            amount = int(entry.clean_content)
+        except ValueError:
+            embed = emb.errorembed('Nederīgs daudzums. Nākošreiz ieraksti skaitli')
+            return await ctx.send(embed=embed, delete_after=15)
+
+        buyembed.set_field_at(
+            index=2,
+            name='Daudzums',
+            value=amount
+        )
+        buyembed.add_field(
+            name='Summa',
+            value=f'{client.gold}{item.cost * amount} vai {client.gem}{item.scost * amount}'
+        )
+        buyembed.add_field(name='Apstiprinājums', value='Norādi ar reakciju valūtu')
+        await buyinfomessage.edit(embed=buyembed)
+        await buyinfomessage.add_reaction(client.gold)
+        await buyinfomessage.add_reaction(client.gem)
+        await buyinfomessage.add_reaction('\u274c')
+
+        allowedemojis = ('\u274c', client.gem, client.gold)
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in allowedemojis
+
+        try:
+            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.')
+            await ctx.send(embed=embed, delete_after=15)
+            return await buyinfomessage.delete()
+
+        if str(reaction.emoji) == client.gold:
+            await self.buywithgold(ctx, buyer, item, amount)
+        elif str(reaction.emoji) == client.gem:
+            await self.buywithgems(ctx, buyer, item, amount)
+
+    async def buywithgold(self, ctx, buyer, item, amount):
+        total = item.cost * amount
+        if buyer['money'] < total:
+            embed = emb.errorembed('Tev nepietiek zelts.')
+            return await ctx.send(embed=embed)
+
+        query = """SELECT money FROM users
+        WHERE id = $1;"""
+
+        usergold = await self.client.db.fetchrow(query, buyer['id'])
+        if usergold['money'] < total:
+            embed = emb.errorembed('Tev nepietiek zelts.')
+            return await ctx.send(embed=embed)
+
+        olditem = await usertools.checkinventoryitem(self.client, ctx.author, item)
+        if not olditem:
+            query = """INSERT INTO inventory(itemid, userid, amount)
+            VALUES($1, $2, $3);"""
+        else:
+            query = """UPDATE inventory SET amount = $1
+            WHERE userid = $2 AND itemid = $3;"""
+
+        monquery = """UPDATE users SET money = $1
+        WHERE id = $2;"""
+
+        connection = await self.client.db.acquire()
+        async with connection.transaction():
+            if olditem:
+                await self.client.db.execute(
+                    query, olditem['amount'] + amount, buyer['id'], item.id
+                    )
+            else:
+                await self.client.db.execute(
+                    query, item.id, buyer['id'], amount
+                )
+            await self.client.db.execute(
+                monquery, usergold['money'] - total, buyer['id']
+            )
+        await self.client.db.release(connection)
+        await ctx.send('ok!')
+
+    async def buywithgems(self, ctx, buyer, item, amount):
+        total = item.scost * amount
+        if buyer['gems'] < total:
+            embed = emb.errorembed('Tev nepietiek supernaudu.')
+            return await ctx.send(embed=embed)
+
+        query = """SELECT gems FROM users
+        WHERE id = $1;"""
+
+        usergems = await self.client.db.fetchrow(query, buyer['id'])
+        if usergems['gems'] < total:
+            embed = emb.errorembed('Tev nepietiek supernaudu.')
             return await ctx.send(embed=embed)
 
 

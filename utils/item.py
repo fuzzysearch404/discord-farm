@@ -20,9 +20,10 @@ class Item:
 
 
 class CropSeed(Item):
-    def __init__(self, name2, grows, dies, expandsto, *args, **kw):
+    def __init__(self, name2, level, grows, dies, expandsto, *args, **kw):
         super().__init__(*args, **kw)
         self.name2 = name2
+        self.level = level
         self.grows = grows
         self.dies = dies
         self.expandsto = expandsto
@@ -51,6 +52,7 @@ class Crop(Item):
     def getparent(self, client):
         return client.cropseeds[self.madefrom]
 
+
 def cropseedloader():
     rseeds = {}
 
@@ -59,13 +61,14 @@ def cropseedloader():
 
     for c, v in seeds.items():
         crop = CropSeed(
-            v['name2'], v['grows'], v['dies'], v['expandsto'], v['id'],
+            v['name2'], v['level'], v['grows'], v['dies'], v['expandsto'], v['id'],
             v['emoji'], v['name'], v['rarity'], v['amount'], v['cost'],
             v['scost']
         )
         rseeds[int(c)] = crop
 
     return rseeds
+
 
 def croploader():
     rcrops = {}
