@@ -40,16 +40,20 @@ class Main(commands.Cog):
         level, lvlmax = usertools.getlevel(userprofile['xp'])
         embed = discord.Embed(title=f'{member} ferma', colour=10521800)
         embed.add_field(
-            name='\ud83d\udd30 Galvenā informācija',
-            value=f"""\ud83d\udd31 **{level}. līmenis** {client.xp}{userprofile['xp']}/{lvlmax}
-            {client.tile}{userprofile['usedtiles']}/{userprofile['tiles']}
-            {client.gold}{userprofile['money']}
-            {client.gem}{userprofile['gems']} """
+            name=f'\ud83d\udd31 {level}. līmenis',
+            value=f"{client.xp}{userprofile['xp']}/{lvlmax}"
         )
+        embed.add_field(name=f'{client.gold}Zelts', value=userprofile['money'])
+        embed.add_field(name=f'{client.gem}Supernaudas', value=userprofile['gems'])
         embed.add_field(
             name='\ud83d\udd12Noliktava',
             value=f"""\u25aa{inventory} lietas
             \u2139`%inventory {member}`"""
+        )
+        embed.add_field(
+            name='\ud83c\udf31Lauks',
+            value=f"""{client.tile}{userprofile['usedtiles']}/{userprofile['tiles']}
+            \u2139`%field {member}`"""
         )
         await ctx.send(embed=embed)
 

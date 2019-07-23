@@ -32,6 +32,12 @@ async def checkinventoryitem(client, member, item):
     return item
 
 
+async def getuserfield(client, member):
+    query = """SELECT * FROM planted WHERE userid = $1;"""
+    data = await client.db.fetch(query, generategameuserid(member))
+    return data
+
+
 def getlevel(xp):
     limit = [0, 10, 30, 100, 150, 220, 310, 400, 500, 620]
     level = 0

@@ -12,6 +12,7 @@ extensions = (
     'cogs.test',
     'cogs.main',
     'cogs.shop',
+    'cogs.planting',
     'cogs.registration'
 )
 unloaded = []
