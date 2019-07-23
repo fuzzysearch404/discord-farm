@@ -28,14 +28,28 @@ class Main(commands.Cog):
         if not userprofile:
             embed = emb.errorembed("Šim lietotājam nav spēles profila")
             return await ctx.send(embed=embed)
+
+        query = """SELECT sum(amount) FROM inventory
+        WHERE userid = $1;"""
+        inventory = await client.db.fetchrow(query, usertools.generategameuserid(member))
+        if not inventory:
+            inventory = 0
+        else:
+            inventory = inventory[0]
+
         level, lvlmax = usertools.getlevel(userprofile['xp'])
         embed = discord.Embed(title=f'{member} ferma', colour=10521800)
         embed.add_field(
             name='\ud83d\udd30 Galvenā informācija',
-            value=f"""\ud83d\udd31 **{level}. līmenis** ({userprofile['xp']}/{lvlmax} {client.xp})
-            {userprofile['usedtiles']}/{userprofile['tiles']} {client.tile}
-            {userprofile['money']} {client.gold}
-            {userprofile['gems']} {client.gem}"""
+            value=f"""\ud83d\udd31 **{level}. līmenis** {client.xp}{userprofile['xp']}/{lvlmax}
+            {client.tile}{userprofile['usedtiles']}/{userprofile['tiles']}
+            {client.gold}{userprofile['money']}
+            {client.gem}{userprofile['gems']} """
+        )
+        embed.add_field(
+            name='\ud83d\udd12Noliktava',
+            value=f"""\u25aa{inventory} lietas
+            \u2139`%inventory {member}`"""
         )
         await ctx.send(embed=embed)
 
@@ -47,7 +61,7 @@ class Main(commands.Cog):
         crops = {}
         inventory = await usertools.getinventory(client, member)
         if not inventory:
-            embed = emb.errorembed("Šim lietotājam nav nekā glabātuvē")
+            embed = emb.errorembed("Šim lietotājam nav nekā noliktavā")
             return await ctx.send(embed=embed)
         for item, value in inventory.items():
             if item.type == 'cropseed':
@@ -58,38 +72,32 @@ class Main(commands.Cog):
 
     async def embedinventory(self, ctx, member, cropseeds, crops):
         items = []
-        iter, string = 0, ""
 
         if cropseeds:
             items.append('__**Augu sēklas:**__')
-            for key, value in cropseeds.items():
-                iter += 1
-                string += f'{key.emoji}**{key.name2.capitalize()}** x{value} '
-                if iter == 3:
-                    items.append(string)
-                    iter, string = 0, ""
-            if iter > 0:
-                items.append(string)
-                iter, string = 0, ""
+            self.cycledict(cropseeds, items)
         if crops:
             items.append('__**Raža:**__')
-            for key, value in crops.items():
-                iter += 1
-                string += f'{key.emoji}**{key.name2.capitalize()}** x{value} '
-                if iter == 3:
-                    items.append(string)
-                    iter, string = 0, ""
-            if iter > 0:
-                items.append(string)
-                iter, string = 0, ""
+            self.cycledict(crops, items)
 
         try:
             p = Pages(ctx, entries=items, per_page=10, show_entry_count=False)
-            p.embed.title = f'{member} glabātuve'
+            p.embed.title = f'{member} noliktava'
             p.embed.color = 10521800
             await p.paginate()
         except Exception as e:
             print(e)
+
+    def cycledict(self, dic, list):
+        iter, string = 0, ""
+        for key, value in dic.items():
+            iter += 1
+            string += f'{key.emoji}**{key.name2.capitalize()}** x{value} '
+            if iter == 3:
+                list.append(string)
+                iter, string = 0, ""
+        if iter > 0:
+            list.append(string)
 
     @commands.command()
     async def info(self, ctx, *, possibleitem):
