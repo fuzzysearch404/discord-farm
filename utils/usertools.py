@@ -130,7 +130,7 @@ async def removeitemfrominventory(client, member, item, amount):
 
     connection = await client.db.acquire()
     async with connection.transaction():
-        if oldamount <= 1 or oldamount < amount:
+        if oldamount <= 1 or oldamount <= amount:
             query = """DELETE FROM inventory
             WHERE userid = $1 AND itemid = $2;"""
             await client.db.execute(query, generategameuserid(member), item.id)
@@ -161,13 +161,13 @@ async def addusedfields(client, member, amount):
 
 def tilescost(ownedtiles):
     if ownedtiles < 5:
-        return 3
+        return 5
     elif ownedtiles < 8:
-        return 4
+        return 8
     elif ownedtiles < 11:
-        return 6
+        return 12
     else:
-        return 9
+        return 15
 
 
 def gemsforlevel(level):
@@ -175,12 +175,17 @@ def gemsforlevel(level):
         return 3
     elif level < 14:
         return 4
-    else:
+    elif level < 19:
         return 5
+    else:
+        return 6
 
 
 def getlevel(xp):
-    limit = [0, 10, 30, 100, 150, 220, 310, 400, 500, 620]
+    limit = (
+        0, 20, 80, 300, 750, 1200, 1800, 2650, 4000, 5600,
+        7700, 10500, 14000, 19000, 26700
+    )
     level = 0
 
     for points in limit:

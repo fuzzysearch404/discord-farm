@@ -3,6 +3,7 @@ import discord
 import asyncio
 import utils.embeds as emb
 from utils import usertools
+from utils.time import secstotime
 from utils.paginator import Pages
 from utils.item import finditem
 from discord.ext import commands, tasks
@@ -43,6 +44,7 @@ class Shop(commands.Cog):
         embed.add_field(name='\ud83c\udf33 Koki', value='`soon`')
         embed.add_field(name='\ud83d\udc14 Dzīvnieki', value='`soon`')
         embed.add_field(name='\ud83c\udfed Ražotnes', value='`soon`')
+        embed.add_field(name='\u2696 Tirgus', value='`%shop market`')
         embed.add_field(name='\u2b50 Citi', value='`%shop special`')
         await ctx.send(embed=embed)
 
@@ -65,13 +67,35 @@ class Shop(commands.Cog):
             print(e)
 
     @shop.command()
+    async def market(self, ctx):
+        items = []
+        client = self.client
+
+        refreshin = datetime.datetime.now() - self.lastrefresh
+        refreshin = secstotime(3600 - refreshin.seconds)
+        items.append(f'\u23f0Tirgus cenas atjaunosies pēc {refreshin}\n')
+
+        for crop in client.crops.values():
+            item = f"""{crop.emoji}**{crop.name2.capitalize()}**
+            Pašlaik iepērkam par: {crop.marketprice}{client.gold}/gab.
+            \u2696 `%sell {crop.id}` \u2139 `%info {crop.id}`\n"""
+            items.append(item)
+        try:
+            p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
+            p.embed.title = '\u2696 Tirgus'
+            p.embed.color = 82247
+            await p.paginate()
+        except Exception as e:
+            print(e)
+
+    @shop.command()
     async def special(self, ctx):
         client = self.client
         profile = await usertools.getprofile(client, ctx.author)
 
         embed = discord.Embed(title='\u2b50 Citi', color=82247)
         embed.add_field(
-            name=f'{client.tile}Paplašināt zemi',
+            name=f'{client.tile}Paplašināt zemi \ud83d\udd313',
             value=f"""\ud83c\udd95 {profile['tiles']} \u2192 {profile['tiles'] + 1} platība
             {client.gem}{usertools.tilescost(profile['tiles'])}
             \ud83d\uded2 `%expand`"""
@@ -220,9 +244,125 @@ class Shop(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
+    async def sell(self, ctx, *, possibleitem):
+        client = self.client
+
+        item = await finditem(client, ctx, possibleitem)
+        if not item:
+            return
+
+        if not item.type or item.type != 'crop':
+            embed = emb.errorembed("Šī prece netiek iepirkta tirgū \ud83d\ude26")
+            return await ctx.send(embed=embed)
+
+        sellembed = discord.Embed(title='Darījuma detaļas', colour=9309837)
+        sellembed.add_field(
+            name='Prece',
+            value=f'{item.emoji}**{item.name.capitalize()}**\nPreces ID: {item.id}'
+        )
+        sellembed.add_field(
+            name='Cena',
+            value=f'{client.gold}{item.marketprice}'
+        )
+        sellembed.add_field(
+            name='Daudzums',
+            value="""Ievadi daudzumu ar cipariem čatā.
+            Lai atceltu, ieraksti čatā `X`."""
+        )
+        sellembed.set_footer(
+            icon_url=ctx.author.avatar_url,
+        )
+        sellinfomessage = await ctx.send(embed=sellembed)
+
+        def check(m):
+            return m.author == ctx.author
+
+        try:
+            entry = await client.wait_for('message', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.')
+            await ctx.send(embed=embed, delete_after=15)
+            await sellinfomessage.delete()
+
+        try:
+
+            if entry is None:
+                return await sellinfomessage.delete()
+            elif entry.clean_content.lower() == 'x':
+                await sellinfomessage.delete()
+                return await entry.delete()
+
+            await entry.delete()
+        except discord.HTTPException:
+            pass
+
+        try:
+            amount = int(entry.clean_content)
+        except ValueError:
+            embed = emb.errorembed('Nederīgs daudzums. Nākošreiz ieraksti skaitli')
+            return await ctx.send(embed=embed, delete_after=15)
+
+        sellembed.set_field_at(
+            index=2,
+            name='Daudzums',
+            value=amount
+        )
+        sellembed.add_field(
+            name='Summa',
+            value=f'{client.gold}{item.marketprice * amount}'
+        )
+        sellembed.add_field(
+            name='Apstiprinājums',
+            value='Lai pabeigtu darījumu, nospied atbilstošo reakciju'
+        )
+        await sellinfomessage.edit(embed=sellembed)
+        await sellinfomessage.add_reaction('\u2705')
+        await sellinfomessage.add_reaction('\u274c')
+
+        allowedemojis = ('\u274c', '\u2705')
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in allowedemojis
+
+        try:
+            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.')
+            await ctx.send(embed=embed, delete_after=15)
+            return await sellinfomessage.delete()
+
+        if str(reaction.emoji) == '\u274c':
+            return
+
+        await self.sellwithgold(ctx, item, amount)
+
+    async def sellwithgold(self, ctx, item, amount):
+        client = self.client
+        total = item.marketprice * amount
+
+        hasitem = await usertools.checkinventoryitem(client, ctx.author, item)
+        if not hasitem:
+            embed = emb.errorembed("Tev nav šādas lietas noliktavā!")
+            return await ctx.send(embed=embed)
+
+        if amount > hasitem['amount']:
+            embed = emb.errorembed(f"Tev ir tikai {hasitem['amount']}x {item.emoji} noliktavā!")
+            return await ctx.send(embed=embed)
+
+        await usertools.removeitemfrominventory(client, ctx.author, item, amount)
+        await usertools.givemoney(client, ctx.author, total)
+
+        embed = emb.confirmembed(f"Tu pārdevi {amount}x{item.emoji} par {total}{self.client.gold}")
+        await ctx.send(embed=embed)
+
+    @commands.command()
     async def expand(self, ctx):
         client = self.client
         profile = await usertools.getprofile(client, ctx.author)
+
+        if usertools.getlevel(profile['xp'])[0] < 3:
+            embed = emb.errorembed('Zemes paplašināšana ir pieejama no 3.līmeņa.')
+            return await ctx.send(embed=embed)
 
         buyembed = discord.Embed(title='Pirkuma detaļas', colour=9309837)
         buyembed.add_field(

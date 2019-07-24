@@ -3,9 +3,9 @@ from discord.ext import commands
 from utils import usertools
 
 DEFAULT_XP = 0
-DEFAULT_MONEY = 150
-DEFAULT_GEMS = 10
-DEFAULT_TILES = 3
+DEFAULT_MONEY = 30
+DEFAULT_GEMS = 3
+DEFAULT_TILES = 2
 
 
 class Registration(commands.Cog):

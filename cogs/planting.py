@@ -100,9 +100,10 @@ class Planting(commands.Cog):
             if status == 'grow1' or status == 'grow2':
                 continue
             elif status == 'ready':
-                await usertools.givexpandlevelup(client, ctx, item.xp * data['amount'])
+                xp = item.xp * data['amount']
+                await usertools.givexpandlevelup(client, ctx, xp)
                 await usertools.additemtoinventory(client, ctx.author, item, data['amount'])
-                information += f"{item.emoji}**{item.name2.capitalize()}** x{data['amount']} "
+                information += f"{item.emoji}**{item.name2.capitalize()}** x{data['amount']} +{xp}{client.xp}"
 
             todelete.append(data['id'])
 
