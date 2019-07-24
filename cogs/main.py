@@ -1,4 +1,5 @@
 import discord
+import asyncio
 import utils.embeds as emb
 from utils import usertools
 from typing import Optional
@@ -160,6 +161,26 @@ class Main(commands.Cog):
         embed.add_field(name='\ud83d\udcc8Pašreizējā tirgus cena', value=f'{crop.marketprice}{client.gold}/gab.\n')
 
         embed.set_thumbnail(url=crop.img)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def resetacc(self, ctx):
+        embed = emb.errorembed(
+            "Vai tiešām izdzēst profilu? Tiks dzēsti pilnīgi **VISI** tavi dati!!"
+        )
+        message = await ctx.send(embed=embed)
+        await message.add_reaction('\u2705')
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) == '\u2705'
+
+        try:
+            reaction, user = await self.client.wait_for('reaction_add', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            return
+
+        await usertools.deleteacc(self.client, ctx.author)
+        embed = emb.confirmembed('Tavs profils ir dzēsts. Lai sāktu spēli no jauna, lieto `%start`')
         await ctx.send(embed=embed)
 
 

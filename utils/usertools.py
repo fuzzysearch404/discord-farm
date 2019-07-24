@@ -12,6 +12,22 @@ async def getprofile(client, member):
     return userprofile
 
 
+async def deleteacc(client, member):
+    queries = (
+        "DELETE FROM planted WHERE userid = $1;",
+        "DELETE FROM inventory WHERE userid = $1;",
+        "DELETE FROM users WHERE id = $1;"
+    )
+
+    userid = generategameuserid(member)
+
+    connection = await client.db.acquire()
+    async with connection.transaction():
+        for query in queries:
+            await client.db.execute(query, userid)
+    await client.db.release(connection)
+
+
 async def getinventory(client, member):
     query = """SELECT * FROM inventory WHERE userid = $1;"""
     inventory = await client.db.fetch(query, generategameuserid(member))
@@ -141,6 +157,17 @@ async def addusedfields(client, member, amount):
         WHERE id = $2;"""
         await client.db.execute(query, amount, generategameuserid(member))
     await client.db.release(connection)
+
+
+def tilescost(ownedtiles):
+    if ownedtiles < 5:
+        return 3
+    elif ownedtiles < 8:
+        return 4
+    elif ownedtiles < 11:
+        return 6
+    else:
+        return 9
 
 
 def gemsforlevel(level):

@@ -12,20 +12,7 @@ class Usercontrol(commands.Cog):
     @commands.command()
     @checks.is_owner()
     async def deluser(self, ctx, member: MemberID):
-        client = self.client
-        queries = (
-            "DELETE FROM planted WHERE userid = $1;",
-            "DELETE FROM inventory WHERE userid = $1;",
-            "DELETE FROM users WHERE id = $1;"
-        )
-
-        userid = usertools.generategameuserid(member)
-
-        connection = await client.db.acquire()
-        async with connection.transaction():
-            for query in queries:
-                await client.db.execute(query, userid)
-        await client.db.release(connection)
+        await usertools.deleteacc(self.client, member)
         embed = emb.confirmembed(f'Deleted: {member}')
         await ctx.send(embed=embed)
 

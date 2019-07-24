@@ -43,6 +43,7 @@ class Shop(commands.Cog):
         embed.add_field(name='\ud83c\udf33 Koki', value='`soon`')
         embed.add_field(name='\ud83d\udc14 Dzīvnieki', value='`soon`')
         embed.add_field(name='\ud83c\udfed Ražotnes', value='`soon`')
+        embed.add_field(name='\u2b50 Citi', value='`%shop special`')
         await ctx.send(embed=embed)
 
     @shop.command()
@@ -62,6 +63,20 @@ class Shop(commands.Cog):
             await p.paginate()
         except Exception as e:
             print(e)
+
+    @shop.command()
+    async def special(self, ctx):
+        client = self.client
+        profile = await usertools.getprofile(client, ctx.author)
+
+        embed = discord.Embed(title='\u2b50 Citi', color=82247)
+        embed.add_field(
+            name=f'{client.tile}Paplašināt zemi',
+            value=f"""\ud83c\udd95 {profile['tiles']} \u2192 {profile['tiles'] + 1} platība
+            {client.gem}{usertools.tilescost(profile['tiles'])}
+            \ud83d\uded2 `%expand`"""
+        )
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def buy(self, ctx, *, possibleitem):
@@ -202,6 +217,46 @@ class Shop(commands.Cog):
         await usertools.givegems(client, ctx.author, total * -1)
 
         embed = emb.confirmembed(f"Tu nopirki {amount}x{item.emoji} par {total}{self.client.gem}")
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def expand(self, ctx):
+        client = self.client
+        profile = await usertools.getprofile(client, ctx.author)
+
+        buyembed = discord.Embed(title='Pirkuma detaļas', colour=9309837)
+        buyembed.add_field(
+            name='Prece',
+            value=f"{client.tile} {profile['tiles']} \u2192 {profile['tiles'] + 1}"
+        )
+        buyembed.add_field(
+            name='Cena',
+            value=f"{client.gem}{usertools.tilescost(profile['tiles'])}"
+        )
+        buyembed.add_field(name='Apstiprinājums', value='Norādi ar reakciju valūtu')
+        buyinfomessage = await ctx.send(embed=buyembed)
+        await buyinfomessage.add_reaction(client.gem)
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) == client.gem
+
+        try:
+            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.')
+            return await ctx.send(embed=embed, delete_after=15)
+
+        profile = await usertools.getprofile(client, ctx.author)
+
+        gemstopay = usertools.tilescost(profile['tiles'])
+
+        if profile['gems'] < gemstopay:
+            embed = emb.errorembed('Tev nepietiek supernaudu.')
+            return await ctx.send(embed=embed)
+
+        await usertools.addfields(client, ctx.author, 1)
+        await usertools.givegems(client, ctx.author, gemstopay * -1)
+        embed = emb.congratzembed(f"Tava lauku platība tagad ir {profile['tiles'] + 1}")
         await ctx.send(embed=embed)
 
 
