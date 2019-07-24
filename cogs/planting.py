@@ -1,8 +1,9 @@
 import utils.embeds as emb
 from discord.ext import commands
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from utils import usertools
+from utils.item import finditem
 from utils.time import secstotime
 from utils.paginator import Pages
 from utils.convertors import MemberID
@@ -126,7 +127,7 @@ class Planting(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command()
-    async def plant(self, ctx):
+    async def plant(self, ctx, *, possibleitem):
         client = self.client
         profile = await usertools.getprofile(client, ctx.author)
         usedtiles = profile['usedtiles']
@@ -138,7 +139,45 @@ class Planting(commands.Cog):
             )
             return await  ctx.send(embed=embed)
 
+        item = await finditem(self.client, ctx, possibleitem)
+        if not item:
+            return
+        if item.type != 'cropseed':
+            embed = emb.errorembed("Šo lietu nevar iestādīt")
+            return await ctx.send(embed=embed)
+
+        inventorydata = await usertools.checkinventoryitem(client, ctx.author, item)
+        if not inventorydata:
+            embed = emb.errorembed(
+                f"Tavā noliktavā nav {item.name}. Tu vari iegādāties lietas ar komandu `%shop`."
+            )
+            return await ctx.send(embed=embed)
+
+        await usertools.removeitemfrominventory(client, ctx.author, item, 1)
+
+        itemchild = item.getchild(client)
+        now = datetime.now().replace(microsecond=0)
+        ends = now + timedelta(seconds=item.grows)
+        dies = ends + timedelta(seconds=item.dies)
+
+        connection = await client.db.acquire()
+        async with connection.transaction():
+            query = """INSERT INTO planted(itemid, userid, amount, ends, dies, robbed)
+            VALUES($1, $2, $3, $4, $5, $6)"""
+            await client.db.execute(
+                query, itemchild.id, usertools.generategameuserid(ctx.author), item.amount,
+                ends, dies, False
+            )
+        await client.db.release(connection)
+
         await usertools.addusedfields(client, ctx.author, 1)
+
+        embed = emb.confirmembed(
+            f"Tu iestādīji {item.emoji}{item.name.capitalize()}.\n"
+            f"Izaugs par {item.amount}x {itemchild.emoji}**{itemchild.name2.capitalize()}**\n"
+            f"Nogatavosies: `{ends}` Sabojāsies: `{dies}`"
+        )
+        await ctx.send(embed=embed)
 
 
 def setup(client):

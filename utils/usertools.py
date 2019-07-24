@@ -104,6 +104,27 @@ async def additemtoinventory(client, member, item, amount):
     await client.db.release(connection)
 
 
+async def removeitemfrominventory(client, member, item, amount):
+    query = """SELECT * FROM inventory
+    WHERE userid = $1 AND itemid = $2;"""
+    data = await client.db.fetchrow(query, generategameuserid(member), item.id)
+    if not data:
+        raise Exception("Critical error: User does not have this item.")
+    oldamount = data['amount']
+
+    connection = await client.db.acquire()
+    async with connection.transaction():
+        if oldamount <= 1 or oldamount < amount:
+            query = """DELETE FROM inventory
+            WHERE userid = $1 AND itemid = $2;"""
+            await client.db.execute(query, generategameuserid(member), item.id)
+        else:
+            query = """UPDATE inventory SET amount = amount - $1
+            WHERE userid = $2 AND itemid = $3;"""
+            await client.db.execute(query, amount, generategameuserid(member), item.id)
+    await client.db.release(connection)
+
+
 async def addfields(client, member, amount):
     connection = await client.db.acquire()
     async with connection.transaction():

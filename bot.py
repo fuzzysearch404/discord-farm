@@ -13,7 +13,8 @@ extensions = (
     'cogs.main',
     'cogs.shop',
     'cogs.planting',
-    'cogs.registration'
+    'cogs.registration',
+    'cogs.usercontrol'
 )
 unloaded = []
 with open("settings.json", "r", encoding="UTF8") as file:
