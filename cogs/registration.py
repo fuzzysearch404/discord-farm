@@ -22,7 +22,7 @@ class Registration(commands.Cog):
             ON CONFLICT DO NOTHING;"""
             result = await self.client.db.execute(
                 query, usertools.generategameuserid(ctx.author), ctx.guild.id, ctx.author.id,
-                DEFAULT_XP, DEFAULT_MONEY, DEFAULT_GEMS, DEFAULT_TILES, DEFAULT_TILES
+                DEFAULT_XP, DEFAULT_MONEY, DEFAULT_GEMS, DEFAULT_TILES, 0
                 )
         await self.client.db.release(connection)
         if result[-1:] != '0':

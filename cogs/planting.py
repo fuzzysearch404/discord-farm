@@ -1,7 +1,7 @@
-import datetime
 import utils.embeds as emb
 from discord.ext import commands
 from typing import Optional
+from datetime import datetime
 from utils import usertools
 from utils.time import secstotime
 from utils.paginator import Pages
@@ -55,7 +55,7 @@ class Planting(commands.Cog):
             print(e)
 
     def getcropstate(self, item, ends, dies):
-        now = datetime.datetime.now()
+        now = datetime.now()
         if ends > now:
             parent = item.getparent(self.client)
             half = parent.grows / 2
@@ -79,7 +79,8 @@ class Planting(commands.Cog):
     @commands.command()
     async def harvest(self, ctx):
         items = {}
-        information = []
+        information = ''
+        todelete = []
 
         client = self.client
         fielddata = await usertools.getuserfield(client, ctx.author)
@@ -98,15 +99,46 @@ class Planting(commands.Cog):
             if status == 'grow1' or status == 'grow2':
                 continue
             elif status == 'ready':
-                pass
-            else:
-                pass
+                await usertools.givexpandlevelup(client, ctx, item.xp * data['amount'])
+                await usertools.additemtoinventory(client, ctx.author, item, data['amount'])
+                information += f"{item.emoji}**{item.name2.capitalize()}** x{data['amount']} "
 
-        await ctx.send(information)
+            todelete.append(data['id'])
+
+        if len(todelete) > 0:
+            connection = await client.db.acquire()
+            async with connection.transaction():
+                query = """DELETE FROM planted WHERE id = $1;"""
+                for item in todelete:
+                    await client.db.execute(query, item)
+            await client.db.release(connection)
+
+        await usertools.addusedfields(client, ctx.author, len(todelete) * -1)
+
+        if len(information) == 0 and len(todelete) > 0:
+            embed = emb.confirmembed("Tu novāci sobojājušās lietas")
+            await ctx.send(embed=embed)
+        elif len(information) > 0:
+            embed = emb.confirmembed(f"Tu novāci: {information}")
+            await ctx.send(embed=embed)
+        else:
+            embed = emb.errorembed("Tev nav gatavas produkcijas, kuru novākt!")
+            await ctx.send(embed=embed)
 
     @commands.command()
     async def plant(self, ctx):
-        pass
+        client = self.client
+        profile = await usertools.getprofile(client, ctx.author)
+        usedtiles = profile['usedtiles']
+        tiles = profile['tiles']
+
+        if usedtiles >= tiles:
+            embed = emb.errorembed(
+                "Tev nav vietas, kur stādīt! Atbrīvo to vai nopērc papildus teritoriju."
+            )
+            return await  ctx.send(embed=embed)
+
+        await usertools.addusedfields(client, ctx.author, 1)
 
 
 def setup(client):

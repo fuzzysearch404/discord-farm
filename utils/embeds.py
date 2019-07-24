@@ -7,3 +7,7 @@ def errorembed(text):
 
 def confirmembed(text):
     return Embed(title=f'\u2705 {text}', colour=955920)
+
+
+def congratzembed(text):
+    return Embed(title=f'\ud83c\udf89 {text}', colour=16776970)

@@ -2,6 +2,7 @@ import discord
 import utils.embeds as emb
 from utils import usertools
 from typing import Optional
+from datetime import datetime
 from discord.ext import commands
 from utils.time import secstotime
 from utils.item import finditem
@@ -32,7 +33,7 @@ class Main(commands.Cog):
         query = """SELECT sum(amount) FROM inventory
         WHERE userid = $1;"""
         inventory = await client.db.fetchrow(query, usertools.generategameuserid(member))
-        if not inventory:
+        if not inventory[0]:
             inventory = 0
         else:
             inventory = inventory[0]
@@ -50,9 +51,21 @@ class Main(commands.Cog):
             value=f"""\u25aa{inventory} lietas
             \u2139`%inventory {member}`"""
         )
+        query = """SELECT ends FROM planted
+        WHERE userid = $1 ORDER BY ends;"""
+        nearestharvest = await client.db.fetchrow(query, usertools.generategameuserid(member))
+        if not nearestharvest:
+            nearestharvest = '-'
+        else:
+            if nearestharvest[0] > datetime.now():
+                nearestharvest = nearestharvest[0] - datetime.now()
+                nearestharvest = secstotime(nearestharvest.seconds)
+            else:
+                nearestharvest = '\u2705'
         embed.add_field(
             name='\ud83c\udf31Lauks',
-            value=f"""{client.tile}{userprofile['usedtiles']}/{userprofile['tiles']}
+            value=f"""{client.tile}{userprofile['tiles'] - userprofile['usedtiles']}/{userprofile['tiles']} brīva platība
+            \u23f0Nākošā raža: {nearestharvest}
             \u2139`%field {member}`"""
         )
         await ctx.send(embed=embed)

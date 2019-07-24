@@ -1,3 +1,6 @@
+from utils.embeds import congratzembed
+
+
 def generategameuserid(member):
     string = str(member.guild.id) + str(member.id)
     return int(string)
@@ -36,6 +39,96 @@ async def getuserfield(client, member):
     query = """SELECT * FROM planted WHERE userid = $1;"""
     data = await client.db.fetch(query, generategameuserid(member))
     return data
+
+
+async def givexpandlevelup(client, ctx, xp):
+    member = ctx.author
+    oldxp = await getprofile(client, member)
+    oldxp = oldxp['xp']
+    oldlevel = getlevel(oldxp)[0]
+
+    connection = await client.db.acquire()
+    async with connection.transaction():
+        query = """UPDATE users SET xp = $1
+        WHERE id = $2;"""
+        newxp = oldxp + xp
+        await client.db.execute(query, newxp, generategameuserid(member))
+    await client.db.release(connection)
+
+    newlevel = getlevel(newxp)[0]
+    if oldlevel < newlevel:
+        gems = gemsforlevel(newlevel)
+        await givegems(client, member, gems)
+        embed = congratzembed(f"Tu sasniedzi {newlevel}.līmeni un ieguvi {gems}{client.gem}!")
+        await ctx.send(embed=embed)
+
+
+async def givegems(client, member, gems):
+    connection = await client.db.acquire()
+    async with connection.transaction():
+        query = """UPDATE users SET gems = gems + $1
+        WHERE id = $2;"""
+        await client.db.execute(query, gems, generategameuserid(member))
+    await client.db.release(connection)
+
+
+async def givemoney(client, member, money):
+    connection = await client.db.acquire()
+    async with connection.transaction():
+        query = """UPDATE users SET money = money + $1
+        WHERE id = $2;"""
+        await client.db.execute(query, money, generategameuserid(member))
+    await client.db.release(connection)
+
+
+async def additemtoinventory(client, member, item, amount):
+    olditem = await checkinventoryitem(client, member, item)
+    if not olditem:
+        query = """INSERT INTO inventory(itemid, userid, amount)
+        VALUES($1, $2, $3);"""
+    else:
+        query = """UPDATE inventory SET amount = $1
+        WHERE userid = $2 AND itemid = $3;"""
+
+    connection = await client.db.acquire()
+    async with connection.transaction():
+        if olditem:
+            await client.db.execute(
+                query, olditem['amount'] + amount, generategameuserid(member), item.id
+                )
+        else:
+            await client.db.execute(
+                query, item.id, generategameuserid(member), amount
+            )
+
+    await client.db.release(connection)
+
+
+async def addfields(client, member, amount):
+    connection = await client.db.acquire()
+    async with connection.transaction():
+        query = """UPDATE users SET tiles = tiles + $1
+        WHERE id = $2;"""
+        await client.db.execute(query, amount, generategameuserid(member))
+    await client.db.release(connection)
+
+
+async def addusedfields(client, member, amount):
+    connection = await client.db.acquire()
+    async with connection.transaction():
+        query = """UPDATE users SET usedtiles = usedtiles + $1
+        WHERE id = $2;"""
+        await client.db.execute(query, amount, generategameuserid(member))
+    await client.db.release(connection)
+
+
+def gemsforlevel(level):
+    if level < 9:
+        return 3
+    elif level < 14:
+        return 4
+    else:
+        return 5
 
 
 def getlevel(xp):
