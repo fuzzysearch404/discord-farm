@@ -20,7 +20,7 @@ class Main(commands.Cog):
         userid = await self.client.db.fetchrow(query, usertools.generategameuserid(ctx.author))
         if not userid:
             return False
-        return userid['userid'] == ctx.author.id
+        return userid['userid'] == ctx.author.id and not self.client.disabledcommands
 
     @commands.command()
     async def profile(self, ctx, member: Optional[MemberID] = None):

@@ -16,6 +16,16 @@ class Usercontrol(commands.Cog):
         embed = emb.confirmembed(f'Deleted: {member}')
         await ctx.send(embed=embed)
 
+    @commands.command()
+    @checks.is_owner()
+    async def disablegame(self, ctx):
+        if self.client.disabledcommands:
+            self.client.disabledcommands = False
+        else:
+            self.client.disabledcommands = True
+        embed = emb.confirmembed(f'Game disabled: {self.client.disabledcommands}')
+        await ctx.send(embed=embed)
+
 
 def setup(client):
     client.add_cog(Usercontrol(client))

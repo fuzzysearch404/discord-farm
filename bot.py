@@ -38,6 +38,7 @@ class MyClient(commands.AutoShardedBot):
         self.add_command(self.reload)
         self.add_command(self.reloadsettings)
         self.add_command(self.reconnectdatabase)
+        self.disabledcommands = False
         self.initemojis()
         self.allitems = {}
         self.loadvariables()
@@ -171,11 +172,12 @@ class MyClient(commands.AutoShardedBot):
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.errors.CheckFailure):
-            try:
-                await ctx.message.delete()
-            except discord.HTTPException:
-                pass
-            embed = emb.errorembed("Tev nav spēles profila. Lieto `%start`")
+            if not self.disabledcommands:
+                embed = emb.errorembed("Tev nav spēles profila. Lieto `%start`")
+            else:
+                embed = emb.errorembed(
+                    "Spēles komandas ir atslēgtas spēles atjauninājumiem.\n"
+                    "\ud83d\udcf0Vairāk informācijas - `%news`")
             await ctx.send(embed=embed)
             return
         if isinstance(error, commands.errors.CommandNotFound):
