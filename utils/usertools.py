@@ -16,6 +16,7 @@ async def deleteacc(client, member):
     queries = (
         "DELETE FROM planted WHERE userid = $1;",
         "DELETE FROM inventory WHERE userid = $1;",
+        "DELETE FROM missions WHERE userid = $1;",
         "DELETE FROM users WHERE id = $1;"
     )
 
@@ -159,6 +160,12 @@ async def addusedfields(client, member, amount):
     await client.db.release(connection)
 
 
+async def getmissions(client, member):
+    query = """SELECT * FROM missions WHERE userid = $1;"""
+    missions = await client.db.fetch(query, generategameuserid(member))
+    return missions
+
+
 def tilescost(ownedtiles):
     if ownedtiles < 5:
         return 5
@@ -183,7 +190,7 @@ def gemsforlevel(level):
 
 def getlevel(xp):
     limit = (
-        0, 20, 80, 300, 750, 1200, 1800, 2650, 4000, 5600,
+        0, 20, 80, 250, 650, 1100, 1700, 2650, 4000, 5600,
         7700, 10500, 14000, 19000, 26700
     )
     level = 0

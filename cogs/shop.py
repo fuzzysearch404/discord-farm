@@ -8,6 +8,8 @@ from utils.paginator import Pages
 from utils.item import finditem
 from discord.ext import commands, tasks
 
+REFRESH_SHOP_SECONDS = 3600
+
 
 class Shop(commands.Cog):
     def __init__(self, client):
@@ -22,7 +24,7 @@ class Shop(commands.Cog):
             return False
         return userid['userid'] == ctx.author.id
 
-    @tasks.loop(seconds=3600)
+    @tasks.loop(seconds=REFRESH_SHOP_SECONDS)
     async def refreshshop(self):
         self.lastrefresh = datetime.datetime.now()
         for crop in self.client.crops.values():
@@ -72,7 +74,7 @@ class Shop(commands.Cog):
         client = self.client
 
         refreshin = datetime.datetime.now() - self.lastrefresh
-        refreshin = secstotime(3600 - refreshin.seconds)
+        refreshin = secstotime(REFRESH_SHOP_SECONDS - refreshin.seconds)
         items.append(f'\u23f0Tirgus cenas atjaunosies pēc {refreshin}\n')
 
         for crop in client.crops.values():

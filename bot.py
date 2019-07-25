@@ -13,6 +13,7 @@ extensions = (
     'cogs.main',
     'cogs.shop',
     'cogs.planting',
+    'cogs.missions',
     'cogs.registration',
     'cogs.usercontrol'
 )
@@ -183,9 +184,9 @@ class MyClient(commands.AutoShardedBot):
             return
         raise error
 
-    async def on_error(self, event, args, kwargs):
-        print(event, args, kwargs)
-        log.error(f'{event} {args} {kwargs}')
+    #async def on_error(self, event, args, kwargs):
+    #    print(event, args, kwargs)
+    #    log.error(f'{event} {args} {kwargs}')
 
     async def on_command(self, ctx):
         log.info(
