@@ -149,12 +149,10 @@ class Shop(commands.Cog):
         except asyncio.TimeoutError:
             embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.')
             await ctx.send(embed=embed, delete_after=15)
-            await buyinfomessage.delete()
 
         try:
-
             if entry is None:
-                return await buyinfomessage.delete()
+                return
             elif entry.clean_content.lower() == 'x':
                 await buyinfomessage.delete()
                 return await entry.delete()
@@ -194,7 +192,7 @@ class Shop(commands.Cog):
         except asyncio.TimeoutError:
             embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.')
             await ctx.send(embed=embed, delete_after=15)
-            return await buyinfomessage.delete()
+            return await buyinfomessage.clear_reactions()
 
         if str(reaction.emoji) == client.gold:
             await self.buywithgold(ctx, buyer, item, amount)
@@ -284,12 +282,10 @@ class Shop(commands.Cog):
         except asyncio.TimeoutError:
             embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.')
             await ctx.send(embed=embed, delete_after=15)
-            await sellinfomessage.delete()
 
         try:
-
             if entry is None:
-                return await sellinfomessage.delete()
+                return
             elif entry.clean_content.lower() == 'x':
                 await sellinfomessage.delete()
                 return await entry.delete()
@@ -331,7 +327,7 @@ class Shop(commands.Cog):
         except asyncio.TimeoutError:
             embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.')
             await ctx.send(embed=embed, delete_after=15)
-            return await sellinfomessage.delete()
+            return await sellinfomessage.clear_reactions()
 
         if str(reaction.emoji) == '\u274c':
             return
@@ -386,7 +382,8 @@ class Shop(commands.Cog):
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
         except asyncio.TimeoutError:
             embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.')
-            return await ctx.send(embed=embed, delete_after=15)
+            await ctx.send(embed=embed, delete_after=15)
+            return await buyinfomessage.clear_reactions()
 
         profile = await usertools.getprofile(client, ctx.author)
 

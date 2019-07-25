@@ -177,7 +177,7 @@ class Main(commands.Cog):
         try:
             reaction, user = await self.client.wait_for('reaction_add', check=check, timeout=30.0)
         except asyncio.TimeoutError:
-            return
+            return message.clear_reactions()
 
         await usertools.deleteacc(self.client, ctx.author)
         embed = emb.confirmembed('Tavs profils ir dzēsts. Lai sāktu spēli no jauna, lieto `%start`')
