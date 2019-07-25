@@ -13,7 +13,7 @@ extensions = (
     'cogs.main',
     'cogs.shop',
     'cogs.planting',
-    'cogs.missions',
+    'cogs.requests',
     'cogs.registration',
     'cogs.usercontrol'
 )

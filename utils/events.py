@@ -20,12 +20,13 @@ class Mission:
         requestsamount = randint(1, cls.itemsforlevel(level))
 
         for i in range(requestsamount):
-            while item in alreadyused:
-                item = choice(suitableitems)
-            amount = cls.calcamount(level, item)
-            req = (item, amount)
+            newitem = None
+            while not newitem or newitem in alreadyused:
+                newitem = choice(suitableitems)
+            amount = cls.calcamount(level, newitem)
+            req = (newitem, amount)
             requests.append(req)
-            alreadyused.append(item)
+            alreadyused.append(newitem)
 
         xp, money = cls.calcreward(requests)
         return cls(money, xp, requests)
