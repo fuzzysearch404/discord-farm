@@ -11,6 +11,15 @@ class Usercontrol(commands.Cog):
 
     @commands.command()
     @checks.is_owner()
+    async def editnews(self, ctx):
+        content = ctx.message.clean_content.replace("%editnews ", "")
+        with open('files/news.txt', "w", encoding='utf-8') as f:
+            f.write(content)
+        embed = emb.confirmembed(content)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @checks.is_owner()
     async def deluser(self, ctx, member: MemberID):
         await usertools.deleteacc(self.client, member)
         embed = emb.confirmembed(f'Deleted: {member}')

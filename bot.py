@@ -9,7 +9,7 @@ from utils import checks
 
 extensions = (
     'cogs.admin',
-    'cogs.test',
+    'cogs.information',
     'cogs.main',
     'cogs.shop',
     'cogs.planting',
