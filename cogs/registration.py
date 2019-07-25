@@ -26,10 +26,17 @@ class Registration(commands.Cog):
                 )
         await self.client.db.release(connection)
         if result[-1:] != '0':
-            await ctx.send('\ud83c\udd97')
+            embed = emb.congratzembed(
+                "Tavs profils ir izveidots!\n"
+                "\u2139Pamācību un komandas atradīsi ar komandu `%tutorial`.")
+            await ctx.send(embed=embed)
         else:
             embed = emb.errorembed('Tev jau ir profils!')
             await ctx.send(embed=embed)
+
+    @commands.command()
+    async def tutorial(self, ctx):
+        pass
 
 
 def setup(client):

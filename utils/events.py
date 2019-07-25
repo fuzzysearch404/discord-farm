@@ -46,17 +46,17 @@ class Mission:
             return randint(8, 20)
         elif level < 10:
             if item.rarity == 1:
-                return randint(10, 50)
+                return randint(10, 30)
             else:
                 return randint(1, 5)
         elif level < 20:
             if item.rarity == 1:
-                return randint(30, 100)
+                return randint(30, 50)
             else:
                 return randint(1, 6)
         else:
             if item.rarity == 1:
-                return randint(1, 150)
+                return randint(30, 70)
             else:
                 return randint(1, 8)
 

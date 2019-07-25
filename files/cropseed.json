@@ -68,5 +68,33 @@
     "amount":15,
     "cost":200,
     "scost":1
+  },
+  "6": {
+    "id":6,
+    "expandsto":106,
+    "level":10,
+    "emoji":"\ud83c\udf46",
+    "name":"baklažānu sēklas",
+    "name2":"baklažāni",
+    "rarity":1,
+    "grows":10800,
+    "dies":16200,
+    "amount":16,
+    "cost":500,
+    "scost":1
+  },
+  "7": {
+    "id":7,
+    "expandsto":107,
+    "level":11,
+    "emoji":"\ud83c\udf53",
+    "name":"zemeņu sēklas",
+    "name2":"zemenes",
+    "rarity":1,
+    "grows":21600,
+    "dies":10800,
+    "amount":14,
+    "cost":700,
+    "scost":1
   }
 }

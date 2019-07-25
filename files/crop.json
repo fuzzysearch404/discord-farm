@@ -88,5 +88,41 @@
     "level":8,
     "xp":4,
     "img":"https://failiem.lv/thumb_show.php?i=g3jmaepp"
+  },
+  "106": {
+    "id":106,
+    "madefrom":6,
+    "emoji":"\ud83c\udf46",
+    "name":"baklažāns",
+    "name2":"baklažāni",
+    "rarity":1,
+    "grows":10800,
+    "dies":16200,
+    "amount":16,
+    "cost":500,
+    "scost":1,
+    "minprice":26,
+    "maxprice":37,
+    "level":10,
+    "xp":5,
+    "img":"https://failiem.lv/thumb_show.php?i=qcavr6ps"
+  },
+  "107": {
+    "id":107,
+    "madefrom":7,
+    "emoji":"\ud83c\udf53",
+    "name":"zemene",
+    "name2":"zemenes",
+    "rarity":1,
+    "grows":21600,
+    "dies":10800,
+    "amount":14,
+    "cost":700,
+    "scost":1,
+    "minprice":40,
+    "maxprice":62,
+    "level":11,
+    "xp":7,
+    "img":"https://failiem.lv/thumb_show.php?i=zkqxcrrj"
   }
 }
