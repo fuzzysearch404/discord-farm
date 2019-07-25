@@ -15,14 +15,14 @@ class Usercontrol(commands.Cog):
         content = ctx.message.clean_content.replace("%editnews ", "")
         with open('files/news.txt', "w", encoding='utf-8') as f:
             f.write(content)
-        embed = emb.confirmembed(content)
+        embed = emb.confirmembed(content, ctx)
         await ctx.send(embed=embed)
 
     @commands.command()
     @checks.is_owner()
     async def deluser(self, ctx, member: MemberID):
         await usertools.deleteacc(self.client, member)
-        embed = emb.confirmembed(f'Deleted: {member}')
+        embed = emb.confirmembed(f'Deleted: {member}', ctx)
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -32,7 +32,7 @@ class Usercontrol(commands.Cog):
             self.client.disabledcommands = False
         else:
             self.client.disabledcommands = True
-        embed = emb.confirmembed(f'Game disabled: {self.client.disabledcommands}')
+        embed = emb.confirmembed(f'Game disabled: {self.client.disabledcommands}', ctx)
         await ctx.send(embed=embed)
 
 

@@ -12,6 +12,7 @@ class Information(commands.Cog):
         with open('files/news.txt', "r", encoding='utf-8') as f:
             lines = f.read()
         embed = discord.Embed(title='\ud83d\udcf0Jaunumi', colour=789613, description=lines)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command()

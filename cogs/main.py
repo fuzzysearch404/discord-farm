@@ -22,13 +22,13 @@ class Main(commands.Cog):
             return False
         return userid['userid'] == ctx.author.id and not self.client.disabledcommands
 
-    @commands.command()
+    @commands.command(aliases=['profils'])
     async def profile(self, ctx, member: Optional[MemberID] = None):
         member = member or ctx.author
         client = self.client
         userprofile = await usertools.getprofile(client, member)
         if not userprofile:
-            embed = emb.errorembed("Šim lietotājam nav spēles profila")
+            embed = emb.errorembed("Šim lietotājam nav spēles profila", ctx)
             return await ctx.send(embed=embed)
 
         query = """SELECT sum(amount) FROM inventory
@@ -69,9 +69,10 @@ class Main(commands.Cog):
             \u23f0Nākošā raža: {nearestharvest}
             \u2139`%field {member}`"""
         )
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=['inv'])
     async def inventory(self, ctx, member: Optional[MemberID] = None):
         member = member or ctx.author
         client = self.client
@@ -79,7 +80,7 @@ class Main(commands.Cog):
         crops = {}
         inventory = await usertools.getinventory(client, member)
         if not inventory:
-            embed = emb.errorembed("Šim lietotājam nav nekā noliktavā")
+            embed = emb.errorembed("Šim lietotājam nav nekā noliktavā", ctx)
             return await ctx.send(embed=embed)
         for item, value in inventory.items():
             if item.type == 'cropseed':
@@ -117,7 +118,7 @@ class Main(commands.Cog):
         if iter > 0:
             list.append(string)
 
-    @commands.command()
+    @commands.command(aliases=['i'])
     async def info(self, ctx, *, possibleitem):
         item = await finditem(self.client, ctx, possibleitem)
         if not item:
@@ -145,6 +146,7 @@ class Main(commands.Cog):
         embed.add_field(name='\u2696Ražas apjoms', value=f'{cropseed.amount} gab.')
 
         embed.set_thumbnail(url=crop.img)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     async def cropinfo(self, ctx, crop):
@@ -161,12 +163,14 @@ class Main(commands.Cog):
         embed.add_field(name='\ud83d\udcc8Pašreizējā tirgus cena', value=f'{crop.marketprice}{client.gold}/gab.\n')
 
         embed.set_thumbnail(url=crop.img)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command()
     async def resetacc(self, ctx):
         embed = emb.errorembed(
-            "Vai tiešām izdzēst profilu? Tiks dzēsti pilnīgi **VISI** tavi dati!!"
+            "Vai tiešām izdzēst profilu? Tiks dzēsti pilnīgi **VISI** tavi dati!!",
+            ctx
         )
         message = await ctx.send(embed=embed)
         await message.add_reaction('\u2705')
@@ -180,7 +184,7 @@ class Main(commands.Cog):
             return message.clear_reactions()
 
         await usertools.deleteacc(self.client, ctx.author)
-        embed = emb.confirmembed('Tavs profils ir dzēsts. Lai sāktu spēli no jauna, lieto `%start`')
+        embed = emb.confirmembed('Tavs profils ir dzēsts. Lai sāktu spēli no jauna, lieto `%start`', ctx)
         await ctx.send(embed=embed)
 
 

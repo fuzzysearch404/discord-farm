@@ -1,0 +1,52 @@
+**Saturs:**
+**1. :house_with_garden: Profila komandas**
+**2. :notepad_spiral: Spēles galvenās komandas**
+**3. :shopping_cart: Veikala un tirgus komandas**
+**4. :tractor: Stādīšanas un lauka komandas**
+**5. :card_box: Pasūtījumu komandas**
+**6. :information_source: Informācijas komandas**
+(*)
+**:house_with_garden: Profila komandas**
+`%profile` - Tavs profils ar ļoti noderīgu informāciju.
+Ja vēlies apskatīt cita lietotāja profilu, norādi to aiz komandas.
+
+`%inventory` - Tava noliktava.
+Ja vēlies apskatīt cita lietotāja noliktavu, norādi to aiz komandas.
+
+`%resetacc` - Pilnībā izdzēš tavu profilu.
+(*)
+**:notepad_spiral: Spēles galvenās komandas**
+`%info <parametrs>` - Parāda informāciju par kādu lietu.
+<parametrs> - Meklētās lietas ID vai nosaukums.
+(*)
+**:shopping_cart: Veikala un tirgus komandas**
+`%shop` - Atver veikalu.
+
+`%shop <parametrs>` - Atver kādu veikala sadaļu.
+<parametrs> - sadaļas nosaukums angliski. (tos var atrast ar `%shop`)
+
+`%buy <parametrs>` - Pirkt kādu lietu no veikala.
+<parametrs> - Meklētās lietas ID vai nosaukums.
+
+`%sell <parametrs>` - Pārdot kādu lietu tirgū.
+<parametrs> - Meklētās lietas ID vai nosaukums.
+(*)
+**:tractor: Stādīšanas un lauka komandas**
+`%field` - Tavs lauks.
+Ja vēlies apskatīt cita lietotāja lauku, norādi to aiz komandas.
+
+`%plant <parametrs>` - Stādīt uz lauka kādu lietu.
+<parametrs> - Meklētās lietas ID vai nosaukums.
+
+`%harvest` - Novāc gatavo ražu un ja kāda daļa no tās ir sabojājusies,
+tad aizvāc to no lauka.
+(*)
+**:card_box: Pasūtījumu komandas**
+`%requests` - Tavi pasūtījumi. Lai izpildītu, nospied atbilstošo reakciju.
+
+`%requests refresh` - Nomaina esošos pasūtījumus uz jauniem. Ir laika ierobežojums.
+(*)
+**:information_source: Informācijas komandas**
+`%news` - Parāda dažādu bota informāciju un jaunumus.
+
+`%commands` - Atver šo komandu sarakstu.

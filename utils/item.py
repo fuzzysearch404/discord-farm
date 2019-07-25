@@ -115,13 +115,13 @@ async def finditem(client, ctx, possibleitem):
         try:
             item = client.allitems[possibleitem]
         except KeyError:
-            embed = emb.errorembed("Neatradu tādu lietu\ud83e\udd14")
+            embed = emb.errorembed("Neatradu tādu lietu\ud83e\udd14", ctx)
             await ctx.send(embed=embed)
             return None
     elif isinstance(possibleitem, str):
         item = finditembyname(client, possibleitem)
         if not item:
-            embed = emb.errorembed("Neatradu tādu lietu\ud83e\udd14")
+            embed = emb.errorembed("Neatradu tādu lietu\ud83e\udd14", ctx)
             await ctx.send(embed=embed)
             return None
 

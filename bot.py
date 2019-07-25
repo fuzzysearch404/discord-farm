@@ -173,11 +173,11 @@ class MyClient(commands.AutoShardedBot):
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.errors.CheckFailure):
             if not self.disabledcommands:
-                embed = emb.errorembed("Tev nav spēles profila. Lieto `%start`")
+                embed = emb.errorembed("Tev nav spēles profila. Lieto `%start`", ctx)
             else:
                 embed = emb.errorembed(
                     "Spēles komandas ir atslēgtas spēles atjauninājumiem.\n"
-                    "\ud83d\udcf0Vairāk informācijas - `%news`")
+                    "\ud83d\udcf0Vairāk informācijas - `%news`", ctx)
             await ctx.send(embed=embed)
             return
         if isinstance(error, commands.errors.CommandNotFound):

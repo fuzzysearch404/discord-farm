@@ -29,7 +29,7 @@ class Planting(commands.Cog):
         client = self.client
         fielddata = await usertools.getuserfield(client, member)
         if not fielddata:
-            embed = emb.errorembed(f'{member} nav apstrādātu lauku')
+            embed = emb.errorembed(f'{member} nav apstrādātu lauku', ctx)
             return await ctx.send(embed=embed)
         for object in fielddata:
             try:
@@ -77,7 +77,7 @@ class Planting(commands.Cog):
 
         return stype, status
 
-    @commands.command()
+    @commands.command(aliases=['h'])
     async def harvest(self, ctx):
         items = {}
         information = ''
@@ -86,7 +86,7 @@ class Planting(commands.Cog):
         client = self.client
         fielddata = await usertools.getuserfield(client, ctx.author)
         if not fielddata:
-            embed = emb.errorembed("Tev nav apstādātu lauku")
+            embed = emb.errorembed("Tev nav apstādātu lauku", ctx)
             return await ctx.send(embed=embed)
         for object in fielddata:
             try:
@@ -118,16 +118,16 @@ class Planting(commands.Cog):
         await usertools.addusedfields(client, ctx.author, len(todelete) * -1)
 
         if len(information) == 0 and len(todelete) > 0:
-            embed = emb.confirmembed("Tu novāci sobojājušās lietas")
+            embed = emb.confirmembed("Tu novāci sobojājušās lietas", ctx)
             await ctx.send(embed=embed)
         elif len(information) > 0:
-            embed = emb.confirmembed(f"Tu novāci: {information}")
+            embed = emb.confirmembed(f"Tu novāci: {information}", ctx)
             await ctx.send(embed=embed)
         else:
-            embed = emb.errorembed("Tev nav gatavas produkcijas, kuru novākt!")
+            embed = emb.errorembed("Tev nav gatavas produkcijas, kuru novākt!", ctx)
             await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=['p'])
     async def plant(self, ctx, *, possibleitem):
         client = self.client
         profile = await usertools.getprofile(client, ctx.author)
@@ -136,7 +136,8 @@ class Planting(commands.Cog):
 
         if usedtiles >= tiles:
             embed = emb.errorembed(
-                "Tev nav vietas, kur stādīt! Atbrīvo to vai nopērc papildus teritoriju."
+                "Tev nav vietas, kur stādīt! Atbrīvo to vai nopērc papildus teritoriju.",
+                ctx
             )
             return await  ctx.send(embed=embed)
 
@@ -144,13 +145,14 @@ class Planting(commands.Cog):
         if not item:
             return
         if item.type != 'cropseed':
-            embed = emb.errorembed("Šo lietu nevar iestādīt")
+            embed = emb.errorembed("Šo lietu nevar iestādīt", ctx)
             return await ctx.send(embed=embed)
 
         inventorydata = await usertools.checkinventoryitem(client, ctx.author, item)
         if not inventorydata:
             embed = emb.errorembed(
-                f"Tavā noliktavā nav {item.name}. Tu vari iegādāties lietas ar komandu `%shop`."
+                f"Tavā noliktavā nav {item.name}. Tu vari iegādāties lietas ar komandu `%shop`.",
+                ctx
             )
             return await ctx.send(embed=embed)
 
@@ -176,7 +178,8 @@ class Planting(commands.Cog):
         embed = emb.confirmembed(
             f"Tu iestādīji {item.emoji}{item.name.capitalize()}.\n"
             f"Izaugs par {item.amount}x {itemchild.emoji}**{itemchild.name2.capitalize()}**\n"
-            f"Nogatavosies: `{ends}` Sabojāsies: `{dies}`"
+            f"Nogatavosies: `{ends}` Sabojāsies: `{dies}`",
+            ctx
         )
         await ctx.send(embed=embed)
 

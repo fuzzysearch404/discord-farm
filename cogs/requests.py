@@ -20,7 +20,7 @@ class Requests(commands.Cog):
             return False
         return userid['userid'] == ctx.author.id and not self.client.disabledcommands
 
-    @commands.group()
+    @commands.group(aliases=['req'])
     async def requests(self, ctx):
         if ctx.invoked_subcommand:
             return
@@ -72,7 +72,8 @@ class Requests(commands.Cog):
 
         if len(needed) > 0:
             embed = emb.errorembed(
-                f"Tev nav pietiekoši daudz {needed[:-2]}, lai izpildītu pasūtījumu!"
+                f"Tev nav pietiekoši daudz {needed[:-2]}, lai izpildītu pasūtījumu!",
+                ctx
             )
             return await ctx.send(embed=embed)
 
@@ -91,7 +92,9 @@ class Requests(commands.Cog):
         await usertools.givemoney(client, ctx.author, mission.moneyaward)
         embed = emb.congratzembed(
             "Tu izpildīji pasūtījumu un ieguvi"
-            f" {client.xp}{mission.xpaward} {client.gold}{mission.moneyaward}")
+            f" {client.xp}{mission.xpaward} {client.gold}{mission.moneyaward}",
+            ctx
+        )
         await ctx.send(embed=embed)
 
     async def createmissions(self, member, missions):
@@ -127,14 +130,14 @@ class Requests(commands.Cog):
             query = """DELETE FROM missions WHERE userid = $1;"""
             await client.db.execute(query, usertools.generategameuserid(ctx.author))
         await client.db.release(connection)
-        embed = emb.confirmembed("Uzdevumi atjaunoti! \ud83d\udc4c")
+        embed = emb.confirmembed("Uzdevumi atjaunoti! \ud83d\udc4c", ctx)
         await ctx.send(embed=embed)
 
     @refresh.error
     async def refresh_handler(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             cooldwtime = time.secstotime(error.retry_after)
-            embed = emb.errorembed(f"Tu varēsi atjaunot uzdevumus tikai pēc \u23f0{cooldwtime}")
+            embed = emb.errorembed(f"Tu varēsi atjaunot uzdevumus tikai pēc \u23f0{cooldwtime}", ctx)
             await ctx.send(embed=embed)
 
     def createrequestdesign(self, request):
