@@ -222,7 +222,7 @@ class Shop(commands.Cog):
 
         await usertools.givemoney(client, ctx.author, total * -1)
 
-        embed = emb.confirmembed(f"Tu nopirki {amount}x{item.emoji} par {total}{self.client.gold}", ctx)
+        embed = emb.confirmembed(f"Tu nopirki {amount}x{item.emoji}{item.name2.capitalize()} par {total}{self.client.gold}", ctx)
         await ctx.send(embed=embed)
 
     async def buywithgems(self, ctx, buyer, item, amount):
@@ -357,7 +357,7 @@ class Shop(commands.Cog):
         await usertools.removeitemfrominventory(client, ctx.author, item, amount)
         await usertools.givemoney(client, ctx.author, total)
 
-        embed = emb.confirmembed(f"Tu pārdevi {amount}x{item.emoji} par {total}{self.client.gold}", ctx)
+        embed = emb.confirmembed(f"Tu pārdevi {amount}x{item.emoji}{item.name2.capitalize()} par {total}{self.client.gold}", ctx)
         await ctx.send(embed=embed)
 
     @commands.command()
