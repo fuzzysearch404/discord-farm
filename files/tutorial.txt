@@ -3,15 +3,16 @@
 **2. :notepad_spiral: Spēles galvenās komandas**
 **3. :shopping_cart: Veikala un tirgus komandas**
 **4. :tractor: Stādīšanas un lauka komandas**
-**5. :card_box: Pasūtījumu komandas**
-**6. :information_source: Informācijas komandas**
+**5. :factory: Rūpnīcas komandas**
+**6. :card_box: Pasūtījumu komandas**
+**7. :information_source: Informācijas komandas**
 (*)
 **:house_with_garden: Profila komandas**
 `%profile` - Tavs profils ar ļoti noderīgu informāciju.
-Ja vēlies apskatīt cita lietotāja profilu, norādi to aiz komandas.
+Ja vēlies apskatīt cita lietotāja profilu, norādi lietotāju aiz komandas.
 
-`%inventory` - Tava noliktava.
-Ja vēlies apskatīt cita lietotāja noliktavu, norādi to aiz komandas.
+`%inventory` vai `%inv` - Tava noliktava.
+Ja vēlies apskatīt cita lietotāja noliktavu, norādi lietotāju aiz komandas.
 
 `%resetacc` - Pilnībā izdzēš tavu profilu.
 (*)
@@ -28,25 +29,43 @@ Ja vēlies apskatīt cita lietotāja noliktavu, norādi to aiz komandas.
 `%buy <parametrs>` - Pirkt kādu lietu no veikala.
 <parametrs> - Meklētās lietas ID vai nosaukums.
 
+`%market` - Atver veikalu.
+
+`%market <parametrs>` - Atver kādu tirgus sadaļu.
+<parametrs> - sadaļas nosaukums angliski. (tos var atrast ar `%market`)
+
 `%sell <parametrs>` - Pārdot kādu lietu tirgū.
 <parametrs> - Meklētās lietas ID vai nosaukums.
 (*)
 **:tractor: Stādīšanas un lauka komandas**
 `%field` - Tavs lauks.
-Ja vēlies apskatīt cita lietotāja lauku, norādi to aiz komandas.
+Ja vēlies apskatīt cita lietotāja lauku, norādi lietotāju aiz komandas.
 
-`%plant <parametrs>` - Stādīt uz lauka kādu lietu.
+`%plant <parametrs>` vai `%p`  - Stādīt uz lauka kādu lietu.
 <parametrs> - Meklētās lietas ID vai nosaukums.
 
-`%harvest` - Novāc gatavo ražu un ja kāda daļa no tās ir sabojājusies,
+`%harvest` vai `%h` - Novāc gatavo ražu un ja kāda daļa no tās ir sabojājusies,
 tad aizvāc to no lauka.
+
+`%expand` - Paplašina zemi par supernaudām.
+(*)
+**:factory: Rūpnīcas komandas**
+`%factory` - Parāda lietas, kuras pašlaik tiek ražotas.
+Ja vēlies apskatīt cita lietotāja rūpnīcu, norādi lietotāju aiz komandas.
+
+`%make <parametrs>` - Ražot produktu.
+<parametrs> - Meklētās lietas ID vai nosaukums.
+
+`%collect` vai `%c` - Savākt gatavo produkciju.
+
+`%upgrade` - Uzlabot maksimālo rūpnīcas ražošanas apjomu.
 (*)
 **:card_box: Pasūtījumu komandas**
-`%requests` - Tavi pasūtījumi. Lai izpildītu, nospied atbilstošo reakciju.
+`%requests` vai `req` - Tavi pasūtījumi. Lai izpildītu, nospied atbilstošo reakciju.
 
 `%requests refresh` - Nomaina esošos pasūtījumus uz jauniem. Ir laika ierobežojums.
 (*)
 **:information_source: Informācijas komandas**
 `%news` - Parāda dažādu bota informāciju un jaunumus.
 
-`%commands` - Atver šo komandu sarakstu.
+`%commands` vai `cmd` - Atver šo komandu sarakstu.

@@ -6,7 +6,7 @@ from typing import Optional
 from datetime import datetime
 from discord.ext import commands
 from utils.time import secstotime
-from utils.item import finditem
+from utils.item import finditem, madefromtostring
 from utils.paginator import Pages
 from utils.convertors import MemberID
 
@@ -69,6 +69,28 @@ class Main(commands.Cog):
             \u23f0Nākošā raža: {nearestharvest}
             \u2139`%field {member}`"""
         )
+
+        if level > 2:
+            query = """SELECT ends FROM factory
+            WHERE userid = $1 ORDER BY ends;"""
+            nearestprod = await client.db.fetchrow(query, usertools.generategameuserid(member))
+            if not nearestprod:
+                nearestprod = '-'
+            else:
+                if nearestprod[0] > datetime.now():
+                    nearestprod = nearestprod[0] - datetime.now()
+                    nearestprod = secstotime(nearestprod.seconds)
+                else:
+                    nearestprod = '\u2705'
+            factorytext = f"""\ud83d\udce6Max. ražošanas apjoms: {userprofile['factoryslots']}
+            \u23f0Nākošā produkcija: {nearestprod}
+            \u2139`%factory {member}`"""
+        else:
+            factorytext = "Pieejams no 3.līmeņa"
+        embed.add_field(
+            name='\ud83c\udfedRūpnīca',
+            value=factorytext
+        )
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -78,6 +100,7 @@ class Main(commands.Cog):
         client = self.client
         cropseeds = {}
         crops = {}
+        crafteditems = {}
         inventory = await usertools.getinventory(client, member)
         if not inventory:
             embed = emb.errorembed("Šim lietotājam nav nekā noliktavā", ctx)
@@ -85,11 +108,13 @@ class Main(commands.Cog):
         for item, value in inventory.items():
             if item.type == 'cropseed':
                 cropseeds[item] = value
-            if item.type == 'crop':
+            elif item.type == 'crop':
                 crops[item] = value
-        await self.embedinventory(ctx, member, cropseeds, crops)
+            elif item.type == 'crafteditem':
+                crafteditems[item] = value
+        await self.embedinventory(ctx, member, cropseeds, crops, crafteditems)
 
-    async def embedinventory(self, ctx, member, cropseeds, crops):
+    async def embedinventory(self, ctx, member, cropseeds, crops, crafteditems):
         items = []
 
         if cropseeds:
@@ -98,6 +123,9 @@ class Main(commands.Cog):
         if crops:
             items.append('__**Raža:**__')
             self.cycledict(crops, items)
+        if crafteditems:
+            items.append('__**Produkti:**__')
+            self.cycledict(crafteditems, items)
 
         try:
             p = Pages(ctx, entries=items, per_page=10, show_entry_count=False)
@@ -128,6 +156,8 @@ class Main(commands.Cog):
             await self.cropseedinfo(ctx, item)
         elif item.type == 'crop':
             await self.cropinfo(ctx, item)
+        elif item.type == 'crafteditem':
+            await self.craftediteminfo(ctx, item)
 
     async def cropseedinfo(self, ctx, cropseed):
         client = self.client
@@ -163,6 +193,29 @@ class Main(commands.Cog):
         embed.add_field(name='\ud83d\udcc8Pašreizējā tirgus cena', value=f'{crop.marketprice}{client.gold}/gab.\n')
 
         embed.set_thumbnail(url=crop.img)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    async def craftediteminfo(self, ctx, item):
+        client = self.client
+
+        embed = discord.Embed(
+            title=f'{item.name.capitalize()} {item.emoji}',
+            description=f'\ud83d\udce6**Produkta ID:** {item.id}',
+            colour=851836
+        )
+
+        madefrom = madefromtostring(client, item.madefrom)
+
+        embed.add_field(name='\ud83d\udd31Nepiciešamais līmenis', value=item.level)
+        embed.add_field(name=f'{client.xp}Ražojot dod', value=f'{item.xp} xp/gab.')
+        embed.add_field(name='\ud83d\udcdcNepieciešamie materiāli', value=madefrom)
+        embed.add_field(name='\ud83d\udd70Ražošanas laiks', value=secstotime(item.time))
+        embed.add_field(name='\ud83d\uded2Tirgus cena', value=f'{item.minprice} - {item.maxprice} /gab. {client.gold}')
+        embed.add_field(name='\ud83d\udcc8Pašreizējā tirgus cena', value=f'{item.marketprice}{client.gold}/gab.\n')
+        embed.add_field(name='\ud83c\udfedRažot', value=f'`%make {item.name}`')
+
+        embed.set_thumbnail(url=item.img)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 

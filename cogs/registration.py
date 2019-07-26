@@ -7,6 +7,7 @@ DEFAULT_XP = 0
 DEFAULT_MONEY = 30
 DEFAULT_GEMS = 3
 DEFAULT_TILES = 2
+DEFAULT_FACTORY_SLOTS = 2
 
 
 class Registration(commands.Cog):
@@ -19,12 +20,12 @@ class Registration(commands.Cog):
         connection = await self.client.db.acquire()
         async with connection.transaction():
             query = """INSERT INTO users(id, guildid, userid, xp,
-            money, gems, tiles, usedtiles)
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+            money, gems, tiles, usedtiles, factoryslots)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
             ON CONFLICT DO NOTHING;"""
             result = await self.client.db.execute(
                 query, usertools.generategameuserid(ctx.author), ctx.guild.id, ctx.author.id,
-                DEFAULT_XP, DEFAULT_MONEY, DEFAULT_GEMS, DEFAULT_TILES, 0
+                DEFAULT_XP, DEFAULT_MONEY, DEFAULT_GEMS, DEFAULT_TILES, 0, DEFAULT_FACTORY_SLOTS
                 )
         await self.client.db.release(connection)
         if result[-1:] != '0':

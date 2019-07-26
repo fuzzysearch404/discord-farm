@@ -53,6 +53,36 @@ class Crop(Item):
         return client.cropseeds[self.madefrom]
 
 
+class CraftedItem(Item):
+    def __init__(self, name2, level, xp, img, minprice, maxprice, madefrom, time, *args, **kw):
+        super().__init__(*args, **kw)
+        self.name2 = name2
+        self.level = level
+        self.xp = xp
+        self.img = img
+        self.minprice = minprice
+        self.maxprice = maxprice
+        self.unpackmadefrom(madefrom)
+        self.time = time
+        self.type = 'crafteditem'
+        self.getmarketprice()
+
+    def getmarketprice(self):
+        self.marketprice = randint(self.minprice, self.maxprice)
+
+    def unpackmadefrom(self, madefrom):
+        temp = {}
+        real = {}
+
+        for pack in madefrom:
+            temp.update(pack)
+
+        for key, value in temp.items():
+            real[int(key)] = value
+
+        self.madefrom = real
+
+
 def cropseedloader():
     rseeds = {}
 
@@ -85,6 +115,23 @@ def croploader():
         rcrops[int(c)] = crop
 
     return rcrops
+
+
+def crafteditemloader():
+    ritems = {}
+
+    with open("files/items.json", "r", encoding="UTF8") as file:
+        litems = json.load(file)
+
+    for c, v in litems.items():
+        item = CraftedItem(
+            v['name2'], v['level'], v['xp'], v['img'], v['minprice'], v['maxprice'],
+            v['madefrom'], v['time'], v['id'], v['emoji'], v['name'], v['rarity'],
+            v['amount'], v['cost'], v['scost']
+        )
+        ritems[int(c)] = item
+
+    return ritems
 
 
 def finditembyname(client, name):
@@ -126,3 +173,21 @@ async def finditem(client, ctx, possibleitem):
             return None
 
     return item
+
+
+def convertmadefrom(client, madefrom):
+    temp = {}
+    for id, amount in madefrom.items():
+        item = client.allitems[id]
+        temp[item] = amount
+
+    return temp
+
+
+def madefromtostring(client, madefrom):
+    string = ''
+    xitems = convertmadefrom(client, madefrom)
+    for item, value in xitems.items():
+        string += f"{item.emoji}{item.name2.capitalize()} x{value}, "
+
+    return string[:-2]

@@ -14,6 +14,7 @@ extensions = (
     'cogs.shop',
     'cogs.planting',
     'cogs.requests',
+    'cogs.factory',
     'cogs.registration',
     'cogs.usercontrol'
 )
@@ -54,8 +55,10 @@ class MyClient(commands.AutoShardedBot):
     def loadcropseeds(self):
         self.cropseeds = items.cropseedloader()
         self.crops = items.croploader()
+        self.crafteditems = items.crafteditemloader()
         self.allitems.update(self.cropseeds)
         self.allitems.update(self.crops)
+        self.allitems.update(self.crafteditems)
 
     def initemojis(self):
         self.gold = '<:gold:603145892811505665>'

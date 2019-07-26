@@ -43,10 +43,10 @@ class Shop(commands.Cog):
             return
         embed = discord.Embed(title='Izvēlies kategoriju', colour=822472)
         embed.add_field(name='\ud83c\udf3e Augu sēklas', value='`%shop crops`')
-        embed.add_field(name='\ud83c\udf33 Koki', value='`soon`')
-        embed.add_field(name='\ud83d\udc14 Dzīvnieki', value='`soon`')
-        embed.add_field(name='\ud83c\udfed Ražotnes', value='`soon`')
-        embed.add_field(name='\u2696 Tirgus', value='`%shop market`')
+        embed.add_field(name='\ud83c\udf33 Koki', value='`Nākošajos update`')
+        embed.add_field(name='\ud83d\udc14 Dzīvnieki', value='`Nākošajos update`')
+        embed.add_field(name='\u2696 Tirgus', value='`%market`')
+        embed.add_field(name='\ud83c\udfe6 Pakalpojumi', value='`Nākošajos update`')
         embed.add_field(name='\u2b50 Citi', value='`%shop special`')
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
@@ -59,7 +59,7 @@ class Shop(commands.Cog):
             crop = cropseed.getchild(client)
             item = f"""{cropseed.emoji}**{cropseed.name2.capitalize()}** \ud83d\udd31{crop.level}
             {cropseed.cost}{client.gold}  vai  {cropseed.scost}{client.gem}
-            \ud83d\uded2 `%buy {cropseed.id}` \u2139 `%info {cropseed.id}`\n"""
+            \ud83d\uded2 `%buy {cropseed.name}` \u2139 `%info {cropseed.name}`\n"""
             items.append(item)
         try:
             p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
@@ -69,8 +69,19 @@ class Shop(commands.Cog):
         except Exception as e:
             print(e)
 
-    @shop.command()
+    @commands.group()
     async def market(self, ctx):
+        if ctx.invoked_subcommand:
+            return
+
+        embed = discord.Embed(title='Izvēlies kategoriju', colour=1563808)
+        embed.add_field(name='\ud83c\udf3e Raža', value='`%market crops`')
+        embed.add_field(name='\ud83d\udce6 Produkti', value='`%market items`')
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @market.command(name='crops')
+    async def mcrops(self, ctx):
         items = []
         client = self.client
 
@@ -78,14 +89,36 @@ class Shop(commands.Cog):
         refreshin = secstotime(REFRESH_SHOP_SECONDS - refreshin.seconds)
         items.append(f'\u23f0Tirgus cenas atjaunosies pēc {refreshin}\n')
 
-        for crop in client.crops.values():
-            item = f"""{crop.emoji}**{crop.name2.capitalize()}**
-            Pašlaik iepērkam par: {crop.marketprice}{client.gold}/gab.
-            \u2696 `%sell {crop.id}` \u2139 `%info {crop.id}`\n"""
+        for x in client.crops.values():
+            item = f"""{x.emoji}**{x.name2.capitalize()}**
+            Pašlaik iepērkam par: {x.marketprice}{client.gold}/gab.
+            \u2696 `%sell {x.name}` \u2139 `%info {x.name}`\n"""
             items.append(item)
         try:
             p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
-            p.embed.title = '\u2696 Tirgus'
+            p.embed.title = '\u2696 Tirgus: \ud83c\udf3eRaža'
+            p.embed.color = 82247
+            await p.paginate()
+        except Exception as e:
+            print(e)
+
+    @market.command(name='items')
+    async def mitems(self, ctx):
+        items = []
+        client = self.client
+
+        refreshin = datetime.datetime.now() - self.lastrefresh
+        refreshin = secstotime(REFRESH_SHOP_SECONDS - refreshin.seconds)
+        items.append(f'\u23f0Tirgus cenas atjaunosies pēc {refreshin}\n')
+
+        for x in client.crafteditems.values():
+            item = f"""{x.emoji}**{x.name2.capitalize()}**
+            Pašlaik iepērkam par: {x.marketprice}{client.gold}/gab.
+            \u2696 `%sell {x.name}` \u2139 `%info {x.name}`\n"""
+            items.append(item)
+        try:
+            p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
+            p.embed.title = '\u2696 Tirgus: \ud83d\udce6Produkti'
             p.embed.color = 82247
             await p.paginate()
         except Exception as e:
@@ -100,8 +133,14 @@ class Shop(commands.Cog):
         embed.add_field(
             name=f'{client.tile}Paplašināt zemi \ud83d\udd313',
             value=f"""\ud83c\udd95 {profile['tiles']} \u2192 {profile['tiles'] + 1} platība
-            {client.gem}{usertools.tilescost(profile['tiles'])}
+            {client.gem}{usertools.upgradecost(profile['tiles'])}
             \ud83d\uded2 `%expand`"""
+        )
+        embed.add_field(
+            name=f'\ud83c\udfedUzlabot rūpnīcu \ud83d\udd313',
+            value=f"""\ud83c\udd95 {profile['factoryslots']} \u2192 {profile['factoryslots'] + 1} ražotspēja
+            {client.gem}{usertools.upgradecost(profile['factoryslots'])}
+            \ud83d\uded2 `%upgrade`"""
         )
         await ctx.send(embed=embed)
 
@@ -113,7 +152,9 @@ class Shop(commands.Cog):
         if not item:
             return
 
-        if not item.type or item.type == 'crop':
+        forbiddentypes = ('crop', 'crafteditem')
+
+        if not item.type or item.type in forbiddentypes:
             embed = emb.errorembed("Šī prece netiek pārdota mūsu bodē \ud83d\ude26", ctx)
             return await ctx.send(embed=embed)
 
@@ -125,7 +166,7 @@ class Shop(commands.Cog):
         buyembed = discord.Embed(title='Pirkuma detaļas', colour=9309837)
         buyembed.add_field(
             name='Prece',
-            value=f'{item.emoji}**{item.name.capitalize()}**\nPreces ID: {item.id}'
+            value=f'{item.emoji}**{item.name.capitalize()}**\n ID: {item.id}'
         )
         buyembed.add_field(
             name='Cena',
@@ -255,7 +296,9 @@ class Shop(commands.Cog):
         if not item:
             return
 
-        if not item.type or item.type != 'crop':
+        allowedtypes = ('crop', 'crafteditem')
+
+        if not item.type or item.type not in allowedtypes:
             embed = emb.errorembed("Šī prece netiek iepirkta tirgū \ud83d\ude26", ctx)
             return await ctx.send(embed=embed)
 
@@ -376,7 +419,7 @@ class Shop(commands.Cog):
         )
         buyembed.add_field(
             name='Cena',
-            value=f"{client.gem}{usertools.tilescost(profile['tiles'])}"
+            value=f"{client.gem}{usertools.upgradecost(profile['tiles'])}"
         )
         buyembed.add_field(name='Apstiprinājums', value='Norādi ar reakciju valūtu')
         buyembed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
@@ -395,7 +438,7 @@ class Shop(commands.Cog):
 
         profile = await usertools.getprofile(client, ctx.author)
 
-        gemstopay = usertools.tilescost(profile['tiles'])
+        gemstopay = usertools.upgradecost(profile['tiles'])
 
         if profile['gems'] < gemstopay:
             embed = emb.errorembed('Tev nepietiek supernaudu. Sāc visu par jaunu.', ctx)
@@ -404,6 +447,52 @@ class Shop(commands.Cog):
         await usertools.addfields(client, ctx.author, 1)
         await usertools.givegems(client, ctx.author, gemstopay * -1)
         embed = emb.congratzembed(f"Tava lauku platība tagad ir {profile['tiles'] + 1}", ctx)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def upgrade(self, ctx):
+        client = self.client
+        profile = await usertools.getprofile(client, ctx.author)
+
+        if usertools.getlevel(profile['xp'])[0] < 3:
+            embed = emb.errorembed('Rūpnīcas uzlabošana ir pieejama no 3.līmeņa.', ctx)
+            return await ctx.send(embed=embed)
+
+        buyembed = discord.Embed(title='Pirkuma detaļas', colour=9309837)
+        buyembed.add_field(
+            name='Prece',
+            value=f"\ud83c\udfed\ud83d\udce6 {profile['factoryslots']} \u2192 {profile['factoryslots'] + 1}"
+        )
+        buyembed.add_field(
+            name='Cena',
+            value=f"{client.gem}{usertools.upgradecost(profile['factoryslots'])}"
+        )
+        buyembed.add_field(name='Apstiprinājums', value='Norādi ar reakciju valūtu')
+        buyembed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        buyinfomessage = await ctx.send(embed=buyembed)
+        await buyinfomessage.add_reaction(client.gem)
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) == client.gem
+
+        try:
+            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
+            await ctx.send(embed=embed, delete_after=15)
+            return await buyinfomessage.clear_reactions()
+
+        profile = await usertools.getprofile(client, ctx.author)
+
+        gemstopay = usertools.upgradecost(profile['factoryslots'])
+
+        if profile['gems'] < gemstopay:
+            embed = emb.errorembed('Tev nepietiek supernaudu. Sāc visu par jaunu.', ctx)
+            return await ctx.send(embed=embed)
+
+        await usertools.addfactoryslots(client, ctx.author, 1)
+        await usertools.givegems(client, ctx.author, gemstopay * -1)
+        embed = emb.congratzembed(f"Tava rūpnīcas ražotspēja tagad ir {profile['factoryslots'] + 1}", ctx)
         await ctx.send(embed=embed)
 
 

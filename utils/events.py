@@ -16,6 +16,9 @@ class Mission:
         for item in client.crops.values():
             if item.level <= level:
                 suitableitems.append(item)
+        for item in client.crafteditems.values():
+            if item.level <= level:
+                suitableitems.append(item)
 
         requestsamount = randint(1, cls.itemsforlevel(level))
 
@@ -48,17 +51,17 @@ class Mission:
             if item.rarity == 1:
                 return randint(10, 30)
             else:
-                return randint(1, 5)
+                return randint(1, 2)
         elif level < 20:
             if item.rarity == 1:
                 return randint(30, 50)
             else:
-                return randint(1, 6)
+                return randint(1, 3)
         else:
             if item.rarity == 1:
                 return randint(30, 70)
             else:
-                return randint(1, 8)
+                return randint(1, 4)
 
     @staticmethod
     def calcreward(items):

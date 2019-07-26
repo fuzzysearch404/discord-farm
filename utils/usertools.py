@@ -17,6 +17,7 @@ async def deleteacc(client, member):
         "DELETE FROM planted WHERE userid = $1;",
         "DELETE FROM inventory WHERE userid = $1;",
         "DELETE FROM missions WHERE userid = $1;",
+        "DELETE FROM factory WHERE userid = $1;",
         "DELETE FROM users WHERE id = $1;"
     )
 
@@ -166,15 +167,54 @@ async def getmissions(client, member):
     return missions
 
 
-def tilescost(ownedtiles):
-    if ownedtiles < 5:
-        return 5
-    elif ownedtiles < 8:
-        return 8
-    elif ownedtiles < 11:
-        return 12
+async def checkfactoryslots(client, member):
+    profile = await getprofile(client, member)
+
+    query = """SELECT count(id) FROM factory WHERE userid = $1;"""
+    slots = await client.db.fetchrow(query, generategameuserid(member))
+
+    if not slots:
+        return profile['factoryslots']
+
+    avaiable = profile['factoryslots'] - slots[0]
+
+    if avaiable > 0:
+        return avaiable
     else:
-        return 15
+        return 0
+
+
+async def getuserfactory(client, member):
+    query = """SELECT * FROM factory WHERE userid = $1;"""
+    data = await client.db.fetch(query, generategameuserid(member))
+    return data
+
+
+async def getoldestfactoryitem(client, member):
+    query = """SELECT * FROM factory WHERE userid = $1
+    ORDER BY ends DESC LIMIT 1;"""
+    data = await client.db.fetchrow(query, generategameuserid(member))
+    return data
+
+
+async def addfactoryslots(client, member, amount):
+    connection = await client.db.acquire()
+    async with connection.transaction():
+        query = """UPDATE users SET factoryslots = factoryslots + $1
+        WHERE id = $2;"""
+        await client.db.execute(query, amount, generategameuserid(member))
+    await client.db.release(connection)
+
+
+def upgradecost(ownedtiles):
+    if ownedtiles < 5:
+        return 4
+    elif ownedtiles < 8:
+        return 7
+    elif ownedtiles < 11:
+        return 11
+    else:
+        return 14
 
 
 def gemsforlevel(level):
