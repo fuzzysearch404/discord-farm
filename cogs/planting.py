@@ -80,8 +80,8 @@ class Planting(commands.Cog):
     @commands.command(aliases=['h'])
     async def harvest(self, ctx):
         items = {}
-        information = ''
         todelete = []
+        unique = {}
 
         client = self.client
         fielddata = await usertools.getuserfield(client, ctx.author)
@@ -103,7 +103,10 @@ class Planting(commands.Cog):
                 xp = item.xp * data['amount']
                 await usertools.givexpandlevelup(client, ctx, xp)
                 await usertools.additemtoinventory(client, ctx.author, item, data['amount'])
-                information += f"{item.emoji}**{item.name2.capitalize()}** x{data['amount']} +{xp}{client.xp}"
+                if item in unique:
+                    unique[item] = (unique[item][0] + data['amount'], unique[item][1] + xp)
+                else:
+                    unique[item] = (data['amount'], xp)
 
             todelete.append(data['id'])
 
@@ -117,10 +120,13 @@ class Planting(commands.Cog):
 
         await usertools.addusedfields(client, ctx.author, len(todelete) * -1)
 
-        if len(information) == 0 and len(todelete) > 0:
+        if not unique.items() and len(todelete) > 0:
             embed = emb.confirmembed("Tu novāci sobojājušās lietas", ctx)
             await ctx.send(embed=embed)
-        elif len(information) > 0:
+        elif unique.items():
+            information = ''
+            for key, value in unique.items():
+                information += f"{key.emoji}**{key.name2.capitalize()}** x{value[1]} +{value[0]}{client.xp}"
             embed = emb.confirmembed(f"Tu novāci: {information}", ctx)
             await ctx.send(embed=embed)
         else:

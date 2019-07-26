@@ -146,7 +146,7 @@ class Factory(commands.Cog):
     @commands.command(aliases=['c'])
     async def collect(self, ctx):
         items = {}
-        information = ''
+        unique = {}
         todelete = []
 
         client = self.client
@@ -169,7 +169,10 @@ class Factory(commands.Cog):
                 xp = item.xp
                 await usertools.givexpandlevelup(client, ctx, xp)
                 await usertools.additemtoinventory(client, ctx.author, item, 1)
-                information += f"{item.emoji}**{item.name2.capitalize()}** +{xp}{client.xp}"
+                if item in unique:
+                    unique[item] = (unique[item][0] + 1, unique[item][1] + xp)
+                else:
+                    unique[item] = (1, xp)
 
             todelete.append(data['id'])
 
@@ -181,7 +184,10 @@ class Factory(commands.Cog):
                     await client.db.execute(query, item)
             await client.db.release(connection)
 
-        if len(information) > 0:
+        if unique.items():
+            information = ''
+            for key, value in unique.items():
+                information += f"{key.emoji}**{key.name2.capitalize()}** x{value[0]} +{value[1]}{client.xp}"
             embed = emb.confirmembed(f"Tu ieguvi: {information}", ctx)
             await ctx.send(embed=embed)
         else:
