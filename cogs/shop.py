@@ -302,6 +302,13 @@ class Shop(commands.Cog):
             embed = emb.errorembed("Šī prece netiek iepirkta tirgū \ud83d\ude26", ctx)
             return await ctx.send(embed=embed)
 
+        hasitem = await usertools.checkinventoryitem(client, ctx.author, item)
+        if not hasitem:
+            embed = emb.errorembed("Tev nav šādas lietas noliktavā!", ctx)
+            return await ctx.send(embed=embed)
+        else:
+            alreadyhas = hasitem['amount']
+
         sellembed = discord.Embed(title='Darījuma detaļas', colour=9309837)
         sellembed.add_field(
             name='Prece',
@@ -313,8 +320,9 @@ class Shop(commands.Cog):
         )
         sellembed.add_field(
             name='Daudzums',
-            value="""Ievadi daudzumu ar cipariem čatā.
-            Lai atceltu, ieraksti čatā `X`."""
+            value=f"""Ievadi daudzumu ar cipariem čatā.
+            Lai atceltu, ieraksti čatā `X`.
+            Tev ir {alreadyhas}{item.emoji}."""
         )
         sellembed.set_footer(
             text=ctx.author, icon_url=ctx.author.avatar_url
