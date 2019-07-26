@@ -29,7 +29,7 @@ Ja vēlies apskatīt cita lietotāja noliktavu, norādi lietotāju aiz komandas.
 `%buy <parametrs>` - Pirkt kādu lietu no veikala.
 <parametrs> - Meklētās lietas ID vai nosaukums.
 
-`%market` - Atver veikalu.
+`%market` - Atver tirgu.
 
 `%market <parametrs>` - Atver kādu tirgus sadaļu.
 <parametrs> - sadaļas nosaukums angliski. (tos var atrast ar `%market`)
