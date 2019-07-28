@@ -49,8 +49,8 @@ class Main(commands.Cog):
         embed.add_field(name=f'{client.gem}Supernaudas', value=userprofile['gems'])
         embed.add_field(
             name='\ud83d\udd12Noliktava',
-            value=f"""\u25aa{inventory} lietas
-            \u2139`%inventory {member}`"""
+            value=f"\u25aa{inventory} lietas"
+            f"\n\u2139`%inventory {member}`"
         )
         query = """SELECT ends FROM planted
         WHERE userid = $1 ORDER BY ends;"""
@@ -65,9 +65,9 @@ class Main(commands.Cog):
                 nearestharvest = '\u2705'
         embed.add_field(
             name='\ud83c\udf31Lauks',
-            value=f"""{client.tile}{userprofile['tiles'] - userprofile['usedtiles']}/{userprofile['tiles']} brīva platība
-            \u23f0Nākošā raža: {nearestharvest}
-            \u2139`%field {member}`"""
+            value=f"{client.tile}{userprofile['tiles'] - userprofile['usedtiles']}/{userprofile['tiles']} brīva platība"
+            f"\n\u23f0Nākošā raža: {nearestharvest}"
+            f"\n\u2139`%field {member}`"
         )
 
         if level > 2:
@@ -82,9 +82,9 @@ class Main(commands.Cog):
                     nearestprod = secstotime(nearestprod.seconds)
                 else:
                     nearestprod = '\u2705'
-            factorytext = f"""\ud83d\udce6Max. ražošanas apjoms: {userprofile['factoryslots']}
-            \u23f0Nākošā produkcija: {nearestprod}
-            \u2139`%factory {member}`"""
+            factorytext = f"\ud83d\udce6Max. ražošanas apjoms: {userprofile['factoryslots']}"
+            factorytext += f"\n\u23f0Nākošā produkcija: {nearestprod}"
+            factorytext += f"\n\u2139`%factory {member}`"
         else:
             factorytext = "Pieejams no 3.līmeņa"
         embed.add_field(
