@@ -65,8 +65,8 @@
     "amount":15,
     "cost":80,
     "scost":1,
-    "minprice":2,
-    "maxprice":6,
+    "minprice":4,
+    "maxprice":7,
     "level":5,
     "xp":2,
     "img":"https://failiem.lv/thumb_show.php?i=uhyvpshe"
