@@ -20,6 +20,47 @@ class Requests(commands.Cog):
             return False
         return userid['userid'] == ctx.author.id and not self.client.disabledcommands
 
+    @commands.command()
+    @commands.cooldown(1, 3600, commands.BucketType.user)
+    async def offer(self, ctx):
+        client = self.client
+        profile = await usertools.getprofile(client, ctx.author)
+        level = usertools.getlevel(profile['xp'])[0]
+
+        request = events.Mission.generate(client, level, boosted=True)
+        requestdesign = self.createrequestdesign(request)
+
+        embed = Embed(title='\ud83d\udccbĪpašais piedāvājums', color=15171850, description=requestdesign)
+        embed.description += '\n\n\ud83d\udd8bVai piekrīti darījumam?\n\u23f0Tev ir tikai 30 sek. laika izlemt.'
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        offermsg = await ctx.send(embed=embed)
+        await offermsg.add_reaction('\u2705')
+        await offermsg.add_reaction('\u274c')
+
+        allowedemojis = ('\u274c', '\u2705')
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in allowedemojis
+
+        try:
+            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
+            await ctx.send(embed=embed, delete_after=15)
+            return await offermsg.clear_reactions()
+
+        if str(reaction.emoji) == '\u274c':
+            return
+
+        await self.finishmission(request, 'offer', ctx)
+
+    @offer.error
+    async def offer_handler(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            cooldwtime = time.secstotime(error.retry_after)
+            embed = emb.errorembed(f"Nākošais piedāvājums pēc \u23f0{cooldwtime}", ctx)
+            await ctx.send(embed=embed)
+
     @commands.group(aliases=['req'])
     async def requests(self, ctx):
         if ctx.invoked_subcommand:
@@ -34,7 +75,11 @@ class Requests(commands.Cog):
         tasks = {}
         i = 0
         emoji = '\u20e3'
-        embed = Embed(title='\ud83d\uddc3Pasūtījumi', color=15171850)
+        embed = Embed(
+            title='\ud83d\uddc3Pasūtījumi',
+            description='Nepatīk pasūtījumi? Lieto `%requests refresh`',
+            color=15171850
+        )
         for mission in missions:
             i += 1
             missionid = mission['id']
@@ -44,7 +89,7 @@ class Requests(commands.Cog):
             tasks[f'{i}{emoji}'] = (mission, missionid)
             requestdesign = self.createrequestdesign(mission)
             embed.add_field(name=f'\ud83d\udcdd Pasūtījums nr.{i}', value=requestdesign)
-        embed.set_footer(text='Nepatīk pasūtījumi? Lieto %requests refresh')
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
 
         message = await ctx.send(embed=embed)
         for j in range(i):
@@ -82,11 +127,12 @@ class Requests(commands.Cog):
                 client, ctx.author, task[0], task[1]
             )
 
-        connection = await client.db.acquire()
-        async with connection.transaction():
-            query = """DELETE FROM missions WHERE id = $1;"""
-            await client.db.execute(query, missionid)
-        await client.db.release(connection)
+        if missionid != 'offer':
+            connection = await client.db.acquire()
+            async with connection.transaction():
+                query = """DELETE FROM missions WHERE id = $1;"""
+                await client.db.execute(query, missionid)
+            await client.db.release(connection)
 
         await usertools.givexpandlevelup(client, ctx, mission.xpaward)
         await usertools.givemoney(client, ctx.author, mission.moneyaward)

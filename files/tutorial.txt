@@ -26,23 +26,26 @@ Ja vēlies apskatīt cita lietotāja noliktavu, norādi lietotāju aiz komandas.
 `%shop <parametrs>` - Atver kādu veikala sadaļu.
 <parametrs> - sadaļas nosaukums angliski. (tos var atrast ar `%shop`)
 
-`%buy <parametrs>` - Pirkt kādu lietu no veikala.
+`%buy <parametrs> <skaits>` - Pirkt kādu lietu no veikala.
 <parametrs> - Meklētās lietas ID vai nosaukums.
+<skaits> - Daudzums norādīts ar cipariem.
 
 `%market` - Atver tirgu.
 
 `%market <parametrs>` - Atver kādu tirgus sadaļu.
 <parametrs> - sadaļas nosaukums angliski. (tos var atrast ar `%market`)
 
-`%sell <parametrs>` - Pārdot kādu lietu tirgū.
+`%sell <parametrs> <skaits>` - Pārdot kādu lietu tirgū.
 <parametrs> - Meklētās lietas ID vai nosaukums.
+<skaits> - Daudzums norādīts ar cipariem.
 (*)
 **:tractor: Stādīšanas un lauka komandas**
 `%field` - Tavs lauks.
 Ja vēlies apskatīt cita lietotāja lauku, norādi lietotāju aiz komandas.
 
-`%plant <parametrs>` vai `%p`  - Stādīt uz lauka kādu lietu.
+`%plant <parametrs> <skaits>` vai `%p`  - Stādīt uz lauka kādu lietu.
 <parametrs> - Meklētās lietas ID vai nosaukums.
+<skaits> - Daudzums norādīts ar cipariem.
 
 `%harvest` vai `%h` - Novāc gatavo ražu un ja kāda daļa no tās ir sabojājusies,
 tad aizvāc to no lauka.
@@ -53,8 +56,9 @@ tad aizvāc to no lauka.
 `%factory` - Parāda lietas, kuras pašlaik tiek ražotas.
 Ja vēlies apskatīt cita lietotāja rūpnīcu, norādi lietotāju aiz komandas.
 
-`%make <parametrs>` - Ražot produktu.
+`%make <parametrs> <skaits>` - Ražot produktu.
 <parametrs> - Meklētās lietas ID vai nosaukums.
+<skaits> - Daudzums norādīts ar cipariem.
 
 `%collect` vai `%c` - Savākt gatavo produkciju.
 
@@ -64,6 +68,8 @@ Ja vēlies apskatīt cita lietotāja rūpnīcu, norādi lietotāju aiz komandas.
 `%requests` vai `req` - Tavi pasūtījumi. Lai izpildītu, nospied atbilstošo reakciju.
 
 `%requests refresh` - Nomaina esošos pasūtījumus uz jauniem. Ir laika ierobežojums.
+
+`%offer` - Līdzīgi kā `%requests` pasūtījums, tikai jāizpilda uzreiz.
 (*)
 **:information_source: Informācijas komandas**
 `%news` - Parāda dažādu bota informāciju un jaunumus.

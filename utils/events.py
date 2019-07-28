@@ -8,7 +8,7 @@ class Mission:
         self.requests = requests
 
     @classmethod
-    def generate(cls, client, level):
+    def generate(cls, client, level, boosted=False):
         suitableitems = []
         requests = []
         alreadyused = []
@@ -31,7 +31,7 @@ class Mission:
             requests.append(req)
             alreadyused.append(newitem)
 
-        xp, money = cls.calcreward(requests)
+        xp, money = cls.calcreward(requests, boosted)
         return cls(money, xp, requests)
 
     @staticmethod
@@ -64,12 +64,15 @@ class Mission:
                 return randint(1, 4)
 
     @staticmethod
-    def calcreward(items):
+    def calcreward(items, boosted):
         sum = 0
 
         for item in items:
             sum += item[0].xp * item[1]
             sum += int(item[0].maxprice * 1.3 * item[1])
+
+        if boosted:
+            sum = int(sum * 1.5)
 
         xp = randint(int(sum / 4), sum)
         money = sum - xp
