@@ -41,7 +41,7 @@ class Factory(commands.Cog):
 
         for data, item in allitems.items():
             status = self.getitemstate(item, data['start'], data['ends'])[1]
-            fmt = f"{item.emoji}**{item.name2.capitalize()}** - {status}"
+            fmt = f"{item.emoji}**{item.name.capitalize()}** - {status}"
             information.append(fmt)
 
         try:
@@ -73,23 +73,46 @@ class Factory(commands.Cog):
         profile = await usertools.getprofile(client, ctx.author)
         slots = await usertools.checkfactoryslots(client, ctx.author)
 
-        if not slots > 0:
-            embed = emb.errorembed(
-                "Tev nav vietas rūpnīcā! Atbrīvo to vai uzlabo rūpnīcu ar `%upgrade`.",
-                ctx
-            )
-            return await ctx.send(embed=embed)
+        customamount = False
+        try:
+            possibleamount = possibleitem.rsplit(' ', 1)[1]
+            reqamount = int(possibleamount)
+            possibleitem = possibleitem.rsplit(' ', 1)[0]
+            customamount = True
+        except Exception:
+            pass
+
+        if not customamount:
+            if not slots > 0:
+                embed = emb.errorembed(
+                    "Tev nav vietas rūpnīcā! Atbrīvo to vai uzlabo rūpnīcu ar `%upgrade`.",
+                    ctx
+                )
+                return await ctx.send(embed=embed)
+        else:
+            if slots < reqamount:
+                embed = emb.errorembed(
+                    "Tev nav tik daudz vietas rūpnīcā! Atbrīvo to vai uzlabo rūpnīcu ar `%upgrade`.",
+                    ctx
+                )
+                return await ctx.send(embed=embed)
+            if not reqamount > 0:
+                embed = emb.errorembed(
+                    "Nederīgs daudzums!",
+                    ctx
+                )
+                return await ctx.send(embed=embed)
 
         fitem = await finditem(self.client, ctx, possibleitem)
         if not fitem:
             return
         if fitem.type != 'crafteditem':
-            embed = emb.errorembed("Šo lietu nevar ražot", ctx)
+            embed = emb.errorembed(f"Šo lietu ({fitem.emoji}{fitem.name2.capitalize()}) nevar ražot.", ctx)
             return await ctx.send(embed=embed)
 
         if fitem.level > usertools.getlevel(profile['xp'])[0]:
             embed = emb.errorembed(
-                f"Šo produktu var ražot tikai no \ud83d\udd31{fitem.level}.līmeņa.",
+                f"{fitem.emoji}{fitem.name2.capitalize()} var ražot tikai no \ud83d\udd31{fitem.level}.līmeņa.",
                 ctx
             )
             return await ctx.send(embed=embed)
@@ -103,8 +126,12 @@ class Factory(commands.Cog):
                 useramount = itemdata['amount']
             else:
                 useramount = 0
-            if not itemdata or useramount < amount:
-                neededstr += f"\n{item.emoji}{item.name2.capitalize()} {useramount}/{amount}, "
+            if not customamount:
+                if not itemdata or useramount < amount:
+                    neededstr += f"\n{item.emoji}{item.name.capitalize()} {useramount}/{amount}, "
+            else:
+                if not itemdata or useramount < amount * reqamount:
+                    neededstr += f"\n{item.emoji}{item.name.capitalize()} {useramount}/{amount * reqamount}, "
 
         if len(neededstr) > 0:
             embed = emb.errorembed(
@@ -114,6 +141,8 @@ class Factory(commands.Cog):
             return await ctx.send(embed=embed)
 
         for item, amount in needed.items():
+            if customamount:
+                amount = amount * reqamount
             await usertools.removeitemfrominventory(
                 client, ctx.author, item, amount
             )
@@ -126,21 +155,42 @@ class Factory(commands.Cog):
             starts = olditem['ends']
         ends = starts + timedelta(seconds=fitem.time)
 
+        userid = usertools.generategameuserid(ctx.author)
+
         connection = await client.db.acquire()
         async with connection.transaction():
-            query = """INSERT INTO factory(userid, itemid, start, ends)
-            VALUES($1, $2, $3, $4)"""
-            await client.db.execute(
-                query, usertools.generategameuserid(ctx.author), fitem.id,
-                starts, ends
-            )
+            if not customamount:
+                query = """INSERT INTO factory(userid, itemid, start, ends)
+                VALUES($1, $2, $3, $4)"""
+                await client.db.execute(
+                    query, userid, fitem.id,
+                    starts, ends
+                )
+            else:
+                for i in range(reqamount):
+                    query = """INSERT INTO factory(userid, itemid, start, ends)
+                    VALUES($1, $2, $3, $4)"""
+                    await client.db.execute(
+                        query, userid, fitem.id,
+                        starts, ends
+                    )
+                    if i != reqamount:
+                        starts = ends
+                        ends = starts + timedelta(seconds=fitem.time)
         await client.db.release(connection)
 
-        embed = emb.confirmembed(
-            f"Tu pievienoji ražošanai {fitem.emoji}{fitem.name.capitalize()}.\n"
-            f"Ražošana sāksies: `{starts}` Beigsies: `{ends}`",
-            ctx
-        )
+        if not customamount:
+            embed = emb.confirmembed(
+                f"Tu pievienoji ražošanai {fitem.emoji}{fitem.name2.capitalize()}.\n"
+                f"Ražošana beigsies: `{ends}`",
+                ctx
+            )
+        else:
+            embed = emb.confirmembed(
+                f"Tu pievienoji ražošanai {reqamount}x{fitem.emoji}{fitem.name2.capitalize()}.\n"
+                f"Ražošana beigsies: `{ends}`",
+                ctx
+            )
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['c'])

@@ -28,7 +28,7 @@ class Main(commands.Cog):
         client = self.client
         userprofile = await usertools.getprofile(client, member)
         if not userprofile:
-            embed = emb.errorembed("Šim lietotājam nav spēles profila", ctx)
+            embed = emb.errorembed(f"{member} nav spēles profila", ctx)
             return await ctx.send(embed=embed)
 
         query = """SELECT sum(amount) FROM inventory
@@ -103,7 +103,7 @@ class Main(commands.Cog):
         crafteditems = {}
         inventory = await usertools.getinventory(client, member)
         if not inventory:
-            embed = emb.errorembed("Šim lietotājam nav nekā noliktavā", ctx)
+            embed = emb.errorembed(f"{member} nav nekā noliktavā", ctx)
             return await ctx.send(embed=embed)
         for item, value in inventory.items():
             if item.type == 'cropseed':
@@ -139,7 +139,7 @@ class Main(commands.Cog):
         iter, string = 0, ""
         for key, value in dic.items():
             iter += 1
-            string += f'{key.emoji}**{key.name2.capitalize()}** x{value} '
+            string += f'{key.emoji}**{key.name.capitalize()}** x{value} '
             if iter == 3:
                 list.append(string)
                 iter, string = 0, ""

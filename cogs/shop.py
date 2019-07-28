@@ -57,7 +57,7 @@ class Shop(commands.Cog):
         client = self.client
         for cropseed in client.cropseeds.values():
             crop = cropseed.getchild(client)
-            item = f"""{cropseed.emoji}**{cropseed.name2.capitalize()}** \ud83d\udd31{crop.level}
+            item = f"""{cropseed.emoji}**{cropseed.name.capitalize()}** \ud83d\udd31{crop.level}
             {cropseed.cost}{client.gold}  vai  {cropseed.scost}{client.gem}
             \ud83d\uded2 `%buy {cropseed.name}` \u2139 `%info {cropseed.name}`\n"""
             items.append(item)
@@ -90,7 +90,7 @@ class Shop(commands.Cog):
         items.append(f'\u23f0Tirgus cenas atjaunosies pēc {refreshin}\n')
 
         for x in client.crops.values():
-            item = f"""{x.emoji}**{x.name2.capitalize()}**
+            item = f"""{x.emoji}**{x.name.capitalize()}**
             Pašlaik iepērkam par: {x.marketprice}{client.gold}/gab.
             \u2696 `%sell {x.name}` \u2139 `%info {x.name}`\n"""
             items.append(item)
@@ -112,7 +112,7 @@ class Shop(commands.Cog):
         items.append(f'\u23f0Tirgus cenas atjaunosies pēc {refreshin}\n')
 
         for x in client.crafteditems.values():
-            item = f"""{x.emoji}**{x.name2.capitalize()}**
+            item = f"""{x.emoji}**{x.name.capitalize()}**
             Pašlaik iepērkam par: {x.marketprice}{client.gold}/gab.
             \u2696 `%sell {x.name}` \u2139 `%info {x.name}`\n"""
             items.append(item)
@@ -148,6 +148,15 @@ class Shop(commands.Cog):
     async def buy(self, ctx, *, possibleitem):
         client = self.client
 
+        customamount = False
+        try:
+            possibleamount = possibleitem.rsplit(' ', 1)[1]
+            amount = int(possibleamount)
+            possibleitem = possibleitem.rsplit(' ', 1)[0]
+            customamount = True
+        except Exception:
+            pass
+
         item = await finditem(client, ctx, possibleitem)
         if not item:
             return
@@ -155,12 +164,12 @@ class Shop(commands.Cog):
         forbiddentypes = ('crop', 'crafteditem')
 
         if not item.type or item.type in forbiddentypes:
-            embed = emb.errorembed("Šī prece netiek pārdota mūsu bodē \ud83d\ude26", ctx)
+            embed = emb.errorembed(f"Šī prece ({item.emoji}{item.name.capitalize()}) netiek pārdota mūsu bodē \ud83d\ude26", ctx)
             return await ctx.send(embed=embed)
 
         buyer = await usertools.getprofile(client, ctx.author)
         if usertools.getlevel(buyer['xp'])[0] < item.level:
-            embed = emb.errorembed("Pārāk zems līmenis, lai iegādātos šo preci", ctx)
+            embed = emb.errorembed(f"Pārāk zems līmenis, lai iegādātos {item.emoji}{item.name2.capitalize()}", ctx)
             return await ctx.send(embed=embed)
 
         buyembed = discord.Embed(title='Pirkuma detaļas', colour=9309837)
@@ -172,57 +181,66 @@ class Shop(commands.Cog):
             name='Cena',
             value=f'{client.gold}{item.cost} vai {client.gem}{item.scost}'
         )
-        buyembed.add_field(
-            name='Daudzums',
-            value="""Ievadi daudzumu ar cipariem čatā.
-            Lai atceltu, ieraksti čatā `X`."""
-        )
+        if not customamount:
+            buyembed.add_field(
+                name='Daudzums',
+                value="""Ievadi daudzumu ar cipariem čatā.
+                Lai atceltu, ieraksti čatā `X`."""
+            )
         buyembed.set_footer(
             text=f"{ctx.author} Zelts: {buyer['money']} SN: {buyer['gems']}",
             icon_url=ctx.author.avatar_url,
         )
-        buyinfomessage = await ctx.send(embed=buyembed)
+        if not customamount:
+            buyinfomessage = await ctx.send(embed=buyembed)
 
-        def check(m):
-            return m.author == ctx.author
+            def check(m):
+                return m.author == ctx.author
 
-        try:
-            entry = await client.wait_for('message', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
-            await ctx.send(embed=embed, delete_after=15)
+            try:
+                entry = None
+                entry = await client.wait_for('message', check=check, timeout=30.0)
+            except asyncio.TimeoutError:
+                embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
+                await ctx.send(embed=embed)
 
-        try:
-            if entry is None:
-                return
-            elif entry.clean_content.lower() == 'x':
+            try:
+                if not entry:
+                    return
+                elif entry.clean_content.lower() == 'x':
+                    await buyinfomessage.delete()
+                    return await entry.delete()
+
                 await buyinfomessage.delete()
-                return await entry.delete()
+                await entry.delete()
+            except discord.HTTPException:
+                pass
 
-            await entry.delete()
-        except discord.HTTPException:
-            pass
-
-        try:
-            amount = int(entry.clean_content)
-            if amount < 1:
-                embed = emb.errorembed('Nederīgs daudzums. Sāc visu par jaunu.', ctx)
+            try:
+                amount = int(entry.clean_content)
+                if amount < 1:
+                    embed = emb.errorembed('Nederīgs daudzums. Sāc pirkumu par jaunu.', ctx)
+                    return await ctx.send(embed=embed)
+            except ValueError:
+                embed = emb.errorembed('Nederīgs daudzums. Nākošreiz ieraksti skaitli', ctx)
                 return await ctx.send(embed=embed)
-        except ValueError:
-            embed = emb.errorembed('Nederīgs daudzums. Nākošreiz ieraksti skaitli', ctx)
-            return await ctx.send(embed=embed)
 
-        buyembed.set_field_at(
-            index=2,
-            name='Daudzums',
-            value=amount
-        )
+            buyembed.set_field_at(
+                index=2,
+                name='Daudzums',
+                value=amount
+            )
+        else:
+            buyembed.add_field(
+                name='Daudzums',
+                value=amount
+            )
         buyembed.add_field(
             name='Summa',
             value=f'{client.gold}{item.cost * amount} vai {client.gem}{item.scost * amount}'
         )
         buyembed.add_field(name='Apstiprinājums', value='Norādi ar reakciju valūtu')
-        await buyinfomessage.edit(embed=buyembed)
+        buyinfomessage = await ctx.send(embed=buyembed)
         await buyinfomessage.add_reaction(client.gold)
         await buyinfomessage.add_reaction(client.gem)
         await buyinfomessage.add_reaction('\u274c')
@@ -248,7 +266,7 @@ class Shop(commands.Cog):
         client = self.client
         total = item.cost * amount
         if buyer['money'] < total:
-            embed = emb.errorembed('Tev nepietiek zelts. Sāc visu par jaunu.', ctx)
+            embed = emb.errorembed('Tev nepietiek zelts. Sāc pirkumu par jaunu.', ctx)
             return await ctx.send(embed=embed)
 
         query = """SELECT money FROM users
@@ -256,7 +274,7 @@ class Shop(commands.Cog):
 
         usergold = await client.db.fetchrow(query, buyer['id'])
         if usergold['money'] < total:
-            embed = emb.errorembed('Tev nepietiek zelts. Sāc visu par jaunu.', ctx)
+            embed = emb.errorembed('Tev nepietiek zelts. Sāc pirkumu par jaunu.', ctx)
             return await ctx.send(embed=embed)
 
         await usertools.additemtoinventory(client, ctx.author, item, amount)
@@ -270,7 +288,7 @@ class Shop(commands.Cog):
         client = self.client
         total = item.scost * amount
         if buyer['gems'] < total:
-            embed = emb.errorembed('Tev nepietiek supernaudu. Sāc visu par jaunu.', ctx)
+            embed = emb.errorembed('Tev nepietiek supernaudu. Sāc pirkumu par jaunu.', ctx)
             return await ctx.send(embed=embed)
 
         query = """SELECT gems FROM users
@@ -278,19 +296,28 @@ class Shop(commands.Cog):
 
         usergems = await client.db.fetchrow(query, buyer['id'])
         if usergems['gems'] < total:
-            embed = emb.errorembed('Tev nepietiek supernaudu. Sāc visu par jaunu.', ctx)
+            embed = emb.errorembed('Tev nepietiek supernaudu. Sāc pirkumu par jaunu.', ctx)
             return await ctx.send(embed=embed)
 
         await usertools.additemtoinventory(client, ctx.author, item, amount)
 
         await usertools.givegems(client, ctx.author, total * -1)
 
-        embed = emb.confirmembed(f"Tu nopirki {amount}x{item.emoji} par {total}{self.client.gem}", ctx)
+        embed = emb.confirmembed(f"Tu nopirki {amount}x{item.emoji}{item.name2.capitalize()} par {total}{self.client.gem}", ctx)
         await ctx.send(embed=embed)
 
     @commands.command()
     async def sell(self, ctx, *, possibleitem):
         client = self.client
+
+        customamount = False
+        try:
+            possibleamount = possibleitem.rsplit(' ', 1)[1]
+            amount = int(possibleamount)
+            possibleitem = possibleitem.rsplit(' ', 1)[0]
+            customamount = True
+        except Exception:
+            pass
 
         item = await finditem(client, ctx, possibleitem)
         if not item:
@@ -299,12 +326,12 @@ class Shop(commands.Cog):
         allowedtypes = ('crop', 'crafteditem')
 
         if not item.type or item.type not in allowedtypes:
-            embed = emb.errorembed("Šī prece netiek iepirkta tirgū \ud83d\ude26", ctx)
+            embed = emb.errorembed(f"Šī prece ({item.emoji}{item.name.capitalize()}) netiek iepirkta tirgū \ud83d\ude26", ctx)
             return await ctx.send(embed=embed)
 
         hasitem = await usertools.checkinventoryitem(client, ctx.author, item)
         if not hasitem:
-            embed = emb.errorembed("Tev nav šādas lietas noliktavā!", ctx)
+            embed = emb.errorembed(f"Tev nav ({item.emoji}{item.name.capitalize()}) noliktavā!", ctx)
             return await ctx.send(embed=embed)
         else:
             alreadyhas = hasitem['amount']
@@ -318,51 +345,62 @@ class Shop(commands.Cog):
             name='Cena',
             value=f'{client.gold}{item.marketprice}'
         )
-        sellembed.add_field(
-            name='Daudzums',
-            value=f"""Ievadi daudzumu ar cipariem čatā.
-            Lai atceltu, ieraksti čatā `X`.
-            Tev ir {alreadyhas}{item.emoji}."""
-        )
         sellembed.set_footer(
             text=ctx.author, icon_url=ctx.author.avatar_url
         )
-        sellinfomessage = await ctx.send(embed=sellembed)
 
-        def check(m):
-            return m.author == ctx.author
+        if not customamount:
+            sellembed.add_field(
+                name='Daudzums',
+                value=f"""Ievadi daudzumu ar cipariem čatā.
+                Lai atceltu, ieraksti čatā `X`.
+                Tev ir {alreadyhas}{item.emoji}."""
+            )
 
-        try:
-            entry = await client.wait_for('message', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
-            await ctx.send(embed=embed, delete_after=15)
+            sellinfomessage = await ctx.send(embed=sellembed)
 
-        try:
-            if entry is None:
-                return
-            elif entry.clean_content.lower() == 'x':
+        if not customamount:
+            def check(m):
+                return m.author == ctx.author
+
+            try:
+                entry = None
+                entry = await client.wait_for('message', check=check, timeout=30.0)
+            except asyncio.TimeoutError:
+                embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
+                await ctx.send(embed=embed, delete_after=15)
+
+            try:
+                if not entry:
+                    return
+                elif entry.clean_content.lower() == 'x':
+                    await sellinfomessage.delete()
+                    return await entry.delete()
+
+                await entry.delete()
                 await sellinfomessage.delete()
-                return await entry.delete()
+            except discord.HTTPException:
+                pass
 
-            await entry.delete()
-        except discord.HTTPException:
-            pass
-
-        try:
-            amount = int(entry.clean_content)
-            if amount < 1:
-                embed = emb.errorembed('Nederīgs daudzums. Sāc visu par jaunu.', ctx)
+            try:
+                amount = int(entry.clean_content)
+                if amount < 1:
+                    embed = emb.errorembed('Nederīgs daudzums. Sāc pārdošanu par jaunu.', ctx)
+                    return await ctx.send(embed=embed)
+            except ValueError:
+                embed = emb.errorembed('Nederīgs daudzums. Nākošreiz ieraksti skaitli', ctx)
                 return await ctx.send(embed=embed)
-        except ValueError:
-            embed = emb.errorembed('Nederīgs daudzums. Nākošreiz ieraksti skaitli', ctx)
-            return await ctx.send(embed=embed)
 
-        sellembed.set_field_at(
-            index=2,
-            name='Daudzums',
-            value=amount
-        )
+            sellembed.set_field_at(
+                index=2,
+                name='Daudzums',
+                value=amount
+            )
+        else:
+            sellembed.add_field(
+                name='Daudzums',
+                value=amount
+            )
         sellembed.add_field(
             name='Summa',
             value=f'{client.gold}{item.marketprice * amount}'
@@ -371,7 +409,7 @@ class Shop(commands.Cog):
             name='Apstiprinājums',
             value='Lai pabeigtu darījumu, nospied atbilstošo reakciju'
         )
-        await sellinfomessage.edit(embed=sellembed)
+        sellinfomessage = await ctx.send(embed=sellembed)
         await sellinfomessage.add_reaction('\u2705')
         await sellinfomessage.add_reaction('\u274c')
 
@@ -398,11 +436,11 @@ class Shop(commands.Cog):
 
         hasitem = await usertools.checkinventoryitem(client, ctx.author, item)
         if not hasitem:
-            embed = emb.errorembed("Tev nav šādas lietas noliktavā!", ctx)
+            embed = emb.errorembed(f"Tev nav {item.emoji}{item.name.capitalize()} noliktavā!", ctx)
             return await ctx.send(embed=embed)
 
         if amount > hasitem['amount']:
-            embed = emb.errorembed(f"Tev ir tikai {hasitem['amount']}x {item.emoji} noliktavā!", ctx)
+            embed = emb.errorembed(f"Tev ir tikai {hasitem['amount']}x {item.emoji}{item.name.capitalize()} noliktavā!", ctx)
             return await ctx.send(embed=embed)
 
         await usertools.removeitemfrominventory(client, ctx.author, item, amount)
@@ -449,7 +487,7 @@ class Shop(commands.Cog):
         gemstopay = usertools.upgradecost(profile['tiles'])
 
         if profile['gems'] < gemstopay:
-            embed = emb.errorembed('Tev nepietiek supernaudu. Sāc visu par jaunu.', ctx)
+            embed = emb.errorembed('Tev nepietiek supernaudu. Sāc pirkumu par jaunu.', ctx)
             return await ctx.send(embed=embed)
 
         await usertools.addfields(client, ctx.author, 1)
@@ -495,7 +533,7 @@ class Shop(commands.Cog):
         gemstopay = usertools.upgradecost(profile['factoryslots'])
 
         if profile['gems'] < gemstopay:
-            embed = emb.errorembed('Tev nepietiek supernaudu. Sāc visu par jaunu.', ctx)
+            embed = emb.errorembed('Tev nepietiek supernaudu. Sāc pirkumu par jaunu.', ctx)
             return await ctx.send(embed=embed)
 
         await usertools.addfactoryslots(client, ctx.author, 1)

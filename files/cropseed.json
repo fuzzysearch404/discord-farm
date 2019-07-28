@@ -51,7 +51,7 @@
     "rarity":1,
     "grows":1500,
     "dies":2000,
-    "amount":20,
+    "amount":15,
     "cost":80,
     "scost":1
   },

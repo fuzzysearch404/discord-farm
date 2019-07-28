@@ -188,6 +188,6 @@ def madefromtostring(client, madefrom):
     string = ''
     xitems = convertmadefrom(client, madefrom)
     for item, value in xitems.items():
-        string += f"{item.emoji}{item.name2.capitalize()} x{value}, "
+        string += f"{item.emoji}{item.name.capitalize()} x{value}, "
 
     return string[:-2]

@@ -68,7 +68,7 @@ class Requests(commands.Cog):
             item = task[0]
             itemdata = await usertools.checkinventoryitem(client, ctx.author, item)
             if not itemdata or itemdata['amount'] < task[1]:
-                needed += f"{item.emoji}{item.name2.capitalize()}, "
+                needed += f"{item.emoji}{item.name.capitalize()}, "
 
         if len(needed) > 0:
             embed = emb.errorembed(
@@ -148,7 +148,7 @@ class Requests(commands.Cog):
 
         for req in request.requests:
             item = req[0]
-            string += f"{item.emoji}{item.name2.capitalize()} x{req[1]}\n"
+            string += f"{item.emoji}{item.name.capitalize()} x{req[1]}\n"
         string += f"{client.gold}{money} {client.xp}{xp}"
 
         return string

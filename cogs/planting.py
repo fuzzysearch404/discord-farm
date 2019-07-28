@@ -44,7 +44,7 @@ class Planting(commands.Cog):
             information.append('**Augi:**')
             for data, item in crops.items():
                 status = self.getcropstate(item, data['ends'], data['dies'])[1]
-                fmt = f"{item.emoji}**{item.name2.capitalize()}** x{data['amount']} - {status}"
+                fmt = f"{item.emoji}**{item.name.capitalize()}** x{data['amount']} - {status}"
                 information.append(fmt)
 
         try:
@@ -140,53 +140,105 @@ class Planting(commands.Cog):
         usedtiles = profile['usedtiles']
         tiles = profile['tiles']
 
-        if usedtiles >= tiles:
-            embed = emb.errorembed(
-                "Tev nav vietas, kur stādīt! Atbrīvo to vai nopērc papildus teritoriju ar `%expand`.",
-                ctx
-            )
-            return await  ctx.send(embed=embed)
+        customamount = False
+        try:
+            possibleamount = possibleitem.rsplit(' ', 1)[1]
+            amount = int(possibleamount)
+            possibleitem = possibleitem.rsplit(' ', 1)[0]
+            customamount = True
+        except Exception:
+            pass
+
+        if not customamount:
+            if usedtiles >= tiles:
+                embed = emb.errorembed(
+                    "Tev nav vietas, kur stādīt! Atbrīvo to vai nopērc papildus teritoriju ar `%expand`.",
+                    ctx
+                )
+                return await ctx.send(embed=embed)
+        else:
+            if usedtiles + amount > tiles:
+                embed = emb.errorembed(
+                    "Tev nav tik daudz vietas, kur stādīt! Atbrīvo to vai nopērc papildus teritoriju ar `%expand`.",
+                    ctx
+                )
+                return await  ctx.send(embed=embed)
 
         item = await finditem(self.client, ctx, possibleitem)
         if not item:
             return
         if item.type != 'cropseed':
-            embed = emb.errorembed("Šo lietu nevar iestādīt", ctx)
+            embed = emb.errorembed(f"Šo lietu ({item.emoji}{item.name2.capitalize()}) nevar iestādīt. Stādi sēklas!", ctx)
             return await ctx.send(embed=embed)
 
         inventorydata = await usertools.checkinventoryitem(client, ctx.author, item)
         if not inventorydata:
             embed = emb.errorembed(
-                f"Tavā noliktavā nav {item.name}. Tu vari iegādāties lietas ar komandu `%shop`.",
+                f"Tavā noliktavā nav {item.emoji}{item.name.capitalize()}. Tu vari iegādāties lietas ar komandu `%shop`.",
                 ctx
             )
             return await ctx.send(embed=embed)
 
-        await usertools.removeitemfrominventory(client, ctx.author, item, 1)
+        if customamount:
+            if inventorydata['amount'] < amount:
+                embed = emb.errorembed(
+                    f"Tavā noliktavā ir tikai {inventorydata['amount']}x{item.emoji}{item.name.capitalize()}. Tu vari iegādāties lietas ar komandu `%shop`.",
+                    ctx
+                )
+                return await ctx.send(embed=embed)
+            elif not amount > 0:
+                embed = emb.errorembed(
+                    f"Nederīgs daudzums!",
+                    ctx
+                )
+                return await ctx.send(embed=embed)
+
+            await usertools.removeitemfrominventory(client, ctx.author, item, amount)
+        else:
+            await usertools.removeitemfrominventory(client, ctx.author, item, 1)
 
         itemchild = item.getchild(client)
         now = datetime.now().replace(microsecond=0)
         ends = now + timedelta(seconds=item.grows)
         dies = ends + timedelta(seconds=item.dies)
 
+        userid = usertools.generategameuserid(ctx.author)
+
         connection = await client.db.acquire()
         async with connection.transaction():
             query = """INSERT INTO planted(itemid, userid, amount, ends, dies, robbed)
             VALUES($1, $2, $3, $4, $5, $6)"""
-            await client.db.execute(
-                query, itemchild.id, usertools.generategameuserid(ctx.author), item.amount,
-                ends, dies, False
-            )
+            if not customamount:
+                await client.db.execute(
+                    query, itemchild.id, userid, item.amount,
+                    ends, dies, False
+                )
+            else:
+                for i in range(amount):
+                    await client.db.execute(
+                        query, itemchild.id, userid, item.amount,
+                        ends, dies, False
+                    )
         await client.db.release(connection)
 
-        await usertools.addusedfields(client, ctx.author, 1)
+        if not customamount:
+            await usertools.addusedfields(client, ctx.author, 1)
 
-        embed = emb.confirmembed(
-            f"Tu iestādīji {item.emoji}{item.name.capitalize()}.\n"
-            f"Izaugs par {item.amount}x {itemchild.emoji}**{itemchild.name2.capitalize()}**\n"
-            f"Nogatavosies: `{ends}` Sabojāsies: `{dies}`",
-            ctx
-        )
+            embed = emb.confirmembed(
+                f"Tu iestādīji {item.emoji}{item.name.capitalize()}.\n"
+                f"Izaugs par {item.amount}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n"
+                f"Nogatavosies: `{ends}` Sabojāsies: `{dies}`",
+                ctx
+                )
+        else:
+            await usertools.addusedfields(client, ctx.author, amount)
+
+            embed = emb.confirmembed(
+                f"Tu iestādīji {amount}x{item.emoji}{item.name.capitalize()}.\n"
+                f"Izaugs par {item.amount * amount}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n"
+                f"Nogatavosies: `{ends}` Sabojāsies: `{dies}`",
+                ctx
+            )
         await ctx.send(embed=embed)
 
 
