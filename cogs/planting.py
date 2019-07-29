@@ -22,7 +22,7 @@ class Planting(commands.Cog):
 
     @commands.command()
     async def field(self, ctx, member: Optional[MemberID] = None):
-        crops = {}
+        crops, animals = {}, {}
         information = []
 
         member = member or ctx.author
@@ -37,6 +37,8 @@ class Planting(commands.Cog):
 
                 if item.type == 'crop':
                     crops[object] = item
+                elif item.type == 'animal':
+                    animals[object] = item
             except KeyError:
                 raise Exception(f"Could not find item {object['itemid']}")
 
@@ -45,6 +47,14 @@ class Planting(commands.Cog):
             for data, item in crops.items():
                 status = self.getcropstate(item, data['ends'], data['dies'])[1]
                 fmt = f"{item.emoji}**{item.name.capitalize()}** x{data['amount']} - {status}"
+                information.append(fmt)
+        if len(animals) > 0:
+            information.append('**Dzīvnieki:**')
+            for data, item in animals.items():
+                child = item.getchild(client)
+                status = self.getanimalstate(item, data['ends'], data['dies'])[1]
+                fmt = f"{item.emoji}**{item.name.capitalize()}** {data['iterations']}.lvl"
+                fmt += f" (x{data['amount']}{child.emoji}) - {status}"
                 information.append(fmt)
 
         try:
@@ -77,11 +87,27 @@ class Planting(commands.Cog):
 
         return stype, status
 
+    def getanimalstate(self, item, ends, dies):
+        now = datetime.now()
+        if ends > now:
+            secsdelta = ends - now
+            status = f'Aug {secstotime(secsdelta.seconds)}'
+            stype = 'grow1'
+        elif dies > now:
+            secsdelta = dies - now
+            status = f'Jānovāc {secstotime(secsdelta.seconds)} laikā'
+            stype = 'ready'
+        else:
+            status = 'Produkti sabojājušies'
+            stype = 'dead'
+
+        return stype, status
+
     @commands.command(aliases=['h'])
     async def harvest(self, ctx):
-        items = {}
+        crops, animals, unique = {}, {}, {}
         todelete = []
-        unique = {}
+        deaditem = False
 
         client = self.client
         fielddata = await usertools.getuserfield(client, ctx.author)
@@ -91,11 +117,45 @@ class Planting(commands.Cog):
         for object in fielddata:
             try:
                 item = client.allitems[object['itemid']]
-                items[object] = item
+                if item.type == 'crop':
+                    crops[object] = item
+                elif item.type == 'animal':
+                    animals[object] = item
             except KeyError:
                 raise Exception(f"Could not find item {object['itemid']}")
 
-        for data, item in items.items():
+        if crops:
+            await self.checkcrops(client, crops, ctx, unique, todelete)
+        if animals:
+            deaditem = await self.checkanimals(client, animals, ctx, unique, todelete, deaditem)
+
+        if len(todelete) > 0:
+            connection = await client.db.acquire()
+            async with connection.transaction():
+                query = """DELETE FROM planted WHERE id = $1;"""
+                for item in todelete:
+                    await client.db.execute(query, item)
+            await client.db.release(connection)
+
+        await usertools.addusedfields(client, ctx.author, len(todelete) * -1)
+
+        if not unique.items() and len(todelete) > 0 or deaditem:
+            embed = emb.confirmembed("Tu novāci sobojājušās lietas", ctx)
+            await ctx.send(embed=embed)
+        elif unique.items():
+            information = ''
+            for key, value in unique.items():
+                if key.type == 'animal':
+                    key = key.getchild(client)
+                information += f"{key.emoji}**{key.name2.capitalize()}** x{value[0]} +{value[1]}{client.xp}"
+            embed = emb.confirmembed(f"Tu novāci: {information}", ctx)
+            await ctx.send(embed=embed)
+        else:
+            embed = emb.errorembed("Tev nav gatavas produkcijas, kuru novākt!", ctx)
+            await ctx.send(embed=embed)
+
+    async def checkcrops(self, client, crops, ctx, unique, todelete):
+        for data, item in crops.items():
             status = self.getcropstate(item, data['ends'], data['dies'])[0]
             if status == 'grow1' or status == 'grow2':
                 continue
@@ -110,28 +170,42 @@ class Planting(commands.Cog):
 
             todelete.append(data['id'])
 
-        if len(todelete) > 0:
-            connection = await client.db.acquire()
-            async with connection.transaction():
-                query = """DELETE FROM planted WHERE id = $1;"""
-                for item in todelete:
-                    await client.db.execute(query, item)
-            await client.db.release(connection)
+    async def checkanimals(self, client, crops, ctx, unique, todelete, deaditem):
+        for data, item in crops.items():
+            status = self.getanimalstate(item, data['ends'], data['dies'])[0]
+            if status == 'grow1':
+                continue
+            elif status == 'ready':
+                child = item.getchild(client)
+                xp = item.xp * child.amount
+                await usertools.givexpandlevelup(client, ctx, xp)
+                await usertools.additemtoinventory(client, ctx.author, child, child.amount)
+                if item in unique:
+                    unique[item] = (unique[item][0] + child.amount, unique[item][1] + xp)
+                else:
+                    unique[item] = (data['amount'], xp)
+            elif status == 'dead':
+                deaditem = True
 
-        await usertools.addusedfields(client, ctx.author, len(todelete) * -1)
+            if data['iterations'] > 1:
+                await self.setnextcycle(client, data['id'], item, data)
+            else:
+                todelete.append(data['id'])
 
-        if not unique.items() and len(todelete) > 0:
-            embed = emb.confirmembed("Tu novāci sobojājušās lietas", ctx)
-            await ctx.send(embed=embed)
-        elif unique.items():
-            information = ''
-            for key, value in unique.items():
-                information += f"{key.emoji}**{key.name2.capitalize()}** x{value[1]} +{value[0]}{client.xp}"
-            embed = emb.confirmembed(f"Tu novāci: {information}", ctx)
-            await ctx.send(embed=embed)
-        else:
-            embed = emb.errorembed("Tev nav gatavas produkcijas, kuru novākt!", ctx)
-            await ctx.send(embed=embed)
+        return deaditem
+
+    async def setnextcycle(self, client, id, item, data):
+        now = datetime.now().replace(microsecond=0)
+        ends = now + timedelta(seconds=item.grows)
+        dies = ends + timedelta(seconds=item.dies)
+
+        connection = await client.db.acquire()
+        async with connection.transaction():
+            query = """UPDATE planted
+            SET ends = $1, dies = $2, iterations = $3
+            WHERE id = $4;"""
+            await client.db.execute(query, ends, dies, data['iterations'] - 1, id)
+        await client.db.release(connection)
 
     @commands.command(aliases=['p'])
     async def plant(self, ctx, *, possibleitem):
@@ -139,6 +213,7 @@ class Planting(commands.Cog):
         profile = await usertools.getprofile(client, ctx.author)
         usedtiles = profile['usedtiles']
         tiles = profile['tiles']
+        amount = 1  # If there is no custom amount
 
         customamount = False
         try:
@@ -152,23 +227,23 @@ class Planting(commands.Cog):
         if not customamount:
             if usedtiles >= tiles:
                 embed = emb.errorembed(
-                    "Tev nav vietas, kur stādīt! Atbrīvo to vai nopērc papildus teritoriju ar `%expand`.",
+                    "Tev nav apstrādājamu lauku! Atbrīvo tos vai nopērc papildus teritoriju ar `%expand`.",
                     ctx
                 )
                 return await ctx.send(embed=embed)
         else:
             if usedtiles + amount > tiles:
                 embed = emb.errorembed(
-                    "Tev nav tik daudz vietas, kur stādīt! Atbrīvo to vai nopērc papildus teritoriju ar `%expand`.",
+                    "Tev nav tik daudz apstrādājamu lauku! Atbrīvo tos vai nopērc papildus teritoriju ar `%expand`.",
                     ctx
                 )
-                return await  ctx.send(embed=embed)
+                return await ctx.send(embed=embed)
 
         item = await finditem(self.client, ctx, possibleitem)
         if not item:
             return
-        if item.type != 'cropseed':
-            embed = emb.errorembed(f"Šo lietu ({item.emoji}{item.name2.capitalize()}) nevar iestādīt. Stādi sēklas!", ctx)
+        if item.type != 'cropseed' and item.type != 'animal':
+            embed = emb.errorembed(f"Šo lietu ({item.emoji}{item.name2.capitalize()}) nevar likt uz lauka!", ctx)
             return await ctx.send(embed=embed)
 
         inventorydata = await usertools.checkinventoryitem(client, ctx.author, item)
@@ -197,6 +272,12 @@ class Planting(commands.Cog):
         else:
             await usertools.removeitemfrominventory(client, ctx.author, item, 1)
 
+        if item.type == 'cropseed':
+            await self.plantcropseeds(client, item, ctx, customamount, amount)
+        elif item.type == 'animal':
+            await self.plantanimal(client, item, ctx, customamount, amount)
+
+    async def plantcropseeds(self, client, item, ctx, customamount, amount):
         itemchild = item.getchild(client)
         now = datetime.now().replace(microsecond=0)
         ends = now + timedelta(seconds=item.grows)
@@ -225,7 +306,7 @@ class Planting(commands.Cog):
             await usertools.addusedfields(client, ctx.author, 1)
 
             embed = emb.confirmembed(
-                f"Tu iestādīji {item.emoji}{item.name.capitalize()}.\n"
+                f"Tu iestādīji {item.emoji}{item.name2.capitalize()}.\n"
                 f"Izaugs par {item.amount}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n"
                 f"Nogatavosies: `{ends}` Sabojāsies: `{dies}`",
                 ctx
@@ -234,9 +315,57 @@ class Planting(commands.Cog):
             await usertools.addusedfields(client, ctx.author, amount)
 
             embed = emb.confirmembed(
-                f"Tu iestādīji {amount}x{item.emoji}{item.name.capitalize()}.\n"
+                f"Tu iestādīji {amount}x{item.emoji}{item.name2.capitalize()}.\n"
                 f"Izaugs par {item.amount * amount}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n"
                 f"Nogatavosies: `{ends}` Sabojāsies: `{dies}`",
+                ctx
+            )
+        await ctx.send(embed=embed)
+
+    async def plantanimal(self, client, item, ctx, customamount, amount):
+        itemchild = item.getchild(client)
+        now = datetime.now().replace(microsecond=0)
+        ends = now + timedelta(seconds=item.grows)
+        dies = ends + timedelta(seconds=item.dies)
+
+        userid = usertools.generategameuserid(ctx.author)
+
+        connection = await client.db.acquire()
+        async with connection.transaction():
+            query = """INSERT INTO planted
+            (itemid, userid, amount, ends, dies, robbed, iterations)
+            VALUES($1, $2, $3, $4, $5, $6, $7)"""
+            if not customamount:
+                await client.db.execute(
+                    query, item.id, userid, itemchild.amount,
+                    ends, dies, False, item.amount
+                )
+            else:
+                for i in range(amount):
+                    await client.db.execute(
+                        query, item.id, userid, itemchild.amount,
+                        ends, dies, False, item.amount
+                    )
+        await client.db.release(connection)
+
+        if not customamount:
+            await usertools.addusedfields(client, ctx.author, 1)
+
+            embed = emb.confirmembed(
+                f"Tu sāki audzēt {item.emoji}{item.name2.capitalize()}.\n"
+                f"Dos {itemchild.amount}x {itemchild.emoji}**"
+                f" {itemchild.name2.capitalize()}** ({item.amount} reizes).\n"
+                f"Pirmā produkcija: `{ends}` Sabojāsies: `{dies}`",
+                ctx
+                )
+        else:
+            await usertools.addusedfields(client, ctx.author, amount)
+
+            embed = emb.confirmembed(
+                f"Tu sāki audzēt {amount}x{item.emoji}{item.name2.capitalize()}.\n"
+                f"Dos {itemchild.amount * amount}x {itemchild.emoji}**"
+                f" {itemchild.name2.capitalize()}** ({item.amount} reizes).\n"
+                f"Pirmā produkcija: `{ends}` Sabojāsies: `{dies}`",
                 ctx
             )
         await ctx.send(embed=embed)

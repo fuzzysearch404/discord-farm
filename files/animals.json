@@ -1,0 +1,50 @@
+{
+  "401" : {
+    "id":401,
+    "expandsto":305,
+    "level":4,
+    "xp":6,
+    "emoji":"\ud83d\udc14",
+    "name":"vistas",
+    "name2":"vistas",
+    "rarity":2,
+    "grows":300,
+    "dies":300,
+    "amount":3,
+    "cost":100,
+    "scost":1,
+    "img":"https://failiem.lv/thumb_show.php?i=ba7t24qf"
+  },
+  "402" : {
+    "id":402,
+    "expandsto":307,
+    "level":10,
+    "xp":11,
+    "emoji":"\ud83d\udc16",
+    "name":"cūkas",
+    "name2":"cūkas",
+    "rarity":2,
+    "grows":10800,
+    "dies":21600,
+    "amount":2,
+    "cost":1000,
+    "scost":1,
+    "img":"https://failiem.lv/thumb_show.php?i=gehf6rej"
+  },
+  "403" : {
+    "id":403,
+    "expandsto":308,
+    "level":13,
+    "xp":5,
+    "emoji":"\ud83d\udc04",
+    "name":"govis",
+    "name2":"govis",
+    "rarity":2,
+    "grows":900,
+    "dies":400,
+    "amount":5,
+    "cost":1600,
+    "scost":2,
+    "img":"https://failiem.lv/thumb_show.php?i=bx3gj6gf"
+  }
+}

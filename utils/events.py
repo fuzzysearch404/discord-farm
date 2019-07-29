@@ -19,6 +19,9 @@ class Mission:
         for item in client.crafteditems.values():
             if item.level <= level:
                 suitableitems.append(item)
+        for item in client.items.values():
+            if item.level <= level:
+                suitableitems.append(item)
 
         requestsamount = randint(1, cls.itemsforlevel(level))
 

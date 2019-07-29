@@ -29,6 +29,10 @@ class Shop(commands.Cog):
         self.lastrefresh = datetime.datetime.now()
         for crop in self.client.crops.values():
             crop.getmarketprice()
+        for item in self.client.items.values():
+            item.getmarketprice()
+        for citem in self.client.crafteditems.values():
+            citem.getmarketprice()
 
     @refreshshop.before_loop
     async def before_refreshshop(self):
@@ -44,7 +48,7 @@ class Shop(commands.Cog):
         embed = discord.Embed(title='Izvēlies kategoriju', colour=822472)
         embed.add_field(name='\ud83c\udf3e Augu sēklas', value='`%shop crops`')
         embed.add_field(name='\ud83c\udf33 Koki', value='`Nākošajos update`')
-        embed.add_field(name='\ud83d\udc14 Dzīvnieki', value='`Nākošajos update`')
+        embed.add_field(name='\ud83d\udc14 Dzīvnieki', value='`%shop animals`')
         embed.add_field(name='\u2696 Tirgus', value='`%market`')
         embed.add_field(name='\ud83c\udfe6 Pakalpojumi', value='`Nākošajos update`')
         embed.add_field(name='\u2b50 Citi', value='`%shop special`')
@@ -69,6 +73,23 @@ class Shop(commands.Cog):
         except Exception as e:
             print(e)
 
+    @shop.command()
+    async def animals(self, ctx):
+        items = []
+        client = self.client
+        for animal in client.animals.values():
+            item = f"""{animal.emoji}**{animal.name.capitalize()}** \ud83d\udd31{animal.level}
+            {animal.cost}{client.gold}  vai  {animal.scost}{client.gem}
+            \ud83d\uded2 `%buy {animal.name}` \u2139 `%info {animal.name}`\n"""
+            items.append(item)
+        try:
+            p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
+            p.embed.title = '\ud83d\udc14 Dzīvnieki'
+            p.embed.color = 82247
+            await p.paginate()
+        except Exception as e:
+            print(e)
+
     @commands.group()
     async def market(self, ctx):
         if ctx.invoked_subcommand:
@@ -77,6 +98,7 @@ class Shop(commands.Cog):
         embed = discord.Embed(title='Izvēlies kategoriju', colour=1563808)
         embed.add_field(name='\ud83c\udf3e Raža', value='`%market crops`')
         embed.add_field(name='\ud83d\udce6 Produkti', value='`%market items`')
+        embed.add_field(name='\ud83d\udd39 Citi Produkti', value='`%market other`')
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -124,6 +146,28 @@ class Shop(commands.Cog):
         except Exception as e:
             print(e)
 
+    @market.command(name='other')
+    async def mother(self, ctx):
+        items = []
+        client = self.client
+
+        refreshin = datetime.datetime.now() - self.lastrefresh
+        refreshin = secstotime(REFRESH_SHOP_SECONDS - refreshin.seconds)
+        items.append(f'\u23f0Tirgus cenas atjaunosies pēc {refreshin}\n')
+
+        for x in client.items.values():
+            item = f"""{x.emoji}**{x.name.capitalize()}**
+            Pašlaik iepērkam par: {x.marketprice}{client.gold}/gab.
+            \u2696 `%sell {x.name}` \u2139 `%info {x.name}`\n"""
+            items.append(item)
+        try:
+            p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
+            p.embed.title = '\u2696 Tirgus: \ud83d\udd39 Citi produkti'
+            p.embed.color = 82247
+            await p.paginate()
+        except Exception as e:
+            print(e)
+
     @shop.command()
     async def special(self, ctx):
         client = self.client
@@ -161,7 +205,7 @@ class Shop(commands.Cog):
         if not item:
             return
 
-        forbiddentypes = ('crop', 'crafteditem')
+        forbiddentypes = ('crop', 'crafteditem', 'item')
 
         if not item.type or item.type in forbiddentypes:
             embed = emb.errorembed(f"Šī prece ({item.emoji}{item.name.capitalize()}) netiek pārdota mūsu bodē \ud83d\ude26", ctx)
@@ -323,7 +367,7 @@ class Shop(commands.Cog):
         if not item:
             return
 
-        allowedtypes = ('crop', 'crafteditem')
+        allowedtypes = ('crop', 'crafteditem', 'item')
 
         if not item.type or item.type not in allowedtypes:
             embed = emb.errorembed(f"Šī prece ({item.emoji}{item.name.capitalize()}) netiek iepirkta tirgū \ud83d\ude26", ctx)

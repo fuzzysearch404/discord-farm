@@ -101,6 +101,8 @@ class Main(commands.Cog):
         cropseeds = {}
         crops = {}
         crafteditems = {}
+        animals = {}
+
         inventory = await usertools.getinventory(client, member)
         if not inventory:
             embed = emb.errorembed(f"{member} nav nekā noliktavā", ctx)
@@ -110,11 +112,13 @@ class Main(commands.Cog):
                 cropseeds[item] = value
             elif item.type == 'crop':
                 crops[item] = value
-            elif item.type == 'crafteditem':
+            elif item.type == 'crafteditem' or item.type == 'item':
                 crafteditems[item] = value
-        await self.embedinventory(ctx, member, cropseeds, crops, crafteditems)
+            elif item.type == 'animal':
+                animals[item] = value
+        await self.embedinventory(ctx, member, cropseeds, crops, crafteditems, animals)
 
-    async def embedinventory(self, ctx, member, cropseeds, crops, crafteditems):
+    async def embedinventory(self, ctx, member, cropseeds, crops, crafteditems, animals):
         items = []
 
         if cropseeds:
@@ -126,6 +130,9 @@ class Main(commands.Cog):
         if crafteditems:
             items.append('__**Produkti:**__')
             self.cycledict(crafteditems, items)
+        if animals:
+            items.append('__**Dzīvnieki:**__')
+            self.cycledict(animals, items)
 
         try:
             p = Pages(ctx, entries=items, per_page=10, show_entry_count=False)
@@ -158,6 +165,10 @@ class Main(commands.Cog):
             await self.cropinfo(ctx, item)
         elif item.type == 'crafteditem':
             await self.craftediteminfo(ctx, item)
+        elif item.type == 'item':
+            await self.iteminfo(ctx, item)
+        elif item.type == 'animal':
+            await self.animalinfo(ctx, item)
 
     async def cropseedinfo(self, ctx, cropseed):
         client = self.client
@@ -214,6 +225,44 @@ class Main(commands.Cog):
         embed.add_field(name='\ud83d\uded2Tirgus cena', value=f'{item.minprice} - {item.maxprice} /gab. {client.gold}')
         embed.add_field(name='\ud83d\udcc8Pašreizējā tirgus cena', value=f'{item.marketprice}{client.gold}/gab.\n')
         embed.add_field(name='\ud83c\udfedRažot', value=f'`%make {item.name}`')
+
+        embed.set_thumbnail(url=item.img)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    async def iteminfo(self, ctx, item):
+        client = self.client
+
+        embed = discord.Embed(
+            title=f'{item.name.capitalize()} {item.emoji}',
+            description=f'\ud83d\udce6**Produkta ID:** {item.id}',
+            colour=851836
+        )
+
+        embed.add_field(name='\ud83d\udd31Nepiciešamais līmenis', value=item.level)
+        embed.add_field(name='\ud83d\uded2Tirgus cena', value=f'{item.minprice} - {item.maxprice} /gab. {client.gold}')
+        embed.add_field(name='\ud83d\udcc8Pašreizējā tirgus cena', value=f'{item.marketprice}{client.gold}/gab.\n')
+
+        embed.set_thumbnail(url=item.img)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    async def animalinfo(self, ctx, item):
+        client = self.client
+        product = item.getchild(client)
+
+        embed = discord.Embed(
+            title=f'{item.name.capitalize()} {item.emoji}',
+            description=f'{item.emoji}**Dzīvnieka ID:** {item.id} {product.emoji}**Produkta ID:** {product.id}',
+            colour=851836
+        )
+        embed.add_field(name='\ud83d\udd31Nepiciešamais līmenis', value=item.level)
+        embed.add_field(name='\u23e9Izaudzē produktu', value=f"**{product.amount}x** {product.emoji}{product.name.capitalize()}")
+        embed.add_field(name=f'{client.xp}Novācot dod', value=f'{item.xp * product.amount} xp')
+        embed.add_field(name='\ud83d\udd70Aug', value=secstotime(item.grows))
+        embed.add_field(name='\ud83d\udd70Novācams', value=secstotime(item.dies))
+        embed.add_field(name='\ud83d\udcb0Dzīvnieka cena', value=f'{item.cost}{client.gold} vai {item.scost}{client.gem}')
+        embed.add_field(name='\u2696Novākšanas cikli', value=f'{item.amount}')
 
         embed.set_thumbnail(url=item.img)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)

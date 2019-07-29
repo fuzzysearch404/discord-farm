@@ -92,6 +92,24 @@
   "106": {
     "id":106,
     "madefrom":6,
+    "emoji":"\ud83c\udf45",
+    "name":"tomāti",
+    "name2":"tomātus",
+    "rarity":1,
+    "grows":7800,
+    "dies":15000,
+    "amount":17,
+    "cost":380,
+    "scost":1,
+    "minprice":18,
+    "maxprice":29,
+    "level":9,
+    "xp":5,
+    "img":"https://failiem.lv/thumb_show.php?i=2k8btpf4"
+  },
+  "107": {
+    "id":107,
+    "madefrom":7,
     "emoji":"\ud83c\udf46",
     "name":"baklažāni",
     "name2":"baklažānus",
@@ -104,12 +122,12 @@
     "minprice":26,
     "maxprice":37,
     "level":10,
-    "xp":5,
+    "xp":6,
     "img":"https://failiem.lv/thumb_show.php?i=qcavr6ps"
   },
-  "107": {
-    "id":107,
-    "madefrom":7,
+  "108": {
+    "id":108,
+    "madefrom":8,
     "emoji":"\ud83c\udf53",
     "name":"zemenes",
     "name2":"zemenes",

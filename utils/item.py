@@ -53,6 +53,22 @@ class Crop(Item):
         return client.cropseeds[self.madefrom]
 
 
+class Animal(Item):
+    def __init__(self, name2, level, xp, grows, dies, expandsto, img, *args, **kw):
+        super().__init__(*args, **kw)
+        self.name2 = name2
+        self.level = level
+        self.xp = xp
+        self.grows = grows
+        self.dies = dies
+        self.expandsto = expandsto
+        self.img = img
+        self.type = 'animal'
+
+    def getchild(self, client):
+        return client.items[self.expandsto]
+
+
 class CraftedItem(Item):
     def __init__(self, name2, level, xp, img, minprice, maxprice, madefrom, time, *args, **kw):
         super().__init__(*args, **kw)
@@ -81,6 +97,22 @@ class CraftedItem(Item):
             real[int(key)] = value
 
         self.madefrom = real
+
+
+class SellableItem(Item):
+    def __init__(self, name2, xp, minprice, maxprice, level, img, *args, **kw):
+        super().__init__(*args, **kw)
+        self.name2 = name2
+        self.xp = xp
+        self.minprice = minprice
+        self.maxprice = maxprice
+        self.level = level
+        self.img = img
+        self.type = 'item'
+        self.getmarketprice()
+
+    def getmarketprice(self):
+        self.marketprice = randint(self.minprice, self.maxprice)
 
 
 def cropseedloader():
@@ -120,13 +152,47 @@ def croploader():
 def crafteditemloader():
     ritems = {}
 
-    with open("files/items.json", "r", encoding="UTF8") as file:
+    with open("files/citems.json", "r", encoding="UTF8") as file:
         litems = json.load(file)
 
     for c, v in litems.items():
         item = CraftedItem(
             v['name2'], v['level'], v['xp'], v['img'], v['minprice'], v['maxprice'],
             v['madefrom'], v['time'], v['id'], v['emoji'], v['name'], v['rarity'],
+            v['amount'], v['cost'], v['scost']
+        )
+        ritems[int(c)] = item
+
+    return ritems
+
+
+def animalloader():
+    ritems = {}
+
+    with open("files/animals.json", "r", encoding="UTF8") as file:
+        litems = json.load(file)
+
+    for c, v in litems.items():
+        item = Animal(
+            v['name2'], v['level'], v['xp'], v['grows'], v['dies'], v['expandsto'],
+            v['img'], v['id'], v['emoji'], v['name'], v['rarity'],
+            v['amount'], v['cost'], v['scost']
+        )
+        ritems[int(c)] = item
+
+    return ritems
+
+
+def itemloader():
+    ritems = {}
+
+    with open("files/items.json", "r", encoding="UTF8") as file:
+        litems = json.load(file)
+
+    for c, v in litems.items():
+        item = SellableItem(
+            v['name2'], v['xp'], v['minprice'], v['maxprice'], v['level'],
+            v['img'], v['id'], v['emoji'], v['name'], v['rarity'],
             v['amount'], v['cost'], v['scost']
         )
         ritems[int(c)] = item

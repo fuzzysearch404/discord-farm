@@ -2,7 +2,7 @@ import discord
 import logging
 import json
 import asyncpg
-import utils.item as items
+import utils.item as utilitems
 import utils.embeds as emb
 from discord.ext import commands
 from utils import checks
@@ -53,12 +53,16 @@ class MyClient(commands.AutoShardedBot):
         self.loadcropseeds()
 
     def loadcropseeds(self):
-        self.cropseeds = items.cropseedloader()
-        self.crops = items.croploader()
-        self.crafteditems = items.crafteditemloader()
+        self.cropseeds = utilitems.cropseedloader()
+        self.crops = utilitems.croploader()
+        self.crafteditems = utilitems.crafteditemloader()
+        self.items = utilitems.itemloader()
+        self.animals = utilitems.animalloader()
         self.allitems.update(self.cropseeds)
         self.allitems.update(self.crops)
         self.allitems.update(self.crafteditems)
+        self.allitems.update(self.items)
+        self.allitems.update(self.animals)
 
     def initemojis(self):
         self.gold = '<:gold:603145892811505665>'

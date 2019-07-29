@@ -72,6 +72,20 @@
   "6": {
     "id":6,
     "expandsto":106,
+    "level":9,
+    "emoji":"\ud83c\udf45",
+    "name":"tomātu sēklas",
+    "name2":"tomātu sēklas",
+    "rarity":1,
+    "grows":7800,
+    "dies":15000,
+    "amount":17,
+    "cost":380,
+    "scost":1
+  },
+  "7": {
+    "id":7,
+    "expandsto":107,
     "level":10,
     "emoji":"\ud83c\udf46",
     "name":"baklažānu sēklas",
@@ -83,9 +97,9 @@
     "cost":500,
     "scost":1
   },
-  "7": {
-    "id":7,
-    "expandsto":107,
+  "8": {
+    "id":8,
+    "expandsto":108,
     "level":11,
     "emoji":"\ud83c\udf53",
     "name":"zemeņu sēklas",
