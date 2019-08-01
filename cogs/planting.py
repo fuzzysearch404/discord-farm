@@ -22,7 +22,7 @@ class Planting(commands.Cog):
 
     @commands.command()
     async def field(self, ctx, member: Optional[MemberID] = None):
-        crops, animals = {}, {}
+        crops, animals, trees = {}, {}, {}
         information = []
 
         member = member or ctx.author
@@ -39,6 +39,8 @@ class Planting(commands.Cog):
                     crops[object] = item
                 elif item.type == 'animal':
                     animals[object] = item
+                elif item.type == 'tree':
+                    trees[object] = item
             except KeyError:
                 raise Exception(f"Could not find item {object['itemid']}")
 
@@ -48,11 +50,19 @@ class Planting(commands.Cog):
                 status = self.getcropstate(item, data['ends'], data['dies'])[1]
                 fmt = f"{item.emoji}**{item.name.capitalize()}** x{data['amount']} - {status}"
                 information.append(fmt)
+        if len(trees) > 0:
+            information.append('**Koki:**')
+            for data, item in trees.items():
+                child = item.getchild(client)
+                status = self.getanimalortreestate(item, data['ends'], data['dies'])[1]
+                fmt = f"{item.emoji}**{item.name.capitalize()}** {data['iterations']}.lvl"
+                fmt += f" (x{data['amount']}{child.emoji}) - {status}"
+                information.append(fmt)
         if len(animals) > 0:
             information.append('**Dzīvnieki:**')
             for data, item in animals.items():
                 child = item.getchild(client)
-                status = self.getanimalstate(item, data['ends'], data['dies'])[1]
+                status = self.getanimalortreestate(item, data['ends'], data['dies'])[1]
                 fmt = f"{item.emoji}**{item.name.capitalize()}** {data['iterations']}.lvl"
                 fmt += f" (x{data['amount']}{child.emoji}) - {status}"
                 information.append(fmt)
@@ -87,7 +97,7 @@ class Planting(commands.Cog):
 
         return stype, status
 
-    def getanimalstate(self, item, ends, dies):
+    def getanimalortreestate(self, item, ends, dies):
         now = datetime.now()
         if ends > now:
             secsdelta = ends - now
@@ -105,7 +115,7 @@ class Planting(commands.Cog):
 
     @commands.command(aliases=['h'])
     async def harvest(self, ctx):
-        crops, animals, unique = {}, {}, {}
+        crops, animals, trees, unique = {}, {}, {}, {}
         todelete = []
         deaditem = False
 
@@ -121,13 +131,17 @@ class Planting(commands.Cog):
                     crops[object] = item
                 elif item.type == 'animal':
                     animals[object] = item
+                elif item.type == 'tree':
+                    trees[object] = item
             except KeyError:
                 raise Exception(f"Could not find item {object['itemid']}")
 
         if crops:
             await self.checkcrops(client, crops, ctx, unique, todelete)
         if animals:
-            deaditem = await self.checkanimals(client, animals, ctx, unique, todelete, deaditem)
+            deaditem = await self.checkanimalsortrees(client, animals, ctx, unique, todelete, deaditem)
+        if trees:
+            deaditem = await self.checkanimalsortrees(client, trees, ctx, unique, todelete, deaditem)
 
         if len(todelete) > 0:
             connection = await client.db.acquire()
@@ -145,7 +159,7 @@ class Planting(commands.Cog):
         elif unique.items():
             information = ''
             for key, value in unique.items():
-                if key.type == 'animal':
+                if key.type == 'animal' or key.type == 'tree':
                     key = key.getchild(client)
                 information += f"{key.emoji}**{key.name2.capitalize()}** x{value[0]} +{value[1]}{client.xp}"
             embed = emb.confirmembed(f"Tu novāci: {information}", ctx)
@@ -170,9 +184,9 @@ class Planting(commands.Cog):
 
             todelete.append(data['id'])
 
-    async def checkanimals(self, client, crops, ctx, unique, todelete, deaditem):
+    async def checkanimalsortrees(self, client, crops, ctx, unique, todelete, deaditem):
         for data, item in crops.items():
-            status = self.getanimalstate(item, data['ends'], data['dies'])[0]
+            status = self.getanimalortreestate(item, data['ends'], data['dies'])[0]
             if status == 'grow1':
                 continue
             elif status == 'ready':
@@ -242,7 +256,7 @@ class Planting(commands.Cog):
         item = await finditem(self.client, ctx, possibleitem)
         if not item:
             return
-        if item.type != 'cropseed' and item.type != 'animal':
+        if item.type != 'cropseed' and item.type != 'animal' and item.type != 'tree':
             embed = emb.errorembed(f"Šo lietu ({item.emoji}{item.name2.capitalize()}) nevar likt uz lauka!", ctx)
             return await ctx.send(embed=embed)
 
@@ -274,8 +288,8 @@ class Planting(commands.Cog):
 
         if item.type == 'cropseed':
             await self.plantcropseeds(client, item, ctx, customamount, amount)
-        elif item.type == 'animal':
-            await self.plantanimal(client, item, ctx, customamount, amount)
+        elif item.type == 'animal' or item.type == 'tree':
+            await self.plantanimalortree(client, item, ctx, customamount, amount)
 
     async def plantcropseeds(self, client, item, ctx, customamount, amount):
         itemchild = item.getchild(client)
@@ -322,7 +336,7 @@ class Planting(commands.Cog):
             )
         await ctx.send(embed=embed)
 
-    async def plantanimal(self, client, item, ctx, customamount, amount):
+    async def plantanimalortree(self, client, item, ctx, customamount, amount):
         itemchild = item.getchild(client)
         now = datetime.now().replace(microsecond=0)
         ends = now + timedelta(seconds=item.grows)

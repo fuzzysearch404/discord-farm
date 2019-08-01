@@ -1,7 +1,9 @@
 import discord
 import asyncio
 import utils.embeds as emb
+from random import randint, choice
 from utils import usertools
+from utils import time
 from typing import Optional
 from datetime import datetime
 from discord.ext import commands
@@ -21,6 +23,40 @@ class Main(commands.Cog):
         if not userid:
             return False
         return userid['userid'] == ctx.author.id and not self.client.disabledcommands
+
+    @commands.command(aliases=['daily'])
+    @commands.cooldown(1, 86400, commands.BucketType.user)
+    async def dailybonus(self, ctx):
+        client = self.client
+        suitableitems = []
+
+        profile = await usertools.getprofile(client, ctx.author)
+        level = usertools.getlevel(profile['xp'])[0]
+
+        for item in client.allitems.values():
+            if item.level <= level:
+                suitableitems.append(item)
+
+        item = choice(suitableitems)
+        if item.type == 'animal' or item.type == 'tree' or item.type == 'crafteditem':
+            amount = randint(1, int(level * 1.2))
+        else:
+            amount = randint(1, level * 3)
+
+        await usertools.additemtoinventory(client, ctx.author, item, amount)
+
+        embed = emb.congratzembed(
+            f"Tu laimēji {amount}x{item.emoji}{item.name2.capitalize()}",
+            ctx
+        )
+        await ctx.send(embed=embed)
+
+    @dailybonus.error
+    async def dailybonus_handler(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            cooldwtime = time.secstotime(error.retry_after)
+            embed = emb.errorembed(f"Nākošais dienas bonuss pēc \u23f0{cooldwtime}", ctx)
+            await ctx.send(embed=embed)
 
     @commands.command(aliases=['profils'])
     async def profile(self, ctx, member: Optional[MemberID] = None):
@@ -98,10 +134,7 @@ class Main(commands.Cog):
     async def inventory(self, ctx, member: Optional[MemberID] = None):
         member = member or ctx.author
         client = self.client
-        cropseeds = {}
-        crops = {}
-        crafteditems = {}
-        animals = {}
+        cropseeds, crops, crafteditems, animals, trees = {}, {}, {}, {}, {}
 
         inventory = await usertools.getinventory(client, member)
         if not inventory:
@@ -116,14 +149,19 @@ class Main(commands.Cog):
                 crafteditems[item] = value
             elif item.type == 'animal':
                 animals[item] = value
-        await self.embedinventory(ctx, member, cropseeds, crops, crafteditems, animals)
+            elif item.type == 'tree':
+                trees[item] = value
+        await self.embedinventory(ctx, member, cropseeds, crops, crafteditems, animals, trees)
 
-    async def embedinventory(self, ctx, member, cropseeds, crops, crafteditems, animals):
+    async def embedinventory(self, ctx, member, cropseeds, crops, crafteditems, animals, trees):
         items = []
 
         if cropseeds:
             items.append('__**Augu sēklas:**__')
             self.cycledict(cropseeds, items)
+        if trees:
+            items.append('__**Koki:**__')
+            self.cycledict(trees, items)
         if crops:
             items.append('__**Raža:**__')
             self.cycledict(crops, items)
@@ -169,6 +207,8 @@ class Main(commands.Cog):
             await self.iteminfo(ctx, item)
         elif item.type == 'animal':
             await self.animalinfo(ctx, item)
+        elif item.type == 'tree':
+            await self.treeinfo(ctx, item)
 
     async def cropseedinfo(self, ctx, cropseed):
         client = self.client
@@ -196,7 +236,7 @@ class Main(commands.Cog):
 
         embed = discord.Embed(
             title=f'{crop.name.capitalize()} {crop.emoji}',
-            description=f'\ud83c\udf3e**Auga ID:** {crop.id} \ud83c\udf31**Sēklu ID:** {cropseed.id}',
+            description=f'\ud83c\udf3e**Dārzeņa/Augļa ID:** {crop.id} \ud83c\udf31**Sēklu/Koka ID:** {cropseed.id}',
             colour=851836
         )
         embed.add_field(name='\ud83d\udd31Nepiciešamais līmenis', value=crop.level)
@@ -262,6 +302,27 @@ class Main(commands.Cog):
         embed.add_field(name='\ud83d\udd70Aug', value=secstotime(item.grows))
         embed.add_field(name='\ud83d\udd70Novācams', value=secstotime(item.dies))
         embed.add_field(name='\ud83d\udcb0Dzīvnieka cena', value=f'{item.cost}{client.gold} vai {item.scost}{client.gem}')
+        embed.add_field(name='\u2696Novākšanas cikli', value=f'{item.amount}')
+
+        embed.set_thumbnail(url=item.img)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    async def treeinfo(self, ctx, item):
+        client = self.client
+        product = item.getchild(client)
+
+        embed = discord.Embed(
+            title=f'{item.name.capitalize()} {item.emoji}',
+            description=f'\ud83c\udf33**Koka ID:** {item.id} {product.emoji}**Produkta ID:** {product.id}',
+            colour=851836
+        )
+        embed.add_field(name='\ud83d\udd31Nepiciešamais līmenis', value=item.level)
+        embed.add_field(name='\u23e9Izaudzē produktu', value=f"**{product.amount}x** {product.emoji}{product.name.capitalize()}")
+        embed.add_field(name=f'{client.xp}Novācot dod', value=f'{item.xp * product.amount} xp')
+        embed.add_field(name='\ud83d\udd70Aug', value=secstotime(item.grows))
+        embed.add_field(name='\ud83d\udd70Novācams', value=secstotime(item.dies))
+        embed.add_field(name='\ud83d\udcb0Koka cena', value=f'{item.cost}{client.gold} vai {item.scost}{client.gem}')
         embed.add_field(name='\u2696Novākšanas cikli', value=f'{item.amount}')
 
         embed.set_thumbnail(url=item.img)

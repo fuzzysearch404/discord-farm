@@ -14,6 +14,8 @@ Ja vēlies apskatīt cita lietotāja profilu, norādi lietotāju aiz komandas.
 `%inventory` vai `%inv` - Tava noliktava.
 Ja vēlies apskatīt cita lietotāja noliktavu, norādi lietotāju aiz komandas.
 
+`%daily` vai `%dailybonus` - Iegūsti dienas bonusu.
+
 `%resetacc` - Pilnībā izdzēš tavu profilu.
 (*)
 **:notepad_spiral: Spēles galvenās komandas**

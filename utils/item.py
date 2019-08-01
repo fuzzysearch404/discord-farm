@@ -50,7 +50,7 @@ class Crop(Item):
         self.marketprice = randint(self.minprice, self.maxprice)
 
     def getparent(self, client):
-        return client.cropseeds[self.madefrom]
+        return client.allitems[self.madefrom]
 
 
 class Animal(Item):
@@ -67,6 +67,22 @@ class Animal(Item):
 
     def getchild(self, client):
         return client.items[self.expandsto]
+
+
+class Tree(Item):
+    def __init__(self, name2, level, xp, grows, dies, expandsto, img, *args, **kw):
+        super().__init__(*args, **kw)
+        self.name2 = name2
+        self.level = level
+        self.xp = xp
+        self.grows = grows
+        self.dies = dies
+        self.expandsto = expandsto
+        self.img = img
+        self.type = 'tree'
+
+    def getchild(self, client):
+        return client.crops[self.expandsto]
 
 
 class CraftedItem(Item):
@@ -174,6 +190,23 @@ def animalloader():
 
     for c, v in litems.items():
         item = Animal(
+            v['name2'], v['level'], v['xp'], v['grows'], v['dies'], v['expandsto'],
+            v['img'], v['id'], v['emoji'], v['name'], v['rarity'],
+            v['amount'], v['cost'], v['scost']
+        )
+        ritems[int(c)] = item
+
+    return ritems
+
+
+def treeloader():
+    ritems = {}
+
+    with open("files/trees.json", "r", encoding="UTF8") as file:
+        litems = json.load(file)
+
+    for c, v in litems.items():
+        item = Tree(
             v['name2'], v['level'], v['xp'], v['grows'], v['dies'], v['expandsto'],
             v['img'], v['id'], v['emoji'], v['name'], v['rarity'],
             v['amount'], v['cost'], v['scost']

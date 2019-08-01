@@ -47,7 +47,7 @@ class Shop(commands.Cog):
             return
         embed = discord.Embed(title='Izvēlies kategoriju', colour=822472)
         embed.add_field(name='\ud83c\udf3e Augu sēklas', value='`%shop crops`')
-        embed.add_field(name='\ud83c\udf33 Koki', value='`Nākošajos update`')
+        embed.add_field(name='\ud83c\udf33 Koki', value='`%shop trees`')
         embed.add_field(name='\ud83d\udc14 Dzīvnieki', value='`%shop animals`')
         embed.add_field(name='\u2696 Tirgus', value='`%market`')
         embed.add_field(name='\ud83c\udfe6 Pakalpojumi', value='`Nākošajos update`')
@@ -85,6 +85,23 @@ class Shop(commands.Cog):
         try:
             p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
             p.embed.title = '\ud83d\udc14 Dzīvnieki'
+            p.embed.color = 82247
+            await p.paginate()
+        except Exception as e:
+            print(e)
+
+    @shop.command()
+    async def trees(self, ctx):
+        items = []
+        client = self.client
+        for tree in client.trees.values():
+            item = f"""{tree.emoji}**{tree.name.capitalize()}** \ud83d\udd31{tree.level}
+            {tree.cost}{client.gold}  vai  {tree.scost}{client.gem}
+            \ud83d\uded2 `%buy {tree.name}` \u2139 `%info {tree.name}`\n"""
+            items.append(item)
+        try:
+            p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
+            p.embed.title = '\ud83c\udf33 Koki'
             p.embed.color = 82247
             await p.paginate()
         except Exception as e:

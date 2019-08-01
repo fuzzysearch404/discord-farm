@@ -58,11 +58,14 @@ class MyClient(commands.AutoShardedBot):
         self.crafteditems = utilitems.crafteditemloader()
         self.items = utilitems.itemloader()
         self.animals = utilitems.animalloader()
+        self.trees = utilitems.treeloader()
+
         self.allitems.update(self.cropseeds)
         self.allitems.update(self.crops)
         self.allitems.update(self.crafteditems)
         self.allitems.update(self.items)
         self.allitems.update(self.animals)
+        self.allitems.update(self.trees)
 
     def initemojis(self):
         self.gold = '<:gold:603145892811505665>'

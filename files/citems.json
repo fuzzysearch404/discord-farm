@@ -50,6 +50,23 @@
     "madefrom":[{"305":5}],
     "time":420
   },
+  "310" : {
+    "id":310,
+    "emoji":"\ud83c\udf6e",
+    "name":"ābolu pudiņi",
+    "name2":"ābolu pudiņus",
+    "rarity":2,
+    "amount":1,
+    "cost":50,
+    "scost":2,
+    "level":4,
+    "xp":13,
+    "img":"https://failiem.lv/thumb_show.php?i=y4q87znj",
+    "minprice":62,
+    "maxprice":82,
+    "madefrom":[{"109":12}, {"305":3}],
+    "time":300
+  },
   "304" : {
     "id":304,
     "emoji":"<:picklejar:604297690389413908>",
@@ -66,6 +83,40 @@
     "maxprice":136,
     "madefrom":[{"104":18}],
     "time":2700
+  },
+  "311" : {
+    "id":311,
+    "emoji":"\ud83c\udf6c",
+    "name":"sarkanās konfektes",
+    "name2":"sarkanās konfektes",
+    "rarity":2,
+    "amount":1,
+    "cost":160,
+    "scost":2,
+    "level":6,
+    "xp":100,
+    "img":"https://failiem.lv/thumb_show.php?i=jk9g33yb",
+    "minprice":110,
+    "maxprice":140,
+    "madefrom":[{"109":10}, {"110":10}],
+    "time":4200
+  },
+  "312" : {
+    "id":312,
+    "emoji":"\ud83c\udf77",
+    "name":"vīnogu vīns",
+    "name2":"vīnogu vīnu",
+    "rarity":2,
+    "amount":1,
+    "cost":1000,
+    "scost":4,
+    "level":7,
+    "xp":555,
+    "img":"https://failiem.lv/thumb_show.php?i=dw66uhrt",
+    "minprice":300,
+    "maxprice":400,
+    "madefrom":[{"112":30}],
+    "time":86400
   },
   "306" : {
     "id":306,
@@ -84,6 +135,23 @@
     "madefrom":[{"102":10}, {"103":4}, {"104":2}, {"105":2}],
     "time":21600
   },
+  "314" : {
+    "id":314,
+    "emoji":"\ud83c\udf6d",
+    "name":"sūkājamie kociņi",
+    "name2":"sūkājamos kociņus",
+    "rarity":2,
+    "amount":1,
+    "cost":200,
+    "scost":2,
+    "level":9,
+    "xp":160,
+    "img":"https://failiem.lv/thumb_show.php?i=ec8v7sqw",
+    "minprice":230,
+    "maxprice":260,
+    "madefrom":[{"110":9}, {"111":9}, {"112":10}],
+    "time":10000
+  },
   "309" : {
     "id":309,
     "emoji":"\ud83c\udf54",
@@ -100,5 +168,22 @@
     "maxprice":760,
     "madefrom":[{"101":10}, {"104":4}, {"105":6}, {"106":5}, {"307":10}],
     "time":7200
+  },
+  "313" : {
+    "id":313,
+    "emoji":"\ud83c\udf79",
+    "name":"tropiskie kokteiļi",
+    "name2":"tropiskos kokteiļus",
+    "rarity":2,
+    "amount":1,
+    "cost":600,
+    "scost":2,
+    "level":12,
+    "xp":72,
+    "img":"https://failiem.lv/thumb_show.php?i=ze9tzsne",
+    "minprice":560,
+    "maxprice":583,
+    "madefrom":[{"109":20}, {"111":10}, {"108":5}, {"113":10}],
+    "time":3600
   }
 }
