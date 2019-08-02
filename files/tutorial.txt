@@ -14,13 +14,19 @@ Ja vēlies apskatīt cita lietotāja profilu, norādi lietotāju aiz komandas.
 `%inventory` vai `%inv` - Tava noliktava.
 Ja vēlies apskatīt cita lietotāja noliktavu, norādi lietotāju aiz komandas.
 
-`%daily` vai `%dailybonus` - Iegūsti dienas bonusu.
+`%dailybonus` vai `%daily` - Iegūsti dienas bonusu.
+
+`%allitems` vai `%all` - Noskaidro kādas lietas ir pieejamas tavam līmenim.
 
 `%resetacc` - Pilnībā izdzēš tavu profilu.
 (*)
 **:notepad_spiral: Spēles galvenās komandas**
 `%info <parametrs>` - Parāda informāciju par kādu lietu.
 <parametrs> - Meklētās lietas ID vai nosaukums.
+
+`%top <parametrs>` - spēlētāju topi.
+<parametrs> - `xp`|`money`|`gems`
+
 (*)
 **:shopping_cart: Veikala un tirgus komandas**
 `%shop` - Atver veikalu.

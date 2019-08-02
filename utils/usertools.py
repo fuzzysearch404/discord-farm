@@ -77,7 +77,11 @@ async def givexpandlevelup(client, ctx, xp):
     if oldlevel < newlevel:
         gems = gemsforlevel(newlevel)
         await givegems(client, member, gems)
-        embed = congratzembed(f"Tu sasniedzi {newlevel}.līmeni un ieguvi {gems}{client.gem}!", ctx)
+        embed = congratzembed(
+            f"Tu sasniedzi {newlevel}.līmeni un ieguvi {gems}{client.gem}!\n"
+            "Noskaidro ko esi atbloķējis ar `%allitems`",
+            ctx
+        )
         await ctx.send(embed=embed)
 
 

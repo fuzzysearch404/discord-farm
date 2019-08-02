@@ -42,7 +42,7 @@
     "name":"sarkanie āboli",
     "name2":"sarkanos ābolus",
     "rarity":1,
-    "grows":60,
+    "grows":90,
     "dies":300,
     "amount":10,
     "cost":50,

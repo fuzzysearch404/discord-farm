@@ -329,6 +329,30 @@ class Main(commands.Cog):
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
+    @commands.command(aliases=['all'])
+    async def allitems(self, ctx):
+        items, texts = [], []
+        client = self.client
+
+        profile = await usertools.getprofile(client, ctx.author)
+        level = usertools.getlevel(profile['xp'])[0]
+
+        for item in client.allitems.values():
+            if item.level <= level:
+                items.append(item)
+
+        for item in items:
+            item = f"ID:{item.id} {item.emoji}{item.name.capitalize()}"
+            texts.append(item)
+        texts.append("\u2139Informācija par kādu lietu - `%info ID vai nosaukums`")
+        try:
+            p = Pages(ctx, entries=texts, per_page=12, show_entry_count=False)
+            p.embed.title = 'Tavam līmenim pieejamās lietas:'
+            p.embed.color = 846046
+            await p.paginate()
+        except Exception as e:
+            print(e)
+
     @commands.command()
     async def resetacc(self, ctx):
         embed = emb.errorembed(

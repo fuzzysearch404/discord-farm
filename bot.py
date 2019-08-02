@@ -16,7 +16,8 @@ extensions = (
     'cogs.requests',
     'cogs.factory',
     'cogs.registration',
-    'cogs.usercontrol'
+    'cogs.usercontrol',
+    'cogs.stats'
 )
 unloaded = []
 with open("settings.json", "r", encoding="UTF8") as file:
