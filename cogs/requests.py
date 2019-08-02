@@ -96,7 +96,7 @@ class Requests(commands.Cog):
             await message.add_reaction(f'{j+1}{emoji}')
 
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji).endswith(emoji)
+            return user == ctx.author and str(reaction.emoji).endswith(emoji) and reaction.message.id == message.id
 
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)

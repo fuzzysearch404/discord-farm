@@ -309,7 +309,7 @@ class Shop(commands.Cog):
         allowedemojis = ('\u274c', client.gem, client.gold)
 
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in allowedemojis
+            return user == ctx.author and str(reaction.emoji) in allowedemojis and reaction.message.id == buyinfomessage.id
 
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
@@ -477,7 +477,7 @@ class Shop(commands.Cog):
         allowedemojis = ('\u274c', '\u2705')
 
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in allowedemojis
+            return user == ctx.author and str(reaction.emoji) in allowedemojis and reaction.message.id == sellinfomessage.id
 
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
@@ -534,7 +534,7 @@ class Shop(commands.Cog):
         await buyinfomessage.add_reaction(client.gem)
 
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) == client.gem
+            return user == ctx.author and str(reaction.emoji) == client.gem and reaction.message.id == buyinfomessage.id
 
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
@@ -580,7 +580,7 @@ class Shop(commands.Cog):
         await buyinfomessage.add_reaction(client.gem)
 
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) == client.gem
+            return user == ctx.author and str(reaction.emoji) == client.gem and reaction.message.id == buyinfomessage.id
 
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
