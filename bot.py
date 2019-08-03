@@ -15,6 +15,7 @@ extensions = (
     'cogs.planting',
     'cogs.requests',
     'cogs.factory',
+    'cogs.trades',
     'cogs.registration',
     'cogs.usercontrol',
     'cogs.stats'
@@ -195,11 +196,13 @@ class MyClient(commands.AutoShardedBot):
             return
         if isinstance(error, commands.errors.CommandOnCooldown):
             return
+        if isinstance(error, commands.errors.MissingRequiredArgument):
+            embed = emb.errorembed(
+                "Šajai komandai jānorāda papildus informāciju.",
+                ctx
+            )
+            return await ctx.send(embed=embed)
         raise error
-
-    #async def on_error(self, event, args, kwargs):
-    #    print(event, args, kwargs)
-    #    log.error(f'{event} {args} {kwargs}')
 
     async def on_command(self, ctx):
         log.info(

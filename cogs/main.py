@@ -59,7 +59,7 @@ class Main(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command(aliases=['profils'])
-    async def profile(self, ctx, member: Optional[MemberID] = None):
+    async def profile(self, ctx, *, member: Optional[MemberID] = None):
         member = member or ctx.author
         client = self.client
         userprofile = await usertools.getprofile(client, member)
@@ -127,11 +127,15 @@ class Main(commands.Cog):
             name='\ud83c\udfedRūpnīca',
             value=factorytext
         )
+        embed.add_field(
+            name='\ud83d\udecdVeikals',
+            value=f'`%store {member}`'
+        )
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['inv'])
-    async def inventory(self, ctx, member: Optional[MemberID] = None):
+    async def inventory(self, ctx, *, member: Optional[MemberID] = None):
         member = member or ctx.author
         client = self.client
         cropseeds, crops, crafteditems, animals, trees = {}, {}, {}, {}, {}

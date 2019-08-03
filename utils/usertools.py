@@ -1,8 +1,15 @@
 from utils.embeds import congratzembed
+from decimal import Decimal
 
 
 def generategameuserid(member):
     string = str(member.guild.id) + str(member.id)
+    return int(string)
+
+
+def splitgameuserid(longid, ctx):
+    string = str(longid)
+    string = string.replace(str(ctx.guild.id), "")
     return int(string)
 
 
@@ -18,6 +25,7 @@ async def deleteacc(client, member):
         "DELETE FROM inventory WHERE userid = $1;",
         "DELETE FROM missions WHERE userid = $1;",
         "DELETE FROM factory WHERE userid = $1;",
+        "DELETE FROM store WHERE userid = $1;"
         "DELETE FROM users WHERE id = $1;"
     )
 
@@ -95,11 +103,14 @@ async def givegems(client, member, gems):
 
 
 async def givemoney(client, member, money):
+    if not isinstance(member, Decimal):
+        member = generategameuserid(member)
+
     connection = await client.db.acquire()
     async with connection.transaction():
         query = """UPDATE users SET money = money + $1
         WHERE id = $2;"""
-        await client.db.execute(query, money, generategameuserid(member))
+        await client.db.execute(query, money, member)
     await client.db.release(connection)
 
 
@@ -210,6 +221,49 @@ async def addfactoryslots(client, member, amount):
     await client.db.release(connection)
 
 
+async def addstoreslots(client, member, amount):
+    connection = await client.db.acquire()
+    async with connection.transaction():
+        query = """UPDATE users SET storeslots = storeslots + $1
+        WHERE id = $2;"""
+        await client.db.execute(query, amount, generategameuserid(member))
+    await client.db.release(connection)
+
+
+async def getuserstore(client, member):
+    query = """SELECT * FROM store WHERE userid = $1;"""
+    data = await client.db.fetch(query, generategameuserid(member))
+    return data
+
+
+async def getguildstore(client, guild):
+    query = """SELECT DISTINCT userid FROM store WHERE guildid = $1;"""
+    data = await client.db.fetch(query, guild.id)
+    return data
+
+
+async def gettrade(client, id):
+    query = """SELECT * FROM store WHERE id = $1;"""
+    data = await client.db.fetchrow(query, id)
+    return data
+
+
+async def deletetrade(client, id):
+    connection = await client.db.acquire()
+    async with connection.transaction():
+        query = """DELETE FROM store WHERE id = $1;"""
+        await client.db.execute(query, id)
+    await client.db.release(connection)
+
+
+async def getstoreslotcount(client, member):
+    query = """SELECT count(id) FROM store WHERE userid = $1;"""
+    slots = await client.db.fetchrow(query, generategameuserid(member))
+    if not slots:
+        return False
+    return slots[0]
+
+
 def upgradecost(ownedtiles):
     if ownedtiles < 5:
         return 4
@@ -219,6 +273,10 @@ def upgradecost(ownedtiles):
         return 11
     else:
         return 14
+
+
+def storeupgcost(ownedslots):
+    return ownedslots * 1000
 
 
 def gemsforlevel(level):

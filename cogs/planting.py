@@ -20,8 +20,8 @@ class Planting(commands.Cog):
             return False
         return userid['userid'] == ctx.author.id and not self.client.disabledcommands
 
-    @commands.command()
-    async def field(self, ctx, member: Optional[MemberID] = None):
+    @commands.command(aliases=['f'])
+    async def field(self, ctx, *, member: Optional[MemberID] = None):
         crops, animals, trees = {}, {}, {}
         information = []
 
@@ -234,7 +234,8 @@ class Planting(commands.Cog):
             possibleamount = possibleitem.rsplit(' ', 1)[1]
             amount = int(possibleamount)
             possibleitem = possibleitem.rsplit(' ', 1)[0]
-            customamount = True
+            if amount > 0:
+                customamount = True
         except Exception:
             pass
 

@@ -10,7 +10,7 @@
     "grows":120,
     "dies":300,
     "amount":10,
-    "cost":10,
+    "cost":15,
     "scost":1
   },
   "2": {
@@ -23,7 +23,7 @@
     "rarity":1,
     "grows":200,
     "dies":400,
-    "amount":12,
+    "amount":11,
     "cost":15,
     "scost":1
   },

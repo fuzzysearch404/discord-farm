@@ -203,9 +203,15 @@ class Shop(commands.Cog):
             {client.gem}{usertools.upgradecost(profile['factoryslots'])}
             \ud83d\uded2 `%upgrade`"""
         )
+        embed.add_field(
+            name=f'\ud83c\udfeaUzlabot veikalu',
+            value=f"""\ud83c\udd95 {profile['storeslots']} \u2192 {profile['storeslots'] + 1} pārdošanas apjoms
+            {client.gold}{usertools.storeupgcost(profile['storeslots'])}
+            \ud83d\uded2 `%addslot`"""
+        )
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=['b'])
     async def buy(self, ctx, *, possibleitem):
         client = self.client
 
@@ -214,7 +220,8 @@ class Shop(commands.Cog):
             possibleamount = possibleitem.rsplit(' ', 1)[1]
             amount = int(possibleamount)
             possibleitem = possibleitem.rsplit(' ', 1)[0]
-            customamount = True
+            if amount > 0:
+                customamount = True
         except Exception:
             pass
 
@@ -367,7 +374,7 @@ class Shop(commands.Cog):
         embed = emb.confirmembed(f"Tu nopirki {amount}x{item.emoji}{item.name2.capitalize()} par {total}{self.client.gem}", ctx)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=['s'])
     async def sell(self, ctx, *, possibleitem):
         client = self.client
 
@@ -376,7 +383,8 @@ class Shop(commands.Cog):
             possibleamount = possibleitem.rsplit(' ', 1)[1]
             amount = int(possibleamount)
             possibleitem = possibleitem.rsplit(' ', 1)[0]
-            customamount = True
+            if amount > 0:
+                customamount = True
         except Exception:
             pass
 
@@ -600,6 +608,48 @@ class Shop(commands.Cog):
         await usertools.addfactoryslots(client, ctx.author, 1)
         await usertools.givegems(client, ctx.author, gemstopay * -1)
         embed = emb.congratzembed(f"Tava rūpnīcas ražotspēja tagad ir {profile['factoryslots'] + 1}", ctx)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def addslot(self, ctx):
+        client = self.client
+        profile = await usertools.getprofile(client, ctx.author)
+
+        buyembed = discord.Embed(title='Pirkuma detaļas', colour=9309837)
+        buyembed.add_field(
+            name='Prece',
+            value=f"\ud83c\udfea {profile['storeslots']} \u2192 {profile['storeslots'] + 1}"
+        )
+        buyembed.add_field(
+            name='Cena',
+            value=f"{client.gold}{usertools.storeupgcost(profile['storeslots'])}"
+        )
+        buyembed.add_field(name='Apstiprinājums', value='Norādi ar reakciju valūtu')
+        buyembed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        buyinfomessage = await ctx.send(embed=buyembed)
+        await buyinfomessage.add_reaction(client.gold)
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) == client.gold and reaction.message.id == buyinfomessage.id
+
+        try:
+            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
+            await ctx.send(embed=embed, delete_after=15)
+            return await buyinfomessage.clear_reactions()
+
+        profile = await usertools.getprofile(client, ctx.author)
+
+        goldtopay = usertools.storeupgcost(profile['storeslots'])
+
+        if profile['money'] < goldtopay:
+            embed = emb.errorembed('Tev nepietiek supernaudu. Sāc pirkumu par jaunu.', ctx)
+            return await ctx.send(embed=embed)
+
+        await usertools.addstoreslots(client, ctx.author, 1)
+        await usertools.givemoney(client, ctx.author, goldtopay * -1)
+        embed = emb.congratzembed(f"Tava veikala pārdošanas apjoms tagad ir {profile['storeslots'] + 1}", ctx)
         await ctx.send(embed=embed)
 
 

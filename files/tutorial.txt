@@ -2,10 +2,11 @@
 **1. :house_with_garden: Profila komandas**
 **2. :notepad_spiral: Spēles galvenās komandas**
 **3. :shopping_cart: Veikala un tirgus komandas**
-**4. :tractor: Stādīšanas un lauka komandas**
-**5. :factory: Rūpnīcas komandas**
-**6. :card_box: Pasūtījumu komandas**
-**7. :information_source: Informācijas komandas**
+**4. :convenience_store: Spēlētāju veikali**
+**5. :tractor: Stādīšanas un lauka komandas**
+**6. :factory: Rūpnīcas komandas**
+**7. :card_box: Pasūtījumu komandas**
+**8. :information_source: Informācijas komandas**
 (*)
 **:house_with_garden: Profila komandas**
 `%profile` - Tavs profils ar ļoti noderīgu informāciju.
@@ -34,7 +35,7 @@ Ja vēlies apskatīt cita lietotāja noliktavu, norādi lietotāju aiz komandas.
 `%shop <parametrs>` - Atver kādu veikala sadaļu.
 <parametrs> - sadaļas nosaukums angliski. (tos var atrast ar `%shop`)
 
-`%buy <parametrs> <skaits>` - Pirkt kādu lietu no veikala.
+`%buy <parametrs> <skaits>` vai `%b` - Pirkt kādu lietu no veikala.
 <parametrs> - Meklētās lietas ID vai nosaukums.
 <skaits> - Daudzums norādīts ar cipariem.
 
@@ -43,12 +44,22 @@ Ja vēlies apskatīt cita lietotāja noliktavu, norādi lietotāju aiz komandas.
 `%market <parametrs>` - Atver kādu tirgus sadaļu.
 <parametrs> - sadaļas nosaukums angliski. (tos var atrast ar `%market`)
 
-`%sell <parametrs> <skaits>` - Pārdot kādu lietu tirgū.
+`%sell <parametrs> <skaits>` vai `%s` - Pārdot kādu lietu tirgū.
+<parametrs> - Meklētās lietas ID vai nosaukums.
+<skaits> - Daudzums norādīts ar cipariem.
+(*)
+**:convenience_store: Spēlētāju veikali**
+`%allstores` vai `%as` - Visu servera lietotāju veikali.
+
+`%store` - Apskati savu veikalu.
+Ja vēlies apskatīt cita lietotāja veikalu, norādi lietotāju aiz komandas.
+
+`%add <parametrs> <skaits>` - Pievieno lietas pārdošanai.
 <parametrs> - Meklētās lietas ID vai nosaukums.
 <skaits> - Daudzums norādīts ar cipariem.
 (*)
 **:tractor: Stādīšanas un lauka komandas**
-`%field` - Tavs lauks.
+`%field` vai `%f` - Tavs lauks.
 Ja vēlies apskatīt cita lietotāja lauku, norādi lietotāju aiz komandas.
 
 `%plant <parametrs> <skaits>` vai `%p`  - Stādīt uz lauka kādu lietu.

@@ -21,7 +21,7 @@ class Factory(commands.Cog):
         return userid['userid'] == ctx.author.id and not self.client.disabledcommands
 
     @commands.command()
-    async def factory(self, ctx, member: Optional[MemberID] = None):
+    async def factory(self, ctx, *, member: Optional[MemberID] = None):
         allitems = {}
         information = []
         member = member or ctx.author
@@ -78,7 +78,8 @@ class Factory(commands.Cog):
             possibleamount = possibleitem.rsplit(' ', 1)[1]
             reqamount = int(possibleamount)
             possibleitem = possibleitem.rsplit(' ', 1)[0]
-            customamount = True
+            if reqamount > 0:
+                customamount = True
         except Exception:
             pass
 
