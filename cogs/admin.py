@@ -1,6 +1,7 @@
 """Most of the code from https://github.com/Rapptz/RoboDanny/"""
 
 from discord.ext import commands
+import importlib
 import asyncio
 import traceback
 import discord
@@ -296,6 +297,15 @@ class Admin(commands.Cog):
         new_time = datetime.datetime.now()
         new_time = new_time - old_time
         await ctx.send(new_time)
+
+    @commands.command(name='reimport')
+    @checks.is_owner()
+    async def reimport(self, ctx, ext: str):
+        try:
+            importlib.reload(importlib.import_module(ext))
+            await ctx.send("\u2705")
+        except Exception as e:
+            await ctx.send(e)
 
 
 def setup(client):

@@ -237,7 +237,8 @@ async def getuserstore(client, member):
 
 
 async def getguildstore(client, guild):
-    query = """SELECT DISTINCT userid FROM store WHERE guildid = $1;"""
+    query = """SELECT * FROM store WHERE guildid = $1
+            ORDER BY userid;"""
     data = await client.db.fetch(query, guild.id)
     return data
 

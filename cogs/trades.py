@@ -24,6 +24,7 @@ class Trades(commands.Cog):
     @commands.command(aliases=['as'])
     async def allstores(self, ctx):
         information = []
+        users = {}
 
         client = self.client
         storedata = await usertools.getguildstore(client, ctx.guild)
@@ -32,11 +33,28 @@ class Trades(commands.Cog):
             return await ctx.send(embed=embed)
 
         for object in storedata:
-            userid = usertools.splitgameuserid(object[0], ctx)
+            userid = usertools.splitgameuserid(object['userid'], ctx)
+
             user = ctx.guild.get_member(userid)
             if not user:
                 continue
-            information.append(f"\ud83c\udfea `%store {user}`")
+
+            try:
+                users[user].append(client.allitems[object['itemid']])
+            except KeyError:
+                users[user] = [client.allitems[object['itemid']]]
+
+        for user, items in users.items():
+            string, count = '', 0
+            for i in items:
+                if count < 5:
+                    count += 1
+                    string += i.emoji
+                else:
+                    string += f'+{len(items) - 5}'
+                    break
+
+            information.append(f"\ud83c\udfea `%store {user}`\n" + string + '\n')
 
         try:
             p = Pages(ctx, entries=information, per_page=5, show_entry_count=False)
@@ -108,6 +126,7 @@ class Trades(commands.Cog):
 
         profile = await usertools.getprofile(client, ctx.author)
         level = usertools.getlevel(profile['xp'])[0]
+        ownerid = usertools.splitgameuserid(tradedata['userid'], ctx)
 
         item = client.allitems[tradedata['itemid']]
 
@@ -115,7 +134,7 @@ class Trades(commands.Cog):
             embed = emb.errorembed("Pārāk zems līmenis, lai iegādātos šo lietu", ctx)
             return await ctx.send(embed=embed)
 
-        if tradedata['money'] > profile['money']:
+        if tradedata['money'] > profile['money'] and ownerid != ctx.author.id:
             embed = emb.errorembed("Tev nepietiek zelts, lai iegādātos šo lietu", ctx)
             return await ctx.send(embed=embed)
 
@@ -156,7 +175,7 @@ class Trades(commands.Cog):
         WHERE id = $1;"""
 
         usergold = await client.db.fetchrow(query, profile['id'])
-        if usergold['money'] < tradedata['money']:
+        if usergold['money'] < tradedata['money'] and ownerid != ctx.author.id:
             embed = emb.errorembed('Tev nepietiek zelts, lai iegādātos šo lietu', ctx)
             return await ctx.send(embed=embed)
 
@@ -167,13 +186,14 @@ class Trades(commands.Cog):
 
         await usertools.deletetrade(client, tradedata['id'])
         await usertools.additemtoinventory(client, ctx.author, item, tradedata['amount'])
-        await usertools.givemoney(client, ctx.author, tradedata['money'] * -1)
-        await usertools.givemoney(client, tradedata['userid'], tradedata['money'])
+
+        if ownerid != ctx.author.id:
+            await usertools.givemoney(client, ctx.author, tradedata['money'] * -1)
+            await usertools.givemoney(client, tradedata['userid'], tradedata['money'])
 
         embed = emb.confirmembed(f"Tu nopirki {tradedata['amount']}x{item.emoji}{item.name2.capitalize()} par {tradedata['money']}{client.gold}", ctx)
         await ctx.send(embed=embed)
 
-        ownerid = usertools.splitgameuserid(tradedata['userid'], ctx)
         owner = ctx.guild.get_member(ownerid)
         if not owner:
             return
