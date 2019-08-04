@@ -121,7 +121,7 @@ class Trades(commands.Cog):
 
         tradedata = await usertools.gettrade(client, id)
         if not tradedata:
-            embed = emb.errorembed("Nepareizs trade ID", ctx)
+            embed = emb.errorembed("Kāds jau ir nopircis šos produktus vai nepareizs ID", ctx)
             return await ctx.send(embed=embed)
 
         profile = await usertools.getprofile(client, ctx.author)
@@ -131,14 +131,14 @@ class Trades(commands.Cog):
         item = client.allitems[tradedata['itemid']]
 
         if level < item.level:
-            embed = emb.errorembed("Pārāk zems līmenis, lai iegādātos šo lietu", ctx)
+            embed = emb.errorembed("Pārāk zems līmenis, lai iegādātos šos produktus", ctx)
             return await ctx.send(embed=embed)
 
         if tradedata['money'] > profile['money'] and ownerid != ctx.author.id:
-            embed = emb.errorembed("Tev nepietiek zelts, lai iegādātos šo lietu", ctx)
+            embed = emb.errorembed("Tev nepietiek zelts, lai iegādātos šos produktus", ctx)
             return await ctx.send(embed=embed)
 
-        buyembed = Embed(title='Trade detaļas', color=8052247)
+        buyembed = Embed(title='Pirkuma detaļas', color=8052247)
         buyembed.set_footer(
             text=f"{ctx.author} Zelts: {profile['money']} SN: {profile['gems']}",
             icon_url=ctx.author.avatar_url,
@@ -176,12 +176,12 @@ class Trades(commands.Cog):
 
         usergold = await client.db.fetchrow(query, profile['id'])
         if usergold['money'] < tradedata['money'] and ownerid != ctx.author.id:
-            embed = emb.errorembed('Tev nepietiek zelts, lai iegādātos šo lietu', ctx)
+            embed = emb.errorembed('Tev nepietiek zelts, lai iegādātos šos produktus', ctx)
             return await ctx.send(embed=embed)
 
         tradedata = await usertools.gettrade(client, id)
         if not tradedata:
-            embed = emb.errorembed('Upsī! Kāds jau paspēja nopirkt pirms tevis', ctx)
+            embed = emb.errorembed('Upsī! Kāds jau paspēja nopirkt šīs lietas pirms tevis', ctx)
             return await ctx.send(embed=embed)
 
         await usertools.deletetrade(client, tradedata['id'])
