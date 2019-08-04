@@ -78,7 +78,7 @@ class Factory(commands.Cog):
             possibleamount = possibleitem.rsplit(' ', 1)[1]
             reqamount = int(possibleamount)
             possibleitem = possibleitem.rsplit(' ', 1)[0]
-            if reqamount > 0:
+            if reqamount > 0 and reqamount < 2147483647:
                 customamount = True
         except Exception:
             pass

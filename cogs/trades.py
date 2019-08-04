@@ -211,7 +211,7 @@ class Trades(commands.Cog):
             possibleamount = possibleitem.rsplit(' ', 1)[1]
             amount = int(possibleamount)
             possibleitem = possibleitem.rsplit(' ', 1)[0]
-            if not amount > 0:
+            if not amount > 0 or amount > 2147483647:
                 return
         except Exception:
             embed = emb.errorembed(

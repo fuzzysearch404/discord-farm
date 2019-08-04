@@ -234,7 +234,7 @@ class Planting(commands.Cog):
             possibleamount = possibleitem.rsplit(' ', 1)[1]
             amount = int(possibleamount)
             possibleitem = possibleitem.rsplit(' ', 1)[0]
-            if amount > 0:
+            if amount > 0 and amount < 2147483647:
                 customamount = True
         except Exception:
             pass
@@ -276,7 +276,7 @@ class Planting(commands.Cog):
                     ctx
                 )
                 return await ctx.send(embed=embed)
-            elif not amount > 0:
+            elif not amount > 0 or not amount < 2147483647:
                 embed = emb.errorembed(
                     f"Nederīgs daudzums!",
                     ctx

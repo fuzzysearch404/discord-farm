@@ -220,7 +220,7 @@ class Shop(commands.Cog):
             possibleamount = possibleitem.rsplit(' ', 1)[1]
             amount = int(possibleamount)
             possibleitem = possibleitem.rsplit(' ', 1)[0]
-            if amount > 0:
+            if amount > 0 and amount < 2147483647:
                 customamount = True
         except Exception:
             pass
@@ -286,7 +286,7 @@ class Shop(commands.Cog):
 
             try:
                 amount = int(entry.clean_content)
-                if amount < 1:
+                if amount < 1 or amount > 2147483647:
                     embed = emb.errorembed('Nederīgs daudzums. Sāc pirkumu par jaunu.', ctx)
                     return await ctx.send(embed=embed)
             except ValueError:
@@ -383,7 +383,7 @@ class Shop(commands.Cog):
             possibleamount = possibleitem.rsplit(' ', 1)[1]
             amount = int(possibleamount)
             possibleitem = possibleitem.rsplit(' ', 1)[0]
-            if amount > 0:
+            if amount > 0 and amount < 2147483647:
                 customamount = True
         except Exception:
             pass
@@ -453,7 +453,7 @@ class Shop(commands.Cog):
 
             try:
                 amount = int(entry.clean_content)
-                if amount < 1:
+                if amount < 1 or amount > 2147483647:
                     embed = emb.errorembed('Nederīgs daudzums. Sāc pārdošanu par jaunu.', ctx)
                     return await ctx.send(embed=embed)
             except ValueError:
