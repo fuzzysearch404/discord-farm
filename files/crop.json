@@ -232,5 +232,41 @@
     "level":12,
     "xp":20,
     "img":"https://failiem.lv/thumb_show.php?i=fxeausz7"
+  },
+  "114": {
+    "id":114,
+    "madefrom":9,
+    "emoji":"\ud83c\udf37",
+    "name":"tulpes",
+    "name2":"tulpes",
+    "rarity":1,
+    "grows":6000,
+    "dies":7000,
+    "amount":13,
+    "cost":100,
+    "scost":1,
+    "minprice":78,
+    "maxprice":92,
+    "level":15,
+    "xp":6,
+    "img":"https://failiem.lv/thumb_show.php?i=2kyxn4rq"
+  },
+  "115": {
+    "id":115,
+    "madefrom":10,
+    "emoji":"\ud83c\udf3a",
+    "name":"hibiski",
+    "name2":"hibiskus",
+    "rarity":1,
+    "grows":4500,
+    "dies":5500,
+    "amount":10,
+    "cost":100,
+    "scost":1,
+    "minprice":100,
+    "maxprice":125,
+    "level":16,
+    "xp":6,
+    "img":"https://failiem.lv/thumb_show.php?i=g87pnqza"
   }
 }

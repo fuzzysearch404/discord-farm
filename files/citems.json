@@ -111,12 +111,12 @@
     "cost":1000,
     "scost":4,
     "level":7,
-    "xp":2222,
+    "xp":1999,
     "img":"https://failiem.lv/thumb_show.php?i=dw66uhrt",
     "minprice":300,
     "maxprice":400,
     "madefrom":[{"112":30}],
-    "time":86400
+    "time":72000
   },
   "306" : {
     "id":306,
@@ -185,5 +185,22 @@
     "maxprice":583,
     "madefrom":[{"109":20}, {"111":10}, {"108":5}, {"113":10}],
     "time":3600
+  },
+  "314" : {
+    "id":314,
+    "emoji":"\ud83d\udc90",
+    "name":"puķu pušķi",
+    "name2":"puķu pušķus",
+    "rarity":2,
+    "amount":1,
+    "cost":600,
+    "scost":2,
+    "level":16,
+    "xp":250,
+    "img":"https://failiem.lv/thumb_show.php?i=fuxqvr7g",
+    "minprice":2180,
+    "maxprice":2260,
+    "madefrom":[{"114":10}, {"115":10}],
+    "time":7200
   }
 }

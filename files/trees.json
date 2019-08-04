@@ -69,14 +69,14 @@
     "level":12,
     "xp":20,
     "emoji":"\ud83c\udf4a",
-    "name":"manderīnu koki",
-    "name2":"manderīnu kokus",
+    "name":"mandarīnu koki",
+    "name2":"mandarīnu kokus",
     "rarity":2,
     "grows":43200,
     "dies":44500,
-    "amount":5,
-    "cost":1000,
-    "scost":3,
+    "amount":2,
+    "cost":400,
+    "scost":2,
     "img":"https://failiem.lv/thumb_show.php?i=fxeausz7"
   }
 }

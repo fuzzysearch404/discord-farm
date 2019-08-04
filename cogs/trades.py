@@ -216,7 +216,7 @@ class Trades(commands.Cog):
         except Exception:
             embed = emb.errorembed(
                 "Lūdzu, norādi arī daudzumu\n"
-                f"Piemēram 10 - `%addtrade {possibleitem} 10`",
+                f"Piemēram 10 - `%add {possibleitem} 10`",
                 ctx)
             return await ctx.send(embed=embed)
 
