@@ -250,7 +250,7 @@ class Trades(commands.Cog):
 
         minprice = item.minprice * amount
         maxprice = item.maxprice * amount
-        maxprice = maxprice + int(maxprice * 1.3)
+        maxprice = maxprice + int(maxprice * 0.43)
 
         sellembed = Embed(title='Pievienot veikalam', colour=8052247)
         sellembed.add_field(
