@@ -145,7 +145,7 @@ class Trades(commands.Cog):
         )
         buyembed.add_field(
             name='Produkti',
-            value=f"{tradedata['amount']}x{item.emoji}{item.name2.capitalize()}"
+            value=f"{tradedata['amount']}x{item.emoji}{item.name.capitalize()}"
         )
         buyembed.add_field(
             name='Summa',
