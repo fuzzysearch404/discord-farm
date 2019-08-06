@@ -116,15 +116,22 @@ class Heists(commands.Cog):
         connection = await client.db.acquire()
         async with connection.transaction():
             for item in win:
-                cnt = item['amount']
+                cnt, iter = item['amount'], None
                 amount = cnt - int(cnt * 0.2)
                 witem = client.allitems[item['itemid']]
                 try:
                     if witem.type == 'tree' or witem.type == 'animal':
+                        iter = item['iterations']
                         witem = witem.getchild(client)
-                    wonitems[witem] += item['amount'] - amount
+                    if iter:
+                        wonitems[witem] += (cnt * iter) - (amount * iter)
+                    else:
+                        wonitems[witem] += cnt - amount
                 except KeyError:
-                    wonitems[witem] = item['amount'] - amount
+                    if iter:
+                        wonitems[witem] = (cnt * iter) - (amount * iter)
+                    else:
+                        wonitems[witem] = cnt - amount
 
                 query = """UPDATE planted SET amount = $1,
                 robbed = TRUE WHERE id = $2"""
