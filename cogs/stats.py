@@ -1,5 +1,6 @@
 from discord.ext import commands
 from discord import Embed, Color
+from utils.usertools import splitgameuserid
 
 
 class Stats(commands.Cog):
@@ -12,18 +13,19 @@ class Stats(commands.Cog):
             return
 
         client = self.client
-        query = """SELECT * FROM users WHERE guildid = $1
-            ORDER BY xp DESC LIMIT 10;"""
+        query = """SELECT * FROM tournament WHERE guildid = $1
+            ORDER BY points DESC LIMIT 10;"""
         users = await client.db.fetch(query, ctx.guild.id)
         fmt = ""
         for element in users:
-            user = client.get_user(element['userid'])
+            userid = splitgameuserid(element['userid'], ctx)
+            user = ctx.guild.get_member(userid)
             if user is not None:
-                name = user.name
+                name = str(user)
             else:
                 name = 'Nav serverī'
-            fmt = fmt + f"\N{SMALL ORANGE DIAMOND}`{name}:` {element['xp']} {client.xp}\n"
-        embed = Embed(title=f'{client.xp}Top 10 pieredze:', description=fmt, colour=Color.dark_orange())
+            fmt = fmt + f"\ud83d\udd3b`{name}:` {element['points']} \ud83c\udf40\n"
+        embed = Embed(title=f'\ud83c\udfc6Fermas turnīrs. 2.sezona:', description=fmt, colour=Color.dark_orange())
         await ctx.send(embed=embed)
 
     @top.command()
@@ -34,7 +36,7 @@ class Stats(commands.Cog):
         users = await client.db.fetch(query, ctx.guild.id)
         fmt = ""
         for element in users:
-            user = client.get_user(element['userid'])
+            user = ctx.guild.get_member(element['userid'])
             if user is not None:
                 name = user.name
             else:
@@ -43,7 +45,7 @@ class Stats(commands.Cog):
         embed = Embed(title=f'{client.xp}Top 10 pieredze:', description=fmt, colour=Color.dark_orange())
         await ctx.send(embed=embed)
 
-    @top.command()
+    @top.command(aliases=['gold'])
     async def money(self, ctx):
         client = self.client
         query = """SELECT * FROM users WHERE guildid = $1
@@ -51,7 +53,7 @@ class Stats(commands.Cog):
         users = await client.db.fetch(query, ctx.guild.id)
         fmt = ""
         for element in users:
-            user = client.get_user(element['userid'])
+            user = ctx.guild.get_member(element['userid'])
             if user is not None:
                 name = user.name
             else:
@@ -60,7 +62,7 @@ class Stats(commands.Cog):
         embed = Embed(title=f'{client.gold}Top 10 zelts:', description=fmt, colour=Color.dark_orange())
         await ctx.send(embed=embed)
 
-    @top.command()
+    @top.command(aliases=['diamonds'])
     async def gems(self, ctx):
         client = self.client
         query = """SELECT * FROM users WHERE guildid = $1
@@ -68,7 +70,7 @@ class Stats(commands.Cog):
         users = await client.db.fetch(query, ctx.guild.id)
         fmt = ""
         for element in users:
-            user = client.get_user(element['userid'])
+            user = ctx.guild.get_member(element['userid'])
             if user is not None:
                 name = user.name
             else:

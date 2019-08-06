@@ -39,9 +39,9 @@ class Main(commands.Cog):
 
         item = choice(suitableitems)
         if item.type == 'animal' or item.type == 'tree' or item.type == 'crafteditem':
-            amount = randint(1, int(level * 1.2))
+            amount = randint(1, int(level * 1))
         else:
-            amount = randint(1, level * 3)
+            amount = randint(1, level * 2)
 
         await usertools.additemtoinventory(client, ctx.author, item, amount)
 
@@ -58,7 +58,7 @@ class Main(commands.Cog):
             embed = emb.errorembed(f"Nākošais dienas bonuss pēc \u23f0{cooldwtime}", ctx)
             await ctx.send(embed=embed)
 
-    @commands.command(aliases=['profils'])
+    @commands.command(aliases=['profils', 'prof'])
     async def profile(self, ctx, *, member: Optional[MemberID] = None):
         member = member or ctx.author
         client = self.client
@@ -67,9 +67,11 @@ class Main(commands.Cog):
             embed = emb.errorembed(f"{member} nav spēles profila", ctx)
             return await ctx.send(embed=embed)
 
+        genuserid = usertools.generategameuserid(member)
+
         query = """SELECT sum(amount) FROM inventory
         WHERE userid = $1;"""
-        inventory = await client.db.fetchrow(query, usertools.generategameuserid(member))
+        inventory = await client.db.fetchrow(query, genuserid)
         if not inventory[0]:
             inventory = 0
         else:
@@ -90,7 +92,7 @@ class Main(commands.Cog):
         )
         query = """SELECT ends FROM planted
         WHERE userid = $1 ORDER BY ends;"""
-        nearestharvest = await client.db.fetchrow(query, usertools.generategameuserid(member))
+        nearestharvest = await client.db.fetchrow(query, genuserid)
         if not nearestharvest:
             nearestharvest = '-'
         else:
@@ -109,7 +111,7 @@ class Main(commands.Cog):
         if level > 2:
             query = """SELECT ends FROM factory
             WHERE userid = $1 ORDER BY ends;"""
-            nearestprod = await client.db.fetchrow(query, usertools.generategameuserid(member))
+            nearestprod = await client.db.fetchrow(query, genuserid)
             if not nearestprod:
                 nearestprod = '-'
             else:
@@ -124,13 +126,18 @@ class Main(commands.Cog):
         else:
             factorytext = "Pieejams no 3.līmeņa"
         embed.add_field(
-            name='\ud83c\udfedRūpnīca',
-            value=factorytext
-        )
-        embed.add_field(
             name='\ud83d\udecdVeikals',
             value=f'`%store {member}`'
         )
+        embed.add_field(
+            name='\u2b06Boosteri',
+            value=f'`%boosts {member}`'
+        )
+        embed.add_field(
+            name='\ud83c\udfedRūpnīca',
+            value=factorytext
+        )
+
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 

@@ -48,7 +48,7 @@ class Registration(commands.Cog):
                 self.words = string.split("(*)")
         except Exception as e:
             print(e)
-            self.words = ['error loading tutorial :(']
+            self.words = ['error occured while loading tutorial :(']
 
     @commands.command(aliases=['cmd'])
     async def commands(self, ctx):

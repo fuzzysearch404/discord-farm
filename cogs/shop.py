@@ -3,6 +3,7 @@ import discord
 import asyncio
 import utils.embeds as emb
 from utils import usertools
+from utils import boosttools
 from utils.time import secstotime
 from utils.paginator import Pages
 from utils.item import finditem
@@ -50,7 +51,7 @@ class Shop(commands.Cog):
         embed.add_field(name='\ud83c\udf33 Koki', value='`%shop trees`')
         embed.add_field(name='\ud83d\udc14 Dzīvnieki', value='`%shop animals`')
         embed.add_field(name='\u2696 Tirgus', value='`%market`')
-        embed.add_field(name='\ud83c\udfe6 Pakalpojumi', value='`Nākošajos update`')
+        embed.add_field(name='\ud83c\udfe6 Pakalpojumi', value='`%shop boosts`')
         embed.add_field(name='\u2b50 Citi', value='`%shop special`')
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
@@ -106,6 +107,30 @@ class Shop(commands.Cog):
             await p.paginate()
         except Exception as e:
             print(e)
+
+    @shop.command()
+    async def boosts(self, ctx):
+        embed = discord.Embed(title='\ud83c\udfe6 Pakalpojumi', color=82247)
+        embed.add_field(
+            name='\ud83d\udc29Kvešķētājs',
+            value="""Sargā lauku, it kā sargā.
+            `%dog 1`"""
+            )
+        embed.add_field(
+            name='\ud83d\udc36Siekalainais Tobis',
+            value="""Sargā lauku, bet patīk spēlēties.
+            `%dog 2`"""
+            )
+        embed.add_field(
+            name='\ud83d\udc15Reksis',
+            value="""Apsargā lauku un tavu sirdsapziņu.
+            `%dog 3`"""
+            )
+        embed.add_field(
+            name='\ud83d\udc31',
+            value='`???`'
+            )
+        await ctx.send(embed=embed)
 
     @commands.group()
     async def market(self, ctx):
@@ -321,8 +346,6 @@ class Shop(commands.Cog):
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
         except asyncio.TimeoutError:
-            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
-            await ctx.send(embed=embed, delete_after=15)
             return await buyinfomessage.clear_reactions()
 
         if str(reaction.emoji) == client.gold:
@@ -490,8 +513,6 @@ class Shop(commands.Cog):
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
         except asyncio.TimeoutError:
-            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
-            await ctx.send(embed=embed, delete_after=15)
             return await sellinfomessage.clear_reactions()
 
         if str(reaction.emoji) == '\u274c':
@@ -547,8 +568,6 @@ class Shop(commands.Cog):
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
         except asyncio.TimeoutError:
-            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
-            await ctx.send(embed=embed, delete_after=15)
             return await buyinfomessage.clear_reactions()
 
         profile = await usertools.getprofile(client, ctx.author)
@@ -593,8 +612,6 @@ class Shop(commands.Cog):
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
         except asyncio.TimeoutError:
-            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
-            await ctx.send(embed=embed, delete_after=15)
             return await buyinfomessage.clear_reactions()
 
         profile = await usertools.getprofile(client, ctx.author)
@@ -635,8 +652,6 @@ class Shop(commands.Cog):
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
         except asyncio.TimeoutError:
-            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
-            await ctx.send(embed=embed, delete_after=15)
             return await buyinfomessage.clear_reactions()
 
         profile = await usertools.getprofile(client, ctx.author)
@@ -650,6 +665,139 @@ class Shop(commands.Cog):
         await usertools.addstoreslots(client, ctx.author, 1)
         await usertools.givemoney(client, ctx.author, goldtopay * -1)
         embed = emb.congratzembed(f"Tava veikala pārdošanas apjoms tagad ir {profile['storeslots'] + 1}", ctx)
+        await ctx.send(embed=embed)
+
+    @commands.group()
+    async def dog(self, ctx):
+        if ctx.invoked_subcommand:
+            return
+        embed = emb.errorembed("`%dog 1 - 3`", ctx)
+        await ctx.send(embed=embed)
+
+    @dog.command(name='1')
+    async def dog1(self, ctx):
+        message, gp, dp = await self.preparedoginfo(ctx, 1, '\ud83d\udc29')
+        await self.assigndog(ctx, message, gp, dp, '\ud83d\udc29', 1)
+
+    @dog.command(name='2')
+    async def dog2(self, ctx):
+        message, gp, dp = await self.preparedoginfo(ctx, 2, '\ud83d\udc36')
+        await self.assigndog(ctx, message, gp, dp, '\ud83d\udc36', 2)
+
+    @dog.command(name='3')
+    async def dog3(self, ctx):
+        message, gp, dp = await self.preparedoginfo(ctx, 3, '\ud83d\udc15')
+        await self.assigndog(ctx, message, gp, dp, '\ud83d\udc15', 3)
+
+    async def preparedoginfo(self, ctx, dog, emoji):
+        client = self.client
+        profile = await usertools.getprofile(self.client, ctx.author)
+        goldprices = boosttools.getdoggoldprices(profile['tiles'], dog)
+        gemprices = boosttools.getdoggemprices(profile['tiles'], dog)
+
+        embed = discord.Embed(title=f'Noalgot suni {emoji}')
+        embed.add_field(
+            name='Uz 1 dienu',
+            value=f"{goldprices[1]}{client.gold} vai {gemprices[1]}{client.gem}"
+            )
+        embed.add_field(
+            name='Uz 3 dienām',
+            value=f"{goldprices[3]}{client.gold} vai {gemprices[3]}{client.gem}"
+            )
+        embed.add_field(
+            name='Uz 7 dienām',
+            value=f"{goldprices[7]}{client.gold} vai {gemprices[7]}{client.gem}"
+            )
+        message = await ctx.send(embed=embed)
+        await message.add_reaction('1\u20e3')
+        await message.add_reaction('3\u20e3')
+        await message.add_reaction('7\u20e3')
+
+        return message, goldprices, gemprices
+
+    async def assigndog(self, ctx, message, gp, dp, emoji, dog):
+        client = self.client
+
+        emojis = {
+            '1\u20e3': (gp[1], dp[1]),
+            '3\u20e3': (gp[3], dp[3]),
+            '7\u20e3': (gp[7], dp[7])
+        }
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in emojis and reaction.message.id == message.id
+
+        try:
+            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            return await message.clear_reactions()
+
+        await message.delete()
+
+        settings = emojis[str(reaction.emoji)]
+
+        buyembed = discord.Embed(title='Pirkuma detaļas')
+        buyembed.add_field(
+            name='Prece',
+            value=f"{emoji} {str(reaction.emoji)[0]} dienas"
+        )
+        buyembed.add_field(
+            name='Cena',
+            value=f"{client.gold}{settings[0]} vai {client.gem}{settings[1]}"
+        )
+        buyembed.add_field(name='Apstiprinājums', value='Norādi ar reakciju valūtu')
+        buyembed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        buyinfomessage = await ctx.send(embed=buyembed)
+        await buyinfomessage.add_reaction(client.gold)
+        await buyinfomessage.add_reaction(client.gem)
+
+        aemojis = (client.gem, client.gold)
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in aemojis and reaction.message.id == buyinfomessage.id
+
+        try:
+            breaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            return await message.clear_reactions()
+
+        if str(breaction.emoji) == client.gold:
+            await self.dogbuywithgold(ctx, settings[0], dog, emoji, int(str(reaction.emoji)[0]))
+        elif str(breaction.emoji) == client.gem:
+            await self.dogbuywithgems(ctx, settings[1], dog, emoji, int(str(reaction.emoji)[0]))
+
+    async def dogbuywithgold(self, ctx, gold, dog, emoji, duration):
+        client = self.client
+        query = """SELECT money FROM users
+        WHERE id = $1;"""
+
+        usergold = await client.db.fetchrow(query, usertools.generategameuserid(ctx.author))
+        if usergold['money'] < gold:
+            embed = emb.errorembed('Tev nepietiek zelts.', ctx)
+            return await ctx.send(embed=embed)
+
+        await usertools.givemoney(client, ctx.author, gold * -1)
+
+        await boosttools.adddog(client, ctx.author, dog, duration)
+
+        embed = emb.confirmembed(f"Tu noalgoji {emoji} apsargāt laukus", ctx)
+        await ctx.send(embed=embed)
+
+    async def dogbuywithgems(self, ctx, gems, dog, emoji, duration):
+        client = self.client
+        query = """SELECT gems FROM users
+        WHERE id = $1;"""
+
+        usergold = await client.db.fetchrow(query, usertools.generategameuserid(ctx.author))
+        if usergold['gems'] < gems:
+            embed = emb.errorembed('Tev nepietiek supernaudu.', ctx)
+            return await ctx.send(embed=embed)
+
+        await usertools.givegems(client, ctx.author, gems * -1)
+
+        await boosttools.adddog(client, ctx.author, dog, duration)
+
+        embed = emb.confirmembed(f"Tu noalgoji {emoji} apsargāt laukus", ctx)
         await ctx.send(embed=embed)
 
 

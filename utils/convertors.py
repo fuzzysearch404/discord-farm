@@ -38,8 +38,6 @@ class MemberID(commands.Converter):
                 member_id = int(argument, base=10)
                 m = await resolve_member(ctx.guild, member_id)
             except ValueError:
-                embed = discord.Embed(colour=16716085, description="\N{CROSS MARK} Nederīgs ID/member objekts")
-                await ctx.send(embed=embed)
                 raise commands.BadArgument(f"{argument} is not a valid member or member ID.") from None
             except MemberNotFound:
                 # hackban case

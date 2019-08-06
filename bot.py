@@ -16,6 +16,7 @@ extensions = (
     'cogs.requests',
     'cogs.factory',
     'cogs.trades',
+    'cogs.heists',
     'cogs.registration',
     'cogs.usercontrol',
     'cogs.stats'

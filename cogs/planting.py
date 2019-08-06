@@ -169,11 +169,20 @@ class Planting(commands.Cog):
             await ctx.send(embed=embed)
 
     async def checkcrops(self, client, crops, ctx, unique, todelete):
+        saladcount, total, eligable = 0, 0, False  # TEMP
+        for data in crops.keys():
+            if data['itemid'] == 101:
+                saladcount += 1
+        if saladcount == 2:
+            eligable = True  # TEMP END
+
         for data, item in crops.items():
             status = self.getcropstate(item, data['ends'], data['dies'])[0]
             if status == 'grow1' or status == 'grow2':
                 continue
             elif status == 'ready':
+                if item.id == 101:  # TEMP
+                    total += data['amount']  # TEMP END
                 xp = item.xp * data['amount']
                 await usertools.givexpandlevelup(client, ctx, xp)
                 await usertools.additemtoinventory(client, ctx.author, item, data['amount'])
@@ -183,6 +192,23 @@ class Planting(commands.Cog):
                     unique[item] = (data['amount'], xp)
 
             todelete.append(data['id'])
+
+        if eligable:  # TEMP
+            if total > 11 and total < 23:
+                connection = await client.db.acquire()
+                async with connection.transaction():
+                    userid = usertools.generategameuserid(ctx.author)
+                    query = """SELECT * FROM tournament WHERE userid = $1;"""
+                    data = await client.db.fetchrow(query, userid)
+                    if not data:
+                        query = """INSERT INTO tournament (userid, guildid, points)
+                        VALUES($1, $2, $3);"""
+                        await client.db.execute(query, userid, ctx.guild.id, total)
+                    else:
+                        query = """UPDATE tournament SET points = points + $1
+                        WHERE userid = $2;"""
+                        await client.db.execute(query, total, userid)
+                await client.db.release(connection)
 
     async def checkanimalsortrees(self, client, crops, ctx, unique, todelete, deaditem):
         for data, item in crops.items():
@@ -258,7 +284,7 @@ class Planting(commands.Cog):
         if not item:
             return
         if item.type != 'cropseed' and item.type != 'animal' and item.type != 'tree':
-            embed = emb.errorembed(f"Šo lietu ({item.emoji}{item.name2.capitalize()}) nevar likt uz lauka!", ctx)
+            embed = emb.errorembed(f"{item.emoji}{item.name2.capitalize()} nevar likt uz lauka!", ctx)
             return await ctx.send(embed=embed)
 
         inventorydata = await usertools.checkinventoryitem(client, ctx.author, item)
@@ -302,18 +328,18 @@ class Planting(commands.Cog):
 
         connection = await client.db.acquire()
         async with connection.transaction():
-            query = """INSERT INTO planted(itemid, userid, amount, ends, dies, robbed)
-            VALUES($1, $2, $3, $4, $5, $6)"""
+            query = """INSERT INTO planted(itemid, userid, amount, ends, dies, robbed, guildid)
+            VALUES($1, $2, $3, $4, $5, $6, $7);"""
             if not customamount:
                 await client.db.execute(
                     query, itemchild.id, userid, item.amount,
-                    ends, dies, False
+                    ends, dies, False, ctx.guild.id
                 )
             else:
                 for i in range(amount):
                     await client.db.execute(
                         query, itemchild.id, userid, item.amount,
-                        ends, dies, False
+                        ends, dies, False, ctx.guild.id
                     )
         await client.db.release(connection)
 

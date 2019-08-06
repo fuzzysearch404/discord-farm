@@ -1,9 +1,1 @@
-%factory - Parâda lietas, kuras pağlaik tiek raşotas.
-Ja vçlies apskatît cita lietotâja rûpnîcu, norâdi lietotâju aiz komandas.
-
-%make <parametrs> - Raşot produktu.
-<parametrs> - Meklçtâs lietas ID vai nosaukums.
-
-%collect vai %c - Savâkt gatavo produkciju.
-
-%upgrade - Uzlabot maksimâlo rûpnîcas raşoğanas apjomu.
+PagaidÄm nav jaunumu. PÄrbaudi vÄ“lÄk vÄ“lreiz :)

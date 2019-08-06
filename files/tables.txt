@@ -1,6 +1,8 @@
 'CREATE TABLE IF NOT EXISTS users(id decimal PRIMARY KEY, guildid bigint NOT NULL, userid bigint NOT NULL, xp bigint NOT NULL, money bigint NOT NULL, gems integer NOT NULL, tiles integer NOT NULL, usedtiles integer NOT NULL, factoryslots integer NOT NULL, storeslots integer NOT NULL);'
 'CREATE TABLE IF NOT EXISTS inventory(itemid smallint NOT NULL, userid decimal NOT NULL, amount integer NOT NULL);'
-CREATE TABLE IF NOT EXISTS planted(id SERIAL PRIMARY KEY, itemid smallint NOT NULL, userid decimal NOT NULL, amount integer NOT NULL, ends timestamp NOT NULL, dies timestamp NOT NULL, robbed boolean NOT NULL, iterations smallint);
+CREATE TABLE IF NOT EXISTS planted(id SERIAL PRIMARY KEY, itemid smallint NOT NULL, userid decimal NOT NULL, amount integer NOT NULL, ends timestamp NOT NULL, dies timestamp NOT NULL, robbed boolean NOT NULL, iterations smallint, guildid bigint NOT NULL);
 CREATE TABLE IF NOT EXISTS missions(id SERIAL PRIMARY KEY, userid decimal NOT NULL, requests text NOT NULL, money integer NOT NULL, xp integer NOT NULL);
 CREATE TABLE IF NOT EXISTS factory(id SERIAL PRIMARY KEY, userid decimal NOT NULL, itemid smallint NOT NULL, start timestamp NOT NULL, ends timestamp NOT NULL);
 CREATE TABLE IF NOT EXISTS store(id SERIAL PRIMARY KEY, guildid bigint NOT NULL, userid decimal NOT NULL, itemid smallint NOT NULL, amount integer NOT NULL, money integer NOT NULL);
+CREATE TABLE IF NOT EXISTS boosts(userid decimal PRIMARY KEY, dog1 timestamp, dog2 timestamp, dog3 timestamp, cat timestamp);
+CREATE TABLE IF NOT EXISTS tournament(userid decimal PRIMARY KEY, guildid bigint NOT NULL, points integer NOT NULL);

@@ -6,14 +6,15 @@
 **5. :tractor: Stādīšanas un lauka komandas**
 **6. :factory: Rūpnīcas komandas**
 **7. :card_box: Pasūtījumu komandas**
-**8. :information_source: Informācijas komandas**
+**8. :dog: Boosteru un lauku retināšanas komandas**
+**9. :information_source: Informācijas komandas**
 (*)
 **:house_with_garden: Profila komandas**
-`%profile` - Tavs profils ar ļoti noderīgu informāciju.
-Ja vēlies apskatīt cita lietotāja profilu, norādi lietotāju aiz komandas.
+`%profile` vai `%prof` - Tavs profils ar ļoti noderīgu informāciju.
+Ja vēlies apskatīt cita spēlētāja profilu, norādi spēlētāju aiz komandas.
 
 `%inventory` vai `%inv` - Tava noliktava.
-Ja vēlies apskatīt cita lietotāja noliktavu, norādi lietotāju aiz komandas.
+Ja vēlies apskatīt cita spēlētāja noliktavu, norādi spēlētāju aiz komandas.
 
 `%dailybonus` vai `%daily` - Iegūsti dienas bonusu.
 
@@ -49,10 +50,10 @@ Ja vēlies apskatīt cita lietotāja noliktavu, norādi lietotāju aiz komandas.
 <skaits> - Daudzums norādīts ar cipariem.
 (*)
 **:convenience_store: Spēlētāju veikali**
-`%allstores` vai `%as` - Visu servera lietotāju veikali.
+`%allstores` vai `%as` - Visu servera spēlētāju veikali.
 
 `%store` - Apskati savu veikalu.
-Ja vēlies apskatīt cita lietotāja veikalu, norādi lietotāju aiz komandas.
+Ja vēlies apskatīt cita spēlētāja veikalu, norādi spēlētāju aiz komandas.
 
 `%add <parametrs> <skaits>` - Pievieno lietas pārdošanai.
 <parametrs> - Meklētās lietas ID vai nosaukums.
@@ -60,7 +61,7 @@ Ja vēlies apskatīt cita lietotāja veikalu, norādi lietotāju aiz komandas.
 (*)
 **:tractor: Stādīšanas un lauka komandas**
 `%field` vai `%f` - Tavs lauks.
-Ja vēlies apskatīt cita lietotāja lauku, norādi lietotāju aiz komandas.
+Ja vēlies apskatīt cita spēlētāja lauku, norādi spēlētāju aiz komandas.
 
 `%plant <parametrs> <skaits>` vai `%p`  - Stādīt uz lauka kādu lietu.
 <parametrs> - Meklētās lietas ID vai nosaukums.
@@ -72,8 +73,8 @@ tad aizvāc to no lauka.
 `%expand` - Paplašina zemi par supernaudām.
 (*)
 **:factory: Rūpnīcas komandas**
-`%factory` - Parāda lietas, kuras pašlaik tiek ražotas.
-Ja vēlies apskatīt cita lietotāja rūpnīcu, norādi lietotāju aiz komandas.
+`%factory` vai `%fa` - Parāda lietas, kuras pašlaik tiek ražotas.
+Ja vēlies apskatīt cita spēlētāja rūpnīcu, norādi spēlētāju aiz komandas.
 
 `%make <parametrs> <skaits>` - Ražot produktu.
 <parametrs> - Meklētās lietas ID vai nosaukums.
@@ -89,6 +90,14 @@ Ja vēlies apskatīt cita lietotāja rūpnīcu, norādi lietotāju aiz komandas.
 `%requests refresh` - Nomaina esošos pasūtījumus uz jauniem. Ir laika ierobežojums.
 
 `%offer` - Līdzīgi kā `%requests` pasūtījums, tikai jāizpilda uzreiz.
+(*)
+**:dog: Boosteru un lauku retināšanas komandas**
+`%scout` - Apskatīt visus servera laukus ar gatavu ražu
+
+`%heist` vai `%rob` - Mēģināt paretināt spēlētāja lauku (norādi kuru aiz komandas)
+
+`%boosts` - Apskatīt savus boosterus.
+Ja vēlies apskatīt cita spēlētāja boosterus, norādi spēlētāju aiz komandas.
 (*)
 **:information_source: Informācijas komandas**
 `%news` - Parāda dažādu bota informāciju un jaunumus.

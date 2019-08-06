@@ -72,12 +72,12 @@ class Mission:
 
         for item in items:
             sum += item[0].xp * item[1]
-            sum += int(item[0].maxprice * 1.3 * item[1])
+            sum += int(item[0].maxprice * 1.42 * item[1])
 
         if boosted:
-            sum = int(sum * 1.5)
+            sum = int(sum * 2)
 
-        xp = randint(int(sum / 4), sum)
+        xp = randint(int(sum / 6), sum)
         money = sum - xp
         return xp, money
 

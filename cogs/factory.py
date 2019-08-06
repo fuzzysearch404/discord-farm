@@ -20,7 +20,7 @@ class Factory(commands.Cog):
             return False
         return userid['userid'] == ctx.author.id and not self.client.disabledcommands
 
-    @commands.command()
+    @commands.command(aliases=['fa'])
     async def factory(self, ctx, *, member: Optional[MemberID] = None):
         allitems = {}
         information = []

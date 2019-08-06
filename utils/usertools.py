@@ -25,7 +25,8 @@ async def deleteacc(client, member):
         "DELETE FROM inventory WHERE userid = $1;",
         "DELETE FROM missions WHERE userid = $1;",
         "DELETE FROM factory WHERE userid = $1;",
-        "DELETE FROM store WHERE userid = $1;"
+        "DELETE FROM store WHERE userid = $1;",
+        "DELETE FROM boosts WHERE userid = $1;",
         "DELETE FROM users WHERE id = $1;"
     )
 

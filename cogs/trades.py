@@ -164,8 +164,6 @@ class Trades(commands.Cog):
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
         except asyncio.TimeoutError:
-            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
-            await ctx.send(embed=embed, delete_after=15)
             return await buyinfomessage.clear_reactions()
 
         if not str(reaction.emoji) == client.gold:
@@ -174,8 +172,10 @@ class Trades(commands.Cog):
         query = """SELECT money FROM users
         WHERE id = $1;"""
 
+        selfbuy = ownerid == ctx.author.id
+
         usergold = await client.db.fetchrow(query, profile['id'])
-        if usergold['money'] < tradedata['money'] and ownerid != ctx.author.id:
+        if usergold['money'] < tradedata['money'] and not selfbuy:
             embed = emb.errorembed('Tev nepietiek zelts, lai iegādātos šos produktus', ctx)
             return await ctx.send(embed=embed)
 
@@ -187,19 +187,25 @@ class Trades(commands.Cog):
         await usertools.deletetrade(client, tradedata['id'])
         await usertools.additemtoinventory(client, ctx.author, item, tradedata['amount'])
 
-        if ownerid != ctx.author.id:
+        if not selfbuy:
             await usertools.givemoney(client, ctx.author, tradedata['money'] * -1)
             await usertools.givemoney(client, tradedata['userid'], tradedata['money'])
 
-        embed = emb.confirmembed(f"Tu nopirki {tradedata['amount']}x{item.emoji}{item.name2.capitalize()} par {tradedata['money']}{client.gold}", ctx)
+        if selfbuy:
+            sum = 0
+        else:
+            sum = tradedata['money']
+        embed = emb.confirmembed(f"Tu nopirki {tradedata['amount']}x{item.emoji}{item.name2.capitalize()} par {sum}{client.gold}", ctx)
         await ctx.send(embed=embed)
 
+        if selfbuy:
+            return
         owner = ctx.guild.get_member(ownerid)
         if not owner:
             return
         embed = emb.confirmembed(
             f"{ctx.author} nopirka no tevis {tradedata['amount']}x{item.emoji}{item.name2.capitalize()} par {tradedata['money']}{client.gold}",
-            ctx
+            ctx, pm=True
         )
         await owner.send(embed=embed)
 
@@ -338,8 +344,6 @@ class Trades(commands.Cog):
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
         except asyncio.TimeoutError:
-            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
-            await ctx.send(embed=embed, delete_after=15)
             return await sellinfomessage.clear_reactions()
 
         if str(reaction.emoji) == '\u274c':

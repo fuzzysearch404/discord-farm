@@ -45,8 +45,6 @@ class Requests(commands.Cog):
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
         except asyncio.TimeoutError:
-            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
-            await ctx.send(embed=embed, delete_after=15)
             return await offermsg.clear_reactions()
 
         if str(reaction.emoji) == '\u274c':
