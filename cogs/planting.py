@@ -122,7 +122,7 @@ class Planting(commands.Cog):
         client = self.client
         fielddata = await usertools.getuserfield(client, ctx.author)
         if not fielddata:
-            embed = emb.errorembed("Tev nav apstādātu lauku", ctx)
+            embed = emb.errorembed("Tev nav apstrādātu lauku", ctx)
             return await ctx.send(embed=embed)
         for object in fielddata:
             try:

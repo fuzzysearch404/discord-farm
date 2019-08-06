@@ -671,57 +671,56 @@ class Shop(commands.Cog):
     async def dog(self, ctx):
         if ctx.invoked_subcommand:
             return
-        embed = emb.errorembed("`%dog 1 - 3`", ctx)
+        embed = emb.errorembed("`%dog 1-3`", ctx)
         await ctx.send(embed=embed)
 
     @dog.command(name='1')
     async def dog1(self, ctx):
-        message, gp, dp = await self.preparedoginfo(ctx, 1, '\ud83d\udc29')
-        await self.assigndog(ctx, message, gp, dp, '\ud83d\udc29', 1)
+        message, gp = await self.preparedoginfo(ctx, 1, '\ud83d\udc29')
+        await self.assigndog(ctx, message, gp, '\ud83d\udc29', 1)
 
     @dog.command(name='2')
     async def dog2(self, ctx):
-        message, gp, dp = await self.preparedoginfo(ctx, 2, '\ud83d\udc36')
-        await self.assigndog(ctx, message, gp, dp, '\ud83d\udc36', 2)
+        message, gp = await self.preparedoginfo(ctx, 2, '\ud83d\udc36')
+        await self.assigndog(ctx, message, gp, '\ud83d\udc36', 2)
 
     @dog.command(name='3')
     async def dog3(self, ctx):
-        message, gp, dp = await self.preparedoginfo(ctx, 3, '\ud83d\udc15')
-        await self.assigndog(ctx, message, gp, dp, '\ud83d\udc15', 3)
+        message, gp = await self.preparedoginfo(ctx, 3, '\ud83d\udc15')
+        await self.assigndog(ctx, message, gp, '\ud83d\udc15', 3)
 
     async def preparedoginfo(self, ctx, dog, emoji):
         client = self.client
         profile = await usertools.getprofile(self.client, ctx.author)
         goldprices = boosttools.getdoggoldprices(profile['tiles'], dog)
-        gemprices = boosttools.getdoggemprices(profile['tiles'], dog)
 
         embed = discord.Embed(title=f'Noalgot suni {emoji}')
         embed.add_field(
             name='Uz 1 dienu',
-            value=f"{goldprices[1]}{client.gold} vai {gemprices[1]}{client.gem}"
+            value=f"{goldprices[1]}{client.gold}"
             )
         embed.add_field(
             name='Uz 3 dienām',
-            value=f"{goldprices[3]}{client.gold} vai {gemprices[3]}{client.gem}"
+            value=f"{goldprices[3]}{client.gold}"
             )
         embed.add_field(
             name='Uz 7 dienām',
-            value=f"{goldprices[7]}{client.gold} vai {gemprices[7]}{client.gem}"
+            value=f"{goldprices[7]}{client.gold}"
             )
         message = await ctx.send(embed=embed)
         await message.add_reaction('1\u20e3')
         await message.add_reaction('3\u20e3')
         await message.add_reaction('7\u20e3')
 
-        return message, goldprices, gemprices
+        return message, goldprices
 
-    async def assigndog(self, ctx, message, gp, dp, emoji, dog):
+    async def assigndog(self, ctx, message, gp, emoji, dog):
         client = self.client
 
         emojis = {
-            '1\u20e3': (gp[1], dp[1]),
-            '3\u20e3': (gp[3], dp[3]),
-            '7\u20e3': (gp[7], dp[7])
+            '1\u20e3': gp[1],
+            '3\u20e3': gp[3],
+            '7\u20e3': gp[7]
         }
 
         def check(reaction, user):
@@ -743,15 +742,14 @@ class Shop(commands.Cog):
         )
         buyembed.add_field(
             name='Cena',
-            value=f"{client.gold}{settings[0]} vai {client.gem}{settings[1]}"
+            value=f"{client.gold}{settings}"
         )
         buyembed.add_field(name='Apstiprinājums', value='Norādi ar reakciju valūtu')
         buyembed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         buyinfomessage = await ctx.send(embed=buyembed)
         await buyinfomessage.add_reaction(client.gold)
-        await buyinfomessage.add_reaction(client.gem)
 
-        aemojis = (client.gem, client.gold)
+        aemojis = (client.gold)
 
         def check(reaction, user):
             return user == ctx.author and str(reaction.emoji) in aemojis and reaction.message.id == buyinfomessage.id
@@ -762,9 +760,7 @@ class Shop(commands.Cog):
             return await message.clear_reactions()
 
         if str(breaction.emoji) == client.gold:
-            await self.dogbuywithgold(ctx, settings[0], dog, emoji, int(str(reaction.emoji)[0]))
-        elif str(breaction.emoji) == client.gem:
-            await self.dogbuywithgems(ctx, settings[1], dog, emoji, int(str(reaction.emoji)[0]))
+            await self.dogbuywithgold(ctx, settings, dog, emoji, int(str(reaction.emoji)[0]))
 
     async def dogbuywithgold(self, ctx, gold, dog, emoji, duration):
         client = self.client
@@ -777,23 +773,6 @@ class Shop(commands.Cog):
             return await ctx.send(embed=embed)
 
         await usertools.givemoney(client, ctx.author, gold * -1)
-
-        await boosttools.adddog(client, ctx.author, dog, duration)
-
-        embed = emb.confirmembed(f"Tu noalgoji {emoji} apsargāt laukus", ctx)
-        await ctx.send(embed=embed)
-
-    async def dogbuywithgems(self, ctx, gems, dog, emoji, duration):
-        client = self.client
-        query = """SELECT gems FROM users
-        WHERE id = $1;"""
-
-        usergold = await client.db.fetchrow(query, usertools.generategameuserid(ctx.author))
-        if usergold['gems'] < gems:
-            embed = emb.errorembed('Tev nepietiek supernaudu.', ctx)
-            return await ctx.send(embed=embed)
-
-        await usertools.givegems(client, ctx.author, gems * -1)
 
         await boosttools.adddog(client, ctx.author, dog, duration)
 

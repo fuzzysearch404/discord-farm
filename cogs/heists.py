@@ -196,13 +196,13 @@ class Heists(commands.Cog):
             embed.description = ''
             dog1 = data['dog1']
             if self.boostvalid(dog1):
-                embed.description += f'\ud83d\udc29 Līdz `{dog1}`'
+                embed.description += f'\ud83d\udc29 Līdz `{dog1}`\n'
             dog2 = data['dog2']
             if self.boostvalid(dog2):
-                embed.description += f'\ud83d\udc36 Līdz `{dog2}`'
+                embed.description += f'\ud83d\udc36 Līdz `{dog2}`\n'
             dog3 = data['dog3']
             if self.boostvalid(dog3):
-                embed.description += f'\ud83d\udc15 Līdz `{dog3}`'
+                embed.description += f'\ud83d\udc15 Līdz `{dog3}`\n'
             if not dog1 and dog2 and dog3:
                 embed.description = "Nav aktīvu boosteru"
 

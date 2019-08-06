@@ -1,12 +1,9 @@
 from utils.usertools import generategameuserid
 from datetime import datetime, timedelta
 
-DEFAULT_DOG_1_GOLD_PRICE = 15
-DEFAULT_DOG_1_GEM_PRICE = 0.2
-DEFAULT_DOG_2_GOLD_PRICE = 25
-DEFAULT_DOG_2_GEM_PRICE = 0.4
-DEFAULT_DOG_3_GOLD_PRICE = 60
-DEFAULT_DOG_3_GEM_PRICE = 0.6
+DEFAULT_DOG_1_GOLD_PRICE = 50
+DEFAULT_DOG_2_GOLD_PRICE = 95
+DEFAULT_DOG_3_GOLD_PRICE = 140
 
 durations = {
     1: 86400,
@@ -31,22 +28,6 @@ def getdoggoldprices(tiles, dog):
     return prices
 
 
-def getdoggemprices(tiles, dog):
-    prices = {}
-
-    if dog == 1:
-        for duration, time in durations.items():
-            prices[duration] = gendoggemprice(duration, DEFAULT_DOG_1_GEM_PRICE * tiles)
-    elif dog == 2:
-        for duration, time in durations.items():
-            prices[duration] = gendoggemprice(duration, DEFAULT_DOG_2_GEM_PRICE * tiles)
-    elif dog == 3:
-        for duration, time in durations.items():
-            prices[duration] = gendoggemprice(duration, DEFAULT_DOG_3_GEM_PRICE * tiles)
-
-    return prices
-
-
 def gendoggoldprice(duration, price):
     if duration == 1:
         return price
@@ -56,17 +37,6 @@ def gendoggoldprice(duration, price):
     else:
         price = price * duration
         return price - int(price * 0.28)
-
-
-def gendoggemprice(duration, price):
-    if duration == 1:
-        return int(price)
-    elif duration == 3:
-        price = price * duration
-        return int(price - 1)
-    else:
-        price = price * duration
-        return int(price - 3)
 
 
 async def adddog(client, member, dog, duration):
