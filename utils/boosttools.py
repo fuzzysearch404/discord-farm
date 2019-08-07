@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 DEFAULT_DOG_1_GOLD_PRICE = 50
 DEFAULT_DOG_2_GOLD_PRICE = 95
 DEFAULT_DOG_3_GOLD_PRICE = 140
+DEFAULT_CAT_GOLD_PRICE = 140
 
 durations = {
     1: 86400,
@@ -12,23 +13,26 @@ durations = {
 }
 
 
-def getdoggoldprices(tiles, dog):
+def getboostgoldprices(tiles, boost):
     prices = {}
 
-    if dog == 1:
+    if boost == 1:
         for duration, time in durations.items():
-            prices[duration] = gendoggoldprice(duration, DEFAULT_DOG_1_GOLD_PRICE * tiles)
-    elif dog == 2:
+            prices[duration] = genboostgoldprice(duration, DEFAULT_DOG_1_GOLD_PRICE * tiles)
+    elif boost == 2:
         for duration, time in durations.items():
-            prices[duration] = gendoggoldprice(duration, DEFAULT_DOG_2_GOLD_PRICE * tiles)
-    elif dog == 3:
+            prices[duration] = genboostgoldprice(duration, DEFAULT_DOG_2_GOLD_PRICE * tiles)
+    elif boost == 3:
         for duration, time in durations.items():
-            prices[duration] = gendoggoldprice(duration, DEFAULT_DOG_3_GOLD_PRICE * tiles)
+            prices[duration] = genboostgoldprice(duration, DEFAULT_DOG_3_GOLD_PRICE * tiles)
+    elif boost == 4:
+        for duration, time in durations.items():
+            prices[duration] = genboostgoldprice(duration, DEFAULT_CAT_GOLD_PRICE * tiles)
 
     return prices
 
 
-def gendoggoldprice(duration, price):
+def genboostgoldprice(duration, price):
     if duration == 1:
         return price
     elif duration == 3:
@@ -39,29 +43,35 @@ def gendoggoldprice(duration, price):
         return price - int(price * 0.28)
 
 
-async def adddog(client, member, dog, duration):
+async def addboost(client, member, boost, duration):
     userid = generategameuserid(member)
     data = await preparedb(client, userid)
     now = datetime.now().replace(microsecond=0)
 
-    if dog == 1:
+    if boost == 1:
         query = """UPDATE boosts SET dog1 = $1 WHERE userid = $2;"""
         if not data['dog1'] or data['dog1'] < datetime.now():
             timestamp = now + timedelta(seconds=durations[duration])
         else:
             timestamp = data['dog1'] + timedelta(seconds=durations[duration])
-    elif dog == 2:
+    elif boost == 2:
         query = """UPDATE boosts SET dog2 = $1 WHERE userid = $2;"""
         if not data['dog2'] or data['dog2'] < datetime.now():
             timestamp = now + timedelta(seconds=durations[duration])
         else:
             timestamp = data['dog2'] + timedelta(seconds=durations[duration])
-    elif dog == 3:
+    elif boost == 3:
         query = """UPDATE boosts SET dog3 = $1 WHERE userid = $2;"""
         if not data['dog3'] or data['dog3'] < datetime.now():
             timestamp = now + timedelta(seconds=durations[duration])
         else:
             timestamp = data['dog3'] + timedelta(seconds=durations[duration])
+    elif boost == 4:
+        query = """UPDATE boosts SET cat = $1 WHERE userid = $2;"""
+        if not data['cat'] or data['cat'] < datetime.now():
+            timestamp = now + timedelta(seconds=durations[duration])
+        else:
+            timestamp = data['cat'] + timedelta(seconds=durations[duration])
     await appenddb(client, userid, query, timestamp)
 
 
@@ -93,3 +103,9 @@ async def removeboosts(client, userid):
         query = """DELETE FROM boosts WHERE userid = $1;"""
         await client.db.execute(query, userid)
     await client.db.release(connection)
+
+
+def boostvalid(date):
+    if not date:
+        return False
+    return date > datetime.now()

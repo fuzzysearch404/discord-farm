@@ -342,7 +342,7 @@ class Trades(commands.Cog):
             return user == ctx.author and str(reaction.emoji) in allowedemojis and reaction.message.id == sellinfomessage.id
 
         try:
-            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+            reaction, user = await client.wait_for('reaction_add', check=check, timeout=10.0)
         except asyncio.TimeoutError:
             return await sellinfomessage.clear_reactions()
 

@@ -287,9 +287,9 @@ def gemsforlevel(level):
     elif level < 14:
         return 4
     elif level < 19:
-        return 5
-    else:
         return 6
+    else:
+        return 8
 
 
 def getlevel(xp):

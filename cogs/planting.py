@@ -2,7 +2,9 @@ import utils.embeds as emb
 from discord.ext import commands
 from typing import Optional
 from datetime import datetime, timedelta
+from random import choice, randint
 from utils import usertools
+from utils.boosttools import boostvalid
 from utils.item import finditem
 from utils.time import secstotime
 from utils.paginator import Pages
@@ -116,8 +118,7 @@ class Planting(commands.Cog):
     @commands.command(aliases=['h'])
     async def harvest(self, ctx):
         crops, animals, trees, unique = {}, {}, {}, {}
-        todelete = []
-        deaditem = False
+        todelete, deaditem, cat = [], False, False
 
         client = self.client
         fielddata = await usertools.getuserfield(client, ctx.author)
@@ -136,12 +137,23 @@ class Planting(commands.Cog):
             except KeyError:
                 raise Exception(f"Could not find item {object['itemid']}")
 
+        query = """SELECT cat FROM boosts WHERE userid = $1;"""
+        catdata = await client.db.fetchrow(
+            query, usertools.generategameuserid(ctx.author)
+        )
+        if catdata:
+            cat = boostvalid(catdata['cat'])
+
         if crops:
-            await self.checkcrops(client, crops, ctx, unique, todelete)
+            await self.checkcrops(client, crops, ctx, unique, todelete, cat)
         if animals:
-            deaditem = await self.checkanimalsortrees(client, animals, ctx, unique, todelete, deaditem)
+            deaditem = await self.checkanimalsortrees(
+                client, animals, ctx, unique, todelete, deaditem, cat
+            )
         if trees:
-            deaditem = await self.checkanimalsortrees(client, trees, ctx, unique, todelete, deaditem)
+            deaditem = await self.checkanimalsortrees(
+                client, trees, ctx, unique, todelete, deaditem, cat
+            )
 
         if len(todelete) > 0:
             connection = await client.db.acquire()
@@ -168,7 +180,7 @@ class Planting(commands.Cog):
             embed = emb.errorembed("Tev nav gatavas produkcijas, kuru novākt!", ctx)
             await ctx.send(embed=embed)
 
-    async def checkcrops(self, client, crops, ctx, unique, todelete):
+    async def checkcrops(self, client, crops, ctx, unique, todelete, cat):
         saladcount, total, eligable = 0, 0, False  # TEMP
         for data in crops.keys():
             if data['itemid'] == 101:
@@ -180,7 +192,7 @@ class Planting(commands.Cog):
             status = self.getcropstate(item, data['ends'], data['dies'])[0]
             if status == 'grow1' or status == 'grow2':
                 continue
-            elif status == 'ready':
+            elif status == 'ready' or status == 'dead' and cat:
                 if item.id == 101:  # TEMP
                     total += data['amount']  # TEMP END
                 xp = item.xp * data['amount']
@@ -210,12 +222,12 @@ class Planting(commands.Cog):
                         await client.db.execute(query, total, userid)
                 await client.db.release(connection)
 
-    async def checkanimalsortrees(self, client, crops, ctx, unique, todelete, deaditem):
+    async def checkanimalsortrees(self, client, crops, ctx, unique, todelete, deaditem, cat):
         for data, item in crops.items():
             status = self.getanimalortreestate(item, data['ends'], data['dies'])[0]
             if status == 'grow1':
                 continue
-            elif status == 'ready':
+            elif status == 'ready' or status == 'dead' and cat:
                 child = item.getchild(client)
                 xp = item.xp * child.amount
                 await usertools.givexpandlevelup(client, ctx, xp)
@@ -410,6 +422,39 @@ class Planting(commands.Cog):
                 ctx
             )
         await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.cooldown(1, 3600, commands.BucketType.user)
+    async def fish(self, ctx):
+        FISH_AMOUNT_TYPES = ('none', 'low', 'medium', 'high')
+        FISH_AMOUNTS = {'low': 5, 'medium': 10, 'high': 20}
+
+        client = self.client
+        profile = await usertools.getprofile(client, ctx.author)
+        if usertools.getlevel(profile['xp'])[0] < 17:
+            embed = emb.errorembed("\ud83c\udfa3Makšķerēšana ir pieejama no \ud83d\udd3117.līmeņa", ctx)
+            return await ctx.send(embed=embed)
+
+        fish = client.items[316]
+
+        mode = choice(FISH_AMOUNT_TYPES)
+        if mode == 'none':
+            embed = emb.errorembed("Šoreiz nepaveicās, zivju nav \ud83d\ude14", ctx)
+            return await ctx.send(embed=embed)
+        amount = randint(1, FISH_AMOUNTS[mode])
+
+        await usertools.givexpandlevelup(client, ctx, fish.xp * amount)
+        await usertools.additemtoinventory(client, ctx.author, fish, amount)
+
+        embed = emb.congratzembed(f"Tu noķēri **{amount} kg.** \ud83d\udc1f +{fish.xp * amount}{client.xp}", ctx)
+        await ctx.send(embed=embed)
+
+    @fish.error
+    async def fish_handler(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            cooldwtime = secstotime(error.retry_after)
+            embed = emb.errorembed(f"\ud83c\udfa3Tavā ūdenstilpnē zivis aug vēl \u23f0{cooldwtime}", ctx)
+            await ctx.send(embed=embed)
 
 
 def setup(client):

@@ -75,8 +75,24 @@
     "grows":43200,
     "dies":44500,
     "amount":2,
-    "cost":400,
+    "cost":600,
     "scost":2,
     "img":"https://failiem.lv/thumb_show.php?i=fxeausz7"
+  },
+  "506" : {
+    "id":506,
+    "expandsto":117,
+    "level":18,
+    "xp":10,
+    "emoji":"\ud83e\udd51",
+    "name":"avokado koki",
+    "name2":"avokado kokus",
+    "rarity":2,
+    "grows":3600,
+    "dies":4600,
+    "amount":4,
+    "cost":1400,
+    "scost":2,
+    "img":"https://failiem.lv/thumb_show.php?i=2zmy85m6"
   }
 }

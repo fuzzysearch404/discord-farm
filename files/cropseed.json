@@ -138,5 +138,33 @@
     "amount":10,
     "cost":1100,
     "scost":1
+  },
+  "11": {
+    "id":11,
+    "expandsto":116,
+    "level":17,
+    "emoji":"\ud83c\udf3e",
+    "name":"rīsu sēklas",
+    "name2":"rīsu sēklas",
+    "rarity":1,
+    "grows":43200,
+    "dies":45000,
+    "amount":60,
+    "cost":1800,
+    "scost":2
+  },
+  "12": {
+    "id":12,
+    "expandsto":118,
+    "level":19,
+    "emoji":"\ud83c\udf49",
+    "name":"arbūzu sēklas",
+    "name2":"arbūzu sēklas",
+    "rarity":1,
+    "grows":21600,
+    "dies":22000,
+    "amount":34,
+    "cost":1500,
+    "scost":2
   }
 }

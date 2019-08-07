@@ -71,6 +71,8 @@ Ja vēlies apskatīt cita spēlētāja lauku, norādi spēlētāju aiz komandas.
 tad aizvāc to no lauka.
 
 `%expand` - Paplašina zemi par supernaudām.
+
+`%fish` - Ķert zivis. (no 17.līmeņa)
 (*)
 **:factory: Rūpnīcas komandas**
 `%factory` vai `%fa` - Parāda lietas, kuras pašlaik tiek ražotas.

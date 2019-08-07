@@ -5,6 +5,7 @@ from typing import Optional
 from random import randint, choice
 from utils import usertools
 from utils import embeds as emb
+from utils.boosttools import boostvalid
 from utils.time import secstotime
 from utils.paginator import Pages
 from utils.usertools import splitgameuserid
@@ -75,16 +76,16 @@ class Heists(commands.Cog):
         if boostdata:
 
             if boostdata['dog3']:
-                if self.boostvalid(boostdata['dog3']):
+                if boostvalid(boostdata['dog3']):
                     embed = emb.errorembed("Šo teritoriju apsargā MILZĪGS suns!", ctx)
                     return await ctx.send(embed=embed)
 
             if boostdata['dog2']:
-                if self.boostvalid(boostdata['dog2']):
+                if boostvalid(boostdata['dog2']):
                     dog2 = True
 
             if boostdata['dog1']:
-                if self.boostvalid(boostdata['dog1']):
+                if boostvalid(boostdata['dog1']):
                     dog1 = True
 
         if dog2:
@@ -176,11 +177,6 @@ class Heists(commands.Cog):
             embed = emb.errorembed(f"Tavs spiegs \ud83d\udd75 ir pusceļā mājās \u23f0{cooldwtime}", ctx)
             await ctx.send(embed=embed)
 
-    def boostvalid(self, date):
-        if not date:
-            return False
-        return date > datetime.now()
-
     @commands.command(aliases=['boosters', 'boost'])
     async def boosts(self, ctx, *, member: Optional[MemberID] = None):
         member = member or ctx.author
@@ -194,16 +190,23 @@ class Heists(commands.Cog):
             embed.description = "Nav aktīvu boosteru"
         else:
             embed.description = ''
-            dog1 = data['dog1']
-            if self.boostvalid(dog1):
-                embed.description += f'\ud83d\udc29 Līdz `{dog1}`\n'
-            dog2 = data['dog2']
-            if self.boostvalid(dog2):
-                embed.description += f'\ud83d\udc36 Līdz `{dog2}`\n'
-            dog3 = data['dog3']
-            if self.boostvalid(dog3):
-                embed.description += f'\ud83d\udc15 Līdz `{dog3}`\n'
-            if not dog1 and dog2 and dog3:
+            dog1d = data['dog1']
+            dog1 = boostvalid(dog1d)
+            if dog1:
+                embed.description += f'\ud83d\udc29 Līdz `{dog1d}`\n'
+            dog2d = data['dog2']
+            dog2 = boostvalid(dog2d)
+            if dog2:
+                embed.description += f'\ud83d\udc36 Līdz `{dog2d}`\n'
+            dog3d = data['dog3']
+            dog3 = boostvalid(dog3d)
+            if dog3:
+                embed.description += f'\ud83d\udc15 Līdz `{dog3d}`\n'
+            catd = data['cat']
+            cat = boostvalid(catd)
+            if cat:
+                embed.description += f'\ud83d\udc31 Līdz `{catd}`\n'
+            if not dog1 and not dog2 and not dog3 and not cat:
                 embed.description = "Nav aktīvu boosteru"
 
         await ctx.send(embed=embed)

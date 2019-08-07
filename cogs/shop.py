@@ -50,9 +50,9 @@ class Shop(commands.Cog):
         embed.add_field(name='\ud83c\udf3e Augu sēklas', value='`%shop crops`')
         embed.add_field(name='\ud83c\udf33 Koki', value='`%shop trees`')
         embed.add_field(name='\ud83d\udc14 Dzīvnieki', value='`%shop animals`')
-        embed.add_field(name='\u2696 Tirgus', value='`%market`')
         embed.add_field(name='\ud83c\udfe6 Pakalpojumi', value='`%shop boosts`')
         embed.add_field(name='\u2b50 Citi', value='`%shop special`')
+        embed.add_field(name='\u2696 Tirgus', value='`%market`')
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
@@ -127,8 +127,9 @@ class Shop(commands.Cog):
             `%dog 3`"""
             )
         embed.add_field(
-            name='\ud83d\udc31',
-            value='`???`'
+            name='\ud83d\udc31Muris',
+            value="""Palīdz saglabāt ražu svaigu. Neprasiet kā.
+            `%cat`"""
             )
         await ctx.send(embed=embed)
 
@@ -676,25 +677,30 @@ class Shop(commands.Cog):
 
     @dog.command(name='1')
     async def dog1(self, ctx):
-        message, gp = await self.preparedoginfo(ctx, 1, '\ud83d\udc29')
-        await self.assigndog(ctx, message, gp, '\ud83d\udc29', 1)
+        message, gp = await self.prepareboostinfo(ctx, 1, '\ud83d\udc29')
+        await self.assignboost(ctx, message, gp, '\ud83d\udc29', 1)
 
     @dog.command(name='2')
     async def dog2(self, ctx):
-        message, gp = await self.preparedoginfo(ctx, 2, '\ud83d\udc36')
-        await self.assigndog(ctx, message, gp, '\ud83d\udc36', 2)
+        message, gp = await self.prepareboostinfo(ctx, 2, '\ud83d\udc36')
+        await self.assignboost(ctx, message, gp, '\ud83d\udc36', 2)
 
     @dog.command(name='3')
     async def dog3(self, ctx):
-        message, gp = await self.preparedoginfo(ctx, 3, '\ud83d\udc15')
-        await self.assigndog(ctx, message, gp, '\ud83d\udc15', 3)
+        message, gp = await self.prepareboostinfo(ctx, 3, '\ud83d\udc15')
+        await self.assignboost(ctx, message, gp, '\ud83d\udc15', 3)
 
-    async def preparedoginfo(self, ctx, dog, emoji):
+    @commands.command()
+    async def cat(self, ctx):
+        message, gp = await self.prepareboostinfo(ctx, 4, '\ud83d\udc31')
+        await self.assignboost(ctx, message, gp, '\ud83d\udc31', 4)
+
+    async def prepareboostinfo(self, ctx, dog, emoji):
         client = self.client
         profile = await usertools.getprofile(self.client, ctx.author)
-        goldprices = boosttools.getdoggoldprices(profile['tiles'], dog)
+        goldprices = boosttools.getboostgoldprices(profile['tiles'], dog)
 
-        embed = discord.Embed(title=f'Noalgot suni {emoji}')
+        embed = discord.Embed(title=f'Noalgot {emoji}')
         embed.add_field(
             name='Uz 1 dienu',
             value=f"{goldprices[1]}{client.gold}"
@@ -714,7 +720,7 @@ class Shop(commands.Cog):
 
         return message, goldprices
 
-    async def assigndog(self, ctx, message, gp, emoji, dog):
+    async def assignboost(self, ctx, message, gp, emoji, dog):
         client = self.client
 
         emojis = {
@@ -760,9 +766,9 @@ class Shop(commands.Cog):
             return await message.clear_reactions()
 
         if str(breaction.emoji) == client.gold:
-            await self.dogbuywithgold(ctx, settings, dog, emoji, int(str(reaction.emoji)[0]))
+            await self.boostbuywithgold(ctx, settings, dog, emoji, int(str(reaction.emoji)[0]))
 
-    async def dogbuywithgold(self, ctx, gold, dog, emoji, duration):
+    async def boostbuywithgold(self, ctx, gold, dog, emoji, duration):
         client = self.client
         query = """SELECT money FROM users
         WHERE id = $1;"""
@@ -774,9 +780,9 @@ class Shop(commands.Cog):
 
         await usertools.givemoney(client, ctx.author, gold * -1)
 
-        await boosttools.adddog(client, ctx.author, dog, duration)
+        await boosttools.addboost(client, ctx.author, dog, duration)
 
-        embed = emb.confirmembed(f"Tu noalgoji {emoji} apsargāt laukus", ctx)
+        embed = emb.confirmembed(f"Tu noalgoji {emoji} palīdzēt tavai fermai.", ctx)
         await ctx.send(embed=embed)
 
 

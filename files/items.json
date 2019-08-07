@@ -43,5 +43,20 @@
     "cost":70,
     "scost":1,
     "img":"https://failiem.lv/thumb_show.php?i=y7c8ms34"
+  },
+  "316" : {
+    "id":316,
+    "level":17,
+    "xp":10,
+    "emoji":"\ud83d\udc1f",
+    "name":"zivis",
+    "name2":"zivis",
+    "rarity":2,
+    "amount":1,
+    "minprice":8,
+    "maxprice":10,
+    "cost":20,
+    "scost":1,
+    "img":"https://failiem.lv/thumb_show.php?i=pf89ja7v"
   }
 }
