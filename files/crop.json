@@ -281,8 +281,8 @@
     "amount":60,
     "cost":100,
     "scost":2,
-    "minprice":50,
-    "maxprice":92,
+    "minprice":40,
+    "maxprice":55,
     "level":17,
     "xp":10,
     "img":"https://failiem.lv/thumb_show.php?i=8mjfgghs"
@@ -299,8 +299,8 @@
     "amount":6,
     "cost":100,
     "scost":2,
-    "minprice":52,
-    "maxprice":64,
+    "minprice":54,
+    "maxprice":68,
     "level":18,
     "xp":10,
     "img":"https://failiem.lv/thumb_show.php?i=2zmy85m6"
@@ -318,7 +318,7 @@
     "cost":100,
     "scost":2,
     "minprice":51,
-    "maxprice":82,
+    "maxprice":75,
     "level":19,
     "xp":7,
     "img":"https://failiem.lv/thumb_show.php?i=uk2fbmat"

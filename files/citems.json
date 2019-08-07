@@ -215,8 +215,8 @@
     "level":17,
     "xp":50,
     "img":"https://failiem.lv/thumb_show.php?i=dr6hrehm",
-    "minprice":430,
-    "maxprice":520,
+    "minprice":267,
+    "maxprice":312,
     "madefrom":[{"116":5}],
     "time":1200
   },
@@ -232,8 +232,8 @@
     "level":17,
     "xp":50,
     "img":"https://failiem.lv/thumb_show.php?i=543zwnsp",
-    "minprice":430,
-    "maxprice":520,
+    "minprice":267,
+    "maxprice":312,
     "madefrom":[{"116":5}],
     "time":1200
   },
@@ -249,8 +249,8 @@
     "level":18,
     "xp":170,
     "img":"https://failiem.lv/thumb_show.php?i=b842pkup",
-    "minprice":1121,
-    "maxprice":1331,
+    "minprice":540,
+    "maxprice":590,
     "madefrom":[{"101":5}, {"116":10}, {"316":10}],
     "time":3600
   },
@@ -266,8 +266,8 @@
     "level":18,
     "xp":520,
     "img":"https://failiem.lv/thumb_show.php?i=hm2exv3x",
-    "minprice":3100,
-    "maxprice":3214,
+    "minprice":1710,
+    "maxprice":1792,
     "madefrom":[{"116":20}, {"316":20}, {"117":6}],
     "time":10800
   },
