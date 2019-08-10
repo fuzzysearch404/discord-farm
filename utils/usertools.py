@@ -273,8 +273,10 @@ def upgradecost(ownedtiles):
         return 7
     elif ownedtiles < 11:
         return 11
-    else:
+    elif ownedtiles < 15:
         return 14
+    else:
+        return 18
 
 
 def storeupgcost(ownedslots):
@@ -296,7 +298,8 @@ def getlevel(xp):
     limit = (
         0, 20, 240, 750, 1950, 3300, 5100, 7950, 12000, 16800,
         23100, 31500, 42000, 57000, 80100,
-        111240, 156900, 211000, 270400, 315000
+        111240, 156900, 211000, 270400, 340400,
+        420069, 520700, 642560, 790000, 940660
     )
     level = 0
 
