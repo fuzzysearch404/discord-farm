@@ -273,8 +273,8 @@
     "id":116,
     "madefrom":11,
     "emoji":"\ud83c\udf3e",
-    "name":"rīsi",
-    "name2":"rīsus",
+    "name":"baltie rīsi",
+    "name2":"baltos rīsus",
     "rarity":1,
     "grows":43200,
     "dies":45000,
@@ -322,5 +322,23 @@
     "level":19,
     "xp":7,
     "img":"https://failiem.lv/thumb_show.php?i=uk2fbmat"
+  },
+  "119": {
+    "id":119,
+    "madefrom":507,
+    "emoji":"\ud83e\udd5d",
+    "name":"kivi",
+    "name2":"kivi",
+    "rarity":1,
+    "grows":300,
+    "dies":345,
+    "amount":8,
+    "cost":100,
+    "scost":2,
+    "minprice":57,
+    "maxprice":67,
+    "level":20,
+    "xp":2,
+    "img":"https://failiem.lv/thumb_show.php?i=vvr3pzbu"
   }
 }

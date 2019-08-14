@@ -94,5 +94,21 @@
     "cost":1400,
     "scost":2,
     "img":"https://failiem.lv/thumb_show.php?i=2zmy85m6"
+  },
+  "507" : {
+    "id":507,
+    "expandsto":119,
+    "level":20,
+    "xp":2,
+    "emoji":"\ud83e\udd5d",
+    "name":"kivi koki",
+    "name2":"kivi kokus",
+    "rarity":2,
+    "grows":300,
+    "dies":345,
+    "amount":6,
+    "cost":3000,
+    "scost":1,
+    "img":"https://failiem.lv/thumb_show.php?i=vvr3pzbu"
   }
 }

@@ -58,5 +58,20 @@
     "cost":20,
     "scost":1,
     "img":"https://failiem.lv/thumb_show.php?i=pf89ja7v"
+  },
+  "324" : {
+    "id":324,
+    "level":21,
+    "xp":50,
+    "emoji":"\ud83c\udf56",
+    "name":"liellopu gaļa",
+    "name2":"liellopu gaļu",
+    "rarity":2,
+    "amount":4,
+    "minprice":390,
+    "maxprice":473,
+    "cost":500,
+    "scost":1,
+    "img":"https://failiem.lv/thumb_show.php?i=6dacqmeq"
   }
 }

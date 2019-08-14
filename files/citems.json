@@ -155,8 +155,8 @@
   "309" : {
     "id":309,
     "emoji":"\ud83c\udf54",
-    "name":"bigijmaks",
-    "name2":"bigijmaku",
+    "name":"bigijmaki",
+    "name2":"bigijmakus",
     "rarity":2,
     "amount":1,
     "cost":600,
@@ -304,5 +304,39 @@
     "maxprice":270,
     "madefrom":[{"316":12}],
     "time":1680
+  },
+  "323" : {
+    "id":323,
+    "emoji":"\ud83c\udf61",
+    "name":"dango",
+    "name2":"dango",
+    "rarity":2,
+    "amount":1,
+    "cost":500,
+    "scost":2,
+    "level":20,
+    "xp":140,
+    "img":"https://failiem.lv/thumb_show.php?i=79m7h96w",
+    "minprice":1465,
+    "maxprice":1540,
+    "madefrom":[{"111":5},{"108":5}, {"116":14}, {"119":8}],
+    "time":2712
+  },
+  "325" : {
+    "id":325,
+    "emoji":"\ud83e\udd59",
+    "name":"pitas",
+    "name2":"pitas",
+    "rarity":2,
+    "amount":1,
+    "cost":1000,
+    "scost":2,
+    "level":22,
+    "xp":940,
+    "img":"https://failiem.lv/thumb_show.php?i=t46da65d",
+    "minprice":4460,
+    "maxprice":4530,
+    "madefrom":[{"101":50}, {"105":1},{"106":10}, {"117":3}, {"324":5}],
+    "time":17631
   }
 }

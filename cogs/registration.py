@@ -4,7 +4,7 @@ from utils import usertools
 from utils.paginator import Pages
 
 DEFAULT_XP = 0
-DEFAULT_MONEY = 40
+DEFAULT_MONEY = 80
 DEFAULT_GEMS = 3
 DEFAULT_TILES = 2
 DEFAULT_FACTORY_SLOTS = 2

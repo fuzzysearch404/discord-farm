@@ -46,5 +46,21 @@
     "cost":1600,
     "scost":2,
     "img":"https://failiem.lv/thumb_show.php?i=bx3gj6gf"
+  },
+  "404" : {
+    "id":404,
+    "expandsto":324,
+    "level":21,
+    "xp":50,
+    "emoji":"\ud83d\udc02",
+    "name":"liellopi",
+    "name2":"liellopus",
+    "rarity":2,
+    "grows":28800,
+    "dies":30000,
+    "amount":3,
+    "cost":5000,
+    "scost":2,
+    "img":"https://failiem.lv/thumb_show.php?i=6dacqmeq"
   }
 }

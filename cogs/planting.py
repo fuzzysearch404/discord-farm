@@ -181,20 +181,11 @@ class Planting(commands.Cog):
             await ctx.send(embed=embed)
 
     async def checkcrops(self, client, crops, ctx, unique, todelete, cat):
-        saladcount, total, eligable = 0, 0, False  # TEMP
-        for data in crops.keys():
-            if data['itemid'] == 101:
-                saladcount += 1
-        if saladcount == 2:
-            eligable = True  # TEMP END
-
         for data, item in crops.items():
             status = self.getcropstate(item, data['ends'], data['dies'])[0]
             if status == 'grow1' or status == 'grow2':
                 continue
             elif status == 'ready' or status == 'dead' and cat:
-                if item.id == 101:  # TEMP
-                    total += data['amount']  # TEMP END
                 xp = item.xp * data['amount']
                 await usertools.givexpandlevelup(client, ctx, xp)
                 await usertools.additemtoinventory(client, ctx.author, item, data['amount'])
@@ -204,23 +195,6 @@ class Planting(commands.Cog):
                     unique[item] = (data['amount'], xp)
 
             todelete.append(data['id'])
-
-        if eligable:  # TEMP
-            if total > 11 and total < 23:
-                connection = await client.db.acquire()
-                async with connection.transaction():
-                    userid = usertools.generategameuserid(ctx.author)
-                    query = """SELECT * FROM tournament WHERE userid = $1;"""
-                    data = await client.db.fetchrow(query, userid)
-                    if not data:
-                        query = """INSERT INTO tournament (userid, guildid, points)
-                        VALUES($1, $2, $3);"""
-                        await client.db.execute(query, userid, ctx.guild.id, total)
-                    else:
-                        query = """UPDATE tournament SET points = points + $1
-                        WHERE userid = $2;"""
-                        await client.db.execute(query, total, userid)
-                await client.db.release(connection)
 
     async def checkanimalsortrees(self, client, crops, ctx, unique, todelete, deaditem, cat):
         for data, item in crops.items():

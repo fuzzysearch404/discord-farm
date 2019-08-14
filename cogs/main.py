@@ -33,22 +33,31 @@ class Main(commands.Cog):
         profile = await usertools.getprofile(client, ctx.author)
         level = usertools.getlevel(profile['xp'])[0]
 
-        for item in client.allitems.values():
-            if item.level <= level:
-                suitableitems.append(item)
+        mode = randint(1, 30)
+        if mode == 1:
+            gemswon = randint(1, 3)
+            await usertools.givegems(client, ctx.author, gemswon)
 
-        item = choice(suitableitems)
-        if item.type == 'animal' or item.type == 'tree' or item.type == 'crafteditem':
-            amount = randint(1, int(level * 1))
+            embed = emb.congratzembed(f"Tu laimēji {gemswon} {client.gem}", ctx)
+        elif mode <= 8:
+            moneywon = randint(1, level * 300)
+            await usertools.givemoney(client, ctx.author, moneywon)
+
+            embed = emb.congratzembed(f"Tu laimēji {moneywon} {client.gold}", ctx)
         else:
-            amount = randint(1, level * 2)
+            for item in client.allitems.values():
+                if item.level <= level:
+                    suitableitems.append(item)
 
-        await usertools.additemtoinventory(client, ctx.author, item, amount)
+            item = choice(suitableitems)
+            amount = randint(1, 4)
 
-        embed = emb.congratzembed(
-            f"Tu laimēji {amount}x{item.emoji}{item.name2.capitalize()}",
-            ctx
-        )
+            await usertools.additemtoinventory(client, ctx.author, item, amount)
+
+            embed = emb.congratzembed(
+                f"Tu laimēji {amount}x{item.emoji}{item.name2.capitalize()}",
+                ctx
+            )
         await ctx.send(embed=embed)
 
     @dailybonus.error

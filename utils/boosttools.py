@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 
 DEFAULT_DOG_1_GOLD_PRICE = 50
 DEFAULT_DOG_2_GOLD_PRICE = 95
-DEFAULT_DOG_3_GOLD_PRICE = 140
-DEFAULT_CAT_GOLD_PRICE = 140
+DEFAULT_DOG_3_GOLD_PRICE = 200
+DEFAULT_CAT_GOLD_PRICE = 200
 
 durations = {
     1: 86400,
@@ -15,6 +15,15 @@ durations = {
 
 def getboostgoldprices(tiles, boost):
     prices = {}
+
+    if tiles < 5:  # Increase prices even more with tiles amount
+        tiles *= 2
+    elif tiles < 8:
+        tiles = int(tiles * 2.5)
+    elif tiles < 12:
+        tiles = int(tiles * 3)
+    else:
+        tiles = int(tiles * 3.5)
 
     if boost == 1:
         for duration, time in durations.items():
