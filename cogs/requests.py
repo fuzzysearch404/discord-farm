@@ -30,8 +30,8 @@ class Requests(commands.Cog):
         request = events.Mission.generate(client, level, boosted=True)
         requestdesign = self.createrequestdesign(request)
 
-        embed = Embed(title='\ud83d\udccbĪpašais piedāvājums', color=15171850, description=requestdesign)
-        embed.description += '\n\n\ud83d\udd8bVai piekrīti darījumam?\n\u23f0Tev ir tikai 30 sek. laika izlemt.'
+        embed = Embed(title='\ud83d\udccbSpecial offer', color=15171850, description=requestdesign)
+        embed.description += '\n\n\ud83d\udd8bDo you accept the offer?\n\u23f0You only have 30 seconds to decide'
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         offermsg = await ctx.send(embed=embed)
         await offermsg.add_reaction('\u2705')
@@ -56,7 +56,7 @@ class Requests(commands.Cog):
     async def offer_handler(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             cooldwtime = time.secstotime(error.retry_after)
-            embed = emb.errorembed(f"Nākošais piedāvājums pēc \u23f0{cooldwtime}", ctx)
+            embed = emb.errorembed(f"Next offer in \u23f0{cooldwtime}", ctx)
             await ctx.send(embed=embed)
 
     @commands.group(aliases=['req'])
@@ -74,8 +74,8 @@ class Requests(commands.Cog):
         i = 0
         emoji = '\u20e3'
         embed = Embed(
-            title='\ud83d\uddc3Pasūtījumi',
-            description='Nepatīk pasūtījumi? Lieto `%requests refresh`',
+            title='\ud83d\uddc3Requests',
+            description='Do not like the requests? Try `%requests refresh`',
             color=15171850
         )
         for mission in missions:
@@ -86,7 +86,7 @@ class Requests(commands.Cog):
             )
             tasks[f'{i}{emoji}'] = (mission, missionid)
             requestdesign = self.createrequestdesign(mission)
-            embed.add_field(name=f'\ud83d\udcdd Pasūtījums nr.{i}', value=requestdesign)
+            embed.add_field(name=f'\ud83d\udcdd Order #{i}', value=requestdesign)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
 
         message = await ctx.send(embed=embed)
@@ -115,7 +115,7 @@ class Requests(commands.Cog):
 
         if len(needed) > 0:
             embed = emb.errorembed(
-                f"Tev nav pietiekoši daudz {needed[:-2]}, lai izpildītu pasūtījumu!",
+                f"You don't have enough {needed[:-2]}, to complete this order!",
                 ctx
             )
             return await ctx.send(embed=embed)
@@ -135,7 +135,7 @@ class Requests(commands.Cog):
         await usertools.givexpandlevelup(client, ctx, mission.xpaward)
         await usertools.givemoney(client, ctx.author, mission.moneyaward)
         embed = emb.congratzembed(
-            "Tu izpildīji pasūtījumu un ieguvi"
+            "You completed the order and got"
             f" {client.xp}{mission.xpaward} {client.gold}{mission.moneyaward}",
             ctx
         )
@@ -174,14 +174,14 @@ class Requests(commands.Cog):
             query = """DELETE FROM missions WHERE userid = $1;"""
             await client.db.execute(query, usertools.generategameuserid(ctx.author))
         await client.db.release(connection)
-        embed = emb.confirmembed("Uzdevumi atjaunoti! \ud83d\udc4c", ctx)
+        embed = emb.confirmembed("Orders refreshed! \ud83d\udc4c", ctx)
         await ctx.send(embed=embed)
 
     @refresh.error
     async def refresh_handler(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             cooldwtime = time.secstotime(error.retry_after)
-            embed = emb.errorembed(f"Tu varēsi atjaunot uzdevumus tikai pēc \u23f0{cooldwtime}", ctx)
+            embed = emb.errorembed(f"You can only refresh orders in \u23f0{cooldwtime}", ctx)
             await ctx.send(embed=embed)
 
     def createrequestdesign(self, request):

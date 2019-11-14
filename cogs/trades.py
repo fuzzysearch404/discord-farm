@@ -29,7 +29,7 @@ class Trades(commands.Cog):
         client = self.client
         storedata = await usertools.getguildstore(client, ctx.guild)
         if not storedata:
-            embed = emb.errorembed(f'Šajā serverī neviens neko nepārdod :(', ctx)
+            embed = emb.errorembed(f'Nobody is selling anything in this server :(', ctx)
             return await ctx.send(embed=embed)
 
         for object in storedata:
@@ -58,7 +58,7 @@ class Trades(commands.Cog):
 
         try:
             p = Pages(ctx, entries=information, per_page=5, show_entry_count=False)
-            p.embed.title = f'\ud83d\udecd{ctx.guild} servera aktīvie veikali'
+            p.embed.title = f"\ud83d\udecd{ctx.guild}'s active stores"
             p.embed.color = 7995937
             await p.paginate()
         except Exception as e:
@@ -73,7 +73,7 @@ class Trades(commands.Cog):
         client = self.client
         storedata = await usertools.getuserstore(client, member)
         if not storedata:
-            embed = emb.errorembed(f'{member} neko nepārdod', ctx)
+            embed = emb.errorembed(f'{member} does not sell anything', ctx)
             return await ctx.send(embed=embed)
         for object in storedata:
             try:
@@ -89,19 +89,19 @@ class Trades(commands.Cog):
                 raise Exception(f"Could not find item {object['itemid']}")
 
         if len(crops) > 0:
-            information.append('**Raža:**')
+            information.append('**Crops:**')
             for data, item in crops.items():
                 fmt = f"""{item.emoji}**{item.name.capitalize()}** x{data['amount']}
                 {client.gold}{data['money']} \ud83d\uded2 `%trade {data['id']}`\n"""
                 information.append(fmt)
         if len(citems) > 0:
-            information.append('**Produkcija:**')
+            information.append('**Products:**')
             for data, item in citems.items():
                 fmt = f"""{item.emoji}**{item.name.capitalize()}** x{data['amount']}
                 {client.gold}{data['money']} \ud83d\uded2 `%trade {data['id']}`\n"""
                 information.append(fmt)
         if len(items) > 0:
-            information.append('**Dzīvnieku produkti:**')
+            information.append('**Animal products:**')
             for data, item in items.items():
                 fmt = f"""{item.emoji}**{item.name.capitalize()}** x{data['amount']}
                 {client.gold}{data['money']} \ud83d\uded2 `%trade {data['id']}`\n"""
@@ -109,7 +109,7 @@ class Trades(commands.Cog):
 
         try:
             p = Pages(ctx, entries=information, per_page=5, show_entry_count=False)
-            p.embed.title = f'\ud83c\udfea{member} veikals'
+            p.embed.title = f"\ud83c\udfea{member}'s store"
             p.embed.color = 7995937
             await p.paginate()
         except Exception as e:
@@ -121,7 +121,7 @@ class Trades(commands.Cog):
 
         tradedata = await usertools.gettrade(client, id)
         if not tradedata:
-            embed = emb.errorembed("Kāds jau ir nopircis šos produktus vai nepareizs ID", ctx)
+            embed = emb.errorembed("Someone already bought this or invalid ID provided", ctx)
             return await ctx.send(embed=embed)
 
         profile = await usertools.getprofile(client, ctx.author)
@@ -131,27 +131,27 @@ class Trades(commands.Cog):
         item = client.allitems[tradedata['itemid']]
 
         if level < item.level:
-            embed = emb.errorembed("Pārāk zems līmenis, lai iegādātos šos produktus", ctx)
+            embed = emb.errorembed("Too low level to buy this", ctx)
             return await ctx.send(embed=embed)
 
         if tradedata['money'] > profile['money'] and ownerid != ctx.author.id:
-            embed = emb.errorembed("Tev nepietiek zelts, lai iegādātos šos produktus", ctx)
+            embed = emb.errorembed("You do not have enough gold", ctx)
             return await ctx.send(embed=embed)
 
-        buyembed = Embed(title='Pirkuma detaļas', color=8052247)
+        buyembed = Embed(title='Purchase details', color=8052247)
         buyembed.set_footer(
-            text=f"{ctx.author} Zelts: {profile['money']} SN: {profile['gems']}",
+            text=f"{ctx.author} Gold: {profile['money']} Gems: {profile['gems']}",
             icon_url=ctx.author.avatar_url,
         )
         buyembed.add_field(
-            name='Produkti',
+            name='Items',
             value=f"{tradedata['amount']}x{item.emoji}{item.name.capitalize()}"
         )
         buyembed.add_field(
-            name='Summa',
+            name='Price',
             value=f"{client.gold}{tradedata['money']}"
         )
-        buyembed.add_field(name='Apstiprinājums', value='Norādi ar reakciju valūtu')
+        buyembed.add_field(name='Confirmation', value='React with the payment method')
         buyinfomessage = await ctx.send(embed=buyembed)
         await buyinfomessage.add_reaction(client.gold)
         await buyinfomessage.add_reaction('\u274c')
@@ -176,12 +176,12 @@ class Trades(commands.Cog):
 
         usergold = await client.db.fetchrow(query, profile['id'])
         if usergold['money'] < tradedata['money'] and not selfbuy:
-            embed = emb.errorembed('Tev nepietiek zelts, lai iegādātos šos produktus', ctx)
+            embed = emb.errorembed('You do not have enough gold', ctx)
             return await ctx.send(embed=embed)
 
         tradedata = await usertools.gettrade(client, id)
         if not tradedata:
-            embed = emb.errorembed('Upsī! Kāds jau paspēja nopirkt šīs lietas pirms tevis', ctx)
+            embed = emb.errorembed('Oops! Somebody managed to buy this before you', ctx)
             return await ctx.send(embed=embed)
 
         await usertools.deletetrade(client, tradedata['id'])
@@ -195,7 +195,7 @@ class Trades(commands.Cog):
             sum = 0
         else:
             sum = tradedata['money']
-        embed = emb.confirmembed(f"Tu nopirki {tradedata['amount']}x{item.emoji}{item.name2.capitalize()} par {sum}{client.gold}", ctx)
+        embed = emb.confirmembed(f"You purchased {tradedata['amount']}x{item.emoji}{item.name.capitalize()} for {sum}{client.gold}", ctx)
         await ctx.send(embed=embed)
 
         if selfbuy:
@@ -204,7 +204,7 @@ class Trades(commands.Cog):
         if not owner:
             return
         embed = emb.confirmembed(
-            f"{ctx.author} nopirka no tevis {tradedata['amount']}x{item.emoji}{item.name2.capitalize()} par {tradedata['money']}{client.gold}",
+            f"{ctx.author} bought from you {tradedata['amount']}x{item.emoji}{item.name.capitalize()} for {tradedata['money']}{client.gold}",
             ctx, pm=True
         )
         await owner.send(embed=embed)
@@ -221,8 +221,8 @@ class Trades(commands.Cog):
                 return
         except Exception:
             embed = emb.errorembed(
-                "Lūdzu, norādi arī daudzumu\n"
-                f"Piemēram 10 - `%add {possibleitem} 10`",
+                "Please specify the amount\n"
+                f"For example, 10 - `%add {possibleitem} 10`",
                 ctx)
             return await ctx.send(embed=embed)
 
@@ -234,8 +234,8 @@ class Trades(commands.Cog):
             pass
         elif usedslots >= slots:
             embed = emb.errorembed(
-                "Tavs veikals ir pilns! Gaidi, lai kāds nopērk kaut ko"
-                ", vai uzlabo veikalu ar `%addslot`", ctx
+                "Your store slots are full! Wait until someone buys something"
+                ", or upgrade your store with `%addslot`", ctx
             )
             return await ctx.send(embed=embed)
 
@@ -246,39 +246,39 @@ class Trades(commands.Cog):
         allowedtypes = ('crop', 'crafteditem', 'item')
 
         if not item.type or item.type not in allowedtypes:
-            embed = emb.errorembed(f"Tu nevari pārdot {item.emoji}{item.name.capitalize()}", ctx)
+            embed = emb.errorembed(f"You can not sell {item.emoji}{item.name.capitalize()}", ctx)
             return await ctx.send(embed=embed)
 
         hasitem = await usertools.checkinventoryitem(client, ctx.author, item)
         if not hasitem:
-            embed = emb.errorembed(f"Tev nav ({item.emoji}{item.name.capitalize()}) noliktavā!", ctx)
+            embed = emb.errorembed(f"You do not have ({item.emoji}{item.name.capitalize()}) in your warehouse!", ctx)
             return await ctx.send(embed=embed)
 
         minprice = item.minprice * amount
         maxprice = item.maxprice * amount
         maxprice = maxprice + int(maxprice * 0.43)
 
-        sellembed = Embed(title='Pievienot veikalam', colour=8052247)
+        sellembed = Embed(title='Add to the store', colour=8052247)
         sellembed.add_field(
-            name='Prece',
-            value=f'{item.emoji}**{item.name.capitalize()}**\nPreces ID: {item.id}'
+            name='Item',
+            value=f'{item.emoji}**{item.name.capitalize()}**\nItem ID: {item.id}'
         )
         sellembed.set_footer(
             text=ctx.author, icon_url=ctx.author.avatar_url
         )
         sellembed.add_field(
-            name='Daudzums',
+            name='Amount',
             value=amount
         )
         sellembed.add_field(
-            name=f'Cenas diapazons',
+            name=f'Price range',
             value=f"**{minprice} - {maxprice} {client.gold}**"
         )
         sellembed.add_field(
-            name=f'{client.gold}Cena',
+            name=f'{client.gold}Price',
             value=f"""
-            Ievadi cenu ar cipariem čatā.
-            Lai atceltu, ieraksti čatā `X`.
+            Please enter the price in the chat
+            To cancel, type `X`.
             """
         )
         sellinfomessage = await ctx.send(embed=sellembed)
@@ -290,7 +290,7 @@ class Trades(commands.Cog):
             entry = None
             entry = await client.wait_for('message', check=check, timeout=30.0)
         except asyncio.TimeoutError:
-            embed = emb.errorembed('Gaidīju pārāk ilgi. Darījums atcelts.', ctx)
+            embed = emb.errorembed('Too long. Operation canceled.', ctx)
             await ctx.send(embed=embed, delete_after=15)
 
         try:
@@ -308,16 +308,16 @@ class Trades(commands.Cog):
         try:
             price = int(entry.clean_content)
             if price < 1:
-                embed = emb.errorembed('Nederīga cena. Sāc pārdošanu par jaunu.', ctx)
+                embed = emb.errorembed('Invalid price', ctx)
                 return await ctx.send(embed=embed)
         except ValueError:
-            embed = emb.errorembed('Nederīga cena. Nākošreiz ieraksti skaitli', ctx)
+            embed = emb.errorembed('Invalid price. Enter numbers', ctx)
             return await ctx.send(embed=embed)
 
         if price > maxprice or price < minprice:
             embed = emb.errorembed(
-                'Nederīga cena.\n'
-                f'Šī prece ir pārdodama par **{minprice} - {maxprice} {client.gold}**',
+                'Invalid price.\n'
+                f'You can on;y sell this for **{minprice} - {maxprice} {client.gold}**',
                 ctx
             )
             return await ctx.send(embed=embed)
@@ -325,12 +325,12 @@ class Trades(commands.Cog):
         sellembed.remove_field(index=2)
         sellembed.remove_field(index=2)
         sellembed.add_field(
-            name='Iespējamā peļņa',
+            name='Possible profit',
             value=f'{client.gold}{price}'
         )
         sellembed.add_field(
-            name='Apstiprinājums',
-            value='Lai pabeigtu darījumu, nospied atbilstošo reakciju'
+            name='Confirmation',
+            value='To finish, react with reaction below the message'
         )
         sellinfomessage = await ctx.send(embed=sellembed)
         await sellinfomessage.add_reaction('\u2705')
@@ -356,11 +356,11 @@ class Trades(commands.Cog):
 
         hasitem = await usertools.checkinventoryitem(client, ctx.author, item)
         if not hasitem:
-            embed = emb.errorembed(f"Tev nav {item.emoji}{item.name.capitalize()} noliktavā!", ctx)
+            embed = emb.errorembed(f"You do not have {item.emoji}{item.name.capitalize()} in you warehouse!", ctx)
             return await ctx.send(embed=embed)
 
         if amount > hasitem['amount']:
-            embed = emb.errorembed(f"Tev ir tikai {hasitem['amount']}x {item.emoji}{item.name.capitalize()} noliktavā!", ctx)
+            embed = emb.errorembed(f"You only have {hasitem['amount']}x {item.emoji}{item.name.capitalize()}!", ctx)
             return await ctx.send(embed=embed)
 
         await usertools.removeitemfrominventory(client, ctx.author, item, amount)
@@ -373,7 +373,7 @@ class Trades(commands.Cog):
             await client.db.execute(query, ctx.guild.id, userid, item.id, amount, price)
         await client.db.release(connection)
 
-        embed = emb.confirmembed(f"Tu ieliki pārdošanā {amount}x{item.emoji}{item.name2.capitalize()} par {price}{self.client.gold}", ctx)
+        embed = emb.confirmembed(f"You added {amount}x{item.emoji}{item.name.capitalize()} to the store for {price}{self.client.gold}", ctx)
         await ctx.send(embed=embed)
 
 

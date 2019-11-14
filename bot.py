@@ -127,10 +127,10 @@ class MyClient(commands.AutoShardedBot):
             client.load_extension('cogs.' + extension.lower())
             unloaded.remove(extension)
             print(f'Loaded {extension}')
-            await ctx.send(f'{extension} ielādēts', delete_after=5)
+            await ctx.send(f'{extension} loaded', delete_after=5)
         except Exception as error:
             print(f'{extension} cannot be loaded. [{error}]')
-            await ctx.send(f'{extension} netika ielādēts [{error}]', delete_after=30)
+            await ctx.send(f'{extension} did not load [{error}]', delete_after=30)
 
     @commands.command(name='unload')
     @checks.is_owner()
@@ -143,10 +143,10 @@ class MyClient(commands.AutoShardedBot):
             client.unload_extension('cogs.' + extension.lower())
             unloaded.append(extension)
             print(f'Unloaded {extension}')
-            await ctx.send(f'{extension} noņemts', delete_after=5)
+            await ctx.send(f'{extension} unload', delete_after=5)
         except Exception as error:
             print(f'{extension} cannot be unloaded. [{error}]')
-            await ctx.send(f'{extension} netika noņemts [{error}]', delete_after=30)
+            await ctx.send(f'{extension} did not unload [{error}]', delete_after=30)
 
     @commands.command(name='reload')
     @checks.is_owner()
@@ -158,10 +158,10 @@ class MyClient(commands.AutoShardedBot):
         try:
             client.reload_extension('cogs.' + extension.lower())
             print(f'Reloaded {extension}')
-            await ctx.send(f'{extension} atjaunots', delete_after=5)
+            await ctx.send(f'{extension} reloaded', delete_after=5)
         except Exception as error:
             print(f'{extension} cannot be reloaded. [{error}]')
-            await ctx.send(f'{extension} netika atjaunots [{error}]', delete_after=15)
+            await ctx.send(f'{extension} could not be reloaded [{error}]', delete_after=15)
 
     # Events
 
@@ -186,11 +186,11 @@ class MyClient(commands.AutoShardedBot):
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.errors.CheckFailure):
             if not self.disabledcommands:
-                embed = emb.errorembed("Tev nav spēles profila. Lieto `%start`", ctx)
+                embed = emb.errorembed("You don't have an account for the game. Type `%start`", ctx)
             else:
                 embed = emb.errorembed(
-                    "Spēles komandas ir atslēgtas spēles atjauninājumiem.\n"
-                    "\ud83d\udcf0Vairāk informācijas - `%news`", ctx)
+                    "The game commands are disabled for a maintenance.\n"
+                    "\ud83d\udcf0More information - `%news`", ctx)
             await ctx.send(embed=embed)
             return
         if isinstance(error, commands.errors.CommandNotFound):
@@ -199,7 +199,7 @@ class MyClient(commands.AutoShardedBot):
             return
         if isinstance(error, commands.errors.MissingRequiredArgument):
             embed = emb.errorembed(
-                "Šajai komandai jānorāda papildus informāciju.",
+                "This command requires additional parameters.",
                 ctx
             )
             return await ctx.send(embed=embed)

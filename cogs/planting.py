@@ -31,7 +31,7 @@ class Planting(commands.Cog):
         client = self.client
         fielddata = await usertools.getuserfield(client, member)
         if not fielddata:
-            embed = emb.errorembed(f'{member} nav apstrādātu lauku', ctx)
+            embed = emb.errorembed(f'{member} has not planted anything right now', ctx)
             return await ctx.send(embed=embed)
         for object in fielddata:
             try:
@@ -47,13 +47,13 @@ class Planting(commands.Cog):
                 raise Exception(f"Could not find item {object['itemid']}")
 
         if len(crops) > 0:
-            information.append('**Augi:**')
+            information.append('**Crops:**')
             for data, item in crops.items():
                 status = self.getcropstate(item, data['ends'], data['dies'])[1]
                 fmt = f"{item.emoji}**{item.name.capitalize()}** x{data['amount']} - {status}"
                 information.append(fmt)
         if len(trees) > 0:
-            information.append('**Koki:**')
+            information.append('**Trees:**')
             for data, item in trees.items():
                 child = item.getchild(client)
                 status = self.getanimalortreestate(item, data['ends'], data['dies'])[1]
@@ -61,7 +61,7 @@ class Planting(commands.Cog):
                 fmt += f" (x{data['amount']}{child.emoji}) - {status}"
                 information.append(fmt)
         if len(animals) > 0:
-            information.append('**Dzīvnieki:**')
+            information.append('**Animals:**')
             for data, item in animals.items():
                 child = item.getchild(client)
                 status = self.getanimalortreestate(item, data['ends'], data['dies'])[1]
@@ -71,7 +71,7 @@ class Planting(commands.Cog):
 
         try:
             p = Pages(ctx, entries=information, per_page=10, show_entry_count=False)
-            p.embed.title = f'{member} lauki'
+            p.embed.title = f"{member}'s fields"
             p.embed.color = 976400
             await p.paginate()
         except Exception as e:
@@ -84,17 +84,17 @@ class Planting(commands.Cog):
             half = parent.grows / 2
             secsdelta = ends - now
             if secsdelta.seconds > half:
-                status = f'Dīgst {secstotime(secsdelta.seconds - half)}'
+                status = f'Sprouting {secstotime(secsdelta.seconds - half)}'
                 stype = 'grow1'
             else:
-                status = f'Aug {secstotime(secsdelta.seconds)}'
+                status = f'Growing {secstotime(secsdelta.seconds)}'
                 stype = 'grow2'
         elif dies > now:
             secsdelta = dies - now
-            status = f'Jānovāc {secstotime(secsdelta.seconds)} laikā'
+            status = f'Harvestable for {secstotime(secsdelta.seconds)}'
             stype = 'ready'
         else:
-            status = 'Sapuvis'
+            status = 'Rotten crops'
             stype = 'dead'
 
         return stype, status
@@ -103,14 +103,14 @@ class Planting(commands.Cog):
         now = datetime.now()
         if ends > now:
             secsdelta = ends - now
-            status = f'Aug {secstotime(secsdelta.seconds)}'
+            status = f'Grows {secstotime(secsdelta.seconds)}'
             stype = 'grow1'
         elif dies > now:
             secsdelta = dies - now
-            status = f'Jānovāc {secstotime(secsdelta.seconds)} laikā'
+            status = f'Collectable for {secstotime(secsdelta.seconds)}'
             stype = 'ready'
         else:
-            status = 'Produkti sabojājušies'
+            status = 'Rotten production '
             stype = 'dead'
 
         return stype, status
@@ -123,7 +123,7 @@ class Planting(commands.Cog):
         client = self.client
         fielddata = await usertools.getuserfield(client, ctx.author)
         if not fielddata:
-            embed = emb.errorembed("Tev nav apstrādātu lauku", ctx)
+            embed = emb.errorembed("You are not growing anything", ctx)
             return await ctx.send(embed=embed)
         for object in fielddata:
             try:
@@ -166,18 +166,18 @@ class Planting(commands.Cog):
         await usertools.addusedfields(client, ctx.author, len(todelete) * -1)
 
         if not unique.items() and len(todelete) > 0 or deaditem:
-            embed = emb.confirmembed("Tu novāci sobojājušās lietas", ctx)
+            embed = emb.confirmembed("You removed the rotten producion", ctx)
             await ctx.send(embed=embed)
         elif unique.items():
             information = ''
             for key, value in unique.items():
                 if key.type == 'animal' or key.type == 'tree':
                     key = key.getchild(client)
-                information += f"{key.emoji}**{key.name2.capitalize()}** x{value[0]} +{value[1]}{client.xp}"
-            embed = emb.confirmembed(f"Tu novāci: {information}", ctx)
+                information += f"{key.emoji}**{key.name.capitalize()}** x{value[0]} +{value[1]}{client.xp}"
+            embed = emb.confirmembed(f"You got: {information}", ctx)
             await ctx.send(embed=embed)
         else:
-            embed = emb.errorembed("Tev nav gatavas produkcijas, kuru novākt!", ctx)
+            embed = emb.errorembed("You don't have anything to harvest or collect!", ctx)
             await ctx.send(embed=embed)
 
     async def checkcrops(self, client, crops, ctx, unique, todelete, cat):
@@ -254,14 +254,14 @@ class Planting(commands.Cog):
         if not customamount:
             if usedtiles >= tiles:
                 embed = emb.errorembed(
-                    "Tev nav apstrādājamu lauku! Atbrīvo tos vai nopērc papildus teritoriju ar `%expand`.",
+                    "Not enough free tiles. Free up some existing ones or expand your field `%expand`.",
                     ctx
                 )
                 return await ctx.send(embed=embed)
         else:
             if usedtiles + amount > tiles:
                 embed = emb.errorembed(
-                    "Tev nav tik daudz apstrādājamu lauku! Atbrīvo tos vai nopērc papildus teritoriju ar `%expand`.",
+                    "Not enough free tiles. Free up some existing ones or expand your field  `%expand`.",
                     ctx
                 )
                 return await ctx.send(embed=embed)
@@ -270,13 +270,13 @@ class Planting(commands.Cog):
         if not item:
             return
         if item.type != 'cropseed' and item.type != 'animal' and item.type != 'tree':
-            embed = emb.errorembed(f"{item.emoji}{item.name2.capitalize()} nevar likt uz lauka!", ctx)
+            embed = emb.errorembed(f"You can't just put {item.emoji}{item.name.capitalize()} on the field!", ctx)
             return await ctx.send(embed=embed)
 
         inventorydata = await usertools.checkinventoryitem(client, ctx.author, item)
         if not inventorydata:
             embed = emb.errorembed(
-                f"Tavā noliktavā nav {item.emoji}{item.name.capitalize()}. Tu vari iegādāties lietas ar komandu `%shop`.",
+                f"You don't have {item.emoji}{item.name.capitalize()}. in your warehouse. Buy some items in the shop `%shop`.",
                 ctx
             )
             return await ctx.send(embed=embed)
@@ -284,13 +284,13 @@ class Planting(commands.Cog):
         if customamount:
             if inventorydata['amount'] < amount:
                 embed = emb.errorembed(
-                    f"Tavā noliktavā ir tikai {inventorydata['amount']}x{item.emoji}{item.name.capitalize()}. Tu vari iegādāties lietas ar komandu `%shop`.",
+                    f"You only have {inventorydata['amount']}x{item.emoji}{item.name.capitalize()} in your warehouse",
                     ctx
                 )
                 return await ctx.send(embed=embed)
             elif not amount > 0 or not amount < 2147483647:
                 embed = emb.errorembed(
-                    f"Nederīgs daudzums!",
+                    f"Invalid amount!",
                     ctx
                 )
                 return await ctx.send(embed=embed)
@@ -333,18 +333,16 @@ class Planting(commands.Cog):
             await usertools.addusedfields(client, ctx.author, 1)
 
             embed = emb.confirmembed(
-                f"Tu iestādīji {item.emoji}{item.name2.capitalize()}.\n"
-                f"Izaugs par {item.amount}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n"
-                f"Nogatavosies: `{ends}` Sabojāsies: `{dies}`",
+                f"You planted {item.emoji}{item.name.capitalize()}.\n"
+                f"Will grow into {item.amount}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n",
                 ctx
                 )
         else:
             await usertools.addusedfields(client, ctx.author, amount)
 
             embed = emb.confirmembed(
-                f"Tu iestādīji {amount}x{item.emoji}{item.name2.capitalize()}.\n"
-                f"Izaugs par {item.amount * amount}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n"
-                f"Nogatavosies: `{ends}` Sabojāsies: `{dies}`",
+                f"You planted {amount}x{item.emoji}{item.name.capitalize()}.\n"
+                f"Will grow into {item.amount * amount}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n",
                 ctx
             )
         await ctx.send(embed=embed)
@@ -379,20 +377,18 @@ class Planting(commands.Cog):
             await usertools.addusedfields(client, ctx.author, 1)
 
             embed = emb.confirmembed(
-                f"Tu sāki audzēt {item.emoji}{item.name2.capitalize()}.\n"
-                f"Dos {itemchild.amount}x {itemchild.emoji}**"
-                f" {itemchild.name2.capitalize()}** ({item.amount} reizes).\n"
-                f"Pirmā produkcija: `{ends}` Sabojāsies: `{dies}`",
+                f"You started to grow {item.emoji}{item.name.capitalize()}.\n"
+                f"Will produce {itemchild.amount}x {itemchild.emoji}**"
+                f" {itemchild.name.capitalize()}** ({item.amount} times).\n",
                 ctx
                 )
         else:
             await usertools.addusedfields(client, ctx.author, amount)
 
             embed = emb.confirmembed(
-                f"Tu sāki audzēt {amount}x{item.emoji}{item.name2.capitalize()}.\n"
-                f"Dos {itemchild.amount * amount}x {itemchild.emoji}**"
-                f" {itemchild.name2.capitalize()}** ({item.amount} reizes).\n"
-                f"Pirmā produkcija: `{ends}` Sabojāsies: `{dies}`",
+                f"You started to grow {amount}x{item.emoji}{item.name.capitalize()}.\n"
+                f"Will produce {itemchild.amount * amount}x {itemchild.emoji}**"
+                f" {itemchild.name.capitalize()}** ({item.amount} times).\n",
                 ctx
             )
         await ctx.send(embed=embed)
@@ -406,28 +402,28 @@ class Planting(commands.Cog):
         client = self.client
         profile = await usertools.getprofile(client, ctx.author)
         if usertools.getlevel(profile['xp'])[0] < 17:
-            embed = emb.errorembed("\ud83c\udfa3Makšķerēšana ir pieejama no \ud83d\udd3117.līmeņa", ctx)
+            embed = emb.errorembed("\ud83c\udfa3Fishing unlocks from \ud83d\udd31 level 17.", ctx)
             return await ctx.send(embed=embed)
 
         fish = client.items[316]
 
         mode = choice(FISH_AMOUNT_TYPES)
         if mode == 'none':
-            embed = emb.errorembed("Šoreiz nepaveicās, zivju nav \ud83d\ude14", ctx)
+            embed = emb.errorembed("Unlucky! No fish this time \ud83d\ude14", ctx)
             return await ctx.send(embed=embed)
         amount = randint(1, FISH_AMOUNTS[mode])
 
         await usertools.givexpandlevelup(client, ctx, fish.xp * amount)
         await usertools.additemtoinventory(client, ctx.author, fish, amount)
 
-        embed = emb.congratzembed(f"Tu noķēri **{amount} kg.** \ud83d\udc1f +{fish.xp * amount}{client.xp}", ctx)
+        embed = emb.congratzembed(f"You cought **{amount} kg.** \ud83d\udc1f +{fish.xp * amount}{client.xp}", ctx)
         await ctx.send(embed=embed)
 
     @fish.error
     async def fish_handler(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             cooldwtime = secstotime(error.retry_after)
-            embed = emb.errorembed(f"\ud83c\udfa3Tavā ūdenstilpnē zivis aug vēl \u23f0{cooldwtime}", ctx)
+            embed = emb.errorembed(f"\ud83c\udfa3Your fishes are still growing \u23f0{cooldwtime}", ctx)
             await ctx.send(embed=embed)
 
 

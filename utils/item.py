@@ -20,9 +20,8 @@ class Item:
 
 
 class CropSeed(Item):
-    def __init__(self, name2, level, grows, dies, expandsto, *args, **kw):
+    def __init__(self, level, grows, dies, expandsto, *args, **kw):
         super().__init__(*args, **kw)
-        self.name2 = name2
         self.level = level
         self.grows = grows
         self.dies = dies
@@ -34,9 +33,8 @@ class CropSeed(Item):
 
 
 class Crop(Item):
-    def __init__(self, name2, level, xp, img, minprice, maxprice, madefrom, *args, **kw):
+    def __init__(self, level, xp, img, minprice, maxprice, madefrom, *args, **kw):
         super().__init__(*args, **kw)
-        self.name2 = name2
         self.level = level
         self.xp = xp
         self.img = img
@@ -54,9 +52,8 @@ class Crop(Item):
 
 
 class Animal(Item):
-    def __init__(self, name2, level, xp, grows, dies, expandsto, img, *args, **kw):
+    def __init__(self, level, xp, grows, dies, expandsto, img, *args, **kw):
         super().__init__(*args, **kw)
-        self.name2 = name2
         self.level = level
         self.xp = xp
         self.grows = grows
@@ -70,9 +67,8 @@ class Animal(Item):
 
 
 class Tree(Item):
-    def __init__(self, name2, level, xp, grows, dies, expandsto, img, *args, **kw):
+    def __init__(self, level, xp, grows, dies, expandsto, img, *args, **kw):
         super().__init__(*args, **kw)
-        self.name2 = name2
         self.level = level
         self.xp = xp
         self.grows = grows
@@ -86,9 +82,8 @@ class Tree(Item):
 
 
 class CraftedItem(Item):
-    def __init__(self, name2, level, xp, img, minprice, maxprice, madefrom, time, *args, **kw):
+    def __init__(self, level, xp, img, minprice, maxprice, madefrom, time, *args, **kw):
         super().__init__(*args, **kw)
-        self.name2 = name2
         self.level = level
         self.xp = xp
         self.img = img
@@ -116,9 +111,8 @@ class CraftedItem(Item):
 
 
 class SellableItem(Item):
-    def __init__(self, name2, xp, minprice, maxprice, level, img, *args, **kw):
+    def __init__(self, xp, minprice, maxprice, level, img, *args, **kw):
         super().__init__(*args, **kw)
-        self.name2 = name2
         self.xp = xp
         self.minprice = minprice
         self.maxprice = maxprice
@@ -139,7 +133,7 @@ def cropseedloader():
 
     for c, v in seeds.items():
         crop = CropSeed(
-            v['name2'], v['level'], v['grows'], v['dies'], v['expandsto'], v['id'],
+            v['level'], v['grows'], v['dies'], v['expandsto'], v['id'],
             v['emoji'], v['name'], v['rarity'], v['amount'], v['cost'],
             v['scost']
         )
@@ -156,7 +150,7 @@ def croploader():
 
     for c, v in crops.items():
         crop = Crop(
-            v['name2'], v['level'], v['xp'], v['img'], v['minprice'], v['maxprice'],
+            v['level'], v['xp'], v['img'], v['minprice'], v['maxprice'],
             v['madefrom'], v['id'], v['emoji'], v['name'], v['rarity'],
             v['amount'], v['cost'], v['scost']
         )
@@ -173,7 +167,7 @@ def crafteditemloader():
 
     for c, v in litems.items():
         item = CraftedItem(
-            v['name2'], v['level'], v['xp'], v['img'], v['minprice'], v['maxprice'],
+            v['level'], v['xp'], v['img'], v['minprice'], v['maxprice'],
             v['madefrom'], v['time'], v['id'], v['emoji'], v['name'], v['rarity'],
             v['amount'], v['cost'], v['scost']
         )
@@ -190,7 +184,7 @@ def animalloader():
 
     for c, v in litems.items():
         item = Animal(
-            v['name2'], v['level'], v['xp'], v['grows'], v['dies'], v['expandsto'],
+            v['level'], v['xp'], v['grows'], v['dies'], v['expandsto'],
             v['img'], v['id'], v['emoji'], v['name'], v['rarity'],
             v['amount'], v['cost'], v['scost']
         )
@@ -207,7 +201,7 @@ def treeloader():
 
     for c, v in litems.items():
         item = Tree(
-            v['name2'], v['level'], v['xp'], v['grows'], v['dies'], v['expandsto'],
+            v['level'], v['xp'], v['grows'], v['dies'], v['expandsto'],
             v['img'], v['id'], v['emoji'], v['name'], v['rarity'],
             v['amount'], v['cost'], v['scost']
         )
@@ -224,7 +218,7 @@ def itemloader():
 
     for c, v in litems.items():
         item = SellableItem(
-            v['name2'], v['xp'], v['minprice'], v['maxprice'], v['level'],
+            v['xp'], v['minprice'], v['maxprice'], v['level'],
             v['img'], v['id'], v['emoji'], v['name'], v['rarity'],
             v['amount'], v['cost'], v['scost']
         )
@@ -241,9 +235,6 @@ def finditembyname(client, name):
     for item in itemslist:
         tempitems[item.name] = item
         tempwords.append(item.name)
-        if item.name2 and item.type != 'cropseed':
-            tempitems[item.name2] = item
-            tempwords.append(item.name2)
 
     matches = get_close_matches(name, tempwords)
     if not matches:
@@ -261,13 +252,13 @@ async def finditem(client, ctx, possibleitem):
         try:
             item = client.allitems[possibleitem]
         except KeyError:
-            embed = emb.errorembed("Neatradu tādu lietu\ud83e\udd14", ctx)
+            embed = emb.errorembed("I did not find any items \ud83e\udd14", ctx)
             await ctx.send(embed=embed)
             return None
-    elif isinstance(possibleitem, str):
+    else:
         item = finditembyname(client, possibleitem)
         if not item:
-            embed = emb.errorembed("Neatradu tādu lietu\ud83e\udd14", ctx)
+            embed = emb.errorembed("I did not find any items named like that \ud83e\udd14", ctx)
             await ctx.send(embed=embed)
             return None
 

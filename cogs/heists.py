@@ -28,7 +28,7 @@ class Heists(commands.Cog):
         data = await client.db.fetch(query, datetime.now(), ctx.guild.id)
 
         if len(data) < 1:
-            embed = emb.errorembed("Šajā apkārtnē nav paretināmu lauku", ctx)
+            embed = emb.errorembed("There is nothing to steal in this area right now", ctx)
             return await ctx.send(embed=embed)
 
         users, information = [], []
@@ -46,7 +46,7 @@ class Heists(commands.Cog):
 
         try:
             p = Pages(ctx, entries=information, per_page=10, show_entry_count=False)
-            p.embed.title = 'Retināmie lauki'
+            p.embed.title = 'Robbable farms'
             p.embed.color = 8052050
             await p.paginate()
         except Exception as e:
@@ -66,7 +66,7 @@ class Heists(commands.Cog):
 
         field = await client.db.fetch(query, datetime.now(), usertools.generategameuserid(member))
         if not field:
-            embed = emb.errorembed("Šim spēlētājam nav ko paretināt.", ctx)
+            embed = emb.errorembed("This player has nothing to steal from.", ctx)
             return await ctx.send(embed=embed)
 
         query = """SELECT * FROM boosts WHERE userid = $1 LIMIT 1;"""
@@ -77,7 +77,7 @@ class Heists(commands.Cog):
 
             if boostdata['dog3']:
                 if boostvalid(boostdata['dog3']):
-                    embed = emb.errorembed("Šo teritoriju apsargā MILZĪGS suns!", ctx)
+                    embed = emb.errorembed("This farm is being guarded by a HUGE dog!", ctx)
                     return await ctx.send(embed=embed)
 
             if boostdata['dog2']:
@@ -144,37 +144,37 @@ class Heists(commands.Cog):
 
         information = ''
         for key, value in wonitems.items():
-            information += f"{key.emoji}**{key.name2.capitalize()}** x{value}"
+            information += f"{key.emoji}**{key.name.capitalize()}** x{value}"
 
         try:
             if len(information) > 0:
-                embed = emb.errorembed(f"{ctx.author} paretināja tavu lauku: {information}", ctx, pm=True)
+                embed = emb.errorembed(f"{ctx.author} robbed your farm: {information}", ctx, pm=True)
                 await member.send(embed=embed)
         except Exception:
             pass
 
         if cought and not len(win) > 0:
-            embed = emb.errorembed("Tevi noķēra suns! :(", ctx)
+            embed = emb.errorembed("You got cought by the dog! :(", ctx)
             return await ctx.send(embed=embed)
         elif cought:
-            embed = emb.confirmembed(f"Tevi noķēra suns, bet tu paspēji paņemt: {information}", ctx)
+            embed = emb.confirmembed(f"You got cought by the dog, but you managed to grab: {information}", ctx)
             return await ctx.send(embed=embed)
         else:
-            embed = emb.congratzembed(f"Tu paņēmi mazliet no visa: {information}", ctx)
+            embed = emb.congratzembed(f"You got a bit from everyhing: {information}", ctx)
             return await ctx.send(embed=embed)
 
     @heist.error
     async def offer_handler(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             cooldwtime = secstotime(error.retry_after)
-            embed = emb.errorembed(f"Tev pakaļ dzenās kaimiņu suns vēl \u23f0{cooldwtime}", ctx)
+            embed = emb.errorembed(f"You are still being chased by neighbor's dog \u23f0{cooldwtime}", ctx)
             await ctx.send(embed=embed)
 
     @scout.error
     async def scout_handler(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             cooldwtime = secstotime(error.retry_after)
-            embed = emb.errorembed(f"Tavs spiegs \ud83d\udd75 ir pusceļā mājās \u23f0{cooldwtime}", ctx)
+            embed = emb.errorembed(f"Your loyal spy \ud83d\udd75 is half way home \u23f0{cooldwtime}", ctx)
             await ctx.send(embed=embed)
 
     @commands.command(aliases=['boosters', 'boost'])
@@ -182,32 +182,32 @@ class Heists(commands.Cog):
         member = member or ctx.author
         client = self.client
 
-        embed = Embed(title=f'\u2b06{member} boosteri', color=817407)
+        embed = Embed(title=f'\u2b06{member} boosters', color=817407)
 
         query = """SELECT * FROM boosts WHERE userid = $1;"""
         data = await client.db.fetchrow(query, usertools.generategameuserid(member))
         if not data:
-            embed.description = "Nav aktīvu boosteru"
+            embed.description = "No active boosters"
         else:
             embed.description = ''
             dog1d = data['dog1']
             dog1 = boostvalid(dog1d)
             if dog1:
-                embed.description += f'\ud83d\udc29 Līdz `{dog1d}`\n'
+                embed.description += f'\ud83d\udc29 until `{dog1d}`\n'
             dog2d = data['dog2']
             dog2 = boostvalid(dog2d)
             if dog2:
-                embed.description += f'\ud83d\udc36 Līdz `{dog2d}`\n'
+                embed.description += f'\ud83d\udc36 until `{dog2d}`\n'
             dog3d = data['dog3']
             dog3 = boostvalid(dog3d)
             if dog3:
-                embed.description += f'\ud83d\udc15 Līdz `{dog3d}`\n'
+                embed.description += f'\ud83d\udc15 until `{dog3d}`\n'
             catd = data['cat']
             cat = boostvalid(catd)
             if cat:
                 embed.description += f'\ud83d\udc31 Līdz `{catd}`\n'
             if not dog1 and not dog2 and not dog3 and not cat:
-                embed.description = "Nav aktīvu boosteru"
+                embed.description = "No active boosters"
 
         await ctx.send(embed=embed)
 

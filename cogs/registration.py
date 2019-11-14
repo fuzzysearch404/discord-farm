@@ -32,13 +32,13 @@ class Registration(commands.Cog):
         await self.client.db.release(connection)
         if result[-1:] != '0':
             embed = emb.congratzembed(
-                "Tavs profils ir izveidots!\n"
-                "\u2139Komandas atradīsi ar komandu `%commands`.",
+                "Your account is created!\n"
+                "\u2139Check out the commands with `%commands`.",
                 ctx
             )
             await ctx.send(embed=embed)
         else:
-            embed = emb.errorembed('Tev jau ir profils!', ctx)
+            embed = emb.errorembed('You already have an account!', ctx)
             await ctx.send(embed=embed)
 
     def loadtutorial(self):
@@ -54,7 +54,7 @@ class Registration(commands.Cog):
     async def commands(self, ctx):
         try:
             p = Pages(ctx, entries=self.words, per_page=1, show_entry_count=False)
-            p.embed.title = '\ud83e\udd55Bota komandas'
+            p.embed.title = '\ud83e\udd55Game commands'
             p.embed.color = 13144332
             await p.paginate()
         except Exception as e:

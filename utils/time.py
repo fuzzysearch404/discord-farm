@@ -10,5 +10,5 @@ def secstotime(secs):
     elif minutes != 0:
         result = f'{minutes}m {secs}s'
     else:
-        result = f'{secs} sek'
+        result = f'{secs} sec'
     return result

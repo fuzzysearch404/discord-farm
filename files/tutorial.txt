@@ -1,107 +1,111 @@
-**Saturs:**
-**1. :house_with_garden: Profila komandas**
-**2. :notepad_spiral: Spēles galvenās komandas**
-**3. :shopping_cart: Veikala un tirgus komandas**
-**4. :convenience_store: Spēlētāju veikali**
-**5. :tractor: Stādīšanas un lauka komandas**
-**6. :factory: Rūpnīcas komandas**
-**7. :card_box: Pasūtījumu komandas**
-**8. :dog: Boosteru un lauku retināšanas komandas**
-**9. :information_source: Informācijas komandas**
+**Contents:**
+**1. :house_with_garden: Profile commands**
+**2. :notepad_spiral: Main game commands**
+**3. :shopping_cart: Shop and market commands**
+**4. :convenience_store: Player store commands**
+**5. :tractor: Planting and field commands**
+**6. :factory: Factory commands**
+**7. :card_box: Mission commands**
+**8. :dog: Boost and heist commands**
+**9. :information_source: Information commands**
 (*)
-**:house_with_garden: Profila komandas**
-`%profile` vai `%prof` - Tavs profils ar ļoti noderīgu informāciju.
-Ja vēlies apskatīt cita spēlētāja profilu, norādi spēlētāju aiz komandas.
+**:house_with_garden: Profile commands**
+`%profile` or `prof` - Your game profile with some useful information.
+If you want to see another player's profile, provide how to find them right after the command.
 
-`%inventory` vai `%inv` - Tava noliktava.
-Ja vēlies apskatīt cita spēlētāja noliktavu, norādi spēlētāju aiz komandas.
+`%inventory` or `inv` - Shows your warehouse.
+If you want to see another player's warehouse, provide how to find them right after the command.
 
-`%dailybonus` vai `%daily` - Iegūsti dienas bonusu.
+`%dailybonus` or `daily` - Gets your daily bonus
 
-`%allitems` vai `%all` - Noskaidro kādas lietas ir pieejamas tavam līmenim.
+`%allitems` or `all` - Lists all the available items unlocked for your level.
 
-`%resetacc` - Pilnībā izdzēš tavu profilu.
+`%resetacc` - Completely deletes your account for the game.
 (*)
-**:notepad_spiral: Spēles galvenās komandas**
-`%info <parametrs>` - Parāda informāciju par kādu lietu.
-<parametrs> - Meklētās lietas ID vai nosaukums.
+**:notepad_spiral: Main game commands**
+`%info <param>` - Shows information about specific item
+<param> - Item's name or ID
 
-`%top <parametrs>` - spēlētāju topi.
-<parametrs> - `xp`|`money`|`gems`
+`%top <param>` - Shows top players in your guild.
+<param> - `xp`|`money`|`gems`
 
 (*)
-**:shopping_cart: Veikala un tirgus komandas**
-`%shop` - Atver veikalu.
+**:shopping_cart: Shop and market commands**
+`%shop` - Opens the shop.
 
-`%shop <parametrs>` - Atver kādu veikala sadaļu.
-<parametrs> - sadaļas nosaukums angliski. (tos var atrast ar `%shop`)
+`%shop <param>` - Opens specific category of the shop.
+<param> - name of the category. (you can find them with the `%shop` command)
 
-`%buy <parametrs> <skaits>` vai `%b` - Pirkt kādu lietu no veikala.
-<parametrs> - Meklētās lietas ID vai nosaukums.
-<skaits> - Daudzums norādīts ar cipariem.
+`%buy <param> <amount>` or `b` - Buys items from the shop
+<param> - Item's name or ID
+<amount> - Amount of how many this type of items to buy
 
-`%market` - Atver tirgu.
+`%market` - Opens the market.
 
-`%market <parametrs>` - Atver kādu tirgus sadaļu.
-<parametrs> - sadaļas nosaukums angliski. (tos var atrast ar `%market`)
+`%market <param>` - Opens specific category of the market
+<param> - name of the category (you can find them with the `%market` command)
 
-`%sell <parametrs> <skaits>` vai `%s` - Pārdot kādu lietu tirgū.
-<parametrs> - Meklētās lietas ID vai nosaukums.
-<skaits> - Daudzums norādīts ar cipariem.
+`%sell <param> <amount>` or `s` - Sells items to the market.
+<param> - Item's name or ID
+<amount> - Amount of how many this type of items to sell
 (*)
-**:convenience_store: Spēlētāju veikali**
-`%allstores` vai `%as` - Visu servera spēlētāju veikali.
+**:convenience_store: Player stores**
+`%allstores` or `%as` - Shows all active player stores in this server.
 
-`%store` - Apskati savu veikalu.
-Ja vēlies apskatīt cita spēlētāja veikalu, norādi spēlētāju aiz komandas.
+`%store` - Shows your store.
+If you want to see another player's store, provide how to find them right after the command.
 
-`%add <parametrs> <skaits>` - Pievieno lietas pārdošanai.
-<parametrs> - Meklētās lietas ID vai nosaukums.
-<skaits> - Daudzums norādīts ar cipariem.
+`%add <param> <amount>` - Adds items to your store
+<param> - Item's name or ID
+<skaits> - Amount of how many this type of items to add
 (*)
-**:tractor: Stādīšanas un lauka komandas**
-`%field` vai `%f` - Tavs lauks.
-Ja vēlies apskatīt cita spēlētāja lauku, norādi spēlētāju aiz komandas.
+**:tractor: Planting and field commands**
+`%field` or `f` - Shows your field.
+If you want to see another player's field, provide how to find them right after the command.
 
-`%plant <parametrs> <skaits>` vai `%p`  - Stādīt uz lauka kādu lietu.
-<parametrs> - Meklētās lietas ID vai nosaukums.
-<skaits> - Daudzums norādīts ar cipariem.
+`%plant <param> <amount>` or `p` - Plants items on the field.
+<param> - Item's name or ID
+<amount> - Amount of how many this type of items to plant
 
-`%harvest` vai `%h` - Novāc gatavo ražu un ja kāda daļa no tās ir sabojājusies,
-tad aizvāc to no lauka.
+`%harvest` or `h` - Harvests crops that are ready to harvest or removes the rotten crops.
 
-`%expand` - Paplašina zemi par supernaudām.
+`%expand` - Expands your field with gems.
 
-`%fish` - Ķert zivis. (no 17.līmeņa)
+`%fish` - Catches fishes. (available from level 17)
 (*)
-**:factory: Rūpnīcas komandas**
-`%factory` vai `%fa` - Parāda lietas, kuras pašlaik tiek ražotas.
-Ja vēlies apskatīt cita spēlētāja rūpnīcu, norādi spēlētāju aiz komandas.
+**:factory: Factory commands**
+`%factory` or `fa` - Shows current items in your factory.
+If you want to see another player's factory, provide how to find them right after the command.
 
-`%make <parametrs> <skaits>` - Ražot produktu.
-<parametrs> - Meklētās lietas ID vai nosaukums.
-<skaits> - Daudzums norādīts ar cipariem.
+`%make <param> <amount>` - Produces items or queues item production in the factory.
+<param> - Item's name or ID
+<amount> - Amount of how many this type of items to produce
 
-`%collect` vai `%c` - Savākt gatavo produkciju.
+`%collect` or `c` - Collects the produced items if they are ready to collect.
 
-`%upgrade` - Uzlabot maksimālo rūpnīcas ražošanas apjomu.
+`%upgrade` - Upgrade the max. production capacity.
 (*)
-**:card_box: Pasūtījumu komandas**
-`%requests` vai `req` - Tavi pasūtījumi. Lai izpildītu, nospied atbilstošo reakciju.
+**:card_box: Mission commands**
+`%requests` or `req` - Lists item orders for your farm.
 
-`%requests refresh` - Nomaina esošos pasūtījumus uz jauniem. Ir laika ierobežojums.
+`%requests refresh` - Replaces the current orders with new ones.
 
-`%offer` - Līdzīgi kā `%requests` pasūtījums, tikai jāizpilda uzreiz.
+`%offer` - Shows a special offer that has limited time to be completed.
 (*)
-**:dog: Boosteru un lauku retināšanas komandas**
-`%scout` - Apskatīt visus servera laukus ar gatavu ražu
+**:dog: Boost and heist commands**
+`%scout` - Lists the available farms in the server that you can rob.
 
-`%heist` vai `%rob` - Mēģināt paretināt spēlētāja lauku (norādi kuru aiz komandas)
+`%heist <param>` or `rob` - Try to rob a player's field.
+<param> - The player you want to rob
 
-`%boosts` - Apskatīt savus boosterus.
-Ja vēlies apskatīt cita spēlētāja boosterus, norādi spēlētāju aiz komandas.
+`%boosts` - View your active boosters.
+If you want to see another player's boosters, provide how to find them right after the command.
 (*)
-**:information_source: Informācijas komandas**
-`%news` - Parāda dažādu bota informāciju un jaunumus.
+**:information_source: Information commands**
+`%news` - Shows game's announcements, update information, maintenance information, etc.
 
-`%commands` vai `cmd` - Atver šo komandu sarakstu.
+`%commands` or `cmd` - Displays this message.
+
+`%invite` - Bot's invite link and link for the official support server.
+
+`%donate` - Support the and motivate the creator of the bot to keep this bot *fresh and cooler*.

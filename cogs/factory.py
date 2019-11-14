@@ -29,7 +29,7 @@ class Factory(commands.Cog):
 
         factorydata = await usertools.getuserfactory(client, member)
         if not factorydata:
-            embed = emb.errorembed(f'{member} neko neražo', ctx)
+            embed = emb.errorembed(f'{member} does not produce anything', ctx)
             return await ctx.send(embed=embed)
 
         for object in factorydata:
@@ -46,7 +46,7 @@ class Factory(commands.Cog):
 
         try:
             p = Pages(ctx, entries=information, per_page=10, show_entry_count=False)
-            p.embed.title = f'\ud83c\udfed{member} rūpnīca'
+            p.embed.title = f"\ud83c\udfed{member}'s factory"
             p.embed.color = 13110284
             await p.paginate()
         except Exception as e:
@@ -55,14 +55,14 @@ class Factory(commands.Cog):
     def getitemstate(self, item, starts, ends):
         now = datetime.now()
         if starts > now:
-            status = 'Gaida ražošanu'
+            status = 'Waiting in queue'
             stype = 'queue'
         elif ends > now:
             secsdelta = ends - now
-            status = f'Ražo {secstotime(secsdelta.seconds)}'
+            status = f'In production {secstotime(secsdelta.seconds)}'
             stype = 'making'
         elif ends < now:
-            status = 'Gatavs'
+            status = 'Ready to collect'
             stype = 'ready'
 
         return stype, status
@@ -86,20 +86,20 @@ class Factory(commands.Cog):
         if not customamount:
             if not slots > 0:
                 embed = emb.errorembed(
-                    "Tev nav vietas rūpnīcā! Atbrīvo to vai uzlabo rūpnīcu ar `%upgrade`.",
+                    "Your factory is full! Free up some space or upgrade the factory with `%upgrade`.",
                     ctx
                 )
                 return await ctx.send(embed=embed)
         else:
             if slots < reqamount:
                 embed = emb.errorembed(
-                    "Tev nav tik daudz vietas rūpnīcā! Atbrīvo to vai uzlabo rūpnīcu ar `%upgrade`.",
+                    "Your factory is full! Free up some space or upgrade the factory with `%upgrade`.",
                     ctx
                 )
                 return await ctx.send(embed=embed)
             if not reqamount > 0:
                 embed = emb.errorembed(
-                    "Nederīgs daudzums!",
+                    "Invalid amount!",
                     ctx
                 )
                 return await ctx.send(embed=embed)
@@ -108,12 +108,12 @@ class Factory(commands.Cog):
         if not fitem:
             return
         if fitem.type != 'crafteditem':
-            embed = emb.errorembed(f"Šo lietu ({fitem.emoji}{fitem.name2.capitalize()}) nevar ražot.", ctx)
+            embed = emb.errorembed(f"This thing ({fitem.emoji}{fitem.name.capitalize()}) cannot be produced.", ctx)
             return await ctx.send(embed=embed)
 
         if fitem.level > usertools.getlevel(profile['xp'])[0]:
             embed = emb.errorembed(
-                f"{fitem.emoji}{fitem.name2.capitalize()} var ražot tikai no \ud83d\udd31{fitem.level}.līmeņa.",
+                f"{fitem.emoji}{fitem.name.capitalize()} can be produced starting from level \ud83d\udd31{fitem.level}",
                 ctx
             )
             return await ctx.send(embed=embed)
@@ -136,7 +136,7 @@ class Factory(commands.Cog):
 
         if len(neededstr) > 0:
             embed = emb.errorembed(
-                f"Tev nav pietiekami daudz materiālu: {neededstr[:-2]}",
+                f"You don't have enough materials: {neededstr[:-2]}",
                 ctx
             )
             return await ctx.send(embed=embed)
@@ -182,14 +182,12 @@ class Factory(commands.Cog):
 
         if not customamount:
             embed = emb.confirmembed(
-                f"Tu pievienoji ražošanai {fitem.emoji}{fitem.name2.capitalize()}.\n"
-                f"Ražošana beigsies: `{ends}`",
+                f"You added {fitem.emoji}{fitem.name.capitalize()} to the production queue.\n",
                 ctx
             )
         else:
             embed = emb.confirmembed(
-                f"Tu pievienoji ražošanai {reqamount}x{fitem.emoji}{fitem.name2.capitalize()}.\n"
-                f"Ražošana beigsies: `{ends}`",
+                f"You added {reqamount}x{fitem.emoji}{fitem.name.capitalize()} to the production queue.\n",
                 ctx
             )
         await ctx.send(embed=embed)
@@ -203,7 +201,7 @@ class Factory(commands.Cog):
         client = self.client
         factdata = await usertools.getuserfactory(client, ctx.author)
         if not factdata:
-            embed = emb.errorembed("Tu neko neražo", ctx)
+            embed = emb.errorembed("You do not produce anything", ctx)
             return await ctx.send(embed=embed)
         for object in factdata:
             try:
@@ -238,11 +236,11 @@ class Factory(commands.Cog):
         if unique.items():
             information = ''
             for key, value in unique.items():
-                information += f"{key.emoji}**{key.name2.capitalize()}** x{value[0]} +{value[1]}{client.xp}"
-            embed = emb.confirmembed(f"Tu ieguvi: {information}", ctx)
+                information += f"{key.emoji}**{key.name.capitalize()}** x{value[0]} +{value[1]}{client.xp}"
+            embed = emb.confirmembed(f"You got: {information}", ctx)
             await ctx.send(embed=embed)
         else:
-            embed = emb.errorembed("Tev nav gatavas produkcijas!", ctx)
+            embed = emb.errorembed("There is no production ready yet!", ctx)
             await ctx.send(embed=embed)
 
 

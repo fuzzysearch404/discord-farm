@@ -93,9 +93,9 @@ class Pages:
 
         if self.maximum_pages > 1:
             if self.show_entry_count:
-                text = f'Lapa {page}/{self.maximum_pages} ({len(self.entries)} rezultāti)'
+                text = f'Page {page}/{self.maximum_pages} ({len(self.entries)} results)'
             else:
-                text = f'Lapa {page}/{self.maximum_pages}'
+                text = f'Page {page}/{self.maximum_pages}'
 
             self.embed.set_footer(text=text)
 
@@ -132,19 +132,19 @@ class Pages:
             await self.show_page(page)
 
     async def first_page(self):
-        """iet uz pirmo lapu"""
+        """go to first page"""
         await self.show_page(1)
 
     async def last_page(self):
-        """iet uz pēdējo lapu"""
+        """got to last page"""
         await self.show_page(self.maximum_pages)
 
     async def next_page(self):
-        """iet uz nākošo lapu"""
+        """go to next page"""
         await self.checked_show_page(self.current_page + 1)
 
     async def previous_page(self):
-        """iet uz iepriekšējo lapu"""
+        """go to previous page"""
         await self.checked_show_page(self.current_page - 1)
 
     async def show_current_page(self):
@@ -152,9 +152,9 @@ class Pages:
             await self.show_page(self.current_page)
 
     async def numbered_page(self):
-        """ļauj ierakstīt lapas numuru uz kuru doties"""
+        """allows to type the number of page to go to"""
         to_delete = []
-        to_delete.append(await self.channel.send('Kuru lapu atvērt?'))
+        to_delete.append(await self.channel.send('Which page to open?'))
 
         def message_check(m):
             return m.author == self.author and \
@@ -164,7 +164,7 @@ class Pages:
         try:
             msg = await self.bot.wait_for('message', check=message_check, timeout=30.0)
         except asyncio.TimeoutError:
-            to_delete.append(await self.channel.send('Gaidīju pārāk ilgi'))
+            to_delete.append(await self.channel.send('Too long'))
             await asyncio.sleep(5)
         else:
             page = int(msg.content)
@@ -172,7 +172,7 @@ class Pages:
             if page != 0 and page <= self.maximum_pages:
                 await self.show_page(page)
             else:
-                to_delete.append(await self.channel.send(f'Nepareiza lapa. ({page}/{self.maximum_pages})'))
+                to_delete.append(await self.channel.send(f'Invalid page. ({page}/{self.maximum_pages})'))
                 await asyncio.sleep(5)
 
         try:
@@ -181,10 +181,10 @@ class Pages:
             pass
 
     async def show_help(self):
-        """parāda šo ziņu"""
-        messages = ['Šīs ir interaktīvas lapas!\n']
-        messages.append('Tu vari mainīt lapas ar reakcijām.'
-                        ' Izmantošana:\n')
+        """shows this message"""
+        messages = ['These are interactive pages!\n']
+        messages.append('You can change pages by reacting to this message.'
+                        ' Usage:\n')
 
         for (emoji, func) in self.reaction_emojis:
             messages.append(f'{emoji} {func.__doc__}')
@@ -192,7 +192,7 @@ class Pages:
         embed = self.embed.copy()
         embed.clear_fields()
         embed.description = '\n'.join(messages)
-        self.embed.set_footer(text=f'Mēs bijām {self.current_page} lapā pirms šīs ziņas.')
+        self.embed.set_footer(text=f'We were in page {self.current_page} before this message.')
         await self.message.edit(content=None, embed=embed)
 
         async def go_back_to_current_page():
@@ -202,7 +202,7 @@ class Pages:
         self.bot.loop.create_task(go_back_to_current_page())
 
     async def stop_pages(self):
-        """izdzēš ziņojumu"""
+        """deletes this message"""
         await self.message.delete()
         self.paginating = False
 
@@ -262,9 +262,9 @@ class FieldPages(Pages):
 
         if self.maximum_pages > 1:
             if self.show_entry_count:
-                text = f'Lapa {page}/{self.maximum_pages} ({len(self.entries)} rezultāti)'
+                text = f'Page {page}/{self.maximum_pages} ({len(self.entries)} results)'
             else:
-                text = f'Lapa {page}/{self.maximum_pages}'
+                text = f'Page {page}/{self.maximum_pages}'
 
             self.embed.set_footer(text=text)
 

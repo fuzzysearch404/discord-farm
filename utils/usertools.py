@@ -87,8 +87,8 @@ async def givexpandlevelup(client, ctx, xp):
         gems = gemsforlevel(newlevel)
         await givegems(client, member, gems)
         embed = congratzembed(
-            f"Tu sasniedzi {newlevel}.līmeni un ieguvi {gems}{client.gem}!\n"
-            "Noskaidro ko esi atbloķējis ar `%allitems`",
+            f"You reached level {newlevel} and got {gems}{client.gem}!\n"
+            "Find your unlocked items by typing `%allitems`",
             ctx
         )
         await ctx.send(embed=embed)

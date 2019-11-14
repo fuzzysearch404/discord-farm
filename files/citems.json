@@ -2,8 +2,7 @@
   "301" : {
     "id":301,
     "emoji":"\ud83e\udd57",
-    "name":"zaļie salāti",
-    "name2":"zaļos salātus",
+    "name":"green lettuce",
     "rarity":2,
     "amount":1,
     "cost":50,
@@ -19,8 +18,7 @@
   "302" : {
     "id":302,
     "emoji":"\ud83c\udf7f",
-    "name":"popkorns",
-    "name2":"popkornu",
+    "name":"popcorn",
     "rarity":2,
     "amount":1,
     "cost":60,
@@ -36,8 +34,7 @@
   "303" : {
     "id":303,
     "emoji":"\ud83c\udf73",
-    "name":"ceptas olas",
-    "name2":"ceptas olas",
+    "name":"cooked eggs",
     "rarity":2,
     "amount":1,
     "cost":80,
@@ -53,8 +50,7 @@
   "310" : {
     "id":310,
     "emoji":"\ud83c\udf6e",
-    "name":"ābolu pudiņi",
-    "name2":"ābolu pudiņus",
+    "name":"apple pudding",
     "rarity":2,
     "amount":1,
     "cost":50,
@@ -70,8 +66,7 @@
   "304" : {
     "id":304,
     "emoji":"<:picklejar:604297690389413908>",
-    "name":"marinēti gurķi",
-    "name2":"marinētus gurķus",
+    "name":"pickles",
     "rarity":2,
     "amount":1,
     "cost":120,
@@ -87,8 +82,7 @@
   "311" : {
     "id":311,
     "emoji":"\ud83c\udf6c",
-    "name":"sarkanās konfektes",
-    "name2":"sarkanās konfektes",
+    "name":"red candy",
     "rarity":2,
     "amount":1,
     "cost":160,
@@ -104,8 +98,7 @@
   "312" : {
     "id":312,
     "emoji":"\ud83c\udf77",
-    "name":"vīnogu vīns",
-    "name2":"vīnogu vīnu",
+    "name":"grape vine",
     "rarity":2,
     "amount":1,
     "cost":1000,
@@ -121,8 +114,7 @@
   "306" : {
     "id":306,
     "emoji":"\ud83c\udf72",
-    "name":"dārzeņu sautējums",
-    "name2":"dārzeņu sautējumu",
+    "name":"stew",
     "rarity":2,
     "amount":1,
     "cost":200,
@@ -138,8 +130,7 @@
   "314" : {
     "id":314,
     "emoji":"\ud83c\udf6d",
-    "name":"sūkājamie kociņi",
-    "name2":"sūkājamos kociņus",
+    "name":"lollipop",
     "rarity":2,
     "amount":1,
     "cost":200,
@@ -155,8 +146,7 @@
   "309" : {
     "id":309,
     "emoji":"\ud83c\udf54",
-    "name":"bigijmaki",
-    "name2":"bigijmakus",
+    "name":"burgers",
     "rarity":2,
     "amount":1,
     "cost":600,
@@ -172,8 +162,7 @@
   "313" : {
     "id":313,
     "emoji":"\ud83c\udf79",
-    "name":"tropiskie kokteiļi",
-    "name2":"tropiskos kokteiļus",
+    "name":"tropical cocktails",
     "rarity":2,
     "amount":1,
     "cost":600,
@@ -189,8 +178,7 @@
   "315" : {
     "id":315,
     "emoji":"\ud83d\udc90",
-    "name":"puķu pušķi",
-    "name2":"puķu pušķus",
+    "name":"bouquets of flowers",
     "rarity":2,
     "amount":1,
     "cost":600,
@@ -206,8 +194,7 @@
   "317" : {
     "id":317,
     "emoji":"\ud83c\udf59",
-    "name":"rīsu bumbas",
-    "name2":"rīsu bumbas",
+    "name":"rice balls",
     "rarity":2,
     "amount":1,
     "cost":600,
@@ -223,8 +210,7 @@
   "318" : {
     "id":318,
     "emoji":"\ud83c\udf58",
-    "name":"rīsu krekeri",
-    "name2":"rīsu krekerus",
+    "name":"rice crackers",
     "rarity":2,
     "amount":1,
     "cost":600,
@@ -240,8 +226,7 @@
   "319" : {
     "id":319,
     "emoji":"\ud83c\udf71",
-    "name":"bento",
-    "name2":"bento",
+    "name":"bentos",
     "rarity":2,
     "amount":1,
     "cost":1600,
@@ -257,8 +242,7 @@
   "320" : {
     "id":320,
     "emoji":"\ud83c\udf63",
-    "name":"suši",
-    "name2":"suši",
+    "name":"sushi",
     "rarity":2,
     "amount":1,
     "cost":3000,
@@ -274,8 +258,7 @@
   "321" : {
     "id":321,
     "emoji":"\ud83c\udf68",
-    "name":"saldējuma bumbiņas",
-    "name2":"saldējuma bumbiņas",
+    "name":"ice cream balls",
     "rarity":2,
     "amount":1,
     "cost":3000,
@@ -291,8 +274,7 @@
   "322" : {
     "id":322,
     "emoji":"\ud83c\udf65",
-    "name":"zivju torte",
-    "name2":"zivju tortes",
+    "name":"fish cake",
     "rarity":2,
     "amount":1,
     "cost":500,
@@ -308,8 +290,7 @@
   "323" : {
     "id":323,
     "emoji":"\ud83c\udf61",
-    "name":"dango",
-    "name2":"dango",
+    "name":"dangos",
     "rarity":2,
     "amount":1,
     "cost":500,
@@ -325,8 +306,7 @@
   "325" : {
     "id":325,
     "emoji":"\ud83e\udd59",
-    "name":"pitas",
-    "name2":"pitas",
+    "name":"stuffed pitas",
     "rarity":2,
     "amount":1,
     "cost":1000,
