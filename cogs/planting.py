@@ -103,7 +103,7 @@ class Planting(commands.Cog):
         now = datetime.now()
         if ends > now:
             secsdelta = ends - now
-            status = f'Grows {secstotime(secsdelta.seconds)}'
+            status = f'Growing {secstotime(secsdelta.seconds)}'
             stype = 'grow1'
         elif dies > now:
             secsdelta = dies - now

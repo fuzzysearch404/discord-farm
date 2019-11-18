@@ -154,5 +154,18 @@
     "amount":34,
     "cost":1500,
     "scost":2
+  },
+  "13": {
+    "id":13,
+    "expandsto":120,
+    "level":22,
+    "emoji":"\ud83e\udd54",
+    "name":"potatoe seeds",
+    "rarity":1,
+    "grows":3600,
+    "dies":4200,
+    "amount":12,
+    "cost":4000,
+    "scost":2
   }
 }

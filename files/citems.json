@@ -318,5 +318,21 @@
     "maxprice":4530,
     "madefrom":[{"101":50}, {"105":1},{"106":10}, {"117":3}, {"324":5}],
     "time":17631
+  },
+  "326" : {
+    "id":326,
+    "emoji":"\ud83c\udf5f",
+    "name":"fries",
+    "rarity":2,
+    "amount":1,
+    "cost":1000,
+    "scost":2,
+    "level":22,
+    "xp":100,
+    "img":"https://files.fm/thumb_show.php?i=mzqjuhqa",
+    "minprice":1950,
+    "maxprice":2050,
+    "madefrom":[{"120":6}],
+    "time":1800
   }
 }

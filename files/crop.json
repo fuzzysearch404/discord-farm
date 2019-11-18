@@ -321,5 +321,22 @@
     "level":20,
     "xp":2,
     "img":"https://failiem.lv/thumb_show.php?i=vvr3pzbu"
+  },
+  "120": {
+    "id":120,
+    "madefrom":13,
+    "emoji":"\ud83e\udd54",
+    "name":"potatoes",
+    "rarity":1,
+    "grows":3600,
+    "dies":4200,
+    "amount":12,
+    "cost":4000,
+    "scost":2,
+    "minprice":300,
+    "maxprice":340,
+    "level":22,
+    "xp":9,
+    "img":"https://files.fm/thumb_show.php?i=5avbw6nd"
   }
 }
