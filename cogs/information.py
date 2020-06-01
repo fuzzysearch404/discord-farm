@@ -21,7 +21,7 @@ class Information(commands.Cog):
 
     @commands.command()
     async def invite(self, ctx):
-        await ctx.send("Support server: https://discord.gg/6PtAXVN" \
+        await ctx.send("Support server: https://discord.gg/MwpxKjF" \
         "\nInvite: <https://discordapp.com/oauth2/authorize?client_id=526436949481881610&scope=bot&permissions=313408>")
 
     @commands.command()
