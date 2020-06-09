@@ -42,5 +42,27 @@
         "grows":150,
         "dies":225,
         "gold_cost":50
+    },
+    "5": {
+        "id":5,
+        "expandsto":105,
+        "level":8,
+        "emoji":"\ud83e\uddc4",
+        "name":"garlic seeds",
+        "rarity":1,
+        "grows":3600,
+        "dies":5400,
+        "gold_cost":140
+    },
+    "6": {
+        "id":6,
+        "expandsto":106,
+        "level":8,
+        "emoji":"\ud83e\uddc5",
+        "name":"onion seeds",
+        "rarity":1,
+        "grows":5400,
+        "dies":7200,
+        "gold_cost":180
     }
 }

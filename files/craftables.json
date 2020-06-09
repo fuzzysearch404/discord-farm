@@ -82,5 +82,47 @@
         "maxprice":256,
         "madefrom":[{"104":7}, {"302":12}],
         "time":1800
+    },
+    "707" : {
+        "id":707,
+        "emoji":"\ud83e\uddc8",
+        "name":"butter",
+        "rarity":2,
+        "amount":1,
+        "level":7,
+        "xp":18,
+        "img":"https://failiem.lv/thumb_show.php?i=fvatua83",
+        "minprice":48,
+        "maxprice":66,
+        "madefrom":[{"502":5}],
+        "time":600
+    },
+    "708" : {
+        "id":708,
+        "emoji":"\ud83e\uddc7",
+        "name":"waffles",
+        "rarity":2,
+        "amount":1,
+        "level":7,
+        "xp":120,
+        "img":"https://failiem.lv/thumb_show.php?i=ry785umq",
+        "minprice":350,
+        "maxprice":487,
+        "madefrom":[{"104":34}, {"501":2}, {"707":2}],
+        "time":3600
+    },
+    "709" : {
+        "id":709,
+        "emoji":"\ud83e\udd5e",
+        "name":"apple pancakes",
+        "rarity":2,
+        "amount":1,
+        "level":7,
+        "xp":180,
+        "img":"https://failiem.lv/thumb_show.php?i=vzv7sr7d",
+        "minprice":420,
+        "maxprice":610,
+        "madefrom":[{"104":30}, {"301":12}, {"501":6}, {"707":1}],
+        "time":5400
     }
 }

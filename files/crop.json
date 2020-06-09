@@ -50,5 +50,31 @@
         "level":5,
         "xp":1,
         "img":"https://failiem.lv/thumb_show.php?i=rt32jaec"
+    },
+    "105": {
+        "id":105,
+        "madefrom":5,
+        "emoji":"\ud83e\uddc4",
+        "name":"garlic",
+        "rarity":1,
+        "amount":20,
+        "minprice":5,
+        "maxprice":14,
+        "level":8,
+        "xp":14,
+        "img":"https://failiem.lv/thumb_show.php?i=kkhp2mxq"
+    },
+    "106": {
+        "id":106,
+        "madefrom":6,
+        "emoji":"\ud83e\uddc5",
+        "name":"onion",
+        "rarity":1,
+        "amount":24,
+        "minprice":5,
+        "maxprice":18,
+        "level":8,
+        "xp":16,
+        "img":"https://failiem.lv/thumb_show.php?i=xg47evjw"
     }
 }
