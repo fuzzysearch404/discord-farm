@@ -1,322 +1,272 @@
-import datetime
-import discord
-import asyncio
 import utils.embeds as emb
-from utils import usertools
-from utils import boosttools
-from utils.time import secstotime
+from asyncio import TimeoutError
+from discord import Embed, HTTPException
+from discord.ext import commands
+from typing import Optional
+from utils import checks
+from utils.time import secstodays
 from utils.paginator import Pages
-from utils.item import finditem
-from discord.ext import commands, tasks
-
-REFRESH_SHOP_SECONDS = 3600
+from classes.item import finditem
+from classes import user as userutils
+from classes import boost as boostutils
 
 
 class Shop(commands.Cog):
+    """
+    In the shop you can buy seeds, animals and other stuff, that is 
+    required for your farm.
+    """
     def __init__(self, client):
         self.client = client
-        self.refreshshop.start()
-        self.lastrefresh = datetime.datetime.now()
+        self.purchasable_types = (
+            'cropseed', 'tree', 'animal'
+        )
+        self.not_purchasable_types = (
+            'crop', 'treeproduct', 'animalproduct'
+        )
 
-    async def cog_check(self, ctx):
-        query = """SELECT userid FROM users WHERE id = $1;"""
-        userid = await self.client.db.fetchrow(query, usertools.generategameuserid(ctx.author))
-        if not userid:
-            return False
-        return userid['userid'] == ctx.author.id and not self.client.disabledcommands
+    async def shop_pages(self, ctx, item_dict, category):
+        client, texts = self.client, []
 
-    @tasks.loop(seconds=REFRESH_SHOP_SECONDS)
-    async def refreshshop(self):
-        self.lastrefresh = datetime.datetime.now()
-        for crop in self.client.crops.values():
-            crop.getmarketprice()
-        for item in self.client.items.values():
-            item.getmarketprice()
-        for citem in self.client.crafteditems.values():
-            citem.getmarketprice()
-
-    @refreshshop.before_loop
-    async def before_refreshshop(self):
-        await self.client.wait_until_ready()
-
-    def cog_unload(self):
-        self.refreshshop.cancel()
+        for item in item_dict.values():
+            text = (
+                f"\ud83d\udd31{item.level} {item.emoji}**{item.name.capitalize()}** - "
+                f"Price: **{item.gold_cost}**{client.gold}\n"
+                f"\ud83d\uded2 `%buy {item.name}` \u2139 `%item {item.name}`\n"
+            )
+            texts.append(text)
+        try:
+            p = Pages(ctx, entries=texts, per_page=7, show_entry_count=False)
+            p.embed.title = '\ud83d\uded2 Shop: ' + category
+            p.embed.color = 82247
+            await p.paginate()
+        except Exception as e:
+            print(e)
 
     @commands.group()
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
     async def shop(self, ctx):
+        """
+        \ud83c\udfea Access the shop to buy items. Shop has some subcategories.
+        """
         if ctx.invoked_subcommand:
             return
-        embed = discord.Embed(title='Select a category', colour=822472)
-        embed.add_field(name='\ud83c\udf3e Crop seeds', value='`%shop crops`')
+
+        embed = Embed(title='Please choose a category', colour=822472)
+        embed.add_field(name='\ud83c\udf3d Crop seeds', value='`%shop crops`')
         embed.add_field(name='\ud83c\udf33 Tree plants', value='`%shop trees`')
         embed.add_field(name='\ud83d\udc14 Animals', value='`%shop animals`')
-        embed.add_field(name='\ud83c\udfe6 Services', value='`%shop boosts`')
-        embed.add_field(name='\u2b50 Other', value='`%shop special`')
-        embed.add_field(name='\u2696 Market', value='`%market`')
+        embed.add_field(name='\u2b06 Boosters', value='`%shop boosts`')
+        embed.add_field(name='\u2b50 Upgrades', value='`%shop upgrades`')
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @shop.command()
+    @shop.command(aliases=['crop', 'seed', 'seeds'])
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
     async def crops(self, ctx):
-        items = []
-        client = self.client
-        for cropseed in client.cropseeds.values():
-            crop = cropseed.getchild(client)
-            item = f"""{cropseed.emoji}**{cropseed.name.capitalize()}** \ud83d\udd31{crop.level}
-            {cropseed.cost}{client.gold}  or  {cropseed.scost}{client.gem}
-            \ud83d\uded2 `%buy {cropseed.name}` \u2139 `%info {cropseed.name}`\n"""
-            items.append(item)
-        try:
-            p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
-            p.embed.title = '\ud83c\udf3e Crop seeds'
-            p.embed.color = 82247
-            await p.paginate()
-        except Exception as e:
-            print(e)
+        """
+        \ud83c\udf3d Shop category for crop seeds.
+        """
+        await self.shop_pages(ctx, self.client.cropseeds, "\ud83c\udf3dCrop seeds")
 
-    @shop.command()
-    async def animals(self, ctx):
-        items = []
-        client = self.client
-        for animal in client.animals.values():
-            item = f"""{animal.emoji}**{animal.name.capitalize()}** \ud83d\udd31{animal.level}
-            {animal.cost}{client.gold}  or  {animal.scost}{client.gem}
-            \ud83d\uded2 `%buy {animal.name}` \u2139 `%info {animal.name}`\n"""
-            items.append(item)
-        try:
-            p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
-            p.embed.title = '\ud83d\udc14 Animals'
-            p.embed.color = 82247
-            await p.paginate()
-        except Exception as e:
-            print(e)
-
-    @shop.command()
+    @shop.command(aliases=['tree'])
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
     async def trees(self, ctx):
-        items = []
-        client = self.client
-        for tree in client.trees.values():
-            item = f"""{tree.emoji}**{tree.name.capitalize()}** \ud83d\udd31{tree.level}
-            {tree.cost}{client.gold}  or  {tree.scost}{client.gem}
-            \ud83d\uded2 `%buy {tree.name}` \u2139 `%info {tree.name}`\n"""
-            items.append(item)
-        try:
-            p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
-            p.embed.title = '\ud83c\udf33 Tree plants'
-            p.embed.color = 82247
-            await p.paginate()
-        except Exception as e:
-            print(e)
+        """
+        \ud83c\udf33 Shop category for tree plants.
+        """
+        await self.shop_pages(ctx, self.client.trees, "\ud83c\udf33Tree plants")
 
-    @shop.command()
+    @shop.command(aliases=['animal'])
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def animals(self, ctx):
+        """
+        \ud83d\udc14 Shop category for animals.
+        """
+        await self.shop_pages(ctx, self.client.animals, "\ud83d\udc14Animals")
+
+    @shop.command(aliases=['boosters', 'boost'])
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
     async def boosts(self, ctx):
-        embed = discord.Embed(title='\ud83c\udfe6 Services', color=82247)
+        """
+        \u2b06 Shop category for boosters.
+        """
+        embed = Embed(title='\u2b06 Boosters', color=82247)
         embed.add_field(
             name='\ud83d\udc29Squealer',
             value="""Protects your field. Or does it?
-            `%dog 1`"""
-            )
+            `%boost dog1`"""
+        )
         embed.add_field(
             name='\ud83d\udc36Saliva Toby',
             value="""Protects your land, but sometimes likes to play around.
-            `%dog 2`"""
-            )
+            `%boost dog2`"""
+        )
         embed.add_field(
             name='\ud83d\udc15Rex',
-            value="""Protects your farm and your heart.
-            `%dog 3`"""
-            )
+            value="""Protects your farm and your conscience.
+            `%boost dog3`"""
+        )
         embed.add_field(
             name='\ud83d\udc31Leo',
             value="""Keeps your harvest fresh. Don't ask me how...
-            `%cat`"""
-            )
+            `%boost cat`"""
+        )
+        embed.set_footer(
+            text="To view your currently active boosters, use the %boosts command", 
+            icon_url=ctx.author.avatar_url
+        )
         await ctx.send(embed=embed)
 
-    @commands.group()
-    async def market(self, ctx):
-        if ctx.invoked_subcommand:
-            return
-
-        embed = discord.Embed(title='Choose a category', colour=1563808)
-        embed.add_field(name='\ud83c\udf3e Harvest', value='`%market crops`')
-        embed.add_field(name='\ud83d\udce6 Products', value='`%market items`')
-        embed.add_field(name='\ud83d\udd39 Other products', value='`%market other`')
-        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=embed)
-
-    @market.command(name='crops')
-    async def mcrops(self, ctx):
-        items = []
+    @shop.command(aliases=['upgrade'])
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def upgrades(self, ctx):
+        """
+        \u2b50 Shop category for upgrades.
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
         client = self.client
+        useracc = userutils.User.get_user(userdata, client)
 
-        refreshin = datetime.datetime.now() - self.lastrefresh
-        refreshin = secstotime(REFRESH_SHOP_SECONDS - refreshin.seconds)
-        items.append(f'\u23f0Market prices are going to refresh in {refreshin}\n')
-
-        for x in client.crops.values():
-            item = f"""{x.emoji}**{x.name.capitalize()}**
-            Currently buying for: {x.marketprice}{client.gold}/item.
-            \u2696 `%sell {x.name}` \u2139 `%info {x.name}`\n"""
-            items.append(item)
-        try:
-            p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
-            p.embed.title = '\u2696 Market: \ud83c\udf3eCrops'
-            p.embed.color = 82247
-            await p.paginate()
-        except Exception as e:
-            print(e)
-
-    @market.command(name='items')
-    async def mitems(self, ctx):
-        items = []
-        client = self.client
-
-        refreshin = datetime.datetime.now() - self.lastrefresh
-        refreshin = secstotime(REFRESH_SHOP_SECONDS - refreshin.seconds)
-        items.append(f'\u23f0Market prices are going to refresh in {refreshin}\n')
-
-        for x in client.crafteditems.values():
-            item = f"""{x.emoji}**{x.name.capitalize()}**
-            Currently buying for: {x.marketprice}{client.gold}/item.
-            \u2696 `%sell {x.name}` \u2139 `%info {x.name}`\n"""
-            items.append(item)
-        try:
-            p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
-            p.embed.title = '\u2696 Tirgus: \ud83d\udce6Products'
-            p.embed.color = 82247
-            await p.paginate()
-        except Exception as e:
-            print(e)
-
-    @market.command(name='other')
-    async def mother(self, ctx):
-        items = []
-        client = self.client
-
-        refreshin = datetime.datetime.now() - self.lastrefresh
-        refreshin = secstotime(REFRESH_SHOP_SECONDS - refreshin.seconds)
-        items.append(f'\u23f0Market prices are going to refresh in {refreshin}\n')
-
-        for x in client.items.values():
-            item = f"""{x.emoji}**{x.name.capitalize()}**
-            Currently buying for: {x.marketprice}{client.gold}/item.
-            \u2696 `%sell {x.name}` \u2139 `%info {x.name}`\n"""
-            items.append(item)
-        try:
-            p = Pages(ctx, entries=items, per_page=3, show_entry_count=False)
-            p.embed.title = '\u2696 Tirgus: \ud83d\udd39 Other products'
-            p.embed.color = 82247
-            await p.paginate()
-        except Exception as e:
-            print(e)
-
-    @shop.command()
-    async def special(self, ctx):
-        client = self.client
-        profile = await usertools.getprofile(client, ctx.author)
-
-        embed = discord.Embed(title='\u2b50 Other', color=82247)
+        embed = Embed(title='\u2b50 Upgrades', color=82247)
         embed.add_field(
-            name=f'{client.tile}Expand field \ud83d\udd313',
-            value=f"""\ud83c\udd95 {profile['tiles']} \u2192 {profile['tiles'] + 1} tiles
-            {client.gem}{usertools.upgradecost(profile['tiles'])}
-            \ud83d\uded2 `%expand`"""
+            name=f'\ud83d\udd313 {client.tile}Expand farm size',
+            value=f"""\ud83c\udd95 {useracc.tiles} \u2192 {useracc.tiles + 1} size
+            {client.gem}1
+            \ud83d\uded2 `%upgrade farm`"""
         )
         embed.add_field(
-            name=f'\ud83c\udfedFactory upgrade \ud83d\udd313',
-            value=f"""\ud83c\udd95 {profile['factoryslots']} \u2192 {profile['factoryslots'] + 1} capacity
-            {client.gem}{usertools.upgradecost(profile['factoryslots'])}
-            \ud83d\uded2 `%upgrade`"""
+            name=f'\ud83d\udd313 \ud83c\udfedFactory upgrade',
+            value=f"""\ud83c\udd95 {useracc.factoryslots} \u2192 {useracc.factoryslots + 1} capacity
+            {client.gem}1
+            \ud83d\uded2 `%upgrade factory`"""
         )
         embed.add_field(
-            name=f'\ud83c\udfeaShop upgrade',
-            value=f"""\ud83c\udd95 {profile['storeslots']} \u2192 {profile['storeslots'] + 1} selling capacity
-            {client.gold}{usertools.storeupgcost(profile['storeslots'])}
-            \ud83d\uded2 `%addslot`"""
+            name=f'\ud83e\udd1dTrading upgrade',
+            value=f"""\ud83c\udd95 {useracc.storeslots} \u2192 {useracc.storeslots + 1} max. trades
+            {client.gold}{useracc.get_store_upgrade_cost()}
+            \ud83d\uded2 `%upgrade trading`"""
         )
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['b'])
-    async def buy(self, ctx, *, possibleitem):
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def buy(self, ctx, *, search, amount: Optional[int] = 1):
+        """
+        \ud83d\uded2 Buy items from the shop.
+
+        Parameters:
+        `search` - item to lookup for buying (item's name or ID).
+        Additional parameters:
+        `amount` - specify how many items to buy.
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
         client = self.client
+        useracc = userutils.User.get_user(userdata, client)
 
         customamount = False
         try:
-            possibleamount = possibleitem.rsplit(' ', 1)[1]
+            possibleamount = search.rsplit(' ', 1)[1]
             amount = int(possibleamount)
-            possibleitem = possibleitem.rsplit(' ', 1)[0]
+            search = search.rsplit(' ', 1)[0]
             if amount > 0 and amount < 2147483647:
                 customamount = True
         except Exception:
             pass
 
-        item = await finditem(client, ctx, possibleitem)
+        item = await finditem(client, ctx, search)
         if not item:
             return
 
-        forbiddentypes = ('crop', 'crafteditem', 'item')
-
-        if not item.type or item.type in forbiddentypes:
-            embed = emb.errorembed(f"This item ({item.emoji}{item.name.capitalize()}) is not being sold in our shop \ud83d\ude26", ctx)
+        itemtype = item.type
+        if itemtype in self.purchasable_types:
+            pass
+        elif itemtype in self.not_purchasable_types:
+            item = item.getparent(client)
+        else:
+            embed = emb.errorembed(
+                f"Sorry, you can't buy **{item.emoji}{item.name.capitalize()}** from the shop!",
+                ctx
+            )
             return await ctx.send(embed=embed)
 
-        buyer = await usertools.getprofile(client, ctx.author)
-        if usertools.getlevel(buyer['xp'])[0] < item.level:
-            embed = emb.errorembed(f"Too low level to buy {item.emoji}{item.name.capitalize()}", ctx)
+        if useracc.level < item.level:
+            embed = emb.errorembed(
+                f"Sorry, your experience level is too low level to buy **{item.emoji}{item.name.capitalize()}**!\n"
+                f"\ud83d\udd31 Required level: {item.level}.",
+                ctx
+            )
             return await ctx.send(embed=embed)
 
-        buyembed = discord.Embed(title='Purchase details', colour=9309837)
+        buyembed = Embed(title='Purchase details', colour=9309837)
         buyembed.add_field(
             name='Item',
-            value=f'{item.emoji}**{item.name.capitalize()}**\n ID: {item.id}'
+            value=f'{item.emoji}**{item.name.capitalize()}**\n\ud83d\udcddID: {item.id}'
         )
         buyembed.add_field(
             name='Price',
-            value=f'{client.gold}{item.cost} or {client.gem}{item.scost}'
+            value=f'{client.gold}{item.gold_cost}'
         )
+        buyembed.set_footer(
+            text=f"{ctx.author} Gold: {useracc.money} Gems: {useracc.gems}",
+            icon_url=ctx.author.avatar_url,
+        )
+
         if not customamount:
             buyembed.add_field(
                 name='Amount',
-                value="""Please enter the amount in the chat.
-                To cancel, type `X`."""
+                value=("Please enter the amount in the chat.\n"
+                "To cancel, type `X`.")
             )
-        buyembed.set_footer(
-            text=f"{ctx.author} Gold: {buyer['money']} Gems: {buyer['gems']}",
-            icon_url=ctx.author.avatar_url,
-        )
-        if not customamount:
+
             buyinfomessage = await ctx.send(embed=buyembed)
 
             def check(m):
                 return m.author == ctx.author
 
+            entry = None
             try:
-                entry = None
                 entry = await client.wait_for('message', check=check, timeout=30.0)
-            except asyncio.TimeoutError:
-                embed = emb.errorembed('Too long. Purchase canceled.', ctx)
+            except TimeoutError:
+                embed = emb.errorembed(
+                    f'Too long. {item.emoji} purchase canceled.',
+                    ctx
+                )
                 await ctx.send(embed=embed)
 
-            try:
-                if not entry:
-                    return
-                elif entry.clean_content.lower() == 'x':
-                    await buyinfomessage.delete()
-                    return await entry.delete()
+            if not entry: return
 
-                await buyinfomessage.delete()
-                await entry.delete()
-            except discord.HTTPException:
-                pass
+            if entry.clean_content.lower() == 'x':
+                embed = emb.confirmembed(f'{item.emoji} purchase canceled.', ctx)
+                return await ctx.send(embed=embed)
 
             try:
                 amount = int(entry.clean_content)
                 if amount < 1 or amount > 2147483647:
-                    embed = emb.errorembed('Invalid amount. Start purchase all over again.', ctx)
+                    embed = emb.errorembed(
+                        f'Invalid amount. {item.emoji} purchase canceled.',
+                        ctx
+                    )
                     return await ctx.send(embed=embed)
             except ValueError:
-                embed = emb.errorembed('Invalid amount. Next time enter a valid amount', ctx)
+                embed = emb.errorembed(
+                    f'Invalid amount. {item.emoji} purchase canceled.', 
+                    ctx
+                )
                 return await ctx.send(embed=embed)
 
             buyembed.set_field_at(
@@ -331,278 +281,98 @@ class Shop(commands.Cog):
             )
         buyembed.add_field(
             name='Total',
-            value=f'{client.gold}{item.cost * amount} or {client.gem}{item.scost * amount}'
+            value=f'{client.gold}{item.gold_cost * amount}'
         )
-        buyembed.add_field(name='Confirmation', value='React with payment method to finish the purchase')
+        buyembed.add_field(
+            name='Confirmation',
+            value=f'React with {client.gold}, to finish the purchase'
+        )
         buyinfomessage = await ctx.send(embed=buyembed)
         await buyinfomessage.add_reaction(client.gold)
-        await buyinfomessage.add_reaction(client.gem)
-        await buyinfomessage.add_reaction('\u274c')
-
-        allowedemojis = ('\u274c', client.gem, client.gold)
 
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in allowedemojis and reaction.message.id == buyinfomessage.id
+            return user == ctx.author and str(reaction.emoji) == client.gold and reaction.message.id == buyinfomessage.id
 
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            return await buyinfomessage.clear_reactions()
+        except TimeoutError:
+            if checks.can_clear_reactions(ctx):
+                return await buyinfomessage.clear_reactions()
+            else: return
 
-        if str(reaction.emoji) == client.gold:
-            await self.buywithgold(ctx, buyer, item, amount)
-        elif str(reaction.emoji) == client.gem:
-            await self.buywithgems(ctx, buyer, item, amount)
+        await self.buy_item_with_gold(ctx, item, amount)
 
-    async def buywithgold(self, ctx, buyer, item, amount):
+    async def buy_item_with_gold(self, ctx, item, amount):
+        # Check again (after another user input time period)
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
         client = self.client
-        total = item.cost * amount
-        if buyer['money'] < total:
-            embed = emb.errorembed('You do not have enough gold', ctx)
-            return await ctx.send(embed=embed)
+        useracc = userutils.User.get_user(userdata, client)
 
-        query = """SELECT money FROM users
-        WHERE id = $1;"""
+        total = item.gold_cost * amount
 
-        usergold = await client.db.fetchrow(query, buyer['id'])
-        if usergold['money'] < total:
-            embed = emb.errorembed('You do not have enough gold', ctx)
-            return await ctx.send(embed=embed)
-
-        await usertools.additemtoinventory(client, ctx.author, item, amount)
-
-        await usertools.givemoney(client, ctx.author, total * -1)
-
-        embed = emb.confirmembed(f"You purchased {amount}x{item.emoji}{item.name.capitalize()} for {total}{self.client.gold}", ctx)
-        await ctx.send(embed=embed)
-
-    async def buywithgems(self, ctx, buyer, item, amount):
-        client = self.client
-        total = item.scost * amount
-        if buyer['gems'] < total:
-            embed = emb.errorembed('You do not have enough gems', ctx)
-            return await ctx.send(embed=embed)
-
-        query = """SELECT gems FROM users
-        WHERE id = $1;"""
-
-        usergems = await client.db.fetchrow(query, buyer['id'])
-        if usergems['gems'] < total:
-            embed = emb.errorembed('You do not have enough gems', ctx)
-            return await ctx.send(embed=embed)
-
-        await usertools.additemtoinventory(client, ctx.author, item, amount)
-
-        await usertools.givegems(client, ctx.author, total * -1)
-
-        embed = emb.confirmembed(f"You purchased {amount}x{item.emoji}{item.name.capitalize()} for {total}{self.client.gem}", ctx)
-        await ctx.send(embed=embed)
-
-    @commands.command(aliases=['s'])
-    async def sell(self, ctx, *, possibleitem):
-        client = self.client
-
-        customamount = False
-        try:
-            possibleamount = possibleitem.rsplit(' ', 1)[1]
-            amount = int(possibleamount)
-            possibleitem = possibleitem.rsplit(' ', 1)[0]
-            if amount > 0 and amount < 2147483647:
-                customamount = True
-        except Exception:
-            pass
-
-        item = await finditem(client, ctx, possibleitem)
-        if not item:
-            return
-
-        allowedtypes = ('crop', 'crafteditem', 'item')
-
-        if not item.type or item.type not in allowedtypes:
-            embed = emb.errorembed(f"This item ({item.emoji}{item.name.capitalize()}) can not be sold in the market \ud83d\ude26", ctx)
-            return await ctx.send(embed=embed)
-
-        hasitem = await usertools.checkinventoryitem(client, ctx.author, item)
-        if not hasitem:
-            embed = emb.errorembed(f"You do not have ({item.emoji}{item.name.capitalize()}) in your warehouse!", ctx)
-            return await ctx.send(embed=embed)
-        else:
-            alreadyhas = hasitem['amount']
-
-        sellembed = discord.Embed(title='Selling details', colour=9309837)
-        sellembed.add_field(
-            name='Item',
-            value=f'{item.emoji}**{item.name.capitalize()}**\nItem ID: {item.id}'
-        )
-        sellembed.add_field(
-            name='Price',
-            value=f'{client.gold}{item.marketprice}'
-        )
-        sellembed.set_footer(
-            text=ctx.author, icon_url=ctx.author.avatar_url
-        )
-
-        if not customamount:
-            sellembed.add_field(
-                name='Amount',
-                value=f"""Please enter the amount in the chat
-                To cancel, type `X`.
-                You have {alreadyhas}{item.emoji}."""
+        if useracc.money < total:
+            embed = emb.errorembed(
+                'You do not have enough gold to buy these items!',
+                ctx
             )
-
-            sellinfomessage = await ctx.send(embed=sellembed)
-
-        if not customamount:
-            def check(m):
-                return m.author == ctx.author
-
-            try:
-                entry = None
-                entry = await client.wait_for('message', check=check, timeout=30.0)
-            except asyncio.TimeoutError:
-                embed = emb.errorembed('Too long. Selling canceled', ctx)
-                await ctx.send(embed=embed, delete_after=15)
-
-            try:
-                if not entry:
-                    return
-                elif entry.clean_content.lower() == 'x':
-                    await sellinfomessage.delete()
-                    return await entry.delete()
-
-                await entry.delete()
-                await sellinfomessage.delete()
-            except discord.HTTPException:
-                pass
-
-            try:
-                amount = int(entry.clean_content)
-                if amount < 1 or amount > 2147483647:
-                    embed = emb.errorembed('Invalid amount. Selling canceled', ctx)
-                    return await ctx.send(embed=embed)
-            except ValueError:
-                embed = emb.errorembed('Invalid amount. Selling canceled', ctx)
-                return await ctx.send(embed=embed)
-
-            sellembed.set_field_at(
-                index=2,
-                name='Amount',
-                value=amount
-            )
-        else:
-            sellembed.add_field(
-                name='Amount',
-                value=amount
-            )
-        sellembed.add_field(
-            name='Total',
-            value=f'{client.gold}{item.marketprice * amount}'
-        )
-        sellembed.add_field(
-            name='Confirmation',
-            value='React with payment method to finish selling these items'
-        )
-        sellinfomessage = await ctx.send(embed=sellembed)
-        await sellinfomessage.add_reaction('\u2705')
-        await sellinfomessage.add_reaction('\u274c')
-
-        allowedemojis = ('\u274c', '\u2705')
-
-        def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in allowedemojis and reaction.message.id == sellinfomessage.id
-
-        try:
-            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            return await sellinfomessage.clear_reactions()
-
-        if str(reaction.emoji) == '\u274c':
-            return
-
-        await self.sellwithgold(ctx, item, amount)
-
-    async def sellwithgold(self, ctx, item, amount):
-        client = self.client
-        total = item.marketprice * amount
-
-        hasitem = await usertools.checkinventoryitem(client, ctx.author, item)
-        if not hasitem:
-            embed = emb.errorembed(f"You do not have {item.emoji}{item.name.capitalize()} in your warehouse!", ctx)
             return await ctx.send(embed=embed)
 
-        if amount > hasitem['amount']:
-            embed = emb.errorembed(f"You only have {hasitem['amount']}x {item.emoji}{item.name.capitalize()} in yout warehouse!", ctx)
-            return await ctx.send(embed=embed)
+        await useracc.add_item_to_inventory(item, amount)
+        await useracc.give_money(total * -1)
 
-        await usertools.removeitemfrominventory(client, ctx.author, item, amount)
-        await usertools.givemoney(client, ctx.author, total)
-
-        embed = emb.confirmembed(f"You sold {amount}x{item.emoji}{item.name.capitalize()} for {total}{self.client.gold}", ctx)
+        embed = emb.confirmembed(
+            f"You successfully purchased {amount}x{item.emoji}{item.name.capitalize()} for {total}{self.client.gold}!",
+            ctx
+        )
         await ctx.send(embed=embed)
 
-    @commands.command()
-    async def expand(self, ctx):
-        client = self.client
-        profile = await usertools.getprofile(client, ctx.author)
-
-        if usertools.getlevel(profile['xp'])[0] < 3:
-            embed = emb.errorembed('Land expansion is avaiable from level 3.', ctx)
-            return await ctx.send(embed=embed)
-
-        buyembed = discord.Embed(title='Purchase details', colour=9309837)
-        buyembed.add_field(
-            name='Item',
-            value=f"{client.tile} {profile['tiles']} \u2192 {profile['tiles'] + 1}"
-        )
-        buyembed.add_field(
-            name='Price',
-            value=f"{client.gem}{usertools.upgradecost(profile['tiles'])}"
-        )
-        buyembed.add_field(name='Confirmation', value='React with the payment method')
-        buyembed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
-        buyinfomessage = await ctx.send(embed=buyembed)
-        await buyinfomessage.add_reaction(client.gem)
-
-        def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) == client.gem and reaction.message.id == buyinfomessage.id
-
-        try:
-            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            return await buyinfomessage.clear_reactions()
-
-        profile = await usertools.getprofile(client, ctx.author)
-
-        gemstopay = usertools.upgradecost(profile['tiles'])
-
-        if profile['gems'] < gemstopay:
-            embed = emb.errorembed('You do not have enough gems', ctx)
-            return await ctx.send(embed=embed)
-
-        await usertools.addfields(client, ctx.author, 1)
-        await usertools.givegems(client, ctx.author, gemstopay * -1)
-        embed = emb.congratzembed(f"You now have {profile['tiles'] + 1} field tiles", ctx)
-        await ctx.send(embed=embed)
-
-    @commands.command()
+    @commands.group()
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
     async def upgrade(self, ctx):
-        client = self.client
-        profile = await usertools.getprofile(client, ctx.author)
+        """
+        \u2b50 Purchase various upgrades for faster game progression.
+        """
+        if ctx.invoked_subcommand:
+            return
 
-        if usertools.getlevel(profile['xp'])[0] < 3:
-            embed = emb.errorembed('Factory upgrades are avaiable from level 3', ctx)
+        await self.upgrades.invoke(ctx)
+
+    @upgrade.command(aliases=['field'])
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def farm(self, ctx):
+        """
+        \ud83d\uded2 [Unlocks from level 3] Adds another farm size tile.
+
+        If you previously could grow 2 items on your field at the time,
+        after purchasing this upgrade, you can grow 3 items at the time. 
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+        client = self.client
+        useracc = userutils.User.get_user(userdata, client)
+
+        if useracc.level < 3:
+            embed = emb.errorembed(
+                'Farm field expansions are available from experience level 3.',
+                ctx
+            )
             return await ctx.send(embed=embed)
 
-        buyembed = discord.Embed(title='Purchase details', colour=9309837)
+        buyembed = Embed(title='Purchase details', colour=9309837)
         buyembed.add_field(
             name='Item',
-            value=f"\ud83c\udfed\ud83d\udce6 {profile['factoryslots']} \u2192 {profile['factoryslots'] + 1}"
+            value=f"{client.tile} {useracc.tiles} \u2192 {useracc.tiles + 1}"
         )
         buyembed.add_field(
             name='Price',
-            value=f"{client.gem}{usertools.upgradecost(profile['factoryslots'])}"
+            value=f"{client.gem}1"
         )
-        buyembed.add_field(name='Confirmation', value='React with the payment method')
+        buyembed.add_field(name='Confirmation', value=f'React with {client.gem}')
         buyembed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         buyinfomessage = await ctx.send(embed=buyembed)
         await buyinfomessage.add_reaction(client.gem)
@@ -612,37 +382,119 @@ class Shop(commands.Cog):
 
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            return await buyinfomessage.clear_reactions()
+        except TimeoutError:
+            if checks.can_clear_reactions(ctx):
+                return await buyinfomessage.clear_reactions()
+            else: return
 
-        profile = await usertools.getprofile(client, ctx.author)
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
 
-        gemstopay = usertools.upgradecost(profile['factoryslots'])
-
-        if profile['gems'] < gemstopay:
-            embed = emb.errorembed('You do not have enough gems', ctx)
+        if userdata['gems'] < 1:
+            embed = emb.errorembed(
+                'You do not have enough gems for this purchase!',
+                ctx
+                )
             return await ctx.send(embed=embed)
 
-        await usertools.addfactoryslots(client, ctx.author, 1)
-        await usertools.givegems(client, ctx.author, gemstopay * -1)
-        embed = emb.congratzembed(f"Your factory has now {profile['factoryslots'] + 1} production slots", ctx)
+        await useracc.add_fields(1)
+        await useracc.give_gems(-1)
+        embed = emb.congratzembed(
+            f"You now have {client.tile} {useracc.tiles + 1} farm field tiles!",
+            ctx
+        )
         await ctx.send(embed=embed)
 
-    @commands.command()
-    async def addslot(self, ctx):
-        client = self.client
-        profile = await usertools.getprofile(client, ctx.author)
+    @upgrade.command()
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def factory(self, ctx):
+        """
+        \ud83d\uded2 [Unlocks from level 3] Adds another factory capacity slot.
 
-        buyembed = discord.Embed(title='Purchase details', colour=9309837)
+        If you previously could queue 2 items for production at the time,
+        after purchasing this upgrade, you can queue 3 items at the time. 
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+        client = self.client
+        useracc = userutils.User.get_user(userdata, client)
+
+        if useracc.level < 3:
+            embed = emb.errorembed(
+                'Factory upgrades are available from experience level 3.',
+                ctx
+            )
+            return await ctx.send(embed=embed)
+
+        buyembed = Embed(title='Purchase details', colour=9309837)
         buyembed.add_field(
             name='Item',
-            value=f"\ud83c\udfea {profile['storeslots']} \u2192 {profile['storeslots'] + 1}"
+            value=f"\ud83c\udfed\ud83d\udce6 {useracc.factoryslots} \u2192 {useracc.factoryslots + 1}"
         )
         buyembed.add_field(
             name='Price',
-            value=f"{client.gold}{usertools.storeupgcost(profile['storeslots'])}"
+            value=f"{client.gem}1"
         )
-        buyembed.add_field(name='Confirmation', value='React with the payment method')
+        buyembed.add_field(name='Confirmation', value=f'React with {client.gem}')
+        buyembed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        buyinfomessage = await ctx.send(embed=buyembed)
+        await buyinfomessage.add_reaction(client.gem)
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) == client.gem and reaction.message.id == buyinfomessage.id
+
+        try:
+            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+        except TimeoutError:
+            if checks.can_clear_reactions(ctx):
+                return await buyinfomessage.clear_reactions()
+            else: return
+
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+
+        if userdata['gems'] < 1:
+            embed = emb.errorembed('You do not have enough gems for this purchase!', ctx)
+            return await ctx.send(embed=embed)
+
+        await useracc.add_factory_slots(1)
+        await useracc.give_gems(-1)
+        embed = emb.congratzembed(
+            f"Your factory has now production capatity of {useracc.factoryslots + 1}!",
+            ctx
+        )
+        await ctx.send(embed=embed)
+
+    @upgrade.command(aliases=['trade', 'trades'])
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def trading(self, ctx):
+        """
+        \ud83d\uded2 Adds another trading capacity slot.
+
+        If you previously could trade 2 items at the time,
+        after purchasing this upgrade, you can trade 3 items at the time. 
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+        client = self.client
+        useracc = userutils.User.get_user(userdata, client)
+
+        cost = useracc.get_store_upgrade_cost()
+
+        buyembed = Embed(title='Purchase details', colour=9309837)
+        buyembed.add_field(
+            name='Item',
+            value=f"\ud83c\udfea {useracc.storeslots} \u2192 {useracc.storeslots + 1}"
+        )
+        buyembed.add_field(
+            name='Price',
+            value=f"{client.gold}{cost}"
+        )
+        buyembed.add_field(name='Confirmation', value=f'React with {client.gold}')
         buyembed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         buyinfomessage = await ctx.send(embed=buyembed)
         await buyinfomessage.add_reaction(client.gold)
@@ -652,137 +504,164 @@ class Shop(commands.Cog):
 
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            return await buyinfomessage.clear_reactions()
+        except TimeoutError:
+            if checks.can_clear_reactions(ctx):
+                return await buyinfomessage.clear_reactions()
+            else: return
 
-        profile = await usertools.getprofile(client, ctx.author)
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
 
-        goldtopay = usertools.storeupgcost(profile['storeslots'])
-
-        if profile['money'] < goldtopay:
-            embed = emb.errorembed('Not enough gems', ctx)
+        if userdata['money'] < cost:
+            embed = emb.errorembed(
+                'You do not have enough gold for this purchase!',
+                ctx
+            )
             return await ctx.send(embed=embed)
 
-        await usertools.addstoreslots(client, ctx.author, 1)
-        await usertools.givemoney(client, ctx.author, goldtopay * -1)
-        embed = emb.congratzembed(f"Your shop now has {profile['storeslots'] + 1} selling slots", ctx)
+        await useracc.add_store_slots(1)
+        await useracc.give_money(cost * -1)
+        embed = emb.congratzembed(
+            f"You can now create up to {useracc.storeslots + 1} trades!",
+            ctx
+        )
         await ctx.send(embed=embed)
 
     @commands.group()
-    async def dog(self, ctx):
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def boost(self, ctx):
+        """
+        \u2b06 Purchase various boosts for faster game progression.
+        """
         if ctx.invoked_subcommand:
             return
-        embed = emb.errorembed("`%dog 1-3`", ctx)
-        await ctx.send(embed=embed)
 
-    @dog.command(name='1')
+        await self.boosts.invoke(ctx)
+
+    @boost.command()
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
     async def dog1(self, ctx):
-        message, gp = await self.prepareboostinfo(ctx, 1, '\ud83d\udc29')
-        await self.assignboost(ctx, message, gp, '\ud83d\udc29', 1)
+        """
+        \ud83d\udc29 Purchase dog "Squealer" to protect your farm's field.
 
-    @dog.command(name='2')
+        Enables low protection against your farm's raids for the period
+        of booster's duration.
+        Boost's price increases by increasing the farm field size.
+        """
+        await self.prepare_boost(ctx, boostutils.dog1)
+
+    @boost.command()
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
     async def dog2(self, ctx):
-        message, gp = await self.prepareboostinfo(ctx, 2, '\ud83d\udc36')
-        await self.assignboost(ctx, message, gp, '\ud83d\udc36', 2)
+        """
+        \ud83d\udc36 Purchase dog "Saliva Toby" to protect your farm's field.
 
-    @dog.command(name='3')
+        Enables medium protection against your farm's raids for the period
+        of booster's duration.
+        Boost's price increases by increasing the farm field size.
+        """
+        await self.prepare_boost(ctx, boostutils.dog2)
+
+    @boost.command()
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
     async def dog3(self, ctx):
-        message, gp = await self.prepareboostinfo(ctx, 3, '\ud83d\udc15')
-        await self.assignboost(ctx, message, gp, '\ud83d\udc15', 3)
+        """
+        \ud83d\udc15 Purchase dog "Rex" to protect your farm's field.
 
-    @commands.command()
+        Enables highest protection against your farm's raids for the period
+        of booster's duration.
+        Boost's price increases by increasing the farm field size.
+        """
+        await self.prepare_boost(ctx, boostutils.dog3)
+
+    @boost.command()
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
     async def cat(self, ctx):
-        message, gp = await self.prepareboostinfo(ctx, 4, '\ud83d\udc31')
-        await self.assignboost(ctx, message, gp, '\ud83d\udc31', 4)
+        """
+        \ud83d\udc31 Purchase cat "Leo" to look after your farm's field.
 
-    async def prepareboostinfo(self, ctx, dog, emoji):
+        Allows to collect rotten crops and rotten production from your farm's 
+        field for the period of booster's duration.
+        Boost's price increases by increasing the farm field size.
+        """
+        await self.prepare_boost(ctx, boostutils.cat)
+
+    async def prepare_boost(self, ctx, boost):
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
         client = self.client
-        profile = await usertools.getprofile(self.client, ctx.author)
-        goldprices = boosttools.getboostgoldprices(profile['tiles'], dog)
+        useracc = userutils.User.get_user(userdata, client)
 
-        embed = discord.Embed(title=f'Get {emoji}')
+        tiles = useracc.tiles
+        price_one_day = boostutils.get_boost_price(boost.one_day_price, tiles)
+        price_three_day = boostutils.get_boost_price(boost.three_day_price, tiles)
+        price_seven_day = boostutils.get_boost_price(boost.seven_day_price, tiles)
+
+        emojis_prices = {
+            '1\u20e3': price_one_day,
+            '3\u20e3': price_three_day,
+            '7\u20e3': price_seven_day
+        }
+
+        embed = Embed(title=f'Get {boost.emoji} booster')
         embed.add_field(
             name='For 1 day',
-            value=f"{goldprices[1]}{client.gold}"
+            value=f"{price_one_day}{client.gold}"
             )
         embed.add_field(
             name='For 3 days',
-            value=f"{goldprices[3]}{client.gold}"
+            value=f"{price_three_day}{client.gold}"
             )
         embed.add_field(
             name='For 7 days',
-            value=f"{goldprices[7]}{client.gold}"
+            value=f"{price_seven_day}{client.gold}"
             )
         message = await ctx.send(embed=embed)
         await message.add_reaction('1\u20e3')
         await message.add_reaction('3\u20e3')
         await message.add_reaction('7\u20e3')
 
-        return message, goldprices
-
-    async def assignboost(self, ctx, message, gp, emoji, dog):
-        client = self.client
-
-        emojis = {
-            '1\u20e3': gp[1],
-            '3\u20e3': gp[3],
-            '7\u20e3': gp[7]
-        }
-
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in emojis and reaction.message.id == message.id
+            return user == ctx.author and str(reaction.emoji) in emojis_prices.keys() and reaction.message.id == message.id
 
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            return await message.clear_reactions()
+        except TimeoutError:
+            if checks.can_clear_reactions(ctx):
+                return await message.clear_reactions()
+            else: return
 
-        await message.delete()
+        price = emojis_prices[str(reaction.emoji)]
 
-        settings = emojis[str(reaction.emoji)]
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
 
-        buyembed = discord.Embed(title='Purchase details')
-        buyembed.add_field(
-            name='Item',
-            value=f"{emoji} {str(reaction.emoji)[0]} days"
-        )
-        buyembed.add_field(
-            name='Price',
-            value=f"{client.gold}{settings}"
-        )
-        buyembed.add_field(name='Confirmation', value='React with the payment method')
-        buyembed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
-        buyinfomessage = await ctx.send(embed=buyembed)
-        await buyinfomessage.add_reaction(client.gold)
-
-        aemojis = (client.gold)
-
-        def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in aemojis and reaction.message.id == buyinfomessage.id
-
-        try:
-            breaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            return await message.clear_reactions()
-
-        if str(breaction.emoji) == client.gold:
-            await self.boostbuywithgold(ctx, settings, dog, emoji, int(str(reaction.emoji)[0]))
-
-    async def boostbuywithgold(self, ctx, gold, dog, emoji, duration):
-        client = self.client
-        query = """SELECT money FROM users
-        WHERE id = $1;"""
-
-        usergold = await client.db.fetchrow(query, usertools.generategameuserid(ctx.author))
-        if usergold['money'] < gold:
-            embed = emb.errorembed('You do not have enough gold', ctx)
+        if userdata['money'] < price:
+            embed = emb.errorembed(
+                'You do not have enough gold for this booster!',
+                ctx
+            )
             return await ctx.send(embed=embed)
 
-        await usertools.givemoney(client, ctx.author, gold * -1)
+        duration = boostutils.DURATIONS[int(str(reaction.emoji)[0])]
 
-        await boosttools.addboost(client, ctx.author, dog, duration)
+        await useracc.give_money(price * -1)
+        await useracc.add_boost(boost, duration)
 
-        embed = emb.confirmembed(f"You paid {emoji} to help your farm", ctx)
+        embed = emb.confirmembed(
+            f"Booster {boost.emoji} activated for {secstodays(duration)}!",
+            ctx
+        )
         await ctx.send(embed=embed)
 
 

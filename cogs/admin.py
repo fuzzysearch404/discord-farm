@@ -7,12 +7,13 @@ import traceback
 import discord
 import inspect
 import textwrap
-from contextlib import redirect_stdout
 import io
+import json
 import copy
 import subprocess
 import datetime
-from typing import Union
+from contextlib import redirect_stdout
+from typing import Union, Optional
 
 from utils.paginator import TextPages
 from utils import checks
@@ -20,10 +21,8 @@ from utils import checks
 # to expose to the eval command
 from collections import Counter
 
-old_time = datetime.datetime.now()
 
-
-class Admin(commands.Cog):
+class Admin(commands.Cog, command_attrs={'hidden': True}):
     """Admin-only commands that make the bot dynamic."""
 
     def __init__(self, client):
@@ -54,6 +53,27 @@ class Admin(commands.Cog):
         if e.text is None:
             return f'```py\n{e.__class__.__name__}: {e}\n```'
         return f'```py\n{e.text}{"^":>{e.offset}}\n{e.__class__.__name__}: {e}```'
+
+    async def send_eval(self, command, content, ctx):
+        self.client.eval_wait = True
+        try:
+            await self.client.websocket.send(json.dumps({'command': command, 'content': content}).encode('utf-8'))
+            msgs = []
+            while True:
+                try:
+                    msg = await asyncio.wait_for(self.client.responses.get(), timeout=3)
+                except asyncio.TimeoutError:
+                    break
+                msgs.append(f'[Cluster-{msg["author"]}]: {msg["response"]}')
+            await ctx.send(' '.join(f'```py\n{m}\n```' for m in msgs))
+        finally:
+            self.client.eval_wait = False
+
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def evall(self, ctx, *, body: str):
+        """Evaluates a code on all clusters"""
+        await self.send_eval("eval", body, ctx)
 
     @commands.command(pass_context=True, hidden=True, name='eval')
     @checks.is_owner()
@@ -280,32 +300,105 @@ class Admin(commands.Cog):
         except Exception as e:
             await ctx.send(str(e))
 
-    @commands.command(name='logout')
+    @commands.command(name='logout', hidden=True)
     @checks.is_owner()
     async def botlogout(self, ctx):
-        await ctx.send("Bots tiek izslēgts")
-        print("Bots izslegts")
+        await self.send_eval("logout", "", ctx)
         for task in asyncio.Task.all_tasks():
             task.cancel()
         asyncio.get_event_loop().stop()
-        await self.client.logout()
+        await self.client.close()
 
-    @commands.command(name='uptime')
+    @commands.command()
     @checks.is_owner()
     async def uptime(self, ctx):
-        global old_time
-        new_time = datetime.datetime.now()
-        new_time = new_time - old_time
-        await ctx.send(new_time)
+        """
+        \ud83d\udd70\ufe0f Bot's uptime.
+        """
+        await ctx.send(self.client.uptime)
 
-    @commands.command(name='reimport')
+    @commands.command()
     @checks.is_owner()
     async def reimport(self, ctx, ext: str):
+        """
+        \ud83d\udce5 Reimports some module on this cluster.
+        """
         try:
             importlib.reload(importlib.import_module(ext))
             await ctx.send("\u2705")
         except Exception as e:
             await ctx.send(e)
+
+    @commands.command()
+    @checks.is_owner()
+    async def reloaditems(self, ctx):
+        """
+        \ud83d\udcd2 Reloads game item data on all clusters.
+        """
+        await self.send_eval("reloaditems", "", ctx)
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def load(self, ctx, extension: str, all: Optional[str]="on"):
+        """
+        \ud83d\udcd2 Loads a module. Defaults to all clusters.
+        
+        Parameters:
+        `all` - all clusters. (on/off)
+        """
+        if all == "on":
+            await self.send_eval("load", extension, ctx)
+        elif all == "off":
+            try:
+                self.client.load_extension(extension)
+                await ctx.send("\u2705")
+            except Exception as e:
+                self.client.log.error(traceback.format_exc())
+                await ctx.send(f"{e.__class__.__name__}: {e}")
+        else:
+            await ctx.send("On/Off")
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def unload(self, ctx, extension: str, all: Optional[str]="on"):
+        """
+        \ud83d\udcd2 Unloads a module. Defaults to all clusters.
+
+        Parameters:
+        `all` - all clusters. (on/off)
+        """
+        if all == "on":
+            await self.send_eval("unload", extension, ctx)
+        elif all == "off":
+            try:
+                self.client.unload_extension(extension)
+                await ctx.send("\u2705")
+            except Exception as e:
+                self.client.log.error(traceback.format_exc())
+                await ctx.send(f"{e.__class__.__name__}: {e}")
+        else:
+            await ctx.send("On/Off")
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def reload(self, ctx, extension: str, all: Optional[str]="on"):
+        """
+        \ud83d\udcd2 Reloads a module. Defaults to all clusters.
+
+        Parameters:
+        `all` - all clusters. (on/off)
+        """
+        if all == "on":
+            await self.send_eval("reload", extension, ctx)
+        elif all == "off":
+            try:
+                self.client.reload_extension(extension)
+                await ctx.send("\u2705")
+            except Exception as e:
+                self.client.log.error(traceback.format_exc())
+                await ctx.send(f"{e.__class__.__name__}: {e}")
+        else:
+            await ctx.send("On/Off")
 
 
 def setup(client):

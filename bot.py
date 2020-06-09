@@ -1,226 +1,336 @@
 import discord
+import asyncio
 import logging
+import traceback
+import textwrap
+import websockets
+import aioredis
+import io
 import json
-import asyncpg
-import utils.item as utilitems
-import utils.embeds as emb
+import botsettings
+import classes.item as utilitems
+from contextlib import redirect_stdout
+from asyncpg import create_pool
 from discord.ext import commands
+from datetime import datetime, timedelta
 from utils import checks
-
-extensions = (
-    'cogs.admin',
-    'cogs.information',
-    'cogs.main',
-    'cogs.shop',
-    'cogs.planting',
-    'cogs.requests',
-    'cogs.factory',
-    'cogs.trades',
-    'cogs.heists',
-    'cogs.registration',
-    'cogs.usercontrol',
-    'cogs.stats'
-)
-unloaded = []
-with open("settings.json", "r", encoding="UTF8") as file:
-    settings = json.load(file)
-
-log = logging.getLogger('discord')
-log.setLevel(logging.INFO)
-handler = logging.FileHandler(filename='farm.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-log.addHandler(handler)
+from utils.time import secstotime
 
 
-class MyClient(commands.AutoShardedBot):
-    def __init__(self, *args, **kwargs):
-        super().__init__(command_prefix='%', *args, **kwargs)
-        self.add_command(self.load)
-        self.add_command(self.unload)
-        self.add_command(self.modules)
-        self.add_command(self.unloaded)
-        self.add_command(self.reload)
-        self.add_command(self.reloadsettings)
-        self.add_command(self.reconnectdatabase)
-        self.disabledcommands = False
-        self.initemojis()
+class BotClient(commands.AutoShardedBot):
+    def __init__(self, **kwargs):
+        self.pipe = kwargs.pop('pipe')
+        self.cluster_name = kwargs.pop('cluster_name')
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        super().__init__(command_prefix=commands.when_mentioned_or('%'), **kwargs, loop=loop)
+        self.websocket = None
+        self._last_result = None
+        self.ws_task = None
+        self.responses = asyncio.Queue()
+        self.eval_wait = False
+        log = logging.getLogger(f"Cluster#{self.cluster_name}")
+        log.setLevel(logging.DEBUG)
+        log.handlers = [logging.FileHandler(f'cluster-{self.cluster_name}.log', encoding='utf-8', mode='a')]
+
+        log.info(f'[Cluster#{self.cluster_name}] {kwargs["shard_ids"]}, {kwargs["shard_count"]}')
+        self.log = log
+        self.loop.create_task(self.ensure_ipc())
+        
         self.allitems = {}
-        self.loadvariables()
-        self.loop.create_task(self.connectdb())
+        
+        self.config = botsettings
+        self.maintenance_mode = botsettings.maintenance_mode
+        
+        self.initemojis()
+        self.loaditems()
+        self.load_news()
+        self.loop.create_task(self._connectdb())
 
-    async def connectdb(self):
-        credentials = {"user": settings['dbuser'], "password": settings['dbpassword'], "database": settings['dbname'], "host": "127.0.0.1"}
-        self.db = await asyncpg.create_pool(**credentials)
+        for ext in self.config.initial_extensions:
+            try:
+                self.load_extension(ext)
+            except Exception as e:
+                log.error(f'Failed to load extension {ext}.')
+                log.error(traceback.format_exc())
 
-    def loadvariables(self):
-        self.loadcropseeds()
+        self.run()
 
-    def loadcropseeds(self):
+    async def _connectdb(self):
+        self.db = await create_pool(**self.config.database_credentials)
+        try:
+            self.redis = await aioredis.create_pool("redis://localhost")
+        except aioredis.RedisError as e:
+            self.log.error(traceback.format_exc())
+
+    def loaditems(self):
         self.cropseeds = utilitems.cropseedloader()
         self.crops = utilitems.croploader()
         self.crafteditems = utilitems.crafteditemloader()
-        self.items = utilitems.itemloader()
+        self.animalproducts = utilitems.animalproductloader()
         self.animals = utilitems.animalloader()
         self.trees = utilitems.treeloader()
+        self.treeproducts = utilitems.treeproductloader()
+        self.specialitems = utilitems.specialitemloader()
 
         self.allitems.update(self.cropseeds)
         self.allitems.update(self.crops)
-        self.allitems.update(self.crafteditems)
-        self.allitems.update(self.items)
-        self.allitems.update(self.animals)
         self.allitems.update(self.trees)
+        self.allitems.update(self.treeproducts)
+        self.allitems.update(self.animals)
+        self.allitems.update(self.animalproducts)
+        self.allitems.update(self.specialitems)
+        self.allitems.update(self.crafteditems)
 
     def initemojis(self):
-        self.gold = '<:gold:603145892811505665>'
-        self.xp = '<:xp:603145893029347329>'
-        self.gem = '<:diamond:603145893025415178>'
-        self.tile = '<:tile:603160625417420801>'
+        self.gold = self.config.gold_emoji
+        self.xp = self.config.xp_emoji
+        self.gem = self.config.gem_emoji
+        self.tile = self.config.tile_emoji
 
-    # Commands
+    def load_news(self):
+        with open('files/news.txt', "r", encoding='utf-8') as f:
+            self.news = f.read()
 
-    @commands.command(name='fixdb')
-    @checks.is_owner()
-    async def reconnectdatabase(ctx):
-        client.connectdb()
-        try:
-            await ctx.message.delete()
-        except discord.HTTPException:
-            pass
-        await ctx.send("\N{WHITE HEAVY CHECK MARK}", delete_after=5)
+    @property
+    def uptime(self):
+        return datetime.now() - self.launchtime
 
-    @commands.command(name='reloadsettings')
-    @checks.is_owner()
-    async def reloadsettings(ctx):
-        client.loadvariables()
-        try:
-            await ctx.message.delete()
-        except discord.HTTPException:
-            pass
-        await ctx.send("\N{WHITE HEAVY CHECK MARK}", delete_after=5)
+    @property
+    def field_guard(self):
+        if not hasattr(self, 'guard_mode'): return False
+        
+        return self.guard_mode > datetime.now()
 
-    @commands.command(name='unloaded')
-    @checks.is_owner()
-    async def unloaded(ctx):
-        try:
-            await ctx.message.delete()
-        except discord.HTTPException:
-            pass
-        await ctx.send(unloaded, delete_after=15)
+    def enable_field_guard(self, seconds):
+        self.guard_mode = datetime.now() + timedelta(seconds=seconds)
 
-    @commands.command(name='modules')
-    @checks.is_owner()
-    async def modules(ctx):
-        try:
-            await ctx.message.delete()
-        except discord.HTTPException:
-            pass
-        await ctx.send(extensions, delete_after=15)
-
-    @commands.command(name='load')
-    @checks.is_owner()
-    async def load(ctx, extension: str):
-        try:
-            await ctx.message.delete()
-        except discord.HTTPException:
-            pass
-        try:
-            client.load_extension('cogs.' + extension.lower())
-            unloaded.remove(extension)
-            print(f'Loaded {extension}')
-            await ctx.send(f'{extension} loaded', delete_after=5)
-        except Exception as error:
-            print(f'{extension} cannot be loaded. [{error}]')
-            await ctx.send(f'{extension} did not load [{error}]', delete_after=30)
-
-    @commands.command(name='unload')
-    @checks.is_owner()
-    async def unload(ctx, extension: str):
-        try:
-            await ctx.message.delete()
-        except discord.HTTPException:
-            pass
-        try:
-            client.unload_extension('cogs.' + extension.lower())
-            unloaded.append(extension)
-            print(f'Unloaded {extension}')
-            await ctx.send(f'{extension} unload', delete_after=5)
-        except Exception as error:
-            print(f'{extension} cannot be unloaded. [{error}]')
-            await ctx.send(f'{extension} did not unload [{error}]', delete_after=30)
-
-    @commands.command(name='reload')
-    @checks.is_owner()
-    async def reload(ctx, extension: str):
-        try:
-            await ctx.message.delete()
-        except discord.HTTPException:
-            pass
-        try:
-            client.reload_extension('cogs.' + extension.lower())
-            print(f'Reloaded {extension}')
-            await ctx.send(f'{extension} reloaded', delete_after=5)
-        except Exception as error:
-            print(f'{extension} cannot be reloaded. [{error}]')
-            await ctx.send(f'{extension} could not be reloaded [{error}]', delete_after=15)
-
-    # Events
+        return self.guard_mode
 
     async def on_ready(self):
-        print('Logged in as')
-        print(self.user.name)
-        print(self.user.id)
-        print('------')
+        self.log.info(f'[Cluster#{self.cluster_name}] Ready called.')
+        if self.pipe:
+            self.pipe.send(1)
+            #self.pipe.close()
+
+        if not hasattr(self, 'launchtime'):
+            self.launchtime = datetime.now()
+
+    async def on_shard_ready(self, shard_id):
+        self.log.info(f'[Cluster#{self.cluster_name}] Shard {shard_id} ready')
 
     async def on_message(self, message):
-        if message.author == self.user:
+        author = message.author
+        if author == self.user or author.bot:
             return
         if not message.guild:
+            return await message.author.send("\u274c Sorry, this bot only accepts commands in servers...")
+
+        if not message.channel.permissions_for(message.guild.me).send_messages:
             return
 
         try:
             await self.process_commands(message)
-        except Exception:
-            print('Command Error Caught At Top Level')
-            print(message.content)
+        except Exception as e:
+            self.log.critical(f'Error occured while executing commands: {e}')
+            self.log.critical(traceback.format_exc())
 
     async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.errors.CheckFailure):
-            if not self.disabledcommands:
-                embed = emb.errorembed("You don't have an account for the game. Type `%start`", ctx)
-            else:
-                embed = emb.errorembed(
-                    "The game commands are disabled for a maintenance.\n"
-                    "\ud83d\udcf0More information - `%news`", ctx)
-            await ctx.send(embed=embed)
-            return
         if isinstance(error, commands.errors.CommandNotFound):
             return
-        if isinstance(error, commands.errors.CommandOnCooldown):
-            return
-        if isinstance(error, commands.errors.MissingRequiredArgument):
-            embed = emb.errorembed(
-                "This command requires additional parameters.",
-                ctx
+        elif isinstance(error, commands.errors.CheckFailure):
+            if isinstance(error, checks.GameIsInMaintenance):
+                return await ctx.send("\u26a0\ufe0f Game's commands are disabled for bot's maintenance "
+                    "or update.\n"
+                    "\ud83d\udd50 Please try again after a while... :)\n"
+                    "\ud83d\udcf0 For more information use command - `%news`.")
+            elif isinstance(error, checks.MissingEmbedPermissions):
+                return await ctx.send("\u274c Please enable **Embed Links** permission for "
+                "me in this channel's settings, to use this command!")
+            elif isinstance(error, checks.MissingAddReactionPermissions):
+                return await ctx.send("\u274c Please enable **Add Reactions** permission for "
+                "me in this channel's settings, to use this command!")
+        elif isinstance(error, commands.errors.CommandOnCooldown):
+            return await ctx.send(f"\u23f0 This command is on cooldown for:  **{secstotime(error.retry_after)}**")
+        elif isinstance(error, commands.errors.MissingRequiredArgument):
+            return await ctx.send("\u274c This command requires additional parameters.")
+        elif isinstance(error, commands.errors.BadArgument):
+            return await ctx.send("\u274c Invalid command parameters provided.")
+        elif isinstance(error, commands.NoPrivateMessage):
+            return await ctx.author.send("\u274c This command is disabled for Direct Messages.")
+        elif isinstance(error, commands.DisabledCommand):
+            return await ctx.author.send("\u274c This command currently has been disabled and it cannot be used.")
+        elif isinstance(error, commands.CommandInvokeError):
+            original = error.original
+            if not isinstance(original, discord.HTTPException):
+                self.log.critical(f'In {ctx.command.qualified_name}:')
+                self.log.critical(str(original))
+                self.log.critical(traceback.format_tb(original.__traceback__))
+        elif isinstance(error, commands.ArgumentParsingError):
+            return await ctx.send(error)
+        else:
+            self.log.critical(''.join(traceback.format_exception(type(error), error, error.__traceback__)))
+
+    def on_error(self, event_method, *args, **kwargs):
+        self.log.critical(traceback.format_exc())
+
+    async def on_guild_join(self, guild):
+        message = ("Hello! \ud83d\udc4b\nThanks for adding me here! Access the command list with: `%help`.\n"
+        "Happy farming! \ud83d\udc68\u200d\ud83c\udf3e")
+
+        channels = list(
+            filter(
+                lambda x: x.permissions_for(guild.me).send_messages, guild.text_channels
             )
-            return await ctx.send(embed=embed)
-        raise error
-
-    async def on_command(self, ctx):
-        log.info(
-            f'{ctx.author.id} executed {ctx.prefix}{ctx.invoked_with} Failed:{ctx.command_failed} '
-            f'Guild: {ctx.guild.id} Channel: {ctx.channel.id}'
         )
+        if channels:
+            await channels[0].send(message)
 
+    async def on_guild_remove(self, guild):
+        async with self.db.acquire() as connection:
+            async with connection.transaction():
+                query = """DELETE FROM store WHERE guildid = $1;"""
+                await self.db.execute(query, guild.id)
 
-client = MyClient()
-if __name__ == '__main__':
-    for extension in extensions:
+    def cleanup_code(self, content):
+        """Automatically removes code blocks from the code."""
+        # remove ```py\n```
+        if content.startswith('```') and content.endswith('```'):
+            return '\n'.join(content.split('\n')[1:-1])
+
+        # remove `foo`
+        return content.strip('` \n')
+
+    async def close(self, *args, **kwargs):
+        self.log.info(f"Shutting down...")
+        await self.websocket.close()
+        await super().close()
+
+    async def exec(self, code):
+        env = {
+            'client': self,
+            '_': self._last_result
+        }
+
+        env.update(globals())
+
+        body = self.cleanup_code(code)
+        stdout = io.StringIO()
+
+        to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
+
         try:
-            client.load_extension(extension)
-            print(f'{extension} auto-loaded')
-        except Exception as error:
-            print(f'{extension} cannot be loaded. [{error}]')
-            unloaded.append(extension)
-    print('------')
-client.remove_command('help')
-client.run(settings['token'])
+            exec(to_compile, env)
+        except Exception as e:
+            return f'{e.__class__.__name__}: {e}'
+
+        func = env['func']
+        try:
+            with redirect_stdout(stdout):
+                ret = await func()
+        except Exception as e:
+            value = stdout.getvalue()
+            f'{value}{traceback.format_exc()}'
+        else:
+            value = stdout.getvalue()
+
+            if ret is None:
+                if value:
+                    return str(value)
+                else:
+                    return 'None'
+            else:
+                self._last_result = ret
+                return f'{value}{ret}'
+
+    async def websocket_loop(self):
+        while True:
+            try:
+                msg = await self.websocket.recv()
+            except websockets.ConnectionClosed as exc:
+                if exc.code == 1000:
+                    return
+                raise
+            data = json.loads(msg, encoding='utf-8')
+            if self.eval_wait and data.get('response'):
+                await self.responses.put(data)
+            cmd = data.get('command')
+            if not cmd:
+                continue
+            if cmd == 'ping':
+                ret = {'response': 'pong'}
+                self.log.info("received command [ping]")
+            elif cmd == 'eval':
+                self.log.info(f"received command [eval] ({data['content']})")
+                content = data['content']
+                data = await self.exec(content)
+                ret = {'response': str(data)}
+            elif cmd == 'maintenance':
+                content = data['content']
+                self.log.info(f"received command [maintenance] ({content})")
+                if content.lower() == 'on':
+                    self.maintenance_mode = True
+                    ret = {'response': '\u2705'}
+                elif content.lower() == 'off':
+                    self.maintenance_mode = False
+                    ret = {'response': '\u2705'}
+            elif cmd == 'guard':
+                self.log.info(f"received command [guard] ({data['content']})")
+                data = self.enable_field_guard(int(data['content']))
+                ret = {'response': str(data)}
+            elif cmd == 'reloaditems':
+                self.log.info(f"received command [reloaditems]")
+                self.loaditems()
+                ret = {'response': '\u2705'}
+            elif cmd == 'reload':
+                self.log.info(f"received command [reload] ({data['content']})")
+                try:
+                    self.reload_extension(data['content'])
+                    ret = {'response': "\u2705"}
+                except Exception as e:
+                    ret = {'response': e.__class__.__name__}
+            elif cmd == 'unload':
+                self.log.info(f"received command [unload] ({data['content']})")
+                try:
+                    self.unload_extension(data['content'])
+                    ret = {'response': "\u2705"}
+                except Exception as e:
+                    ret = {'response': e.__class__.__name__}
+            elif cmd == 'load':
+                self.log.info(f"received command [load] ({data['content']})")
+                try:
+                    self.load_extension(data['content'])
+                    ret = {'response': "\u2705"}
+                except Exception as e:
+                    ret = {'response': e.__class__.__name__}
+            elif cmd == 'logout':
+                self.log.info(f"received command [logout]")
+                await self.close()
+            elif cmd == 'readnews':
+                self.load_news()
+                ret = {'response': "\u2705"}
+            else:
+                ret = {'response': 'unknown command'}
+            ret['author'] = self.cluster_name
+            self.log.info(f"responding: {ret}")
+            try:
+                await self.websocket.send(json.dumps(ret).encode('utf-8'))
+            except websockets.ConnectionClosed as exc:
+                if exc.code == 1000:
+                    return
+                raise
+
+    async def ensure_ipc(self):
+        self.websocket = w = await websockets.connect('ws://localhost:42069')
+        await w.send(self.cluster_name.encode('utf-8'))
+        try:
+            await w.recv()
+            self.ws_task = self.loop.create_task(self.websocket_loop())
+            self.log.info("ws connection succeeded")
+        except websockets.ConnectionClosed as exc:
+            self.log.warning(f"! couldnt connect to ws: {exc.code} {exc.reason}")
+            self.websocket = None
+            raise
+
+    def run(self):
+        super().run(self.config.bot_auth_token, reconnect=True)

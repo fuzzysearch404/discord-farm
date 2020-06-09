@@ -1,62 +1,28 @@
 {
-  "401" : {
-    "id":401,
-    "expandsto":305,
-    "level":4,
-    "xp":6,
-    "emoji":"\ud83d\udc14",
-    "name":"chickens",
-    "rarity":2,
-    "grows":300,
-    "dies":300,
-    "amount":3,
-    "cost":100,
-    "scost":1,
-    "img":"https://failiem.lv/thumb_show.php?i=ba7t24qf"
-  },
-  "402" : {
-    "id":402,
-    "expandsto":307,
-    "level":10,
-    "xp":11,
-    "emoji":"\ud83d\udc16",
-    "name":"pigs",
-    "rarity":2,
-    "grows":10800,
-    "dies":21600,
-    "amount":2,
-    "cost":1000,
-    "scost":1,
-    "img":"https://failiem.lv/thumb_show.php?i=gehf6rej"
-  },
-  "403" : {
-    "id":403,
-    "expandsto":308,
-    "level":13,
-    "xp":5,
-    "emoji":"\ud83d\udc04",
-    "name":"cows",
-    "rarity":2,
-    "grows":900,
-    "dies":400,
-    "amount":5,
-    "cost":1600,
-    "scost":2,
-    "img":"https://failiem.lv/thumb_show.php?i=bx3gj6gf"
-  },
-  "404" : {
-    "id":404,
-    "expandsto":324,
-    "level":21,
-    "xp":50,
-    "emoji":"\ud83d\udc02",
-    "name":"cattles",
-    "rarity":2,
-    "grows":28800,
-    "dies":30000,
-    "amount":3,
-    "cost":5000,
-    "scost":2,
-    "img":"https://failiem.lv/thumb_show.php?i=6dacqmeq"
-  }
+    "401" : {
+        "id":401,
+        "expandsto":501,
+        "level":4,
+        "emoji":"\ud83d\udc14",
+        "name":"chickens",
+        "rarity":2,
+        "grows":300,
+        "dies":300,
+        "amount":3,
+        "gold_cost":80,
+        "img":"https://failiem.lv/thumb_show.php?i=wddbjvvn"
+    },
+    "402" : {
+        "id":402,
+        "expandsto":502,
+        "level":5,
+        "emoji":"\ud83d\udc04",
+        "name":"cows",
+        "rarity":2,
+        "grows":600,
+        "dies":800,
+        "amount":2,
+        "gold_cost":70,
+        "img":"https://failiem.lv/thumb_show.php?i=qbufg3z8"
+    }
 }

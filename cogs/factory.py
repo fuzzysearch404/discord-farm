@@ -1,65 +1,37 @@
 from discord.ext import commands
 from typing import Optional
 from datetime import datetime, timedelta
+from utils import checks
 from utils import embeds as emb
-from utils import usertools
-from utils.item import finditem, convertmadefrom
 from utils.paginator import Pages
 from utils.time import secstotime
 from utils.convertors import MemberID
+from classes import user as userutils
+from classes.item import finditem, convertmadefrom
 
 
 class Factory(commands.Cog):
+    """
+    In your factory you can craft some of your items to some new items.
+    Doesn't that sound fun already?
+
+    Unlike in farm, factory can produce only one item per time, but
+    you can queue the next items to produce, depending on  your factory capacity.
+    Another benefit is that items do not get rotten in the factory.
+    Crafted items usually have more gold and experience value 
+    than the regular items.
+    """
     def __init__(self, client):
         self.client = client
 
-    async def cog_check(self, ctx):
-        query = """SELECT userid FROM users WHERE id = $1;"""
-        userid = await self.client.db.fetchrow(query, usertools.generategameuserid(ctx.author))
-        if not userid:
-            return False
-        return userid['userid'] == ctx.author.id and not self.client.disabledcommands
-
-    @commands.command(aliases=['fa'])
-    async def factory(self, ctx, *, member: Optional[MemberID] = None):
-        allitems = {}
-        information = []
-        member = member or ctx.author
-        client = self.client
-
-        factorydata = await usertools.getuserfactory(client, member)
-        if not factorydata:
-            embed = emb.errorembed(f'{member} does not produce anything', ctx)
-            return await ctx.send(embed=embed)
-
-        for object in factorydata:
-            try:
-                item = client.allitems[object['itemid']]
-                allitems[object] = item
-            except KeyError:
-                raise Exception(f"Could not find item {object['itemid']}")
-
-        for data, item in allitems.items():
-            status = self.getitemstate(item, data['start'], data['ends'])[1]
-            fmt = f"{item.emoji}**{item.name.capitalize()}** - {status}"
-            information.append(fmt)
-
-        try:
-            p = Pages(ctx, entries=information, per_page=10, show_entry_count=False)
-            p.embed.title = f"\ud83c\udfed{member}'s factory"
-            p.embed.color = 13110284
-            await p.paginate()
-        except Exception as e:
-            print(e)
-
-    def getitemstate(self, item, starts, ends):
+    def get_item_state(self, item, starts, ends):
         now = datetime.now()
         if starts > now:
-            status = 'Waiting in queue'
+            status = 'Waiting in queue for production'
             stype = 'queue'
         elif ends > now:
             secsdelta = ends - now
-            status = f'In production {secstotime(secsdelta.seconds)}'
+            status = f'In production {secstotime(secsdelta.total_seconds())}'
             stype = 'making'
         elif ends < now:
             status = 'Ready to collect'
@@ -67,157 +39,230 @@ class Factory(commands.Cog):
 
         return stype, status
 
-    @commands.command()
-    async def make(self, ctx, *, possibleitem):
+    @commands.command(aliases=['fa'])
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def factory(self, ctx, *, member: Optional[MemberID] = None):
+        """
+        \ud83c\udfed Shows your or someone's factory information.
+
+        With this command you can check what are you producing and
+        what items are queued next.
+
+        Additional parameters:
+        `member` - some user in your server. (username, username#1234, user's ID)
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
         client = self.client
-        profile = await usertools.getprofile(client, ctx.author)
-        slots = await usertools.checkfactoryslots(client, ctx.author)
+        useracc = userutils.User.get_user(userdata, client)
+        
+        allitems = {}
+        information = []
+        member = member or ctx.author
+
+        factorydata = await useracc.get_factory()
+        if not factorydata:
+            embed = emb.errorembed(f'{member} is not producing anything in the factory', ctx)
+            return await ctx.send(embed=embed)
+
+        usedcap = 0
+
+        for data in factorydata:
+            usedcap += 1
+            try:
+                item = client.allitems[data['itemid']]
+                allitems[data] = item
+            except KeyError:
+                raise Exception(f"Could not find item {data['itemid']}")
+
+        information.append(f"\ud83d\udce6 Used factory's capacity: {usedcap}/{useracc.factoryslots}\n")
+
+        for data, item in allitems.items():
+            status = self.get_item_state(item, data['starts'], data['ends'])[1]
+            fmt = f"{item.emoji}**{item.name.capitalize()}** - {status}"
+            information.append(fmt)
+
+        try:
+            p = Pages(ctx, entries=information, per_page=15, show_entry_count=False)
+            p.embed.title = f"\ud83c\udfed{member}'s factory"
+            p.embed.color = 13110284
+            p.embed.set_footer(
+                text="Collect items with the %collect command", 
+                icon_url=ctx.author.avatar_url
+            )
+            await p.paginate()
+        except Exception as e:
+            print(e)
+
+    @commands.command(aliases=['craft', 'produce'])
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def make(self, ctx, *, search, amount: Optional[int] = 1):
+        """
+        \ud83d\udce6 Starts crafting an item or adds it to the production queue.
+
+        Parameters:
+        `search` - item to lookup for to make. (item's name or ID).
+        Additional parameters:
+        `amount` - specify how many items to make. 
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+        client = self.client
+        useracc = userutils.User.get_user(userdata, client)
+
+        usedslots = await useracc.check_used_factory_slots()
 
         customamount = False
         try:
-            possibleamount = possibleitem.rsplit(' ', 1)[1]
-            reqamount = int(possibleamount)
-            possibleitem = possibleitem.rsplit(' ', 1)[0]
-            if reqamount > 0 and reqamount < 2147483647:
+            possibleamount = search.rsplit(' ', 1)[1]
+            amount = int(possibleamount)
+            search = search.rsplit(' ', 1)[0]
+            if amount > 0 and amount < 2147483647:
                 customamount = True
         except Exception:
             pass
 
         if not customamount:
-            if not slots > 0:
+            if usedslots >= useracc.factoryslots:
                 embed = emb.errorembed(
                     "Your factory is full! Free up some space or upgrade the factory with `%upgrade`.",
                     ctx
                 )
                 return await ctx.send(embed=embed)
         else:
-            if slots < reqamount:
+            if usedslots + amount > useracc.factoryslots:
                 embed = emb.errorembed(
                     "Your factory is full! Free up some space or upgrade the factory with `%upgrade`.",
                     ctx
                 )
                 return await ctx.send(embed=embed)
-            if not reqamount > 0:
-                embed = emb.errorembed(
-                    "Invalid amount!",
-                    ctx
-                )
-                return await ctx.send(embed=embed)
 
-        fitem = await finditem(self.client, ctx, possibleitem)
-        if not fitem:
+        item = await finditem(client, ctx, search)
+        if not item:
             return
-        if fitem.type != 'crafteditem':
-            embed = emb.errorembed(f"This thing ({fitem.emoji}{fitem.name.capitalize()}) cannot be produced.", ctx)
-            return await ctx.send(embed=embed)
 
-        if fitem.level > usertools.getlevel(profile['xp'])[0]:
+        if item.type != 'crafteditem':
             embed = emb.errorembed(
-                f"{fitem.emoji}{fitem.name.capitalize()} can be produced starting from level \ud83d\udd31{fitem.level}",
+                f"Sorry, you can't produce {item.emoji}{item.name.capitalize()} in the factory.",
                 ctx
             )
             return await ctx.send(embed=embed)
 
-        needed = convertmadefrom(client, fitem.madefrom)
-        neededstr = ''
+        if item.level > useracc.level:
+            embed = emb.errorembed(
+                f"You need experience level {item.level} to start making {item.emoji}{item.name.capitalize()}!",
+                ctx
+            )
+            return await ctx.send(embed=embed)
 
-        for item, amount in needed.items():
-            itemdata = await usertools.checkinventoryitem(client, ctx.author, item)
-            if itemdata:
-                useramount = itemdata['amount']
-            else:
-                useramount = 0
+        reqitems, reqitemsstr = convertmadefrom(client, item.madefrom), ""
+
+        for req_item, req_amount in reqitems.items():
+            itemdata = await useracc.check_inventory_item(req_item)
+            if not itemdata: useramount = 0
+            else: useramount = itemdata['amount']
+
             if not customamount:
-                if not itemdata or useramount < amount:
-                    neededstr += f"\n{item.emoji}{item.name.capitalize()} {useramount}/{amount}, "
+                if useramount < req_amount:
+                    reqitemsstr += f"\n{req_item.emoji}{req_item.name.capitalize()} {useramount}/{req_amount}, "
             else:
-                if not itemdata or useramount < amount * reqamount:
-                    neededstr += f"\n{item.emoji}{item.name.capitalize()} {useramount}/{amount * reqamount}, "
+                if useramount < req_amount * amount:
+                    reqitemsstr += f"\n{req_item.emoji}{req_item.name.capitalize()} {useramount}/{amount * req_amount}, "
 
-        if len(neededstr) > 0:
+        if len(reqitemsstr) > 0:
             embed = emb.errorembed(
-                f"You don't have enough materials: {neededstr[:-2]}",
+                f"You don't have enough raw materials for {amount}x {item.emoji} {reqitemsstr[:-2]}",
                 ctx
             )
             return await ctx.send(embed=embed)
 
-        for item, amount in needed.items():
+        for req_item, req_amount in reqitems.items():
+            total = req_amount
             if customamount:
-                amount = amount * reqamount
-            await usertools.removeitemfrominventory(
-                client, ctx.author, item, amount
-            )
+                total = total * amount
+            await useracc.remove_item_from_inventory(req_item, total)
 
         now = datetime.now().replace(microsecond=0)
-        olditem = await usertools.getoldestfactoryitem(client, ctx.author)
-        if not olditem:
-            starts = now
-        else:
-            starts = olditem['ends']
-        ends = starts + timedelta(seconds=fitem.time)
+        olditem = await useracc.get_oldest_factory_item()
+        if not olditem: starts = now
+        else: starts = olditem['ends']
 
-        userid = usertools.generategameuserid(ctx.author)
+        ends = starts + timedelta(seconds=item.time)
 
-        connection = await client.db.acquire()
-        async with connection.transaction():
-            if not customamount:
-                query = """INSERT INTO factory(userid, itemid, start, ends)
-                VALUES($1, $2, $3, $4)"""
-                await client.db.execute(
-                    query, userid, fitem.id,
-                    starts, ends
-                )
-            else:
-                for i in range(reqamount):
-                    query = """INSERT INTO factory(userid, itemid, start, ends)
+        async with self.client.db.acquire() as connection:
+            async with connection.transaction():
+                if not customamount:
+                    query = """INSERT INTO factory(userid, itemid, starts, ends)
                     VALUES($1, $2, $3, $4)"""
                     await client.db.execute(
-                        query, userid, fitem.id,
-                        starts, ends
+                        query, useracc.userid, item.id, starts, ends
                     )
-                    if i != reqamount:
+                else:
+                    for i in range(amount):
+                        query = """INSERT INTO factory(userid, itemid, starts, ends)
+                        VALUES($1, $2, $3, $4)"""
+                        await client.db.execute(
+                            query, useracc.userid, item.id, starts, ends
+                        )
                         starts = ends
-                        ends = starts + timedelta(seconds=fitem.time)
-        await client.db.release(connection)
+                        ends = starts + timedelta(seconds=item.time)
 
         if not customamount:
             embed = emb.confirmembed(
-                f"You added {fitem.emoji}{fitem.name.capitalize()} to the production queue.\n",
+                f"You added {item.emoji}{item.name.capitalize()} to the production queue.\n",
                 ctx
             )
         else:
             embed = emb.confirmembed(
-                f"You added {reqamount}x{fitem.emoji}{fitem.name.capitalize()} to the production queue.\n",
+                f"You added {amount}x{item.emoji}{item.name.capitalize()} to the production queue.\n",
                 ctx
             )
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['c'])
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.user_cooldown(15)
+    @checks.avoid_maintenance()
     async def collect(self, ctx):
-        items = {}
-        unique = {}
-        todelete = []
+        """
+        \ud83d\ude9a Collects crafted items from your factory.
 
+        Note: You can only collect items which are ready.
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
         client = self.client
-        factdata = await usertools.getuserfactory(client, ctx.author)
+        useracc = userutils.User.get_user(userdata, client)
+        
+        items, unique, todelete = {}, {}, []
+
+        factdata = await useracc.get_factory()
         if not factdata:
-            embed = emb.errorembed("You do not produce anything", ctx)
+            embed = emb.errorembed(
+                "You are not producing anything in your factory",
+                ctx
+            )
             return await ctx.send(embed=embed)
-        for object in factdata:
+        for data in factdata:
             try:
-                item = client.allitems[object['itemid']]
-                items[object] = item
+                item = client.allitems[data['itemid']]
+                items[data] = item
             except KeyError:
-                raise Exception(f"Could not find item {object['itemid']}")
+                raise Exception(f"Could not find item {data['itemid']}")
 
         for data, item in items.items():
-            status = self.getitemstate(item, data['start'], data['ends'])[0]
+            status = self.get_item_state(item, data['starts'], data['ends'])[0]
             if status == 'queue' or status == 'making':
                 continue
             elif status == 'ready':
                 xp = item.xp
-                await usertools.givexpandlevelup(client, ctx, xp)
-                await usertools.additemtoinventory(client, ctx.author, item, 1)
+                await useracc.give_xp_and_level_up(xp, ctx)
+                await useracc.add_item_to_inventory(item, 1)
                 if item in unique:
                     unique[item] = (unique[item][0] + 1, unique[item][1] + xp)
                 else:
@@ -226,21 +271,29 @@ class Factory(commands.Cog):
             todelete.append(data['id'])
 
         if len(todelete) > 0:
-            connection = await client.db.acquire()
-            async with connection.transaction():
-                query = """DELETE FROM factory WHERE id = $1;"""
-                for item in todelete:
-                    await client.db.execute(query, item)
-            await client.db.release(connection)
+            async with self.client.db.acquire() as connection:
+                async with connection.transaction():
+                    query = """DELETE FROM factory WHERE id = $1;"""
+                    for item in todelete:
+                        await client.db.execute(query, item)
 
         if unique.items():
             information = ''
             for key, value in unique.items():
                 information += f"{key.emoji}**{key.name.capitalize()}** x{value[0]} +{value[1]}{client.xp}"
-            embed = emb.confirmembed(f"You got: {information}", ctx)
+            embed = emb.confirmembed(
+                f"You collected items from the factory: {information}",
+                ctx
+            )
             await ctx.send(embed=embed)
         else:
-            embed = emb.errorembed("There is no production ready yet!", ctx)
+            embed = emb.errorembed(
+                "There is no production ready yet in the factory!",
+                ctx
+            )
+            embed.set_footer(
+                text="Check your item crafting times with the %factory command."
+            )
             await ctx.send(embed=embed)
 
 

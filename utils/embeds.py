@@ -9,7 +9,7 @@ def errorembed(text, ctx=None, long=False, pm=False):
     if not pm:
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
     else:
-        embed.set_footer(text=f'Farm notification from {ctx.guild}', icon_url=ctx.guild.icon_url)
+        embed.set_footer(text=f'Farm notification from "{ctx.guild}" server', icon_url=ctx.guild.icon_url)
     return embed
 
 
@@ -21,7 +21,7 @@ def confirmembed(text, ctx=None, long=False, pm=False):
     if not pm:
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
     else:
-        embed.set_footer(text=f'Farm notification from {ctx.guild}', icon_url=ctx.guild.icon_url)
+        embed.set_footer(text=f'Farm notification from "{ctx.guild}" server', icon_url=ctx.guild.icon_url)
     return embed
 
 
@@ -33,5 +33,5 @@ def congratzembed(text, ctx=None, long=False, pm=False):
     if not pm:
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
     else:
-        embed.set_footer(text=f' Farm notification from {ctx.guild}', icon_url=ctx.guild.icon_url)
+        embed.set_footer(text=f'Farm notification from "{ctx.guild}" server', icon_url=ctx.guild.icon_url)
     return embed

@@ -1,0 +1,14 @@
+{
+    "600" : {
+        "id":600,
+        "level":17,
+        "xp":10,
+        "emoji":"\ud83d\udc1f",
+        "name":"fish",
+        "rarity":2,
+        "amount":1,
+        "minprice":8,
+        "maxprice":10,
+        "img":"https://failiem.lv/thumb_show.php?i=yvk2wekx"
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "501" : {
+        "id":501,
+        "level":4,
+        "xp":6,
+        "emoji":"\ud83e\udd5a",
+        "name":"chicken eggs",
+        "rarity":2,
+        "madefrom":401,
+        "amount":3,
+        "minprice":9,
+        "maxprice":13,
+        "img":"https://failiem.lv/thumb_show.php?i=fajn5urp"
+    },
+    "502" : {
+        "id":502,
+        "level":5,
+        "xp":3,
+        "emoji":"\ud83e\udd5b",
+        "name":"cow's milk",
+        "rarity":2,
+        "madefrom":402,
+        "amount":5,
+        "minprice":6,
+        "maxprice":10,
+        "img":"https://failiem.lv/thumb_show.php?i=5met672m"
+    }
+}
