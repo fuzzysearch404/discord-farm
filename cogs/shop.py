@@ -142,21 +142,21 @@ class Shop(commands.Cog):
         embed = Embed(title='\u2b50 Upgrades', color=82247)
         embed.add_field(
             name=f'\ud83d\udd313 {client.tile}Expand farm size',
-            value=f"""\ud83c\udd95 {useracc.tiles} \u2192 {useracc.tiles + 1} size
-            {client.gem}1
-            \ud83d\uded2 `%upgrade farm`"""
+            value=(f"\ud83c\udd95 {useracc.tiles} \u2192 {useracc.tiles + 1} size\n"
+            f"{client.gem}1\n"
+            "\ud83d\uded2 `%upgrade farm`")
         )
         embed.add_field(
             name=f'\ud83d\udd313 \ud83c\udfedFactory upgrade',
-            value=f"""\ud83c\udd95 {useracc.factoryslots} \u2192 {useracc.factoryslots + 1} capacity
-            {client.gem}1
-            \ud83d\uded2 `%upgrade factory`"""
+            value=(f"\ud83c\udd95 {useracc.factoryslots} \u2192 {useracc.factoryslots + 1} capacity\n"
+            f"{client.gem}1\n"
+            "\ud83d\uded2 `%upgrade factory`")
         )
         embed.add_field(
             name=f'\ud83e\udd1dTrading upgrade',
-            value=f"""\ud83c\udd95 {useracc.storeslots} \u2192 {useracc.storeslots + 1} max. trades
-            {client.gold}{useracc.get_store_upgrade_cost()}
-            \ud83d\uded2 `%upgrade trading`"""
+            value=(f"\ud83c\udd95 {useracc.storeslots} \u2192 {useracc.storeslots + 1} max. trades\n"
+            f"{client.gold}{useracc.get_store_upgrade_cost()}\n"
+            "\ud83d\uded2 `%upgrade trading`")
         )
         await ctx.send(embed=embed)
 
