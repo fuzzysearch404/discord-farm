@@ -9,8 +9,8 @@ from utils import checks
 from classes import user as userutils
 
 DEFAULT_XP = 0
-DEFAULT_MONEY = 120
-DEFAULT_GEMS = 1
+DEFAULT_MONEY = 150
+DEFAULT_GEMS = 0
 DEFAULT_TILES = 2
 DEFAULT_FACTORY_SLOTS = 1
 DEFAULT_STORE_SLOTS = 1
