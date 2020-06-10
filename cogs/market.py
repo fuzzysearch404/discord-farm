@@ -1,9 +1,9 @@
 import operator
+import asyncio
 import utils.embeds as emb
-from asyncio import TimeoutError
 from discord.ext import commands, tasks
 from discord import Embed, HTTPException
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from utils import checks
 from utils.paginator import Pages
@@ -11,7 +11,6 @@ from utils.time import secstotime
 from classes.item import finditem
 from classes import user as userutils
 
-MARKET_REFRESH_SECONDS = 3600
 
 class Market(commands.Cog):
     """
@@ -30,9 +29,16 @@ class Market(commands.Cog):
             'cropseed', 'tree', 'animal'
         )
 
-    @tasks.loop(seconds=MARKET_REFRESH_SECONDS)
+    def get_next_market_refresh_seconds(self):
+        next_refresh = datetime.now().replace(microsecond=0, second=0, minute=0) + timedelta(hours=1)
+        seconds_until = next_refresh - datetime.now()
+
+        return seconds_until.total_seconds()
+
+    @tasks.loop()
     async def _market_refresh_loop(self):
-        self.lastrefresh = datetime.now()
+        await asyncio.sleep(self.get_next_market_refresh_seconds())
+
         for item in self.client.crops.values():
             item.getmarketprice()
         for item in self.client.treeproducts.values():
@@ -54,8 +60,7 @@ class Market(commands.Cog):
     async def market_pages(self, ctx, item_dict, category):
         client, texts = self.client, []
 
-        refreshin = datetime.now() - self.lastrefresh
-        refreshin = secstotime(MARKET_REFRESH_SECONDS - refreshin.seconds)
+        refreshin = secstotime(self.get_next_market_refresh_seconds())
         texts.append(f'\u23f0 Market prices are going to be refreshed in {refreshin}\n')
 
         for item in item_dict.values():
@@ -220,7 +225,7 @@ class Market(commands.Cog):
             entry = None
             try:
                 entry = await client.wait_for('message', check=check, timeout=30.0)
-            except TimeoutError:
+            except asyncio.TimeoutError:
                 embed = emb.errorembed(
                     f'Too long. {item.emoji} selling canceled.',
                     ctx
@@ -274,7 +279,7 @@ class Market(commands.Cog):
 
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
-        except TimeoutError:
+        except asyncio.TimeoutError:
             if checks.can_clear_reactions(ctx):
                 return await sellinfomessage.clear_reactions()
             else: return

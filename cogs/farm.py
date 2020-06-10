@@ -108,7 +108,7 @@ class Farm(commands.Cog):
 
         if cat:
             information.append("\u2139\ufe0f Farm's items can be harvested even if they are rotten, "
-            " thanks to user's cat \ud83d\udc31")
+            " thanks to player's cat \ud83d\udc31")
         if client.field_guard:
             information.append("\u2139\ufe0f For a short period of time, farm's items can be harvested "
             "even if they are rotten, thanks to farm guard \ud83d\udee1\ufe0f")

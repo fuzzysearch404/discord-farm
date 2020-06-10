@@ -6,7 +6,9 @@ BUISNESS_NAMES = (
     "Pink Elephants Store", 'Kindergarden "Nuts"', "Laura's Cafe",
     'Restaurant "Yuri mum"', "Seapickle Cafe", "Local Highschool",
     "Katie's Grandma", "BurgerStation Cafe", 'Kindergarden "Chill"',
-    "Supermarket 24/7", "Bob's restraurant", "Soup Cafe"
+    "Supermarket 24/7", "Bob's restraurant", "Soup Cafe",
+    "Lazloo's Kitchen", "Horror pancake's celler", "Andy's Cow Resort",
+    "Donkey's bakery", "Bob's dairy", "Stella's aunt"
 )
 
 class Mission:

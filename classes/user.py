@@ -4,12 +4,12 @@ from utils.embeds import congratzembed
 
 class User:
     __slots__ = ('client', 'userid', 'xp', 'money', 'gems', 'tiles',
-    'factoryslots', 'storeslots', 'faction', 'notifications', 'level',
+    'factoryslots', 'factorylevel', 'storeslots', 'faction', 'notifications', 'level',
     'nextlevelxp')
 
     def __init__(
         self, client, userid, xp, money, gems, tiles,
-        factoryslots, storeslots, faction, notifications
+        factoryslots, factorylevel, storeslots, faction, notifications
     ):
         self.client = client
         self.userid = userid
@@ -18,6 +18,7 @@ class User:
         self.gems = gems
         self.tiles = tiles
         self.factoryslots = factoryslots
+        self.factorylevel = factorylevel
         self.storeslots = storeslots
         self.faction = faction
         self.notifications = notifications
@@ -28,7 +29,7 @@ class User:
         """Converts database object to User object."""
         return cls(
             client, data['userid'], data['xp'], data['money'],
-            data['gems'], data['tiles'], data['factoryslots'],
+            data['gems'], data['tiles'], data['factoryslots'], data['factorylevel'],
             data['storeslots'], data['faction'], data['notifications']
         )
 
@@ -255,6 +256,13 @@ class User:
         async with self.client.db.acquire() as connection:
             async with connection.transaction():
                 query = """UPDATE profile SET factoryslots = factoryslots + $1
+                WHERE userid = $2;"""
+                await self.client.db.execute(query, amount, self.userid)
+
+    async def add_factory_level(self, amount):
+        async with self.client.db.acquire() as connection:
+            async with connection.transaction():
+                query = """UPDATE profile SET factorylevel = factorylevel + $1
                 WHERE userid = $2;"""
                 await self.client.db.execute(query, amount, self.userid)
 

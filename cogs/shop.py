@@ -147,11 +147,19 @@ class Shop(commands.Cog):
             "\ud83d\uded2 `%upgrade farm`")
         )
         embed.add_field(
-            name=f'\ud83d\udd313 \ud83c\udfedFactory upgrade',
+            name=f'\ud83d\udd313 \ud83c\udfedFactory upgrade - capacity',
             value=(f"\ud83c\udd95 {useracc.factoryslots} \u2192 {useracc.factoryslots + 1} capacity\n"
             f"{client.gem}1\n"
-            "\ud83d\uded2 `%upgrade factory`")
+            "\ud83d\uded2 `%upgrade factory1`")
         )
+        if useracc.factorylevel < 10:
+            embed.add_field(
+                name=f'\ud83d\udd313 \ud83c\udfedFactory upgrade - workers',
+                value=(f"\ud83c\udd95 {useracc.factorylevel * 5}% \u2192 "
+                f"{(useracc.factorylevel + 1) *5}% faster production speed\n"
+                f"{client.gem}1\n"
+                "\ud83d\uded2 `%upgrade factory2`")
+            )
         embed.add_field(
             name=f'\ud83e\udd1dTrading upgrade',
             value=(f"\ud83c\udd95 {useracc.storeslots} \u2192 {useracc.storeslots + 1} max. trades\n"
@@ -409,7 +417,7 @@ class Shop(commands.Cog):
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
-    async def factory(self, ctx):
+    async def factory1(self, ctx):
         """
         \ud83d\uded2 [Unlocks from level 3] Adds another factory capacity slot.
 
@@ -463,6 +471,82 @@ class Shop(commands.Cog):
         await useracc.give_gems(-1)
         embed = emb.congratzembed(
             f"Your factory has now production capatity of {useracc.factoryslots + 1}!",
+            ctx
+        )
+        await ctx.send(embed=embed)
+
+    @upgrade.command()
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def factory2(self, ctx):
+        """
+        \ud83d\udc68\u200d\ud83c\udfed [Unlocks from level 3] Increases factory production speed by 5%.
+
+        Makes your factory production speed a bit faster.
+        Max. factory workers: 10.
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+        client = self.client
+        useracc = userutils.User.get_user(userdata, client)
+
+        if useracc.level < 3:
+            embed = emb.errorembed(
+                'Factory upgrades are available from experience level 3.',
+                ctx
+            )
+            return await ctx.send(embed=embed)
+
+        if useracc.factorylevel >= 10:
+            embed = emb.errorembed(
+                'You already have reached the maximum factory worker amount.',
+                ctx
+            )
+            return await ctx.send(embed=embed)
+
+        buyembed = Embed(title='Purchase details', colour=9309837)
+        buyembed.add_field(
+            name='Item',
+            value=f"\ud83c\udfed\ud83d\udc68\u200d\ud83c\udfed {useracc.factorylevel} \u2192 {useracc.factorylevel + 1}"
+        )
+        buyembed.add_field(
+            name='Price',
+            value=f"{client.gem}1"
+        )
+        buyembed.add_field(name='Confirmation', value=f'React with {client.gem}')
+        buyembed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        buyinfomessage = await ctx.send(embed=buyembed)
+        await buyinfomessage.add_reaction(client.gem)
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) == client.gem and reaction.message.id == buyinfomessage.id
+
+        try:
+            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+        except TimeoutError:
+            if checks.can_clear_reactions(ctx):
+                return await buyinfomessage.clear_reactions()
+            else: return
+
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+
+        if userdata['gems'] < 1:
+            embed = emb.errorembed('You do not have enough gems for this purchase!', ctx)
+            return await ctx.send(embed=embed)
+
+        if userdata['factorylevel'] >= 10:
+            embed = emb.errorembed(
+                'You already have reached the maximum factory worker amount.',
+                ctx
+            )
+            return await ctx.send(embed=embed)
+
+        await useracc.add_factory_level(1)
+        await useracc.give_gems(-1)
+        embed = emb.congratzembed(
+            f"Your factory now produces items {(useracc.factorylevel + 1) * 5}% faster!",
             ctx
         )
         await ctx.send(embed=embed)

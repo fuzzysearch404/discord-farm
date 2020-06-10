@@ -77,7 +77,11 @@ class Factory(commands.Cog):
             except KeyError:
                 raise Exception(f"Could not find item {data['itemid']}")
 
-        information.append(f"\ud83d\udce6 Used factory's capacity: {usedcap}/{useracc.factoryslots}\n")
+        information.append(
+            f"\ud83d\udce6 Used factory's capacity: {usedcap}/{useracc.factoryslots}\n"
+            f"\ud83d\udc68\u200d\ud83c\udfed Factory workers: {useracc.factorylevel} "
+            f"({useracc.factorylevel * 5}% faster production)\n"
+        )
 
         for data, item in allitems.items():
             status = self.get_item_state(item, data['starts'], data['ends'])[1]
@@ -191,7 +195,10 @@ class Factory(commands.Cog):
         if not olditem: starts = now
         else: starts = olditem['ends']
 
-        ends = starts + timedelta(seconds=item.time)
+        def get_production_time():
+            return item.time - int((item.time / 100) * (useracc.factorylevel * 5))
+
+        ends = starts + timedelta(seconds=get_production_time())
 
         async with self.client.db.acquire() as connection:
             async with connection.transaction():
@@ -209,7 +216,7 @@ class Factory(commands.Cog):
                             query, useracc.userid, item.id, starts, ends
                         )
                         starts = ends
-                        ends = starts + timedelta(seconds=item.time)
+                        ends = starts + timedelta(seconds=get_production_time())
 
         if not customamount:
             embed = emb.confirmembed(

@@ -64,5 +64,16 @@
         "grows":5400,
         "dies":7200,
         "gold_cost":180
+    },
+    "7": {
+        "id":7,
+        "expandsto":107,
+        "level":9,
+        "emoji":"\ud83e\udd52",
+        "name":"cucumber seeds",
+        "rarity":1,
+        "grows":10800,
+        "dies":14400,
+        "gold_cost":350
     }
 }

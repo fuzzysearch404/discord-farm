@@ -95,6 +95,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
                 else:
                     nearestprod = '\u2705'
             factorytext = f"\ud83d\udce6Max. production cap.: {useracc.factoryslots}"
+            factorytext += f"\n\ud83d\udc68\u200d\ud83c\udfedWorkers: {useracc.factorylevel}"
             factorytext += f"\n\u23f0Next production: {nearestprod}"
             factorytext += f"\n\u2139`%factory {member}`"
         else:

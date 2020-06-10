@@ -68,7 +68,7 @@
         "id":106,
         "madefrom":6,
         "emoji":"\ud83e\uddc5",
-        "name":"onion",
+        "name":"onions",
         "rarity":1,
         "amount":24,
         "minprice":5,
@@ -76,5 +76,18 @@
         "level":8,
         "xp":16,
         "img":"https://failiem.lv/thumb_show.php?i=xg47evjw"
+    },
+    "107": {
+        "id":107,
+        "madefrom":7,
+        "emoji":"\ud83e\udd52",
+        "name":"cucumbers",
+        "rarity":1,
+        "amount":28,
+        "minprice":9,
+        "maxprice":26,
+        "level":9,
+        "xp":22,
+        "img":"https://failiem.lv/thumb_show.php?i=ddb9yqmu"
     }
 }

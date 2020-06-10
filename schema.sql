@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.profile(
 	gems integer,
 	tiles integer DEFAULT 2,
 	factoryslots integer DEFAULT 1,
+    factorylevel integer DEFAULT 0,
 	storeslots integer DEFAULT 1,
 	faction smallint,
     notifications boolean DEFAULT true,
