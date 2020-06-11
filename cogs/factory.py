@@ -53,7 +53,7 @@ class Factory(commands.Cog):
         Additional parameters:
         `member` - some user in your server. (username, username#1234, user's ID)
         """
-        userdata = await checks.check_account_data(ctx)
+        userdata = await checks.check_account_data(ctx, lurk=member)
         if not userdata: return
         client = self.client
         useracc = userutils.User.get_user(userdata, client)
