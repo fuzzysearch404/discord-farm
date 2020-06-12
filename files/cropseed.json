@@ -39,8 +39,8 @@
         "emoji":"<:wheat:719661873854939137>",
         "name":"wheat seeds",
         "rarity":1,
-        "grows":150,
-        "dies":225,
+        "grows":180,
+        "dies":240,
         "gold_cost":50
     },
     "5": {

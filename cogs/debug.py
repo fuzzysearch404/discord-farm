@@ -56,7 +56,7 @@ class Debug(commands.Cog, name="Debugging tools", command_attrs={'hidden': True}
         avggoldh = avgprofit / (seed.grows / 60) * 60
         maxgoldh = maxprofit / (seed.grows / 60) * 60
 
-        embed.add_field(name="XP/H.", value=xph)
+        embed.add_field(name="XP/H.", value=xph * tiles)
         embed.add_field(name="Min. profit (market)", value=minprofit * tiles)
         embed.add_field(name="Avg. profit (market)", value=avgprofit * tiles)
         embed.add_field(name="Max. profit (market)", value=maxprofit * tiles)
@@ -74,7 +74,7 @@ class Debug(commands.Cog, name="Debugging tools", command_attrs={'hidden': True}
         avggoldh = avgprofit / (parent.grows * parent.amount / 60) * 60
         maxgoldh = maxprofit / (parent.grows * parent.amount / 60) * 60
 
-        embed.add_field(name="XP/H.", value=xph)
+        embed.add_field(name="XP/H.", value=xph * tiles)
         embed.add_field(name="Min. profit (market)", value=minprofit * tiles)
         embed.add_field(name="Avg. profit (market)", value=avgprofit * tiles)
         embed.add_field(name="Max. profit (market)", value=maxprofit * tiles)

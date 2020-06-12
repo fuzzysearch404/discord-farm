@@ -69,16 +69,16 @@ class Mission:
             if item.rarity == 1: return randint(8, 20)
             else: return 1
         elif level < 10:
-            if item.rarity == 1: return randint(10, 30)
+            if item.rarity == 1: return randint(10, 60)
             else: return randint(1, 3)
         elif level < 20:
-            if item.rarity == 1: return randint(30, 50)
+            if item.rarity == 1: return randint(30, 120)
             else: return randint(1, 4)
         elif level < 30:
-            if item.rarity == 1: return randint(50, 80)
+            if item.rarity == 1: return randint(50, 240)
             else: return randint(1, 5)
         else:
-            if item.rarity == 1: return randint(80, 120)
+            if item.rarity == 1: return randint(80, 480)
             else: return randint(1, 6)
 
     @staticmethod
@@ -87,10 +87,10 @@ class Mission:
 
         for item in items:
             sum += item[0].xp * item[1] * 2
-            sum += int(item[0].maxprice * 1.42 * item[1])
+            sum += int(item[0].maxprice * 1.35 * item[1])
 
         if boosted:
-            sum = int(sum * 1.35)
+            sum = int(sum * 1.4)
 
         xp = randint(int(sum / 10), sum)
         money = sum - xp
@@ -124,4 +124,5 @@ class Mission:
 def missions_per_level(level):
     if level < 10: return 3
     elif level < 20: return 4
-    else: return 5
+    elif level < 30: return 5
+    else: return 6
