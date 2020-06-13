@@ -358,7 +358,7 @@ def finditembyname(client, name):
         tempitems[item.name] = item
         tempwords.append(item.name)
 
-    matches = get_close_matches(name, tempwords)
+    matches = get_close_matches(name, tempwords, cutoff=0.72)
     if not matches:
         return False
     return tempitems[matches[0]]

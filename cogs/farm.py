@@ -220,7 +220,7 @@ class Farm(commands.Cog):
                 query = """UPDATE planted
                 SET ends = $1, dies = $2, iterations = $3,
                 amount = $4, robbed=false WHERE id = $5;"""
-            await client.db.execute(query, ends, dies, data['iterations'] - 1, child.amount, id)
+            await client.db.execute(query, ends, dies, data['iterations'] - 1, child.amount * data['fieldsused'], id)
 
     @commands.command(aliases=['h'])
     @checks.embed_perms()
