@@ -55,12 +55,11 @@ class Animal(Item):
 
 
 class AnimalProduct(Item):
-    def __init__(self, minprice, maxprice, madefrom, img, *args, **kw):
+    def __init__(self, minprice, maxprice, madefrom, *args, **kw):
         super().__init__(*args, **kw)
         self.minprice = minprice
         self.maxprice = maxprice
         self.madefrom = madefrom
-        self.img = img
         self.type = 'animalproduct'
 
     @property
@@ -275,7 +274,6 @@ def animalproductloader():
             minprice=v['minprice'],
             maxprice=v['maxprice'],
             level=v['level'],
-            img=v['img'],
             id=v['id'],
             emoji=v['emoji'],
             name=v['name'],

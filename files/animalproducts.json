@@ -8,8 +8,7 @@
         "madefrom":401,
         "amount":3,
         "minprice":9,
-        "maxprice":13,
-        "img":"https://failiem.lv/thumb_show.php?i=fajn5urp"
+        "maxprice":13
     },
     "502" : {
         "id":502,
@@ -20,7 +19,6 @@
         "madefrom":402,
         "amount":5,
         "minprice":6,
-        "maxprice":10,
-        "img":"https://failiem.lv/thumb_show.php?i=5met672m"
+        "maxprice":10
     }
 }
