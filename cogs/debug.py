@@ -33,11 +33,11 @@ class Debug(commands.Cog, name="Debugging tools", command_attrs={'hidden': True}
         embed.add_field(name="Level", value=item.rarity)
         
         if item.type == "cropseed":
-            item = item.getparent(self.client) 
+            item = item.madefrom
             self.add_fields_crop(embed, item, tiles)
         elif item.type == "crop": self.add_fields_crop(embed, item, tiles)
         elif item.type == "animal" or item.type == "tree":
-            item = item.getchild(self.client)
+            item = item.expandsto
             self.add_fields_animal_tree(embed, item, tiles) 
         elif item.type == "animalproduct" or item.type == "treeproduct":
             self.add_fields_animal_tree(embed, item, tiles)
@@ -47,7 +47,7 @@ class Debug(commands.Cog, name="Debugging tools", command_attrs={'hidden': True}
         await ctx.send(embed=embed)
 
     def add_fields_crop(self, embed, item, tiles):
-        seed = item.getparent(self.client)
+        seed = item.madefrom
         avgmarket = (item.minprice + item.maxprice) / 2
         xph = (item.xp * item.amount) / (seed.grows / 60) * 60
         avgprofit = (item.amount * avgmarket) - seed.gold_cost
@@ -65,7 +65,7 @@ class Debug(commands.Cog, name="Debugging tools", command_attrs={'hidden': True}
         embed.add_field(name="Max. Gold/H.", value=maxgoldh * tiles)
 
     def add_fields_animal_tree(self, embed, item, tiles):
-        parent = item.getparent(self.client)
+        parent = item.madefrom
         avgmarket = (item.minprice + item.maxprice) / 2
         xph = (item.xp * item.amount) / (parent.grows / 60) * 60
         avgprofit = (item.amount * parent.amount * avgmarket) - parent.gold_cost

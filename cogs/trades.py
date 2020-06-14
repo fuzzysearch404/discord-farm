@@ -314,7 +314,7 @@ class Trades(commands.Cog, name="Trading"):
         if itemtype in self.tradeable_types:
             pass
         elif itemtype in self.not_tradable_types:
-            item = item.getchild(client)
+            item = item.expandsto
         else:
             embed = emb.errorembed(
                 f"Sorry, you can't trade {item.emoji}{item.name.capitalize()}!",

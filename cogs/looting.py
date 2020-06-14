@@ -96,7 +96,7 @@ class Looting(commands.Cog):
                     
                     witem = client.allitems[item['itemid']]
                     if witem.type != 'crop':
-                        witem = witem.getchild(client)
+                        witem = witem.expandsto
 
                     try:
                         wonitems[witem] += cnt - amount

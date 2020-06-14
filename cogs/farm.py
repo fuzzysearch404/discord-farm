@@ -35,7 +35,7 @@ class Farm(commands.Cog):
         """Calculates time between now and item status."""
         now = datetime.now()
         if ends > now:
-            parent = item.getparent(self.client)
+            parent = item.madefrom
             half = parent.grows / 2
             secsdelta = ends - now
             if secsdelta.total_seconds() > half:
@@ -140,7 +140,7 @@ class Farm(commands.Cog):
         if len(trees) > 0:
             information.append('__**Trees:**__')
             for data, item in trees.items():
-                child = item.getchild(client)
+                child = item.expandsto
                 status = self.get_animal_or_tree_state(data['ends'], data['dies'])[1]
                 fmt = f"{item.emoji}**{item.name.capitalize()}** {data['iterations']}.lvl"
                 fmt += f" (x{data['amount']}{child.emoji}) - {status}"
@@ -148,7 +148,7 @@ class Farm(commands.Cog):
         if len(animals) > 0:
             information.append('__**Animals:**__')
             for data, item in animals.items():
-                child = item.getchild(client)
+                child = item.expandsto
                 status = self.get_animal_or_tree_state(data['ends'], data['dies'])[1]
                 fmt = f"{item.emoji}**{item.name.capitalize()}** {data['iterations']}.lvl"
                 fmt += f" (x{data['amount']}{child.emoji}) - {status}"
@@ -189,7 +189,7 @@ class Farm(commands.Cog):
             if status == 'grow1':
                 continue
             elif status == 'ready' or status == 'dead' and (cat or client.field_guard):
-                child = item.getchild(client)
+                child = item.expandsto
                 amount = data['amount']
                 xp = child.xp * amount
                 
@@ -213,7 +213,7 @@ class Farm(commands.Cog):
         now = datetime.now().replace(microsecond=0)
         ends = now + timedelta(seconds=item.grows)
         dies = ends + timedelta(seconds=item.dies)
-        child = item.getchild(client)
+        child = item.expandsto
 
         async with client.db.acquire() as connection:
             async with connection.transaction():
@@ -293,7 +293,7 @@ class Farm(commands.Cog):
             information = ''
             for key, value in unique.items():
                 if key.type == 'animal' or key.type == 'tree':
-                    key = key.getchild(client)
+                    key = key.expandsto
                 information += f"{key.emoji}**{key.name.capitalize()}** x{value[0]} +{value[1]}{client.xp}"
             embed = emb.confirmembed(f"You harvested: {information}", ctx)
             embed.set_footer(text="Items are now moved to your %inventory.")
@@ -304,7 +304,7 @@ class Farm(commands.Cog):
             await ctx.send(embed=embed)
 
     async def plant_crop_seeds(self, client, item, ctx, customamount, amount, useracc):
-        itemchild = item.getchild(client)
+        itemchild = item.expandsto
         now = datetime.now().replace(microsecond=0)
         ends = now + timedelta(seconds=item.grows)
         dies = ends + timedelta(seconds=item.dies)
@@ -339,7 +339,7 @@ class Farm(commands.Cog):
         await ctx.send(embed=embed)
 
     async def plant_animal_or_tree(self, client, item, ctx, customamount, amount, useracc):
-        itemchild = item.getchild(client)
+        itemchild = item.expandsto
         now = datetime.now().replace(microsecond=0)
         ends = now + timedelta(seconds=item.grows)
         dies = ends + timedelta(seconds=item.dies)
@@ -429,7 +429,7 @@ class Farm(commands.Cog):
         if itemtype in self.growable_items:
             pass
         elif itemtype in self.not_growable_items:
-            item = item.getparent(client)
+            item = item.madefrom
         else:
             embed = emb.errorembed(f"Sorry, you can't grow {item.emoji}{item.name.capitalize()} on the field!", ctx)
             return await ctx.send(embed=embed)

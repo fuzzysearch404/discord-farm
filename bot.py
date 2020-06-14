@@ -82,6 +82,8 @@ class BotClient(commands.AutoShardedBot):
         self.allitems.update(self.specialitems)
         self.allitems.update(self.crafteditems)
 
+        utilitems.update_item_relations(self)
+
     def initemojis(self):
         self.gold = self.config.gold_emoji
         self.xp = self.config.xp_emoji

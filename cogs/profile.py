@@ -362,7 +362,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
     async def cropseedinfo(self, ctx, cropseed):
         client = self.client
-        crop = cropseed.getchild(client)
+        crop = cropseed.expandsto
 
         embed = Embed(
             title=f'{cropseed.name.capitalize()} {cropseed.emoji}',
@@ -384,7 +384,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
     async def cropinfo(self, ctx, crop):
         client = self.client
-        cropseed = crop.getparent(client)
+        cropseed = crop.madefrom
 
         embed = Embed(
             title=f'{crop.name.capitalize()} {crop.emoji}',
@@ -425,7 +425,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
     async def animalproductinfo(self, ctx, item):
         client = self.client
-        animal = item.getparent(client)
+        animal = item.madefrom
 
         embed = Embed(
             title=f'{item.name.capitalize()} {item.emoji}',
@@ -444,7 +444,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
     async def animalinfo(self, ctx, item):
         client = self.client
-        product = item.getchild(client)
+        product = item.expandsto
 
         embed = Embed(
             title=f'{item.name.capitalize()} {item.emoji}',
@@ -466,7 +466,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
     async def treeinfo(self, ctx, item):
         client = self.client
-        product = item.getchild(client)
+        product = item.expandsto
 
         embed = Embed(
             title=f'{item.name.capitalize()} {item.emoji}',

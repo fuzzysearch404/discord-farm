@@ -204,7 +204,7 @@ class Shop(commands.Cog):
         if itemtype in self.purchasable_types:
             pass
         elif itemtype in self.not_purchasable_types:
-            item = item.getparent(client)
+            item = item.madefrom
         else:
             embed = emb.errorembed(
                 f"Sorry, you can't buy **{item.emoji}{item.name.capitalize()}** from the shop!",

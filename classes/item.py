@@ -26,14 +26,10 @@ class CropSeed(Item):
         self.gold_cost = gold_cost
         self.type = 'cropseed'
 
-    def getchild(self, client):
-        return client.crops[self.expandsto]
-
 
 class Crop(Item):
-    def __init__(self, xp, img, minprice, maxprice, madefrom, *args, **kw):
+    def __init__(self, img, minprice, maxprice, madefrom, *args, **kw):
         super().__init__(*args, **kw)
-        self.xp = xp
         self.img = img
         self.minprice = minprice
         self.maxprice = maxprice
@@ -41,11 +37,14 @@ class Crop(Item):
         self.type = 'crop'
         self.getmarketprice()
 
+    @property
+    def xp(self):
+        xp = int((self.madefrom.grows / 3600) * 240 / self.amount)
+        
+        return xp or 1
+
     def getmarketprice(self):
         self.marketprice = randint(self.minprice, self.maxprice)
-
-    def getparent(self, client):
-        return client.cropseeds[self.madefrom]
 
 
 class Animal(Item):
@@ -58,14 +57,10 @@ class Animal(Item):
         self.gold_cost = gold_cost
         self.type = 'animal'
 
-    def getchild(self, client):
-        return client.animalproducts[self.expandsto]
-
 
 class AnimalProduct(Item):
-    def __init__(self, xp, minprice, maxprice, madefrom, img, *args, **kw):
+    def __init__(self, minprice, maxprice, madefrom, img, *args, **kw):
         super().__init__(*args, **kw)
-        self.xp = xp
         self.minprice = minprice
         self.maxprice = maxprice
         self.madefrom = madefrom
@@ -73,11 +68,14 @@ class AnimalProduct(Item):
         self.type = 'animalproduct'
         self.getmarketprice()
 
+    @property
+    def xp(self):
+        xp = int((self.madefrom.grows / 3600) * 240 / self.amount)
+        
+        return xp or 1
+
     def getmarketprice(self):
         self.marketprice = randint(self.minprice, self.maxprice)
-
-    def getparent(self, client):
-        return client.animals[self.madefrom]
 
 
 class Tree(Item):
@@ -89,14 +87,10 @@ class Tree(Item):
         self.gold_cost = gold_cost
         self.type = 'tree'
 
-    def getchild(self, client):
-        return client.treeproducts[self.expandsto]
-
 
 class TreeProduct(Item):
-    def __init__(self, xp, img, minprice, maxprice, madefrom, *args, **kw):
+    def __init__(self, img, minprice, maxprice, madefrom, *args, **kw):
         super().__init__(*args, **kw)
-        self.xp = xp
         self.img = img
         self.minprice = minprice
         self.maxprice = maxprice
@@ -104,11 +98,14 @@ class TreeProduct(Item):
         self.type = 'treeproduct'
         self.getmarketprice()
 
+    @property
+    def xp(self):
+        xp = int((self.madefrom.grows / 3600) * 240 / self.amount)
+        
+        return xp or 1
+
     def getmarketprice(self):
         self.marketprice = randint(self.minprice, self.maxprice)
-
-    def getparent(self, client):
-        return client.trees[self.madefrom]
 
 
 class CraftedItem(Item):
@@ -189,7 +186,6 @@ def croploader():
         crop = Crop(
             id=v['id'],
             level=v['level'],
-            xp=v['xp'],
             img=v['img'],
             minprice=v['minprice'], 
             maxprice=v['maxprice'],
@@ -238,7 +234,6 @@ def treeproductloader():
         prod = TreeProduct(
             id=v['id'],
             level=v['level'],
-            xp=v['xp'],
             img=v['img'],
             minprice=v['minprice'], 
             maxprice=v['maxprice'],
@@ -286,7 +281,6 @@ def animalproductloader():
 
     for c, v in litems.items():
         item = AnimalProduct(
-            xp=v['xp'],
             minprice=v['minprice'],
             maxprice=v['maxprice'],
             level=v['level'],

@@ -178,7 +178,7 @@ class Market(commands.Cog):
         if itemtype in self.sellable_types:
             pass
         elif itemtype in self.not_sellable_types:
-            item = item.getchild(client)
+            item = item.expandsto
         else:
             embed = emb.errorembed(
                 f"Sorry, you can't sell **{item.emoji}{item.name.capitalize()}** in the market!",
