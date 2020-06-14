@@ -189,7 +189,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         client = self.client
         useracc = userutils.User.get_user(userdata, client)
 
-        mode = randint(1, 30)
+        mode = randint(1, 40)
         if mode == 1:
             await useracc.give_gems(1)
 

@@ -86,13 +86,12 @@ class Mission:
         sum = 0
 
         for item in items:
-            sum += item[0].xp * item[1] * 2
-            sum += int(item[0].maxprice * 1.35 * item[1])
+            sum += int(item[0].maxprice * 1.30 * item[1])
 
         if boosted:
             sum = int(sum * 1.4)
 
-        xp = randint(int(sum / 10), sum)
+        xp = randint(int(sum / 20), sum)
         money = sum - xp
         return xp, money
 
