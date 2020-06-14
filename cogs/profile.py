@@ -345,148 +345,118 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
         itemtype = item.type
 
-        if itemtype == 'cropseed':
-            await self.cropseedinfo(ctx, item)
-        elif itemtype == 'crop' or itemtype == 'treeproduct':
-            await self.cropinfo(ctx, item)
-        elif itemtype == 'crafteditem':
-            await self.craftediteminfo(ctx, item)
-        elif itemtype == 'animalproduct':
-            await self.animalproductinfo(ctx, item)
-        elif itemtype == 'animal':
-            await self.animalinfo(ctx, item)
+        if itemtype == 'crop':
+            await self.crop_info(ctx, item.madefrom)
+        elif itemtype == 'cropseed':
+            await self.crop_info(ctx, item)
+        elif itemtype == 'treeproduct':
+            await self.tree_info(ctx, item.madefrom)
         elif itemtype == 'tree':
-            await self.treeinfo(ctx, item)
+            await self.tree_info(ctx, item)
+        elif itemtype == 'animal':
+            await self.animal_info(ctx, item)
+        elif itemtype == 'animalproduct':
+            await self.animal_info(ctx, item.madefrom)
+        elif itemtype == 'crafteditem':
+            await self.crafted_item_info(ctx, item)
         elif itemtype == 'special':
-            await self.specialinfo(ctx, item)
+            await self.special_info(ctx, item)
 
-    async def cropseedinfo(self, ctx, cropseed):
+    async def crop_info(self, ctx, cropseed):
         client = self.client
         crop = cropseed.expandsto
 
         embed = Embed(
-            title=f'{cropseed.name.capitalize()} {cropseed.emoji}',
+            title=f'{cropseed.name.capitalize()} | {crop.name.capitalize()} {cropseed.emoji}',
             description=f'\ud83c\udf31**Seed ID:** {cropseed.id} \ud83c\udf3e**Crop ID:** {crop.id}',
             colour=851836
         )
         embed.add_field(name='\ud83d\udd31Required level', value=crop.level)
-        embed.add_field(name=f'{client.xp}When harvested gives', value=f'{crop.xp} xp/per item.')
+        embed.add_field(name=f'{client.xp}When harvested gains', value=f'{crop.xp} xp/per item.')
+        embed.add_field(name='\ud83d\udcb0Seeds price', value=f'{cropseed.gold_cost}{client.gold}')
         embed.add_field(name='\ud83d\udd70Sprouting, grows', value=secstotime(cropseed.grows))
         embed.add_field(name='\ud83d\udd70Harvestable for', value=secstotime(cropseed.dies))
-        embed.add_field(name='\ud83d\udcb0Seeds price', value=f'{cropseed.gold_cost}{client.gold}')
-        embed.add_field(name=f'{crop.emoji}Grows into', value=f'`%item {crop.name}`')
         embed.add_field(name='\u2696Harvest volume', value=f'{crop.amount} items')
+        embed.add_field(name='\ud83d\uded2Market price', value=f'{crop.minprice} - {crop.maxprice}{client.gold}/item')
+        embed.add_field(name='\ud83d\udcc8Current market price', value=f'{crop.marketprice}{client.gold}/item.')
         embed.add_field(name=f'{cropseed.emoji}Grow', value=f'`%plant {cropseed.name}`')
 
         embed.set_thumbnail(url=crop.img)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    async def cropinfo(self, ctx, crop):
-        client = self.client
-        cropseed = crop.madefrom
-
-        embed = Embed(
-            title=f'{crop.name.capitalize()} {crop.emoji}',
-            description=f'\ud83c\udf3e**Vegetable/Fruit ID:** {crop.id} \ud83c\udf31**Seed/Tree/Bush ID:** {cropseed.id}',
-            colour=851836
-        )
-        embed.add_field(name='\ud83d\udd31Required level', value=crop.level)
-        embed.add_field(name=f'{cropseed.emoji}Grows from', value=f'`%item {cropseed.name}`')
-        embed.add_field(name='\ud83d\uded2Market price', value=f'{crop.minprice} - {crop.maxprice} /item. {client.gold}')
-        embed.add_field(name='\ud83d\udcc8Current market price', value=f'{crop.marketprice}{client.gold}/item.\n')
-
-        embed.set_thumbnail(url=crop.img)
-        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=embed)
-
-    async def craftediteminfo(self, ctx, item):
-        client = self.client
-
-        embed = Embed(
-            title=f'{item.name.capitalize()} {item.emoji}',
-            description=f'\ud83d\udce6**Product ID:** {item.id}',
-            colour=851836
-        )
-
-        craftedfrom = crafted_from_to_string(item)
-
-        embed.add_field(name='\ud83d\udd31Required level', value=item.level)
-        embed.add_field(name=f'{client.xp}When produced gives', value=f'{item.xp} xp/item.')
-        embed.add_field(name='\ud83d\udcdcRequired materials', value=craftedfrom)
-        embed.add_field(name='\ud83d\udd70Production duration', value=secstotime(item.time))
-        embed.add_field(name='\ud83d\uded2Market price', value=f'{item.minprice} - {item.maxprice} /item. {client.gold}')
-        embed.add_field(name='\ud83d\udcc8Current market price', value=f'{item.marketprice}{client.gold}/item.\n')
-        embed.add_field(name=f'{item.emoji}Produce', value=f'`%make {item.name}`')
-
-        embed.set_thumbnail(url=item.img)
-        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=embed)
-
-    async def animalproductinfo(self, ctx, item):
-        client = self.client
-        animal = item.madefrom
-
-        embed = Embed(
-            title=f'{item.name.capitalize()} {item.emoji}',
-            description=f'\ud83d\udce6**Product ID:** {item.id}',
-            colour=851836
-        )
-
-        embed.add_field(name='\ud83d\udd31Required level', value=item.level)
-        embed.add_field(name=f'{animal.emoji}Collectable from', value=f'`%item {animal.name}`')
-        embed.add_field(name='\ud83d\uded2Market price', value=f'{item.minprice} - {item.maxprice} /item. {client.gold}')
-        embed.add_field(name='\ud83d\udcc8Current market price', value=f'{item.marketprice}{client.gold}/item.\n')
-
-        embed.set_thumbnail(url=item.img)
-        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=embed)
-
-    async def animalinfo(self, ctx, item):
+    async def tree_info(self, ctx, item):
         client = self.client
         product = item.expandsto
 
         embed = Embed(
-            title=f'{item.name.capitalize()} {item.emoji}',
-            description=f'{item.emoji}**Animal ID:** {item.id} {product.emoji}**Product ID:** {product.id}',
-            colour=851836
-        )
-        embed.add_field(name='\ud83d\udd31Required level', value=item.level)
-        embed.add_field(name='\u23e9Produces', value=f"**{product.amount}x** {product.emoji}{product.name.capitalize()}")
-        embed.add_field(name=f'{client.xp}When produced gives', value=f'{product.xp} xp/per item')
-        embed.add_field(name='\ud83d\udd70Grows', value=secstotime(item.grows))
-        embed.add_field(name='\ud83d\udd70Collectable', value=secstotime(item.dies))
-        embed.add_field(name='\ud83d\udcb0Price', value=f'{item.gold_cost}{client.gold}')
-        embed.add_field(name='\u2696Collection cycles', value=f'{item.amount}')
-        embed.add_field(name=f'{item.emoji}Grow', value=f'`%grow {item.name}`')
-
-        embed.set_thumbnail(url=item.img)
-        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=embed)
-
-    async def treeinfo(self, ctx, item):
-        client = self.client
-        product = item.expandsto
-
-        embed = Embed(
-            title=f'{item.name.capitalize()} {item.emoji}',
+            title=f'{item.name.capitalize()} | {product.name.capitalize()} {item.emoji}',
             description=f'\ud83c\udf33**Tree/Bush ID:** {item.id} {product.emoji}**Product ID:** {product.id}',
             colour=851836
         )
         embed.add_field(name='\ud83d\udd31Required level', value=item.level)
-        embed.add_field(name='\u23e9Produces (per cycle)', value=f"**{product.amount}x** {product.emoji}{product.name.capitalize()}")
-        embed.add_field(name=f'{client.xp}When harvested gives', value=f'{product.xp} xp/per item')
-        embed.add_field(name='\ud83d\udd70Grows', value=secstotime(item.grows))
-        embed.add_field(name='\ud83d\udd70Is harvestable', value=secstotime(item.dies))
+        embed.add_field(name=f'{client.xp}When harvested gains', value=f'{product.xp} xp/per item')
         embed.add_field(name='\ud83d\udcb0Plant price', value=f'{item.gold_cost}{client.gold}')
+        embed.add_field(name='\ud83d\udd70Grows', value=secstotime(item.grows))
+        embed.add_field(name='\ud83d\udd70Harvestable for', value=secstotime(item.dies))
+        embed.add_field(name='\u2696Harvest volume (per cycle)', value=f"{product.amount} items")
         embed.add_field(name='\u2696Harvest cycles', value=f'{item.amount}')
+        embed.add_field(name='\ud83d\uded2Market price', value=f'{product.minprice} - {product.maxprice}{client.gold}/item')
+        embed.add_field(name='\ud83d\udcc8Current market price', value=f'{product.marketprice}{client.gold}/item.')
         embed.add_field(name=f'{item.emoji}Plant', value=f'`%plant {item.name}`')
 
         embed.set_thumbnail(url=product.img)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    async def specialinfo(self, ctx, item):
+    async def animal_info(self, ctx, item):
+        client = self.client
+        product = item.expandsto
+
+        embed = Embed(
+            title=f'{item.name.capitalize()} {item.emoji} | {product.name.capitalize()} {product.emoji}',
+            description=f'{item.emoji}**Animal ID:** {item.id} {product.emoji}**Product ID:** {product.id}',
+            colour=851836
+        )
+        embed.add_field(name='\ud83d\udd31Required level', value=item.level)
+        embed.add_field(name=f'{client.xp}When produced gains', value=f'{product.xp} xp/per item')
+        embed.add_field(name='\ud83d\udcb0Animal price', value=f'{item.gold_cost}{client.gold}')
+        embed.add_field(name='\ud83d\udd70Grows', value=secstotime(item.grows))
+        embed.add_field(name='\ud83d\udd70Collectable for', value=secstotime(item.dies))
+        embed.add_field(name='\u2696Production volume (per cycle)', value=f"{product.amount} items")
+        embed.add_field(name='\u2696Production cycles', value=f'{item.amount}')
+        embed.add_field(name='\ud83d\uded2Market price', value=f'{product.minprice} - {product.maxprice}{client.gold}/item')
+        embed.add_field(name='\ud83d\udcc8Current market price', value=f'{product.marketprice}{client.gold}/item.')
+        embed.add_field(name=f'{item.emoji}Grow', value=f'`%grow {item.name}`')
+
+        embed.set_thumbnail(url=item.img)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    async def crafted_item_info(self, ctx, item):
+        client = self.client
+
+        embed = Embed(
+            title=f'{item.name.capitalize()} {item.emoji}',
+            description=f'\ud83d\udce6**Item ID:** {item.id}',
+            colour=851836
+        )
+
+        craftedfrom = crafted_from_to_string(item)
+
+        embed.add_field(name='\ud83d\udd31Required level', value=item.level)
+        embed.add_field(name=f'{client.xp}When produced gains', value=f'{item.xp} xp/per item')
+        embed.add_field(name='\ud83d\udcdcRequired raw materials', value=craftedfrom)
+        embed.add_field(name='\ud83d\udd70Production duration', value=secstotime(item.time))
+        embed.add_field(name='\ud83d\uded2Market price', value=f'{item.minprice} - {item.maxprice}{client.gold}/item')
+        embed.add_field(name='\ud83d\udcc8Current market price', value=f'{item.marketprice}{client.gold}/item.')
+        embed.add_field(name=f'{item.emoji}Produce', value=f'`%make {item.name}`')
+
+        embed.set_thumbnail(url=item.img)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    async def special_info(self, ctx, item):
         client = self.client
 
         embed = Embed(
