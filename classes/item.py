@@ -38,7 +38,7 @@ class Crop(Item):
 
     @property
     def xp(self):
-        xp = int((self.madefrom.grows / 3600) * 240 / self.amount)
+        xp = int((self.madefrom.grows / 3600) * 200 / self.amount)
         
         return xp or 1
 
@@ -64,7 +64,7 @@ class AnimalProduct(Item):
 
     @property
     def xp(self):
-        xp = int((self.madefrom.grows / 3600) * 240 / self.amount)
+        xp = int((self.madefrom.grows / 3600) * 200 / self.amount)
         
         return xp or 1
 
@@ -90,7 +90,7 @@ class TreeProduct(Item):
 
     @property
     def xp(self):
-        xp = int((self.madefrom.grows / 3600) * 240 / self.amount)
+        xp = int((self.madefrom.grows / 3600) * 200 / self.amount)
         
         return xp or 1
 
