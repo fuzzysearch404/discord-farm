@@ -7,7 +7,7 @@ from utils.paginator import Pages
 from utils.time import secstotime
 from utils.convertors import MemberID
 from classes import user as userutils
-from classes.item import finditem, convertmadefrom
+from classes.item import finditem, convert_crafted_from
 
 
 class Factory(commands.Cog):
@@ -163,7 +163,7 @@ class Factory(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-        reqitems, reqitemsstr = convertmadefrom(client, item.madefrom), ""
+        reqitems, reqitemsstr = convert_crafted_from(client, item.craftedfrom), ""
 
         for req_item, req_amount in reqitems.items():
             itemdata = await useracc.check_inventory_item(req_item)

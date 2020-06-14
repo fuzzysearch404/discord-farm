@@ -84,7 +84,7 @@ class Debug(commands.Cog, name="Debugging tools", command_attrs={'hidden': True}
 
     def add_fields_crafted(self, embed, item):
         made_from = {}
-        for i, a in item.madefrom.items():
+        for i, a in item.craftedfrom.items():
             _item = self.client.allitems[i]
             made_from[_item] = a
         

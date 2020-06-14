@@ -112,31 +112,34 @@ class TreeProduct(Item):
 
 
 class CraftedItem(Item):
-    def __init__(self, xp, img, minprice, maxprice, madefrom, time, *args, **kw):
+    def __init__(self, img, minprice, maxprice, craftedfrom, time, *args, **kw):
         super().__init__(*args, **kw)
-        self.xp = xp
         self.img = img
         self.minprice = minprice
         self.maxprice = maxprice
-        self.unpackmadefrom(madefrom)
+        self.unpackmadefrom(craftedfrom)
         self.time = time
         self.type = 'crafteditem'
         self.getmarketprice()
 
+    @property
+    def xp(self):
+        return int((self.time / 3600) * 120)
+
     def getmarketprice(self):
         self.marketprice = randint(self.minprice, self.maxprice)
 
-    def unpackmadefrom(self, madefrom):
+    def unpackmadefrom(self, craftedfrom):
         temp = {}
         real = {}
 
-        for pack in madefrom:
+        for pack in craftedfrom:
             temp.update(pack)
 
         for key, value in temp.items():
             real[int(key)] = value
 
-        self.madefrom = real
+        self.craftedfrom = real
 
 class SpecialItem(Item):
     def __init__(self, xp, minprice, maxprice, img, *args, **kw):
@@ -309,11 +312,10 @@ def crafteditemloader():
     for c, v in litems.items():
         item = CraftedItem(
             level=v['level'],
-            xp=v['xp'],
             img=v['img'],
             minprice=v['minprice'], 
             maxprice=v['maxprice'],
-            madefrom=v['madefrom'],
+            craftedfrom=v['craftedfrom'],
             time=v['time'],
             id=v['id'],
             emoji=v['emoji'],
@@ -349,7 +351,15 @@ def specialitemloader():
     return sitems
 
 
-def finditembyname(client, name):
+def update_item_relations(client):
+    for item in client.allitems.values():
+        if hasattr(item, 'expandsto'):
+            item.expandsto = client.allitems[item.expandsto]
+        elif hasattr(item, 'madefrom'):
+            item.madefrom = client.allitems[item.madefrom]
+
+
+def find_item_by_name(client, name):
     itemslist = list(client.allitems.values())
 
     tempitems = {}
@@ -378,7 +388,7 @@ async def finditem(client, ctx, possibleitem):
             await ctx.send(embed=embed)
             return None
     else:
-        item = finditembyname(client, possibleitem)
+        item = find_item_by_name(client, possibleitem)
         if not item:
             embed = emb.errorembed("I didn't find any items named like that \ud83e\udd14", ctx)
             await ctx.send(embed=embed)
@@ -387,18 +397,18 @@ async def finditem(client, ctx, possibleitem):
     return item
 
 
-def convertmadefrom(client, madefrom):
+def convert_crafted_from(client, craftedfrom):
     temp = {}
-    for id, amount in madefrom.items():
+    for id, amount in craftedfrom.items():
         item = client.allitems[id]
         temp[item] = amount
 
     return temp
 
 
-def madefromtostring(client, madefrom):
+def crafted_from_to_string(client, craftedfrom):
     string = ''
-    xitems = convertmadefrom(client, madefrom)
+    xitems = convert_crafted_from(client, craftedfrom)
     for item, value in xitems.items():
         string += f"{item.emoji}{item.name.capitalize()} x{value},\n"
 

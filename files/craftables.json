@@ -6,11 +6,10 @@
         "rarity":2,
         "amount":1,
         "level":3,
-        "xp":25,
         "img":"https://failiem.lv/thumb_show.php?i=mrx6q5aj",
         "minprice":105,
         "maxprice":136,
-        "madefrom":[{"101":10}, {"102":10}, {"103":10}],
+        "craftedfrom":[{"101":10}, {"102":10}, {"103":10}],
         "time":600
     },
     "702" : {
@@ -20,11 +19,10 @@
         "rarity":2,
         "amount":1,
         "level":3,
-        "xp":10,
         "img":"https://failiem.lv/thumb_show.php?i=d4wbbzr7",
         "minprice":82,
         "maxprice":115,
-        "madefrom":[{"103":15}],
+        "craftedfrom":[{"103":15}],
         "time":300
     },
     "703" : {
@@ -34,11 +32,10 @@
         "rarity":2,
         "amount":1,
         "level":4,
-        "xp":12,
         "img":"https://failiem.lv/thumb_show.php?i=qr88nngm",
         "minprice":60,
         "maxprice":94,
-        "madefrom":[{"501":5}],
+        "craftedfrom":[{"501":5}],
         "time":420
     },
     "704" : {
@@ -48,11 +45,10 @@
         "rarity":2,
         "amount":1,
         "level":5,
-        "xp":18,
         "img":"https://failiem.lv/thumb_show.php?i=ngrzhvcb",
         "minprice":95,
         "maxprice":140,
-        "madefrom":[{"502":10}],
+        "craftedfrom":[{"502":10}],
         "time":600
     },
     "705" : {
@@ -62,11 +58,10 @@
         "rarity":2,
         "amount":1,
         "level":6,
-        "xp":64,
         "img":"https://failiem.lv/thumb_show.php?i=xm68e72g",
         "minprice":100,
         "maxprice":147,
-        "madefrom":[{"104":12}, {"502":5}],
+        "craftedfrom":[{"104":12}, {"502":5}],
         "time":2000
     },
     "706" : {
@@ -76,11 +71,10 @@
         "rarity":2,
         "amount":1,
         "level":6,
-        "xp":60,
         "img":"https://failiem.lv/thumb_show.php?i=x7987mdg",
         "minprice":180,
         "maxprice":256,
-        "madefrom":[{"104":7}, {"302":12}],
+        "craftedfrom":[{"104":7}, {"302":12}],
         "time":1800
     },
     "707" : {
@@ -90,11 +84,10 @@
         "rarity":2,
         "amount":1,
         "level":7,
-        "xp":18,
         "img":"https://failiem.lv/thumb_show.php?i=fvatua83",
         "minprice":48,
         "maxprice":66,
-        "madefrom":[{"502":5}],
+        "craftedfrom":[{"502":5}],
         "time":600
     },
     "708" : {
@@ -104,11 +97,10 @@
         "rarity":2,
         "amount":1,
         "level":7,
-        "xp":120,
         "img":"https://failiem.lv/thumb_show.php?i=ry785umq",
         "minprice":350,
         "maxprice":487,
-        "madefrom":[{"104":34}, {"501":2}, {"707":2}],
+        "craftedfrom":[{"104":34}, {"501":2}, {"707":2}],
         "time":3600
     },
     "709" : {
@@ -118,11 +110,10 @@
         "rarity":2,
         "amount":1,
         "level":7,
-        "xp":180,
         "img":"https://failiem.lv/thumb_show.php?i=vzv7sr7d",
         "minprice":420,
         "maxprice":610,
-        "madefrom":[{"104":30}, {"301":12}, {"501":6}, {"707":1}],
+        "craftedfrom":[{"104":30}, {"301":12}, {"501":6}, {"707":1}],
         "time":5400
     }
 }

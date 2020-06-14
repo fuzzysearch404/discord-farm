@@ -8,7 +8,7 @@ from utils.time import secstotime
 from utils.paginator import Pages
 from utils.convertors import MemberID
 from utils import checks
-from classes.item import finditem, madefromtostring
+from classes.item import finditem, crafted_from_to_string
 from classes import user as userutils
 from classes.boost import boostvalid
 
@@ -409,11 +409,11 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             colour=851836
         )
 
-        madefrom = madefromtostring(client, item.madefrom)
+        craftedfrom = crafted_from_to_string(client, item.craftedfrom)
 
         embed.add_field(name='\ud83d\udd31Required level', value=item.level)
         embed.add_field(name=f'{client.xp}When produced gives', value=f'{item.xp} xp/item.')
-        embed.add_field(name='\ud83d\udcdcRequired materials', value=madefrom)
+        embed.add_field(name='\ud83d\udcdcRequired materials', value=craftedfrom)
         embed.add_field(name='\ud83d\udd70Production duration', value=secstotime(item.time))
         embed.add_field(name='\ud83d\uded2Market price', value=f'{item.minprice} - {item.maxprice} /item. {client.gold}')
         embed.add_field(name='\ud83d\udcc8Current market price', value=f'{item.marketprice}{client.gold}/item.\n')
