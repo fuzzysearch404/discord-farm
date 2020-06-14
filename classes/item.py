@@ -97,14 +97,28 @@ class TreeProduct(Item):
 
 
 class CraftedItem(Item):
-    def __init__(self, img, minprice, maxprice, craftedfrom, time, *args, **kw):
+    def __init__(self, img, craftedfrom, time, *args, **kw):
         super().__init__(*args, **kw)
         self.img = img
-        self.minprice = minprice
-        self.maxprice = maxprice
         self.unpackmadefrom(craftedfrom)
         self.time = time
         self.type = 'crafteditem'
+
+    @property
+    def minprice(self):
+        price = 0
+        for item, amount in self.craftedfrom.items():
+            price += item.maxprice * amount
+
+        return int(price - (price / 8))
+
+    @property
+    def maxprice(self):
+        price = 0
+        for item, amount in self.craftedfrom.items():
+            price += item.maxprice * amount
+
+        return int(price + (price / 5) + (self.time / 50))
 
     @property
     def xp(self):
@@ -284,8 +298,6 @@ def crafteditemloader():
         item = CraftedItem(
             level=v['level'],
             img=v['img'],
-            minprice=v['minprice'], 
-            maxprice=v['maxprice'],
             craftedfrom=v['craftedfrom'],
             time=v['time'],
             id=v['id'],
