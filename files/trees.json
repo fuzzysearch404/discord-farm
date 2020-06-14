@@ -7,7 +7,6 @@
         "name":"red apple tree",
         "rarity":2,
         "grows":120,
-        "dies":300,
         "amount":3,
         "gold_cost":120
     },
@@ -19,7 +18,6 @@
         "name":"cherry tree",
         "rarity":2,
         "grows":900,
-        "dies":960,
         "amount":4,
         "gold_cost":480
     }

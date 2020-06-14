@@ -9,7 +9,6 @@
         "minprice":3,
         "maxprice":6,
         "level":2,
-        "xp":1,
         "img":"https://failiem.lv/thumb_show.php?i=ayrez6dx"
     },
     "302": {
@@ -22,7 +21,6 @@
         "minprice":7,
         "maxprice":13,
         "level":6,
-        "xp":4,
         "img":"https://failiem.lv/thumb_show.php?i=rmcmnavs"
     }
 }

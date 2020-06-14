@@ -7,7 +7,6 @@
         "name":"lettuce seeds",
         "rarity":1,
         "grows":120,
-        "dies":300,
         "gold_cost":15
     },
     "2": {
@@ -18,7 +17,6 @@
         "name":"carrot seeds",
         "rarity":1,
         "grows":200,
-        "dies":400,
         "gold_cost":15
     },
     "3": {
@@ -29,7 +27,6 @@
         "name":"corn seeds",
         "rarity":1,
         "grows":600,
-        "dies":1800,
         "gold_cost":30
     },
     "4": {
@@ -40,7 +37,6 @@
         "name":"wheat seeds",
         "rarity":1,
         "grows":180,
-        "dies":240,
         "gold_cost":50
     },
     "5": {
@@ -51,7 +47,6 @@
         "name":"garlic seeds",
         "rarity":1,
         "grows":3600,
-        "dies":5400,
         "gold_cost":140
     },
     "6": {
@@ -62,7 +57,6 @@
         "name":"onion seeds",
         "rarity":1,
         "grows":5400,
-        "dies":7200,
         "gold_cost":180
     },
     "7": {
@@ -73,7 +67,6 @@
         "name":"cucumber seeds",
         "rarity":1,
         "grows":10800,
-        "dies":14400,
         "gold_cost":350
     }
 }

@@ -18,10 +18,10 @@ class Item:
 
 
 class CropSeed(Item):
-    def __init__(self, grows, dies, expandsto, gold_cost, *args, **kw):
+    def __init__(self, grows, expandsto, gold_cost, *args, **kw):
         super().__init__(*args, **kw)
         self.grows = grows
-        self.dies = dies
+        self.dies = int(grows * 1.5)
         self.expandsto = expandsto
         self.gold_cost = gold_cost
         self.type = 'cropseed'
@@ -48,10 +48,10 @@ class Crop(Item):
 
 
 class Animal(Item):
-    def __init__(self, grows, dies, expandsto, img, gold_cost, *args, **kw):
+    def __init__(self, grows, expandsto, img, gold_cost, *args, **kw):
         super().__init__(*args, **kw)
         self.grows = grows
-        self.dies = dies
+        self.dies = int(grows * 1.5)
         self.expandsto = expandsto
         self.img = img
         self.gold_cost = gold_cost
@@ -79,10 +79,10 @@ class AnimalProduct(Item):
 
 
 class Tree(Item):
-    def __init__(self, grows, dies, expandsto, gold_cost, *args, **kw):
+    def __init__(self, grows, expandsto, gold_cost, *args, **kw):
         super().__init__(*args, **kw)
         self.grows = grows
-        self.dies = dies
+        self.dies = int(grows * 1.5)
         self.expandsto = expandsto
         self.gold_cost = gold_cost
         self.type = 'tree'
@@ -162,7 +162,6 @@ def cropseedloader():
         crop = CropSeed(
             level=v['level'],
             grows=v['grows'],
-            dies=v['dies'],
             expandsto=v['expandsto'],
             id=v['id'],
             emoji=v['emoji'],
@@ -210,7 +209,6 @@ def treeloader():
         item = Tree(
             level=v['level'],
             grows=v['grows'],
-            dies=v['dies'],
             expandsto=v['expandsto'],
             id=v['id'],
             emoji=v['emoji'],
@@ -258,7 +256,6 @@ def animalloader():
         item = Animal(
             level=v['level'],
             grows=v['grows'],
-            dies=v['dies'],
             expandsto=v['expandsto'],
             img=v['img'],
             id=v['id'],

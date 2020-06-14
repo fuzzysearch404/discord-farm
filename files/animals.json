@@ -7,7 +7,6 @@
         "name":"chickens",
         "rarity":2,
         "grows":300,
-        "dies":300,
         "amount":3,
         "gold_cost":80,
         "img":"https://failiem.lv/thumb_show.php?i=wddbjvvn"
@@ -20,7 +19,6 @@
         "name":"cows",
         "rarity":2,
         "grows":600,
-        "dies":800,
         "amount":2,
         "gold_cost":70,
         "img":"https://failiem.lv/thumb_show.php?i=qbufg3z8"
