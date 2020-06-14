@@ -35,16 +35,12 @@ class Crop(Item):
         self.maxprice = maxprice
         self.madefrom = madefrom
         self.type = 'crop'
-        self.getmarketprice()
 
     @property
     def xp(self):
         xp = int((self.madefrom.grows / 3600) * 240 / self.amount)
         
         return xp or 1
-
-    def getmarketprice(self):
-        self.marketprice = randint(self.minprice, self.maxprice)
 
 
 class Animal(Item):
@@ -66,16 +62,12 @@ class AnimalProduct(Item):
         self.madefrom = madefrom
         self.img = img
         self.type = 'animalproduct'
-        self.getmarketprice()
 
     @property
     def xp(self):
         xp = int((self.madefrom.grows / 3600) * 240 / self.amount)
         
         return xp or 1
-
-    def getmarketprice(self):
-        self.marketprice = randint(self.minprice, self.maxprice)
 
 
 class Tree(Item):
@@ -96,16 +88,12 @@ class TreeProduct(Item):
         self.maxprice = maxprice
         self.madefrom = madefrom
         self.type = 'treeproduct'
-        self.getmarketprice()
 
     @property
     def xp(self):
         xp = int((self.madefrom.grows / 3600) * 240 / self.amount)
         
         return xp or 1
-
-    def getmarketprice(self):
-        self.marketprice = randint(self.minprice, self.maxprice)
 
 
 class CraftedItem(Item):
@@ -117,14 +105,10 @@ class CraftedItem(Item):
         self.unpackmadefrom(craftedfrom)
         self.time = time
         self.type = 'crafteditem'
-        self.getmarketprice()
 
     @property
     def xp(self):
         return int((self.time / 3600) * 120)
-
-    def getmarketprice(self):
-        self.marketprice = randint(self.minprice, self.maxprice)
 
     def unpackmadefrom(self, craftedfrom):
         temp = {}
@@ -146,10 +130,6 @@ class SpecialItem(Item):
         self.maxprice = maxprice
         self.img = img
         self.type = 'special'
-        self.getmarketprice()
-
-    def getmarketprice(self):
-        self.marketprice = randint(self.minprice, self.maxprice)
 
 
 def cropseedloader():
@@ -342,12 +322,35 @@ def specialitemloader():
     return sitems
 
 
+def update_market_prices(client):
+    
+    def update_price(item):
+        item.marketprice = randint(item.minprice, item.maxprice)
+
+    for item in client.crops.values():
+        update_price(item)
+    for item in client.treeproducts.values():
+        update_price(item)
+    for item in client.animalproducts.values():
+        update_price(item)
+    for item in client.crafteditems.values():
+        update_price(item)
+    for item in client.specialitems.values():
+        update_price(item)
+
 def update_item_relations(client):
     for item in client.allitems.values():
         if hasattr(item, 'expandsto'):
             item.expandsto = client.allitems[item.expandsto]
         elif hasattr(item, 'madefrom'):
             item.madefrom = client.allitems[item.madefrom]
+        elif hasattr(item, 'craftedfrom'):
+            dct = {}
+            for product, amount in item.craftedfrom.items():
+                product = client.allitems[product]
+                dct[product] = amount
+
+            item.craftedfrom = dct
 
 
 def find_item_by_name(client, name):
@@ -388,19 +391,9 @@ async def finditem(client, ctx, possibleitem):
     return item
 
 
-def convert_crafted_from(client, craftedfrom):
-    temp = {}
-    for id, amount in craftedfrom.items():
-        item = client.allitems[id]
-        temp[item] = amount
-
-    return temp
-
-
-def crafted_from_to_string(client, craftedfrom):
+def crafted_from_to_string(item):
     string = ''
-    xitems = convert_crafted_from(client, craftedfrom)
-    for item, value in xitems.items():
-        string += f"{item.emoji}{item.name.capitalize()} x{value},\n"
+    for product, value in item.craftedfrom.items():
+        string += f"{product.emoji}{product.name.capitalize()} x{value},\n"
 
     return string[:-2]

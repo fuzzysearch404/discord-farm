@@ -8,7 +8,7 @@ from typing import Optional
 from utils import checks
 from utils.paginator import Pages
 from utils.time import secstotime
-from classes.item import finditem
+from classes.item import finditem, update_market_prices
 from classes import user as userutils
 
 
@@ -39,16 +39,7 @@ class Market(commands.Cog):
     async def _market_refresh_loop(self):
         await asyncio.sleep(self.get_next_market_refresh_seconds())
 
-        for item in self.client.crops.values():
-            item.getmarketprice()
-        for item in self.client.treeproducts.values():
-            item.getmarketprice()
-        for item in self.client.animalproducts.values():
-            item.getmarketprice()
-        for item in self.client.crafteditems.values():
-            item.getmarketprice()
-        for item in self.client.specialitems.values():
-            item.getmarketprice()
+        update_market_prices()
 
     @_market_refresh_loop.before_loop
     async def before__market_refresh_loop(self):

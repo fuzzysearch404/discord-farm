@@ -409,7 +409,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             colour=851836
         )
 
-        craftedfrom = crafted_from_to_string(client, item.craftedfrom)
+        craftedfrom = crafted_from_to_string(item)
 
         embed.add_field(name='\ud83d\udd31Required level', value=item.level)
         embed.add_field(name=f'{client.xp}When produced gives', value=f'{item.xp} xp/item.')

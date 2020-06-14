@@ -83,6 +83,7 @@ class BotClient(commands.AutoShardedBot):
         self.allitems.update(self.crafteditems)
 
         utilitems.update_item_relations(self)
+        utilitems.update_market_prices(self)
 
     def initemojis(self):
         self.gold = self.config.gold_emoji
