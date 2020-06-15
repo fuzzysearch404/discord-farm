@@ -31,6 +31,6 @@ initial_extensions = (
 )
 
 gold_emoji='<:gold:722116061780246528>'
-gem_emoji='<:diamond:603145893025415178>'
+gem_emoji='<a:gem:722191212706136095>'
 xp_emoji='<:xp:603145893029347329>'
 tile_emoji='<:tile:603160625417420801>'
