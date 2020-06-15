@@ -274,16 +274,18 @@ class User:
                 await self.client.db.execute(query, amount, self.userid)
 
     async def add_boost(self, boost, duration):
-        period = datetime.now() + timedelta(seconds=duration)
+        now = datetime.now()
+        period = now + timedelta(seconds=duration)
         async with self.client.db.acquire() as connection:
             async with connection.transaction():
                 query = f"""INSERT INTO boosts(userid, {boost.id})
                 VALUES($1, $2) ON CONFLICT(userid) DO UPDATE
                 SET {boost.id} = CASE
                 WHEN boosts.{boost.id} IS NULL THEN EXCLUDED.{boost.id}
-                ELSE boosts.{boost.id} + $3 * INTERVAL '1 SECONDS'
+                WHEN boosts.{boost.id} < $3 THEN EXCLUDED.{boost.id}
+                ELSE boosts.{boost.id} + $4 * INTERVAL '1 SECONDS'
                 END;"""
-                await self.client.db.execute(query, self.userid, period, duration)
+                await self.client.db.execute(query, self.userid, period, now, duration)
 
     async def toggle_notifications(self, notif):
         async with self.client.db.acquire() as connection:
