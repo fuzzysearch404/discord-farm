@@ -189,12 +189,12 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         client = self.client
         useracc = userutils.User.get_user(userdata, client)
 
-        mode = randint(1, 40)
+        mode = randint(1, 45)
         if mode == 1:
             await useracc.give_gems(1)
 
             embed = emb.congratzembed(f"You won 1{client.gem}!", ctx)
-        elif mode <= 8:
+        elif mode <= 10:
             moneywon = randint(1, useracc.level * 100)
             await useracc.give_money(moneywon)
 
@@ -203,7 +203,10 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             suitableitems = useracc.find_all_items_unlocked()
 
             item = choice(suitableitems)
-            amount = randint(1, 3)
+            if item.rarity <= 2:
+                amount = randint(1, 4)
+            else:
+                amount = 1
 
             await useracc.add_item_to_inventory(item, amount)
 

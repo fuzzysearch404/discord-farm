@@ -70,16 +70,20 @@ class Mission:
             else: return 1
         elif level < 10:
             if item.rarity == 1: return randint(10, 60)
-            else: return randint(1, 3)
+            elif item.rarity == 2: return randint(1, 3)
+            else: return 1
         elif level < 20:
             if item.rarity == 1: return randint(30, 120)
-            else: return randint(1, 4)
+            elif item.rarity == 2: return randint(1, 4)
+            else: return randint(1, 2)
         elif level < 30:
             if item.rarity == 1: return randint(50, 240)
-            else: return randint(1, 5)
+            elif item.rarity == 2: return randint(1, 5)
+            else: return randint(1, 3)
         else:
             if item.rarity == 1: return randint(80, 480)
-            else: return randint(1, 6)
+            elif item.rarity == 2: return randint(1, 6)
+            else: return randint(1, 4)
 
     @staticmethod
     def calcreward(items, boosted):

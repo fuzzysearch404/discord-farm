@@ -97,5 +97,27 @@
         "img":"https://failiem.lv/thumb_show.php?i=vzv7sr7d",
         "craftedfrom":[{"104":80}, {"301":40}, {"501":8}, {"707":2}],
         "time":5400
+    },
+    "710" : {
+        "id":710,
+        "emoji":"<:onionrings:722116494808580167>",
+        "name":"onion rings",
+        "rarity":3,
+        "amount":1,
+        "level":8,
+        "img":"https://failiem.lv/thumb_show.php?i=cnzvbrp2",
+        "craftedfrom":[{"106":95}],
+        "time":9000
+    },
+    "711" : {
+        "id":711,
+        "emoji":"<:picklejar:722117361380884560>",
+        "name":"pickles",
+        "rarity":3,
+        "amount":1,
+        "level":9,
+        "img":"https://failiem.lv/thumb_show.php?i=h295k788",
+        "craftedfrom":[{"105":65}, {"107":90}],
+        "time":5280
     }
 }

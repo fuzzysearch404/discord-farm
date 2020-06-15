@@ -30,7 +30,7 @@ initial_extensions = (
     'cogs.stats'
 )
 
-gold_emoji='<:gold:603145892811505665>'
+gold_emoji='<:gold:722116061780246528>'
 gem_emoji='<:diamond:603145893025415178>'
 xp_emoji='<:xp:603145893029347329>'
 tile_emoji='<:tile:603160625417420801>'
