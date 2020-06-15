@@ -39,7 +39,7 @@ class Market(commands.Cog):
     async def _market_refresh_loop(self):
         await asyncio.sleep(self.get_next_market_refresh_seconds())
 
-        update_market_prices()
+        update_market_prices(self.client)
 
     @_market_refresh_loop.before_loop
     async def before__market_refresh_loop(self):
