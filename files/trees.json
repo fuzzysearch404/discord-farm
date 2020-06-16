@@ -20,5 +20,16 @@
         "grows":900,
         "amount":4,
         "gold_cost":480
+    },
+    "203" : {
+        "id":203,
+        "expandsto":303,
+        "level":10,
+        "emoji":"\ud83c\udf50",
+        "name":"pear tree",
+        "rarity":2,
+        "grows":7800,
+        "amount":3,
+        "gold_cost":1000
     }
 }

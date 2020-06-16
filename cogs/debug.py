@@ -30,7 +30,7 @@ class Debug(commands.Cog, name="Debugging tools", command_attrs={'hidden': True}
 
         embed = Embed(title=item.name)
         embed.add_field(name="Rarity", value=item.rarity)
-        embed.add_field(name="Level", value=item.rarity)
+        embed.add_field(name="Level", value=item.level)
         
         if item.type == "cropseed":
             item = item.madefrom

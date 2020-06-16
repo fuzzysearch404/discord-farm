@@ -17,10 +17,22 @@
         "emoji":"\ud83c\udf52",
         "name":"cherries",
         "rarity":1,
-        "amount":15,
+        "amount":14,
         "minprice":7,
         "maxprice":13,
         "level":6,
         "img":"https://failiem.lv/thumb_show.php?i=rmcmnavs"
+    },
+    "303": {
+        "id":303,
+        "madefrom":203,
+        "emoji":"\ud83c\udf50",
+        "name":"pears",
+        "rarity":1,
+        "amount":29,
+        "minprice":10,
+        "maxprice":20,
+        "level":10,
+        "img":"https://failiem.lv/thumb_show.php?i=weg8hny7"
     }
 }

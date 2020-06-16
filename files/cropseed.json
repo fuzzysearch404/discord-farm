@@ -68,5 +68,15 @@
         "rarity":1,
         "grows":10800,
         "gold_cost":350
+    },
+    "8": {
+        "id":8,
+        "expandsto":108,
+        "level":11,
+        "emoji":"\ud83c\udf53",
+        "name":"strawberry seeds",
+        "rarity":2,
+        "grows":16200,
+        "gold_cost":600
     }
 }

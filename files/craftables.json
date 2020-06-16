@@ -102,7 +102,7 @@
         "id":710,
         "emoji":"<:onionrings:722116494808580167>",
         "name":"onion rings",
-        "rarity":3,
+        "rarity":2,
         "amount":1,
         "level":8,
         "img":"https://failiem.lv/thumb_show.php?i=cnzvbrp2",
@@ -113,11 +113,33 @@
         "id":711,
         "emoji":"<:picklejar:722117361380884560>",
         "name":"pickles",
-        "rarity":3,
+        "rarity":2,
         "amount":1,
         "level":9,
         "img":"https://failiem.lv/thumb_show.php?i=h295k788",
         "craftedfrom":[{"105":65}, {"107":90}],
         "time":5280
+    },
+    "712" : {
+        "id":712,
+        "emoji":"\ud83c\udf75",
+        "name":"pear tea",
+        "rarity":2,
+        "amount":1,
+        "level":10,
+        "img":"https://failiem.lv/thumb_show.php?i=je24vvdj",
+        "craftedfrom":[{"303":35}],
+        "time":3600
+    },
+    "713" : {
+        "id":713,
+        "emoji":"\ud83c\udf6c",
+        "name":"red candies",
+        "rarity":2,
+        "amount":1,
+        "level":11,
+        "img":"https://failiem.lv/thumb_show.php?i=d5aukcxr",
+        "craftedfrom":[{"108":40}, {"301":120}, {"302":35}],
+        "time":4500
     }
 }
