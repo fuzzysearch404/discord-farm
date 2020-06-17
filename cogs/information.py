@@ -34,10 +34,10 @@ class Information(commands.Cog, name="Very Informative"):
     @commands.command()
     async def invite(self, ctx):
         """
-        \ud83d\udcf2 Do you want to invite bot to your own server? Do it!
+        \ud83d\udcf2 Would you like to invite bot to your own server? Sure, do it!
         """
-        await ctx.send("Support server invite: https://discord.gg/MwpxKjF" \
-        "\nBot invite: <https://discordapp.com/oauth2/authorize?client_id=526436949481881610&scope=bot&permissions=313408>")
+        await ctx.send("Support server invite: https://discord.gg/MwpxKjF"
+        "\nBot invite: <https://discord.com/oauth2/authorize?client_id=526436949481881610&scope=bot&permissions=387136>")
 
     @commands.command()
     async def donate(self, ctx):
