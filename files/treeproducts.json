@@ -34,5 +34,17 @@
         "maxprice":20,
         "level":10,
         "img":"https://failiem.lv/thumb_show.php?i=weg8hny7"
+    },
+    "304": {
+        "id":304,
+        "madefrom":204,
+        "emoji":"\ud83c\udf47",
+        "name":"grapes",
+        "rarity":1,
+        "amount":24,
+        "minprice":16,
+        "maxprice":22,
+        "level":12,
+        "img":"https://failiem.lv/thumb_show.php?i=pftbuxn4"
     }
 }

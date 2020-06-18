@@ -31,5 +31,16 @@
         "grows":7800,
         "amount":3,
         "gold_cost":1000
+    },
+    "204" : {
+        "id":204,
+        "expandsto":304,
+        "level":12,
+        "emoji":"\ud83c\udf47",
+        "name":"grape bush",
+        "rarity":2,
+        "grows":3600,
+        "amount":5,
+        "gold_cost":2000
     }
 }

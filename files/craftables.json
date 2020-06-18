@@ -141,5 +141,16 @@
         "img":"https://failiem.lv/thumb_show.php?i=d5aukcxr",
         "craftedfrom":[{"108":40}, {"301":120}, {"302":35}],
         "time":4500
+    },
+    "714" : {
+        "id":714,
+        "emoji":"\ud83c\udf77",
+        "name":"wine",
+        "rarity":2,
+        "amount":1,
+        "level":12,
+        "img":"https://failiem.lv/thumb_show.php?i=vcxdswfz",
+        "craftedfrom":[{"304":85}],
+        "time":21600
     }
 }
