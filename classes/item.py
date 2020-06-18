@@ -121,7 +121,7 @@ class CraftedItem(Item):
 
     @property
     def xp(self):
-        return int((self.time / 3600) * 120)
+        return int((self.time / 3600) * 240)
 
     def unpackmadefrom(self, craftedfrom):
         temp = {}
