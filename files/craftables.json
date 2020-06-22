@@ -152,5 +152,16 @@
         "img":"https://failiem.lv/thumb_show.php?i=vcxdswfz",
         "craftedfrom":[{"304":85}],
         "time":21600
+    },
+    "715" : {
+        "id":715,
+        "emoji":"\ud83d\udc90",
+        "name":"bouquet",
+        "rarity":3,
+        "amount":1,
+        "level":14,
+        "img":"https://failiem.lv/thumb_show.php?i=krd7verp",
+        "craftedfrom":[{"109":50}, {"110":50}, {"111":50}],
+        "time":8100
     }
 }

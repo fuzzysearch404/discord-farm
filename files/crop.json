@@ -94,5 +94,41 @@
         "maxprice":31,
         "level":11,
         "img":"https://failiem.lv/thumb_show.php?i=baahfnpy"
+    },
+    "109": {
+        "id":109,
+        "madefrom":9,
+        "emoji":"\ud83c\udf37",
+        "name":"tulips",
+        "rarity":1,
+        "amount":16,
+        "minprice":43,
+        "maxprice":62,
+        "level":13,
+        "img":"https://failiem.lv/thumb_show.php?i=ey7nzsa3"
+    },
+    "110": {
+        "id":110,
+        "madefrom":10,
+        "emoji":"\ud83c\udf3a",
+        "name":"hibiscus",
+        "rarity":1,
+        "amount":18,
+        "minprice":39,
+        "maxprice":55,
+        "level":13,
+        "img":"https://failiem.lv/thumb_show.php?i=b6jj83ey"
+    },
+    "111": {
+        "id":111,
+        "madefrom":11,
+        "emoji":"\ud83c\udf39",
+        "name":"roses",
+        "rarity":1,
+        "amount":25,
+        "minprice":33,
+        "maxprice":54,
+        "level":14,
+        "img":"https://failiem.lv/thumb_show.php?i=zvv8kt5f"
     }
 }

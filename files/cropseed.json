@@ -78,5 +78,35 @@
         "rarity":2,
         "grows":16200,
         "gold_cost":600
+    },
+    "9": {
+        "id":9,
+        "expandsto":109,
+        "level":13,
+        "emoji":"\ud83c\udf37",
+        "name":"tulip seeds",
+        "rarity":2,
+        "grows":5400,
+        "gold_cost":800
+    },
+    "10": {
+        "id":10,
+        "expandsto":110,
+        "level":13,
+        "emoji":"\ud83c\udf3a",
+        "name":"hibiscus seeds",
+        "rarity":2,
+        "grows":5400,
+        "gold_cost":800
+    },
+    "11": {
+        "id":11,
+        "expandsto":111,
+        "level":14,
+        "emoji":"\ud83c\udf39",
+        "name":"rose seeds",
+        "rarity":2,
+        "grows":14400,
+        "gold_cost":1000
     }
 }
