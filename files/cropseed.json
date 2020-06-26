@@ -108,5 +108,15 @@
         "rarity":2,
         "grows":14400,
         "gold_cost":1000
+    },
+    "12": {
+        "id":12,
+        "expandsto":112,
+        "level":15,
+        "emoji":"\ud83e\udd54",
+        "name":"potato seeds",
+        "rarity":2,
+        "grows":28800,
+        "gold_cost":2000
     }
 }

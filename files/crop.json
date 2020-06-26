@@ -79,7 +79,7 @@
         "rarity":1,
         "amount":26,
         "minprice":8,
-        "maxprice":25,
+        "maxprice":24,
         "level":9,
         "img":"https://failiem.lv/thumb_show.php?i=ddb9yqmu"
     },
@@ -130,5 +130,17 @@
         "maxprice":54,
         "level":14,
         "img":"https://failiem.lv/thumb_show.php?i=zvv8kt5f"
+    },
+    "112": {
+        "id":112,
+        "madefrom":12,
+        "emoji":"\ud83e\udd54",
+        "name":"potatoes",
+        "rarity":1,
+        "amount":42,
+        "minprice":39,
+        "maxprice":55,
+        "level":15,
+        "img":"https://failiem.lv/thumb_show.php?i=j7paxvba"
     }
 }
