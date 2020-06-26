@@ -163,5 +163,16 @@
         "img":"https://failiem.lv/thumb_show.php?i=krd7verp",
         "craftedfrom":[{"109":50}, {"110":50}, {"111":50}],
         "time":8100
+    },
+    "716" : {
+        "id":716,
+        "emoji":"\ud83c\udf5f",
+        "name":"french fries",
+        "rarity":3,
+        "amount":1,
+        "level":15,
+        "img":"https://failiem.lv/thumb_show.php?i=2e8gf2t7",
+        "craftedfrom":[{"112":69}],
+        "time":6300
     }
 }

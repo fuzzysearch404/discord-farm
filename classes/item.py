@@ -117,7 +117,7 @@ class CraftedItem(Item):
         for item, amount in self.craftedfrom.items():
             price += item.maxprice * amount
 
-        return int(price + (price / 8) + (self.time / 2000))
+        return int(price + (price / 10) + (self.time / 2000))
 
     @property
     def xp(self):
