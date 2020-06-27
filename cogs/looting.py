@@ -24,7 +24,7 @@ class Looting(commands.Cog):
 
     @commands.command(aliases=['rob', 'steal'])
     @checks.embed_perms()
-    @checks.user_cooldown(300)
+    @checks.user_cooldown(600)
     @checks.avoid_maintenance()
     async def loot(self, ctx, *, member: MemberID):
         """
