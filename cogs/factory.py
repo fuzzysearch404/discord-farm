@@ -195,7 +195,7 @@ class Factory(commands.Cog):
         if not olditem: starts = now
         else:
             oldends = olditem['ends']
-            if oldends > now: starts = olditem['ends']
+            if oldends > now: starts = oldends
             else: starts = now
 
         def get_production_time():
