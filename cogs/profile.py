@@ -322,7 +322,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             texts.append(item)
         texts.append("\u2139Get detailed information about an item - `%item ID or name`")
         try:
-            p = Pages(ctx, entries=texts, per_page=16, show_entry_count=False)
+            p = Pages(ctx, entries=texts, per_page=18, show_entry_count=False)
             p.embed.title = 'Unlocked items for your level:'
             p.embed.color = 846046
             await p.paginate()

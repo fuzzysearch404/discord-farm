@@ -198,7 +198,7 @@ class Missions(commands.Cog, name="Mission"):
     @missions.command()
     @checks.reaction_perms()
     @checks.embed_perms()
-    @checks.user_cooldown(21600)
+    @checks.user_cooldown(18000)
     @checks.avoid_maintenance()
     async def refresh(self, ctx):
         """
