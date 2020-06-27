@@ -8,7 +8,8 @@ BUISNESS_NAMES = (
     "Katie's Grandma", "BurgerStation Cafe", 'Kindergarden "Chill"',
     "Supermarket 24/7", "Bob's restraurant", "Soup Cafe",
     "Lazloo's Kitchen", "Horror pancake's celler", "Andy's Cow Resort",
-    "Donkey's bakery", "Bob's dairy", "Stella's aunt"
+    "Donkey's bakery", "Bob's dairy", "Stella's aunt",
+    "Greg's waterpark", "Cafe El-pesto", "Kebab dinner"
 )
 
 class Mission:
@@ -90,7 +91,7 @@ class Mission:
         sum = 0
 
         for item in items:
-            sum += int(item[0].maxprice * 1.30 * item[1])
+            sum += int(item[0].maxprice * 1.35 * item[1])
 
         if boosted:
             sum = int(sum * 1.4)
