@@ -118,5 +118,15 @@
         "rarity":2,
         "grows":28800,
         "gold_cost":2000
+    },
+    "13": {
+        "id":13,
+        "expandsto":113,
+        "level":16,
+        "emoji":"\ud83e\udd66",
+        "name":"broccoli seeds",
+        "rarity":2,
+        "grows":43200,
+        "gold_cost":3000
     }
 }

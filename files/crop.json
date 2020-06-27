@@ -139,8 +139,20 @@
         "rarity":1,
         "amount":42,
         "minprice":39,
-        "maxprice":55,
+        "maxprice":56,
         "level":15,
         "img":"https://failiem.lv/thumb_show.php?i=j7paxvba"
+    },
+    "113": {
+        "id":113,
+        "madefrom":13,
+        "emoji":"\ud83e\udd66",
+        "name":"broccoli",
+        "rarity":1,
+        "amount":56,
+        "minprice":45,
+        "maxprice":60,
+        "level":16,
+        "img":"https://failiem.lv/thumb_show.php?i=m8ygtf64"
     }
 }

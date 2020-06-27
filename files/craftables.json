@@ -174,5 +174,16 @@
         "img":"https://failiem.lv/thumb_show.php?i=2e8gf2t7",
         "craftedfrom":[{"112":69}],
         "time":6300
+    },
+    "717" : {
+        "id":717,
+        "emoji":"\ud83e\udd58",
+        "name":"vegetable soup",
+        "rarity":3,
+        "amount":1,
+        "level":16,
+        "img":"https://failiem.lv/thumb_show.php?i=amjaatdz",
+        "craftedfrom":[{"102":250}, {"112":35}, {"113":120}],
+        "time":12813
     }
 }
