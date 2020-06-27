@@ -193,7 +193,10 @@ class Factory(commands.Cog):
         now = datetime.now().replace(microsecond=0)
         olditem = await useracc.get_oldest_factory_item()
         if not olditem: starts = now
-        else: starts = olditem['ends']
+        else:
+            oldends = olditem['ends']
+            if oldends > now: starts = olditem['ends']
+            else: starts = now
 
         def get_production_time():
             return item.time - int((item.time / 100) * (useracc.factorylevel * 5))
