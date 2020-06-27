@@ -41,9 +41,9 @@
         "emoji":"<:wheat:719661873854939137>",
         "name":"wheat",
         "rarity":1,
-        "amount":16,
+        "amount":18,
         "minprice":1,
-        "maxprice":7,
+        "maxprice":6,
         "level":5,
         "img":"https://failiem.lv/thumb_show.php?i=rt32jaec"
     },
