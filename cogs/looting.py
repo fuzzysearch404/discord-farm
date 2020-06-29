@@ -69,8 +69,8 @@ class Looting(commands.Cog):
             if boostvalid(boostdata['dog3']):
                 embed = emb.errorembed("This farm is being guarded by a HUGE dog!", ctx)
                 return await ctx.send(embed=embed)
-            if boostvalid(boostdata['dog2']): chance = 3
-            if boostvalid(boostdata['dog1']): chance = 6
+            elif boostvalid(boostdata['dog2']): chance = 3
+            elif boostvalid(boostdata['dog1']): chance = 6
 
         win, cought = [], False
         

@@ -478,12 +478,12 @@ class Farm(commands.Cog):
         client = self.client
         useracc = userutils.User.get_user(userdata, client)
 
-        FISH_AMOUNT_TYPES = ('none', 'low', 'medium', 'high')
-        FISH_AMOUNTS = {'low': 5, 'medium': 10, 'high': 20}
-
         if useracc.level < 17:
             embed = emb.errorembed("\ud83c\udfa3Fishing unlocks from experience level 17.", ctx)
             return await ctx.send(embed=embed)
+
+        FISH_AMOUNT_TYPES = ('none', 'low', 'medium', 'high')
+        FISH_AMOUNTS = {'low': 5, 'medium': 10, 'high': 20}
 
         fish = client.specialitems[600] # ID 600 -> Fish item
 
