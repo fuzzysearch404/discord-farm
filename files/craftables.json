@@ -185,5 +185,16 @@
         "img":"https://failiem.lv/thumb_show.php?i=amjaatdz",
         "craftedfrom":[{"102":250}, {"112":35}, {"113":120}],
         "time":12813
+    },
+    "718" : {
+        "id":718,
+        "emoji":"\ud83c\udf65",
+        "name":"fish cake",
+        "rarity":2,
+        "amount":1,
+        "level":17,
+        "img":"https://failiem.lv/thumb_show.php?i=r3gbrw25",
+        "craftedfrom":[{"600":40}],
+        "time":900
     }
 }
