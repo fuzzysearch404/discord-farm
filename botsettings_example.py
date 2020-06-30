@@ -1,4 +1,4 @@
-version="1.1.5. beta"
+version="1.2.0. beta"
 activity_status = '%help'
 
 maintenance_mode=True
