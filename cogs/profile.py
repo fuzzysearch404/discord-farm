@@ -110,7 +110,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         embed.add_field(
             name='\ud83e\udd1dServer trades',
             value=(
-                f"Used trading cap.: {used_trade_slots}/{useracc.storeslots}\n"
+                f"Active trades: {used_trade_slots}/{useracc.storeslots}\n"
                 f'`%trades {member}`'
             )
         )

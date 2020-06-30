@@ -76,7 +76,7 @@ class Trades(commands.Cog, name="Trading"):
 
         try:
             p = Pages(ctx, entries=information, per_page=7, show_entry_count=False)
-            p.embed.title = f"\ud83d\udecd{ctx.guild}'s active trades"
+            p.embed.title = f"\ud83e\udd1d{ctx.guild} server's active trades"
             p.embed.color = 7995937
             await p.paginate()
         except Exception as e:
@@ -138,7 +138,7 @@ class Trades(commands.Cog, name="Trading"):
 
         try:
             p = Pages(ctx, entries=information, per_page=15, show_entry_count=False)
-            p.embed.title = f"\ud83c\udfea{member}'s store"
+            p.embed.title = f"\ud83e\udd1d{member}'s trades"
             p.embed.color = 7995937
             await p.paginate()
         except Exception as e:
