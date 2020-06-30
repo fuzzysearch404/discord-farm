@@ -174,6 +174,23 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
         await ctx.send(embed=embed)
 
+    @commands.command(aliases=['bal', 'gold', 'gems', 'money'])
+    @checks.avoid_maintenance()
+    async def balance(self, ctx):
+        """
+        \ud83d\udcb0 Check your gold and gem amounts.
+        
+        For more detailed information about your profile,
+        check out command `%profile`.
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+        client = self.client
+        
+        await ctx.send(
+            f"{client.gold} **Gold:** {userdata['money']} {client.gem} **Gems:** {userdata['gems']}"
+        )
+
     @commands.command(aliases=['daily'])
     @checks.embed_perms()
     @checks.user_cooldown(82800)
@@ -182,7 +199,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         """
         \ud83c\udfb0 Get some items for free every day.
         
-        Possible rewards: All items, gold, gems.
+        Possible rewards: Various items, gold, gems.
         """
         userdata = await checks.check_account_data(ctx)
         if not userdata: return
@@ -193,12 +210,12 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         if mode == 1:
             await useracc.give_gems(1)
 
-            embed = emb.congratzembed(f"You won 1{client.gem}!", ctx)
+            embed = emb.congratzembed(f"Here is your daily bonus: 1{client.gem}!", ctx)
         elif mode <= 10:
             moneywon = randint(1, useracc.level * 100)
             await useracc.give_money(moneywon)
 
-            embed = emb.congratzembed(f"You won {moneywon}{client.gold}!", ctx)
+            embed = emb.congratzembed(f"Here is your daily bonus: {moneywon}{client.gold}!", ctx)
         else:
             suitableitems = useracc.find_all_items_unlocked()
 
@@ -211,7 +228,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             await useracc.add_item_to_inventory(item, amount)
 
             embed = emb.congratzembed(
-                f"You won {amount}x {item.emoji}{item.name.capitalize()}!",
+                f"Here is your daily bonus: {amount}x {item.emoji}{item.name.capitalize()}!",
                 ctx
             )
         await ctx.send(embed=embed)
