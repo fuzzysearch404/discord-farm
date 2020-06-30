@@ -219,7 +219,7 @@ class Farm(commands.Cog):
             async with connection.transaction():
                 query = """UPDATE planted
                 SET ends = $1, dies = $2, iterations = $3,
-                amount = $4, robbed=false WHERE id = $5;"""
+                amount = $4, robbedfields=0 WHERE id = $5;"""
             await client.db.execute(query, ends, dies, data['iterations'] - 1, child.amount * data['fieldsused'], id)
 
     @commands.command(aliases=['h'])

@@ -10,6 +10,7 @@ from utils.convertors import MemberID
 from classes import user as userutils
 from classes.boost import boostvalid
 
+
 class Looting(commands.Cog):
     """
     Do you see someone having quite a lot good stuff in their farm?
@@ -52,60 +53,74 @@ class Looting(commands.Cog):
 
         query = """SELECT * FROM planted
         WHERE ends < $1 AND dies > $1
-        AND NOT robbed AND userid = $2;"""
+        AND robbedfields < fieldsused AND userid = $2;"""
 
-        field = await client.db.fetch(query, datetime.now(), targetacc.userid)
-        if not field:
+        fielddata = await client.db.fetch(query, datetime.now(), targetacc.userid)
+        if not fielddata:
             embed = emb.errorembed(
-                "This player has nothing to loot or is already fully robbed.",
+                "This player has nothing to loot currently, or is already robbed too much.",
                 ctx
             )
             return await ctx.send(embed=embed)
 
         boostdata = await targetacc.get_boosts()
 
-        chance = False
+        dog_chance = False
         if boostdata:
             if boostvalid(boostdata['dog3']):
-                embed = emb.errorembed("This farm is being guarded by a HUGE dog!", ctx)
+                embed = emb.errorembed("This farm is being guarded by a HUGE dog, and it can't be robbed!", ctx)
                 return await ctx.send(embed=embed)
-            elif boostvalid(boostdata['dog2']): chance = 3
-            elif boostvalid(boostdata['dog1']): chance = 6
+            elif boostvalid(boostdata['dog2']): dog_chance = 4
+            elif boostvalid(boostdata['dog1']): dog_chance = 8
 
-        win, cought = [], False
-        
+        field, cought, field_volume = [], False, 0
+
+        for data in fielddata:
+            for _ in range(data['fieldsused'] - data['robbedfields']):
+                field.append(data)
+
+        won, wonitems = {}, {}
+
         for _ in range(len(field)):
             data = choice(field)
             field.remove(data)
-            if chance:
-                if randint(1, chance) == 1:
+            if dog_chance:
+                if randint(1, dog_chance) == 1:
                     cought = True
                     break
                 else:
-                    win.append(data)
-            else:
-                win.append(data)
-
-        wonitems = {}
-        async with self.client.db.acquire() as connection:
-            async with connection.transaction():
-                for item in win:
-                    cnt = item['amount']
-                    amount = cnt - int(cnt * 0.2)
-                    if amount == cnt: amount -= 1
-                    
-                    witem = client.allitems[item['itemid']]
-                    if witem.type != 'crop':
-                        witem = witem.expandsto
-
                     try:
-                        wonitems[witem] += cnt - amount
+                        won[data] += 1
                     except KeyError:
-                        wonitems[witem] = cnt - amount
+                        won[data] = 1
+            else:
+                try:
+                    won[data] += 1
+                except KeyError:
+                    won[data] = 1
 
-                    query = """UPDATE planted SET amount = $1,
-                    robbed = TRUE WHERE id = $2"""
-                    await client.db.execute(query, amount, item['id'])
+        if won:
+            async with self.client.db.acquire() as connection:
+                async with connection.transaction():
+                    for robitem, robfields in won.items():
+                        witem = client.allitems[robitem['itemid']]
+                        if witem.type != 'crop':
+                            witem = witem.expandsto
+
+                        item_amount_on_field = robitem['amount']
+                        amount_per_field = int(item_amount_on_field / robitem['fieldsused'])
+                        robbed_per_field = int(witem.amount * 0.2) or 1
+                        cnt = robbed_per_field * robfields
+                        amount = item_amount_on_field - cnt
+
+                        try:
+                            wonitems[witem] += cnt
+                        except KeyError:
+                            wonitems[witem] = cnt
+
+                        query = """UPDATE planted SET amount = $1,
+                        robbedfields = robbedfields + $2 WHERE id = $3"""
+                        await client.db.execute(query, amount, robfields, robitem['id'])
 
         information = ''
         for item, amnt in wonitems.items():
@@ -114,19 +129,19 @@ class Looting(commands.Cog):
         
         if targetacc.notifications and len(information) > 0:
             try:
-                embed = emb.errorembed(f"{ctx.author} robbed your farm: {information}", ctx, pm=True)
+                embed = emb.errorembed(f"{ctx.author} managed to rob items from your farm: {information}", ctx, pm=True)
                 await member.send(embed=embed)
             except HTTPException:
                 pass
 
-        if cought and not len(win) > 0:
-            embed = emb.errorembed("You got cought by the dog! :(", ctx)
+        if cought and not len(wonitems) > 0:
+            embed = emb.errorembed("You've got cought by the dog! :(", ctx)
             return await ctx.send(embed=embed)
         elif cought:
-            embed = emb.confirmembed(f"You got cought by the dog, but you managed to grab: {information}", ctx)
+            embed = emb.confirmembed(f"You've got cought by the dog, but you somehow managed to grab: {information}", ctx)
             return await ctx.send(embed=embed)
         else:
-            embed = emb.congratzembed(f"You got a bit from everyhing: {information}", ctx)
+            embed = emb.congratzembed(f"You've got a bit from everyhing: {information}", ctx)
             return await ctx.send(embed=embed)
 
 
