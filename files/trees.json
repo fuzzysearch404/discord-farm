@@ -42,5 +42,38 @@
         "grows":3600,
         "amount":5,
         "gold_cost":2000
+    },
+    "205" : {
+        "id":205,
+        "expandsto":305,
+        "level":19,
+        "emoji":"\ud83e\udd51",
+        "name":"avocado tree",
+        "rarity":2,
+        "grows":1800,
+        "amount":4,
+        "gold_cost":2500
+    },
+    "206" : {
+        "id":206,
+        "expandsto":306,
+        "level":20,
+        "emoji":"\ud83c\udf4b",
+        "name":"lemon tree",
+        "rarity":2,
+        "grows":8640,
+        "amount":3,
+        "gold_cost":3000
+    },
+    "207" : {
+        "id":207,
+        "expandsto":307,
+        "level":22,
+        "emoji":"\ud83c\udf4c",
+        "name":"banana tree",
+        "rarity":2,
+        "grows":14400,
+        "amount":2,
+        "gold_cost":4000
     }
 }

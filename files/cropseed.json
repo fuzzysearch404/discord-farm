@@ -128,5 +128,15 @@
         "rarity":2,
         "grows":43200,
         "gold_cost":3000
+    },
+    "14": {
+        "id":14,
+        "expandsto":114,
+        "level":18,
+        "emoji":"\ud83c\udf3e",
+        "name":"rice seeds",
+        "rarity":2,
+        "grows":11700,
+        "gold_cost":2500
     }
 }

@@ -126,8 +126,8 @@
         "name":"roses",
         "rarity":1,
         "amount":25,
-        "minprice":33,
-        "maxprice":54,
+        "minprice":30,
+        "maxprice":53,
         "level":14,
         "img":"https://failiem.lv/thumb_show.php?i=zvv8kt5f"
     },
@@ -154,5 +154,17 @@
         "maxprice":60,
         "level":16,
         "img":"https://failiem.lv/thumb_show.php?i=m8ygtf64"
+    },
+    "114": {
+        "id":114,
+        "madefrom":14,
+        "emoji":"\ud83c\udf3e",
+        "name":"rice",
+        "rarity":1,
+        "amount":26,
+        "minprice":89,
+        "maxprice":108,
+        "level":18,
+        "img":"https://failiem.lv/thumb_show.php?i=6h5sy93e"
     }
 }

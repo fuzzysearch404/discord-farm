@@ -196,5 +196,60 @@
         "img":"https://failiem.lv/thumb_show.php?i=r3gbrw25",
         "craftedfrom":[{"600":40}],
         "time":900
+    },
+    "719" : {
+        "id":719,
+        "emoji":"\ud83c\udf58",
+        "name":"rice crackers",
+        "rarity":2,
+        "amount":1,
+        "level":18,
+        "img":"https://failiem.lv/thumb_show.php?i=5sh7w3r7",
+        "craftedfrom":[{"114":75}],
+        "time":1710
+    },
+    "720" : {
+        "id":720,
+        "emoji":"\ud83c\udf63",
+        "name":"sushi",
+        "rarity":3,
+        "amount":1,
+        "level":19,
+        "img":"https://failiem.lv/thumb_show.php?i=mz4jkv47",
+        "craftedfrom":[{"114":60}, {"305":92}, {"600":20}],
+        "time":7500
+    },
+    "721" : {
+        "id":721,
+        "emoji":"\ud83e\udd64",
+        "name":"lemonade",
+        "rarity":2,
+        "amount":1,
+        "level":20,
+        "img":"https://failiem.lv/thumb_show.php?i=tprdkvt3",
+        "craftedfrom":[{"306":120}],
+        "time":3600
+    },
+    "722" : {
+        "id":722,
+        "emoji":"\ud83e\udd67",
+        "name":"honey pie",
+        "rarity":2,
+        "amount":1,
+        "level":21,
+        "img":"https://failiem.lv/thumb_show.php?i=6efp5rek",
+        "craftedfrom":[{"501":40}, {"503":20}],
+        "time":3600
+    },
+    "723" : {
+        "id":723,
+        "emoji":"\ud83c\udf6e",
+        "name":"summer pudding",
+        "rarity":3,
+        "amount":1,
+        "level":22,
+        "img":"https://failiem.lv/thumb_show.php?i=qm7bzd23",
+        "craftedfrom":[{"108":75}, {"307":110}],
+        "time":12000
     }
 }

@@ -8,7 +8,7 @@
         "madefrom":401,
         "amount":3,
         "minprice":9,
-        "maxprice":13
+        "maxprice":16
     },
     "502" : {
         "id":502,
@@ -20,5 +20,16 @@
         "amount":5,
         "minprice":6,
         "maxprice":10
+    },
+    "503" : {
+        "id":503,
+        "level":21,
+        "emoji":"\ud83c\udf6f",
+        "name":"honey",
+        "rarity":2,
+        "madefrom":403,
+        "amount":4,
+        "minprice":150,
+        "maxprice":235
     }
 }

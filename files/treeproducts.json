@@ -46,5 +46,41 @@
         "maxprice":22,
         "level":12,
         "img":"https://failiem.lv/thumb_show.php?i=pftbuxn4"
+    },
+    "305": {
+        "id":305,
+        "madefrom":205,
+        "emoji":"\ud83e\udd51",
+        "name":"avocados",
+        "rarity":1,
+        "amount":16,
+        "minprice":30,
+        "maxprice":44,
+        "level":19,
+        "img":"https://failiem.lv/thumb_show.php?i=8ea6w37n"
+    },
+    "306": {
+        "id":306,
+        "madefrom":206,
+        "emoji":"\ud83c\udf4b",
+        "name":"lemons",
+        "rarity":1,
+        "amount":34,
+        "minprice":25,
+        "maxprice":36,
+        "level":20,
+        "img":"https://failiem.lv/thumb_show.php?i=eb9mjrme"
+    },
+    "307": {
+        "id":307,
+        "madefrom":207,
+        "emoji":"\ud83c\udf4c",
+        "name":"bananas",
+        "rarity":1,
+        "amount":36,
+        "minprice":49,
+        "maxprice":64,
+        "level":22,
+        "img":"https://failiem.lv/thumb_show.php?i=rn2metwf"
     }
 }
