@@ -67,24 +67,24 @@ class Mission:
     @staticmethod
     def calcamount(level, item):
         if level < 3: 
-            if item.rarity == 1: return randint(8, 20)
+            if item.rarity == 1: return randint(6, 20)
             else: return 1
         elif level < 10:
-            if item.rarity == 1: return randint(10, 60)
+            if item.rarity == 1: return randint(10, 50)
             elif item.rarity == 2: return randint(1, 2)
             else: return 1
         elif level < 20:
-            if item.rarity == 1: return randint(20, 120)
+            if item.rarity == 1: return randint(15, 80)
+            elif item.rarity == 2: return randint(1, 2)
+            else: return 1
+        elif level < 30:
+            if item.rarity == 1: return randint(20, 140)
             elif item.rarity == 2: return randint(1, 3)
             else: return randint(1, 2)
-        elif level < 30:
-            if item.rarity == 1: return randint(30, 240)
+        else:
+            if item.rarity == 1: return randint(25, 200)
             elif item.rarity == 2: return randint(1, 4)
             else: return randint(1, 2)
-        else:
-            if item.rarity == 1: return randint(40, 360)
-            elif item.rarity == 2: return randint(1, 5)
-            else: return randint(1, 3)
 
     @staticmethod
     def calcreward(items, boosted):
