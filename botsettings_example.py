@@ -26,8 +26,7 @@ initial_extensions = (
     'cogs.trades',
     'cogs.looting',
     'cogs.registration',
-    'cogs.usercontrol',
-    'cogs.stats'
+    'cogs.usercontrol'
 )
 
 gold_emoji='<:gold:722116061780246528>'
