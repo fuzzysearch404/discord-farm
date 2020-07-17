@@ -42,7 +42,7 @@ class HelpPaginator(Pages):
         self.embed.set_footer(text=f'Use "{self.prefix}help command" for more info on a command.')
 
         for entry in entries:
-            signature = f'{entry.qualified_name} {entry.signature}'
+            signature = f'%{entry.qualified_name} {entry.signature}'
             self.embed.add_field(name=signature, value=entry.short_doc or "No help given", inline=False)
 
         if self.maximum_pages:
