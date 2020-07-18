@@ -83,7 +83,7 @@ class Farm(commands.Cog):
         Displays item quantities, statuses and grow timers.
 
         Additional parameters:
-        `member` - some user in your server. (username, username#1234, user's ID)
+        `member` - some user in your server. (tagged user or user's ID)
         """
         userdata = await checks.check_account_data(ctx, lurk=member)
         if not userdata: return

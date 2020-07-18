@@ -73,7 +73,8 @@ CREATE TABLE IF NOT EXISTS public.store(
 	userid bigint NOT NULL,
 	itemid smallint NOT NULL,
 	amount integer NOT NULL,
-	price integer NOT NULL
+	price integer NOT NULL,
+    username text NOT NULL
 );
 
 ALTER TABLE ONLY public.store

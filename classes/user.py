@@ -85,10 +85,11 @@ class User:
         
         return data['sum'] or 0
 
-    async def get_used_store_slot_count(self):
+    async def get_used_store_slot_count(self, guild):
         """Fetches the count of used store slots (trades)"""
-        query = """SELECT count(id) FROM store WHERE userid = $1;"""
-        slots = await self.client.db.fetchrow(query, self.userid)
+        query = """SELECT count(id) FROM store WHERE userid = $1
+        AND guildid = $2;"""
+        slots = await self.client.db.fetchrow(query, self.userid, guild.id)
         if not slots: return 0
         
         return slots[0]

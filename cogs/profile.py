@@ -31,7 +31,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         Useful command for your overall progress tracking.
         
         Additional parameters:
-        `member` - some user in your server. (username, username#1234, user's ID)
+        `member` - some user in your server. (tagged user or user's ID)
         """
         userdata = await checks.check_account_data(ctx, lurk=member)
         if not userdata: return
@@ -57,7 +57,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         embed.add_field(
             name='\ud83d\udd12Warehouse',
             value=f"\u25aa{inventory} inventory items"
-            f"\n\u2139`%inventory {member}`"
+            f"\n\u2139`%inventory` {member.mention}"
         )
         
         query = """SELECT ends, (SELECT SUM(fieldsused) FROM planted WHERE userid = $1) 
@@ -79,7 +79,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             name='\ud83c\udf31Farm',
             value=f"{client.tile}{freetiles}/{useracc.tiles} free tiles"
             f"\n\u23f0Next harvest: {nearestharvest}"
-            f"\n\u2139`%farm {member}`"
+            f"\n\u2139`%farm` {member.mention}"
         )
 
         if useracc.level > 2:
@@ -97,11 +97,14 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             factorytext = f"\ud83d\udce6Max. production cap.: {useracc.factoryslots}"
             factorytext += f"\n\ud83d\udc68\u200d\ud83c\udfedWorkers: {useracc.factorylevel}/10"
             factorytext += f"\n\u23f0Next production: {nearestprod}"
-            factorytext += f"\n\u2139`%factory {member}`"
+            factorytext += f"\n\u2139`%factory` {member.mention}"
         else:
             factorytext = "Unlocks at level 3."
 
-        used_trade_slots = await useracc.get_used_store_slot_count()
+        if ctx.guild:
+            used_trade_slots = await useracc.get_used_store_slot_count(ctx.guild)
+        else:
+            used_trade_slots = 0
 
         embed.add_field(
             name='\ud83c\udfedFactory',
@@ -111,12 +114,12 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             name='\ud83e\udd1dServer trades',
             value=(
                 f"Active trades: {used_trade_slots}/{useracc.storeslots}\n"
-                f'`%trades {member}`'
+                f'`%trades` {member.mention}'
             )
         )
         embed.add_field(
             name='\u2b06Boosters',
-            value=f'`%boosts {member}`'
+            value=f'`%boosts` {member.mention}'
         )
         embed.add_field(
             name='\ud83d\ude9cAlliance',
@@ -137,7 +140,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         Boosters speed up your overall game progression in various ways.
 
         Additional parameters:
-        `member` - some user in your server. (username, username#1234, user's ID)
+        `member` - some user in your server. (tagged user or user's ID)
         """
         userdata = await checks.check_account_data(ctx, lurk=member)
         if not userdata: return
@@ -244,7 +247,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         Useful to see what items you or someone else owns in their warehouse.
 
         Additional parameters:
-        `member` - some user in your server. (username, username#1234, user's ID)
+        `member` - some user in your server. (tagged user or user's ID)
         """
         userdata = await checks.check_account_data(ctx, lurk=member)
         if not userdata: return

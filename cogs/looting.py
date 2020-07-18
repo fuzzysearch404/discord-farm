@@ -36,7 +36,7 @@ class Looting(commands.Cog):
         You can't loot rotten items. 
 
         Parameters:
-        `member` - some user in your server. (username, username#1234, user's ID)
+        `member` - some user in your server. (tagged user or user's ID)
         """
         userdata = await checks.check_account_data(ctx)
         if not userdata: return

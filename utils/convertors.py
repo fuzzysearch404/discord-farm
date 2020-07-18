@@ -2,17 +2,6 @@ from discord.ext import commands
 import discord
 
 
-class MessageID(commands.Converter):
-    async def convert(self, ctx, argument):
-        try:
-            m = await commands.MessageConverter().convert(ctx, argument)
-        except commands.BadArgument:
-            embed = discord.Embed(colour=16716085, description="\N{CROSS MARK} Invalid message object")
-            await ctx.send(embed=embed)
-            raise commands.BadArgument(f"{argument} is not a valid message or message ID.") from None
-        return m
-
-
 class MemberNotFound(Exception):
     pass
 

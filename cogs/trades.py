@@ -42,7 +42,6 @@ class Trades(commands.Cog, name="Trading"):
         useracc = userutils.User.get_user(userdata, client)
 
         information = []
-        users = {}
 
         storedata = await useracc.get_guild_store(ctx.guild)
         if not storedata:
@@ -53,26 +52,16 @@ class Trades(commands.Cog, name="Trading"):
             return await ctx.send(embed=embed)
 
         for data in storedata:
-            user = ctx.guild.get_member(data['userid'])
-            if not user:
-                continue
-
             try:
-                users[user].append(client.allitems[data['itemid']])
+                item = client.allitems[data['itemid']]
             except KeyError:
-                users[user] = [client.allitems[data['itemid']]]
+                raise Exception(f"Could not find item {data['itemid']}")
 
-        for user, items in users.items():
-            string, count = '', 0
-            for i in items:
-                if count < 5:
-                    count += 1
-                    string += i.emoji
-                else:
-                    string += f'+{len(items) - 5}'
-                    break
-
-            information.append(f"\ud83c\udfea `%trades {user}`\n" + string + '\n')
+            information.append((
+                f"\ud83d\udc68\u200d\ud83c\udf3e**{data['username']}**\n"
+                f"\ud83d\udccb**Selling {data['amount']}x {item.emoji}{item.name.capitalize()} "
+                f"for {data['price']}**{client.gold}\n\ud83e\udd1dAccept trade - `%trade {data['id']}`\n"
+            ))
 
         try:
             p = Pages(ctx, entries=information, per_page=7, show_entry_count=False)
@@ -91,7 +80,7 @@ class Trades(commands.Cog, name="Trading"):
         \ud83e\udd1d Lists your or someone's currently active trades.
 
         Additional parameters:
-        `member` - some user in your server. (username, username#1234, user's ID)
+        `member` - some user in your server. (tagged user or user's ID)
         """
         userdata = await checks.check_account_data(ctx, lurk=member)
         if not userdata: return
@@ -150,7 +139,7 @@ class Trades(commands.Cog, name="Trading"):
     @checks.avoid_maintenance()
     async def trade(self, ctx, id: int):
         """
-        \ud83e\udd1d Accept trade offer.
+        \ud83e\udd1d Accept player's trade offer.
 
         Parameters:
         `id` - ID of the trade you want to accept.
@@ -407,7 +396,7 @@ class Trades(commands.Cog, name="Trading"):
                 return await sellinfomessage.clear_reactions()
             else: return
 
-        usedslots = await useracc.get_used_store_slot_count()
+        usedslots = await useracc.get_used_store_slot_count(ctx.guild)
 
         if usedslots >= useracc.storeslots:
             embed = emb.errorembed(
@@ -437,10 +426,10 @@ class Trades(commands.Cog, name="Trading"):
 
         async with self.client.db.acquire() as connection:
             async with connection.transaction():
-                query = """INSERT INTO store(guildid, userid, itemid, amount, price)
-                VALUES ($1, $2, $3, $4, $5);"""
+                query = """INSERT INTO store(guildid, userid, itemid, amount, price, username)
+                VALUES ($1, $2, $3, $4, $5, $6);"""
                 await client.db.execute(
-                    query, ctx.guild.id, useracc.userid, item.id, amount, price
+                    query, ctx.guild.id, useracc.userid, item.id, amount, price, str(ctx.author)
                 )
 
         embed = emb.confirmembed(

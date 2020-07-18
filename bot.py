@@ -23,7 +23,12 @@ class BotClient(commands.AutoShardedBot):
         self.cluster_name = kwargs.pop('cluster_name')
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        super().__init__(command_prefix=commands.when_mentioned_or('%'), **kwargs, loop=loop)
+        super().__init__(
+            fetch_offline_members=False,
+            guild_subscriptions=False,
+            command_prefix=commands.when_mentioned_or('%'), 
+            **kwargs, loop=loop
+        )
         self.websocket = None
         self._last_result = None
         self.ws_task = None
