@@ -44,7 +44,12 @@ class Information(commands.Cog, name="Very Informative"):
         """
         \u2764\ufe0f If you are really kind and really enjoy this game.
         """
-        await ctx.send("Any donations are appreciated <3\n https://www.paypal.me/fuzzysearch")
+        await ctx.send(
+            "Hello, my name is fuzzyseach, and I do bots as a free time hobby. \ud83e\udd13\n"
+            "Managing a bot is not an easy task, and it costs time and money. "
+            "Any donations are appreciated, they motivate and support me, to make this bot even better. <3"
+            "\nhttps://www.paypal.me/fuzzysearch"
+        )
 
     @commands.command()
     async def about(self, ctx):

@@ -1,3 +1,4 @@
+import aiohttp
 import discord
 import asyncio
 import logging
@@ -115,6 +116,19 @@ class BotClient(commands.AutoShardedBot):
 
         return self.guard_mode
 
+    async def send_log(self, content, embed=None):
+        """Sends message to support server's log channel."""
+        async with aiohttp.ClientSession() as session:
+            webhook = discord.Webhook.from_url(
+                self.config.bot_log_webhook,
+                adapter=discord.AsyncWebhookAdapter(session)
+            )
+            await webhook.send(
+                f"**[{self.cluster_name}]** " + content,
+                embed=embed,
+                username=self.user.name
+            )
+
     async def on_ready(self):
         self.log.info(f'[Cluster#{self.cluster_name}] Ready called.')
         if self.pipe:
@@ -123,6 +137,15 @@ class BotClient(commands.AutoShardedBot):
 
         if not hasattr(self, 'launchtime'):
             self.launchtime = datetime.now()
+
+        await self.send_log(
+            f'\ud83d\udfe2 Ready! Maintenance mode: `{self.maintenance_mode}` '
+            f'DB: `{self.db != None}` Redis: `{self.redis != None}` '
+            f'Shards: `{self.shard_ids}` Total guilds: `{len(self.guilds)}`'
+        )
+
+    async def on_resumed(self):
+        await self.send_log(f'\ud83d\udfe1 Resumed session...')
 
     async def on_shard_ready(self, shard_id):
         self.log.info(f'[Cluster#{self.cluster_name}] Shard {shard_id} ready')
@@ -194,11 +217,21 @@ class BotClient(commands.AutoShardedBot):
         if channels:
             await channels[0].send(message)
 
+        await self.send_log(
+            f'\ud83d\udce5 Joined guild: {guild.name} (`{guild.id}`) Large:`{guild.large}` '
+            f'Total guilds: `{len(self.guilds)}`'
+        )
+
     async def on_guild_remove(self, guild):
         async with self.db.acquire() as connection:
             async with connection.transaction():
                 query = """DELETE FROM store WHERE guildid = $1;"""
                 await self.db.execute(query, guild.id)
+
+        await self.send_log(
+            f'\ud83d\udce4 Left guild: {guild.name} (`{guild.id}`) Large:`{guild.large}`'
+            f'Total guilds: `{len(self.guilds)}`'
+        )
 
     def cleanup_code(self, content):
         """Automatically removes code blocks from the code."""
@@ -282,14 +315,20 @@ class BotClient(commands.AutoShardedBot):
                 elif content.lower() == 'off':
                     self.maintenance_mode = False
                     ret = {'response': '\u2705'}
+
+                await self.send_log(f"\u2699\ufe0f Maintenance mode: `{self.maintenance_mode}`")
             elif cmd == 'guard':
                 self.log.info(f"received command [guard] ({data['content']})")
                 data = self.enable_field_guard(int(data['content']))
                 ret = {'response': str(data)}
+
+                await self.send_log(f"\ud83d\udee1\ufe0f Guard mode enabled: `{data}`")
             elif cmd == 'reloaditems':
                 self.log.info(f"received command [reloaditems]")
                 self.loaditems()
                 ret = {'response': '\u2705'}
+
+                await self.send_log(f"\ud83d\udd04 Items reloaded")
             elif cmd == 'reload':
                 self.log.info(f"received command [reload] ({data['content']})")
                 try:

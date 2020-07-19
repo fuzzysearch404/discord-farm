@@ -1,4 +1,4 @@
-version="1.2.2. beta"
+version="1.2.3. beta"
 activity_status = '%help'
 
 maintenance_mode=True
@@ -6,6 +6,7 @@ maintenance_mode=True
 owner_ids=[123]
 
 bot_auth_token="token"
+bot_log_webhook="https://canary.discordapp.com/api/webhooks/a/b"
 
 database_credentials = {
 	"user": "discordfarm",

@@ -47,7 +47,7 @@ class Usercontrol(commands.Cog, name="User Control", command_attrs={'hidden': Tr
         \u2699\ufe0f Enable farm guard mode.
 
         Parameters:
-        `seconds` - some user in your server. (username, username#1234, user's ID)
+        `seconds` - how long the guard mode will last.
         """
         await self.send_eval("guard", seconds, ctx)
 
