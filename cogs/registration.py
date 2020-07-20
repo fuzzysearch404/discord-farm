@@ -42,7 +42,7 @@ class HelpPaginator(Pages):
         self.embed.set_footer(text=f'Use "{self.prefix}help command" for more info on a command.')
 
         for entry in entries:
-            signature = f'%{entry.qualified_name} {entry.signature}'
+            signature = f'{self.prefix}{entry.qualified_name} {entry.signature}'
             self.embed.add_field(name=signature, value=entry.short_doc or "No help given", inline=False)
 
         if self.maximum_pages:
@@ -103,8 +103,24 @@ class PaginatedHelpCommand(commands.HelpCommand):
             command_attrs={
             'help': 'Shows help about the bot, a command, or a category',
             'aliases': ['commands', 'cmd', 'cmds', 'helpme'],
-            'checks': [checks.reaction_perms(), checks.embed_perms(), checks.message_history_perms()]
+            'checks': [self.help_command_checks]
         })
+
+    async def help_command_checks(self, ctx):
+        """Since we cant use commands.checks, we have to create custom predicate function."""
+        if ctx.guild is not None:
+            permissions = ctx.channel.permissions_for(ctx.guild.me)
+        else:
+            permissions = ctx.channel.permissions_for(ctx.bot.user)
+
+        if not permissions.embed_links:
+            raise checks.MissingEmbedPermissions('Bot does not have embed links permission.')
+        if not permissions.add_reactions:
+            raise checks.MissingAddReactionPermissions('Bot does not have add reactions permission.')
+        if not permissions.read_message_history:
+            raise checks.MissingReadMessageHistoryPermissions('Bot does not have read message history permission.')
+        
+        return True
 
     async def on_help_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError):
@@ -191,6 +207,9 @@ class Registration(commands.Cog, name="Your Game Account"):
     def __init__(self, client):
         self.client = client
         client.help_command = PaginatedHelpCommand()
+
+    def cog_unload(self):
+        self.client.help_command = commands.DefaultHelpCommand()
 
     @commands.command(aliases=['start'])
     @checks.embed_perms()

@@ -61,23 +61,6 @@ class Pages:
         else:
             self.permissions = self.channel.permissions_for(ctx.bot.user)
 
-        if not self.permissions.embed_links:
-            raise CannotPaginate("\u274c Please enable **Embed Links** permission for "
-                "me in this channel's settings, to use this command!")
-
-        if not self.permissions.send_messages:
-            raise CannotPaginate('Bot cannot send messages.')
-
-        if self.paginating:
-            # verify we can actually use the pagination session
-            if not self.permissions.add_reactions:
-                raise CannotPaginate("\u274c Please enable **Add Reactions** permission for "
-                "me in this channel's settings, to use this command!")
-
-            if not self.permissions.read_message_history:
-                raise CannotPaginate("\u274c Please enable **Read Message History** permission for "
-                "me in this channel's settings, to use this command!")
-
     def get_page(self, page):
         base = (page - 1) * self.per_page
         return self.entries[base:base + self.per_page]
@@ -122,8 +105,8 @@ class Pages:
 
         self.message = await self.channel.send(content=content, embed=embed)
         for (reaction, _) in self.reaction_emojis:
-            if self.maximum_pages == 2 and reaction in ('\u23ed', '\u23ee'):
-                # no |<< or >>| buttons if we only have two pages
+            if self.maximum_pages < 6 and reaction in ('\u23ed', '\u23ee'):
+                # no |<< or >>| buttons if we only have less than six pages
                 # we can't forbid it if someone ends up using it but remove
                 # it from the default set
                 continue
@@ -153,35 +136,6 @@ class Pages:
     async def show_current_page(self):
         if self.paginating:
             await self.show_page(self.current_page)
-
-    async def numbered_page(self):
-        """allows to type the number of page to go to"""
-        to_delete = []
-        to_delete.append(await self.channel.send('Which page to open?'))
-
-        def message_check(m):
-            return m.author == self.author and \
-                   self.channel == m.channel and \
-                   m.content.isdigit()
-
-        try:
-            msg = await self.bot.wait_for('message', check=message_check, timeout=30.0)
-        except asyncio.TimeoutError:
-            to_delete.append(await self.channel.send('Too long'))
-            await asyncio.sleep(5)
-        else:
-            page = int(msg.content)
-            to_delete.append(msg)
-            if page != 0 and page <= self.maximum_pages:
-                await self.show_page(page)
-            else:
-                to_delete.append(await self.channel.send(f'Invalid page. ({page}/{self.maximum_pages})'))
-                await asyncio.sleep(5)
-
-        try:
-            await self.channel.delete_messages(to_delete)
-        except Exception:
-            pass
 
     async def show_help(self):
         """shows this message"""
@@ -237,14 +191,16 @@ class Pages:
             except asyncio.TimeoutError:
                 self.paginating = False
                 try:
-                    await self.message.clear_reactions()
+                    if self.permissions.manage_messages:
+                        await self.message.clear_reactions()
                 except:
                     pass
                 finally:
                     break
 
             try:
-                await self.message.remove_reaction(reaction, user)
+                if self.permissions.manage_messages:
+                    await self.message.remove_reaction(reaction, user)
             except:
                 pass # can't remove it so don't bother doing so
 

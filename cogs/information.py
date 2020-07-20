@@ -33,7 +33,7 @@ class Information(commands.Cog, name="Very Informative"):
         """
         await ctx.send('ponh!')
 
-    @commands.command()
+    @commands.command(aliases=['support'])
     async def invite(self, ctx):
         """
         \ud83d\udcf2 Would you like to invite bot to your own server? Sure, do it!
