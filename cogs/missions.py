@@ -1,6 +1,6 @@
 from asyncio import TimeoutError
 from discord.ext import commands
-from discord import Embed
+from discord import Embed, HTTPException
 from utils import embeds as emb
 from utils import time
 from utils import checks
@@ -68,7 +68,10 @@ class Missions(commands.Cog, name="Mission"):
                 f"You don't have enough: {required_items[:-2]}, to complete this mission!",
                 ctx
             )
-            return await ctx.send(embed=embed)
+            try:
+                return await ctx.reply_message.edit(embed=embed)
+            except HTTPException:
+                return
 
         for task in mission.requests:
             await useracc.remove_item_from_inventory(task[0], task[1])
@@ -86,7 +89,10 @@ class Missions(commands.Cog, name="Mission"):
             f"{mission.moneyaward}{client.gold} and {mission.xpaward}{client.xp}",
             ctx
         )
-        await ctx.send(embed=embed)
+        try:
+            await ctx.reply_message.edit(embed=embed)
+        except HTTPException:
+            pass
 
     @commands.command()
     @checks.user_cooldown(3600)
@@ -118,8 +124,9 @@ class Missions(commands.Cog, name="Mission"):
             'Quick! You only have 30 seconds to decide.'
         )
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
-        offermsg = await ctx.send(embed=embed)
-        await offermsg.add_reaction('\u2705')
+        reply_message = await ctx.send(embed=embed)
+        ctx.reply_message = reply_message # To pass it to outside function
+        await reply_message.add_reaction('\u2705')
 
         def check(reaction, user):
             return user == ctx.author and str(reaction.emoji) == '\u2705'
@@ -128,7 +135,7 @@ class Missions(commands.Cog, name="Mission"):
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
         except TimeoutError:
             if checks.can_clear_reactions(ctx):
-                return await offermsg.clear_reactions()
+                return await reply_message.clear_reactions()
             else: return
 
         if str(reaction.emoji) == '\u274c':
@@ -179,18 +186,19 @@ class Missions(commands.Cog, name="Mission"):
             embed.add_field(name=f'\ud83d\udcdd Order #{i}', value=requestdesign)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
 
-        message = await ctx.send(embed=embed)
+        reply_message = await ctx.send(embed=embed)
+        ctx.reply_message = reply_message # To pass it to outside function
         for j in range(i):
-            await message.add_reaction(f'{j+1}{emoji}')
+            await reply_message.add_reaction(f'{j+1}{emoji}')
 
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji).endswith(emoji) and reaction.message.id == message.id
+            return user == ctx.author and str(reaction.emoji).endswith(emoji) and reaction.message.id == reply_message.id
 
         try:
             reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
         except TimeoutError:
             if checks.can_clear_reactions(ctx):
-                return await message.clear_reactions()
+                return await reply_message.clear_reactions()
             else: return
 
         await self.finish_mission(

@@ -224,7 +224,10 @@ class Trades(commands.Cog, name="Trading"):
                 "You do not have enough gold to buy these items.",
                 ctx
             )
-            return await ctx.send(embed=embed)
+            try:
+                return await buyinfomessage.edit(embed=embed)
+            except HTTPException:
+                return
 
         tradedata = await tradeutils.get_trade(client, id, ctx.guild)
         if not tradedata:
@@ -232,7 +235,10 @@ class Trades(commands.Cog, name="Trading"):
                 'Oops! Somebody managed to buy these items before you.',
                 ctx
             )
-            return await ctx.send(embed=embed)
+            try:
+                return await buyinfomessage.edit(embed=embed)
+            except HTTPException:
+                return
 
         trader = ctx.guild.get_member(traderid)
         if not trader:
@@ -256,7 +262,10 @@ class Trades(commands.Cog, name="Trading"):
             f"You purchased {amount}x{item.emoji}{item.name.capitalize()} for {sum}{client.gold}",
             ctx
         )
-        await ctx.send(embed=embed)
+        try:
+            await buyinfomessage.edit(embed=embed)
+        except HTTPException:
+            pass
 
         if selfbuy: return
         
@@ -421,7 +430,10 @@ class Trades(commands.Cog, name="Trading"):
                 "`%upgrade trading` command.",
                 ctx
             )
-            return await ctx.send(embed=embed)
+            try:
+                return await sellinfomessage.edit(embed=embed)
+            except HTTPException:
+                return
 
         itemdata = await useracc.check_inventory_item(item)
         if not itemdata:
@@ -429,14 +441,20 @@ class Trades(commands.Cog, name="Trading"):
                 f"You do not have {item.emoji}{item.name.capitalize()} in you warehouse!",
                 ctx
             )
-            return await ctx.send(embed=embed)
+            try:
+                return await sellinfomessage.edit(embed=embed)
+            except HTTPException:
+                return
 
         if amount > itemdata['amount']:
             embed = emb.errorembed(
                 f"You only have {itemdata['amount']}x {item.emoji}{item.name.capitalize()}!",
                 ctx
             )
-            return await ctx.send(embed=embed)
+            try:
+                return await sellinfomessage.edit(embed=embed)
+            except HTTPException:
+                return
 
         await useracc.remove_item_from_inventory(item, amount)
 
@@ -453,7 +471,10 @@ class Trades(commands.Cog, name="Trading"):
             ctx
         )
         
-        await ctx.send(embed=embed)
+        try:
+            await sellinfomessage.edit(embed=embed)
+        except HTTPException:
+            pass
 
 
 def setup(client):
