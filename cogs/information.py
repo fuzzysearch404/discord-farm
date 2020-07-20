@@ -19,6 +19,8 @@ class Information(commands.Cog, name="Very Informative"):
     async def news(self, ctx):
         """
         \ud83d\udcf0 Get latest update and bot's status information.
+
+        For more information join official support server.
         """
         embed = Embed(title='\ud83d\udcf0 News', colour=15129855, description=self.client.news)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)

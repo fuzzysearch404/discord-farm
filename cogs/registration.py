@@ -193,7 +193,6 @@ class Registration(commands.Cog, name="Your Game Account"):
         client.help_command = PaginatedHelpCommand()
 
     @commands.command(aliases=['start'])
-    @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
     async def register(self, ctx):

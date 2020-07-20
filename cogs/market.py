@@ -70,7 +70,6 @@ class Market(commands.Cog):
             print(e)
 
     @commands.group()
-    @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
     async def market(self, ctx):
@@ -89,6 +88,7 @@ class Market(commands.Cog):
         await ctx.send(embed=embed)
 
     @market.command(aliases=['harvested', 'crops'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -104,6 +104,7 @@ class Market(commands.Cog):
         await self.market_pages(ctx, dict(sortedlist), "\ud83c\udf3dHarvest")
 
     @market.command(aliases=['animals'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -114,6 +115,7 @@ class Market(commands.Cog):
         await self.market_pages(ctx, self.client.animalproducts, "\ud83d\udc3dAnimal products")
 
     @market.command()
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -124,6 +126,7 @@ class Market(commands.Cog):
         await self.market_pages(ctx, self.client.crafteditems, "\ud83c\udf66Factory production")
 
     @market.command(aliases=['special'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -137,14 +140,18 @@ class Market(commands.Cog):
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
-    async def sell(self, ctx, *, search, amount: Optional[int] = 1):
+    async def sell(self, ctx, *, item_search, amount: Optional[int] = 1):
         """
         \u2696\ufe0f Sell your goods to the market.
 
         Parameters:
-        `search` - item to lookup for selling (item's name or ID).
+        `item_search` - item to lookup for selling (item's name or ID).
         Additional parameters:
         `amount` - specify how many items to sell.
+
+        Usage examples for selling 2 green salad items:
+        `%sell green salad 2` - by using item's name.
+        `%sell 701 2` - by using item's ID.
         """
         userdata = await checks.check_account_data(ctx)
         if not userdata: return
@@ -153,15 +160,15 @@ class Market(commands.Cog):
 
         customamount = False
         try:
-            possibleamount = search.rsplit(' ', 1)[1]
+            possibleamount = item_search.rsplit(' ', 1)[1]
             amount = int(possibleamount)
-            search = search.rsplit(' ', 1)[0]
+            item_search = item_search.rsplit(' ', 1)[0]
             if amount > 0 and amount < 2147483647:
                 customamount = True
         except Exception:
             pass
 
-        item = await finditem(client, ctx, search)
+        item = await finditem(client, ctx, item_search)
         if not item:
             return
 
@@ -218,7 +225,7 @@ class Market(commands.Cog):
                 entry = await client.wait_for('message', check=check, timeout=30.0)
             except asyncio.TimeoutError:
                 embed = emb.errorembed(
-                    f'Too long. {item.emoji} selling canceled.',
+                    f'Too long. {item.emoji}{item.name.capitalize()} selling canceled.',
                     ctx
                 )
                 await ctx.send(embed=embed)
@@ -226,20 +233,20 @@ class Market(commands.Cog):
             if not entry: return
 
             if entry.clean_content.lower() == 'x':
-                embed = emb.confirmembed(f'{item.emoji} selling canceled.', ctx)
+                embed = emb.confirmembed(f'Okey, {item.emoji}{item.name.capitalize()} selling canceled.', ctx)
                 return await ctx.send(embed=embed)
             
             try:
                 amount = int(entry.clean_content)
                 if amount < 1 or amount > 2147483647:
                     embed = emb.errorembed(
-                        f'Invalid amount. {item.emoji} selling to market canceled.',
+                        f'Invalid amount. {item.emoji}{item.name.capitalize()} selling to market canceled.',
                         ctx
                     )
                     return await ctx.send(embed=embed)
             except ValueError:
                 embed = emb.errorembed(
-                    f'Invalid amount. {item.emoji} selling to market canceled.',
+                    f'Invalid amount. {item.emoji}{item.name.capitalize()} selling to market canceled.',
                     ctx
                 )
                 return await ctx.send(embed=embed)

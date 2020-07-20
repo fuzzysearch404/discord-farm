@@ -72,6 +72,7 @@ class Farm(commands.Cog, name="Actual Farm"):
         return stype, status
 
     @commands.command(aliases=['field', 'f'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -242,7 +243,7 @@ class Farm(commands.Cog, name="Actual Farm"):
 
         fielddata = await useracc.get_field()
         if not fielddata:
-            embed = emb.errorembed("You are not growing anything", ctx)
+            embed = emb.errorembed("You are not growing anything.", ctx)
             embed.set_footer(text="Plant and grow items with the %plant command.")
             return await ctx.send(embed=embed)
 
@@ -377,14 +378,19 @@ class Farm(commands.Cog, name="Actual Farm"):
     @commands.command(aliases=['p', 'grow', 'g'])
     @checks.embed_perms()
     @checks.avoid_maintenance()
-    async def plant(self, ctx, *, search, amount: Optional[int] = 1):
+    async def plant(self, ctx, *, item_search, amount: Optional[int] = 1):
         """
         \ud83c\udf31 Plants seeds and trees, grows animals on your field.
 
         Parameters:
-        `search` - item to lookup for to plant/grow (item's name or ID).
+        `item_search` - item to lookup for to plant/grow (item's name or ID).
         Additional parameters:
         `amount` - specify how many items to plant/grow (the actual seeds, plants).
+
+        Usage examples for planting 2 lettuce seed items:
+        `%plant lettuce seeds 2` - by using item's name.
+        `%plant lettuce 2` - by using item's shorter name.
+        `%plant 1 2` - by using item's ID.
         """
         userdata = await checks.check_account_data(ctx)
         if not userdata: return
@@ -393,9 +399,9 @@ class Farm(commands.Cog, name="Actual Farm"):
 
         customamount = False
         try:
-            possibleamount = search.rsplit(' ', 1)[1]
+            possibleamount = item_search.rsplit(' ', 1)[1]
             amount = int(possibleamount)
-            search = search.rsplit(' ', 1)[0]
+            item_search = item_search.rsplit(' ', 1)[0]
             if amount > 0 and amount < 2147483647:
                 customamount = True
         except Exception:
@@ -420,7 +426,7 @@ class Farm(commands.Cog, name="Actual Farm"):
                 embed.set_footer(text="Harvest your field with the %harvest command")
                 return await ctx.send(embed=embed)
 
-        item = await finditem(client, ctx, search)
+        item = await finditem(client, ctx, item_search)
         if not item:
             return
 
@@ -444,7 +450,7 @@ class Farm(commands.Cog, name="Actual Farm"):
         if customamount:
             if inventorydata['amount'] < amount:
                 embed = emb.errorembed(
-                    f"You only have {inventorydata['amount']}x{item.emoji}{item.name.capitalize()} in your warehouse",
+                    f"You only have {inventorydata['amount']}x{item.emoji}{item.name.capitalize()} in your warehouse.",
                     ctx
                 )
                 return await ctx.send(embed=embed)
@@ -465,12 +471,15 @@ class Farm(commands.Cog, name="Actual Farm"):
             await self.plant_animal_or_tree(client, item, ctx, customamount, amount, useracc)
 
     @commands.command()
-    @checks.embed_perms()
     @checks.user_cooldown(3600)
+    @checks.embed_perms()
     @checks.avoid_maintenance()
     async def fish(self, ctx):
         """
         \ud83c\udfa3 [Unlocks from level 17] Go fishing!
+
+        You can catch random amount of fish items once per hour.
+        Sometimes your luck can be bad, and you might not get any fish.
         """
         userdata = await checks.check_account_data(ctx)
         if not userdata: return

@@ -16,6 +16,11 @@ class MissingAddReactionPermissions(commands.CheckFailure):
 
     pass
 
+class MissingReadMessageHistoryPermissions(commands.CheckFailure):
+    """Exception raised when bot cannot read message history."""
+
+    pass
+
 class GlobalCooldown(commands.CommandOnCooldown):
     """Exception raised when global cooldown is reache."""
     
@@ -97,6 +102,19 @@ def reaction_perms():
         if permissions.add_reactions:
             return True
         raise MissingAddReactionPermissions('Bot does not have add reactions permission.')
+
+    return commands.check(pred)
+
+def message_history_perms():
+    async def pred(ctx):
+        if ctx.guild is not None:
+            permissions = ctx.channel.permissions_for(ctx.guild.me)
+        else:
+            permissions = ctx.channel.permissions_for(ctx.bot.user)
+
+        if permissions.read_message_history:
+            return True
+        raise MissingAddReactionPermissions('Bot does not have read message history permission.')
 
     return commands.check(pred)
 

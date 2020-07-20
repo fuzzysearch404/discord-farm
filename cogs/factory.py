@@ -40,6 +40,7 @@ class Factory(commands.Cog):
         return stype, status
 
     @commands.command(aliases=['fa'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -101,17 +102,20 @@ class Factory(commands.Cog):
             print(e)
 
     @commands.command(aliases=['craft', 'produce'])
-    @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
-    async def make(self, ctx, *, search, amount: Optional[int] = 1):
+    async def make(self, ctx, *, item_search, amount: Optional[int] = 1):
         """
         \ud83d\udce6 Starts crafting an item or adds it to the production queue.
 
         Parameters:
-        `search` - item to lookup for to make. (item's name or ID).
+        `item_search` - item to lookup for to make. (item's name or ID).
         Additional parameters:
-        `amount` - specify how many items to make. 
+        `amount` - specify how many items to make.
+
+        Usage examples for crafting 2 green salad items:
+        `%make green salad 2` - by using item's name.
+        `%make 701 2` - by using item's ID.
         """
         userdata = await checks.check_account_data(ctx)
         if not userdata: return
@@ -122,9 +126,9 @@ class Factory(commands.Cog):
 
         customamount = False
         try:
-            possibleamount = search.rsplit(' ', 1)[1]
+            possibleamount = item_search.rsplit(' ', 1)[1]
             amount = int(possibleamount)
-            search = search.rsplit(' ', 1)[0]
+            item_search = item_search.rsplit(' ', 1)[0]
             if amount > 0 and amount < 2147483647:
                 customamount = True
         except Exception:
@@ -145,7 +149,7 @@ class Factory(commands.Cog):
                 )
                 return await ctx.send(embed=embed)
 
-        item = await finditem(client, ctx, search)
+        item = await finditem(client, ctx, item_search)
         if not item:
             return
 
@@ -234,7 +238,6 @@ class Factory(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['c'])
-    @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
     async def collect(self, ctx):

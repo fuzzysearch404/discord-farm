@@ -244,6 +244,9 @@ class BotClient(commands.AutoShardedBot):
             elif isinstance(error, checks.MissingAddReactionPermissions):
                 return await ctx.send("\u274c Please enable **Add Reactions** permission for "
                 "me in this channel's settings, to use this command!")
+            elif isinstance(error, checks.MissingReadMessageHistoryPermissions):
+                return await ctx.send("\u274c Please enable **Read Message History** permission for "
+                "me in this channel's settings, to use this command!")
         elif isinstance(error, checks.GlobalCooldown):
             return await ctx.send(
                 f"\u23f2\ufe0f You are typing commands way too fast! Slow down for: **{secstotime(error.retry_after)}**"

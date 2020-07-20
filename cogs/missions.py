@@ -89,9 +89,9 @@ class Missions(commands.Cog, name="Mission"):
         await ctx.send(embed=embed)
 
     @commands.command()
+    @checks.user_cooldown(3600)
     @checks.reaction_perms()
     @checks.embed_perms()
-    @checks.user_cooldown(3600)
     @checks.avoid_maintenance()
     async def offer(self, ctx):
         """

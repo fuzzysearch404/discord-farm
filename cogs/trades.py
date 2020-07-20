@@ -29,6 +29,7 @@ class Trades(commands.Cog, name="Trading"):
         )
 
     @commands.command(aliases=['at'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -72,6 +73,7 @@ class Trades(commands.Cog, name="Trading"):
             print(e)
 
     @commands.command()
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -141,8 +143,14 @@ class Trades(commands.Cog, name="Trading"):
         """
         \ud83e\udd1d Accept player's trade offer.
 
+        You can trade with yourself for free.
+        This is useful, if you want to remove your own trade.
+
         Parameters:
         `id` - ID of the trade you want to accept.
+
+        Usage example:
+        `%trade 123` - accept trade offer with ID 123.
         """
         userdata = await checks.check_account_data(ctx)
         if not userdata: return
@@ -262,18 +270,24 @@ class Trades(commands.Cog, name="Trading"):
                 pass
 
     @commands.command(aliases=['ct', 'addtrade'])
+    @checks.user_cooldown(30)
     @checks.reaction_perms()
     @checks.embed_perms()
-    @checks.user_cooldown(30)
     @checks.avoid_maintenance()
-    async def createtrade(self, ctx, *, search, amount: Optional[int] = 1):
+    async def createtrade(self, ctx, *, item_search, amount: Optional[int] = 1):
         """
         \ud83d\udcb0 Creates item trade in the current server.
 
+        This command has a short cooldown.
+
         Parameters:
-        `search` - item to lookup for to trade (item's name or ID).
+        `item_search` - item to lookup for to trade (item's name or ID).
         Additional parameters:
         `amount` - specify how many items to trade.
+
+        Usage examples for creating trade offer for 20 lettuce items:
+        `%createtrade lettuce 20` - by item's name.
+        `%createtrade 101 20` - by item's ID.
         """
         userdata = await checks.check_account_data(ctx)
         if not userdata: return
@@ -281,9 +295,9 @@ class Trades(commands.Cog, name="Trading"):
         useracc = userutils.User.get_user(userdata, client)
 
         try:
-            possibleamount = search.rsplit(' ', 1)[1]
+            possibleamount = item_search.rsplit(' ', 1)[1]
             amount = int(possibleamount)
-            search = search.rsplit(' ', 1)[0]
+            item_search = item_search.rsplit(' ', 1)[0]
             if not amount > 0 or amount > 2147483647:
                 raise Exception('Invalid amount')
         except Exception:
@@ -295,7 +309,7 @@ class Trades(commands.Cog, name="Trading"):
             )
             return await ctx.send(embed=embed)
 
-        item = await finditem(client, ctx, search)
+        item = await finditem(client, ctx, item_search)
         if not item:
             return
 

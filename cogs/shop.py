@@ -44,7 +44,6 @@ class Shop(commands.Cog):
             print(e)
 
     @commands.group()
-    @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
     async def shop(self, ctx):
@@ -64,6 +63,7 @@ class Shop(commands.Cog):
         await ctx.send(embed=embed)
 
     @shop.command(aliases=['crop', 'seed', 'seeds'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -74,6 +74,7 @@ class Shop(commands.Cog):
         await self.shop_pages(ctx, self.client.cropseeds, "\ud83c\udf3dCrop seeds")
 
     @shop.command(aliases=['tree'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -84,6 +85,7 @@ class Shop(commands.Cog):
         await self.shop_pages(ctx, self.client.trees, "\ud83c\udf33Tree plants")
 
     @shop.command(aliases=['animal'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -172,14 +174,19 @@ class Shop(commands.Cog):
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
-    async def buy(self, ctx, *, search, amount: Optional[int] = 1):
+    async def buy(self, ctx, *, item_search, amount: Optional[int] = 1):
         """
         \ud83d\uded2 Buy items from the shop.
 
         Parameters:
-        `search` - item to lookup for buying (item's name or ID).
+        `item_search` - item to lookup for buying (item's name or ID).
         Additional parameters:
         `amount` - specify how many items to buy.
+
+        Usage examples for buying 2 lettuce seed items:
+        `%buy lettuce seeds 2` - by using item's name.
+        `%buy lettuce 2` - by using item's shorter name.
+        `%buy 1 2` - by using item's ID.
         """
         userdata = await checks.check_account_data(ctx)
         if not userdata: return
@@ -188,15 +195,15 @@ class Shop(commands.Cog):
 
         customamount = False
         try:
-            possibleamount = search.rsplit(' ', 1)[1]
+            possibleamount = item_search.rsplit(' ', 1)[1]
             amount = int(possibleamount)
-            search = search.rsplit(' ', 1)[0]
+            item_search = item_search.rsplit(' ', 1)[0]
             if amount > 0 and amount < 2147483647:
                 customamount = True
         except Exception:
             pass
 
-        item = await finditem(client, ctx, search)
+        item = await finditem(client, ctx, item_search)
         if not item:
             return
 
@@ -251,7 +258,7 @@ class Shop(commands.Cog):
                 entry = await client.wait_for('message', check=check, timeout=30.0)
             except TimeoutError:
                 embed = emb.errorembed(
-                    f'Too long. {item.emoji} purchase canceled.',
+                    f'Too long. {item.emoji}{item.name.capitalize()} purchase canceled.',
                     ctx
                 )
                 await ctx.send(embed=embed)
@@ -259,20 +266,20 @@ class Shop(commands.Cog):
             if not entry: return
 
             if entry.clean_content.lower() == 'x':
-                embed = emb.confirmembed(f'{item.emoji} purchase canceled.', ctx)
+                embed = emb.confirmembed(f'Okey, {item.emoji}{item.name.capitalize()} purchase canceled.', ctx)
                 return await ctx.send(embed=embed)
 
             try:
                 amount = int(entry.clean_content)
                 if amount < 1 or amount > 2147483647:
                     embed = emb.errorembed(
-                        f'Invalid amount. {item.emoji} purchase canceled.',
+                        f'Invalid amount. {item.emoji}{item.name.capitalize()} purchase canceled.',
                         ctx
                     )
                     return await ctx.send(embed=embed)
             except ValueError:
                 embed = emb.errorembed(
-                    f'Invalid amount. {item.emoji} purchase canceled.', 
+                    f'Invalid amount. {item.emoji}{item.name.capitalize()} purchase canceled.', 
                     ctx
                 )
                 return await ctx.send(embed=embed)
@@ -336,7 +343,6 @@ class Shop(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.group()
-    @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
     async def upgrade(self, ctx):

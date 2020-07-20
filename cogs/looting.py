@@ -24,8 +24,8 @@ class Looting(commands.Cog, name="Thief"):
 
 
     @commands.command(aliases=['rob', 'steal'])
-    @checks.embed_perms()
     @checks.user_cooldown(600)
+    @checks.embed_perms()
     @checks.avoid_maintenance()
     async def loot(self, ctx, *, member: MemberID):
         """
@@ -33,7 +33,8 @@ class Looting(commands.Cog, name="Thief"):
 
         Gets some grown items from someones farm field.
         Lootable item amount depends on farm's dog boosters.
-        You can't loot rotten items. 
+        You can't loot rotten items.
+        This command has a cooldown.
 
         Parameters:
         `member` - some user in your server. (tagged user or user's ID)

@@ -21,7 +21,6 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         self.client = client
 
     @commands.command(aliases=['prof', 'account'])
-    @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
     async def profile(self, ctx, *, member: Optional[MemberID] = None):
@@ -130,7 +129,6 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['boosts'])
-    @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
     async def boosters(self, ctx, *, member: Optional[MemberID] = None):
@@ -195,8 +193,8 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         )
 
     @commands.command(aliases=['daily'])
-    @checks.embed_perms()
     @checks.user_cooldown(82800)
+    @checks.embed_perms()
     @checks.avoid_maintenance()
     async def dailybonus(self, ctx):
         """
@@ -237,6 +235,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['inv', 'warehouse'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -320,6 +319,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             item_list.append(string)
 
     @commands.command(aliases=['all', 'unlocked'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -352,7 +352,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
     @commands.command(aliases=['i', 'info'])
     @checks.embed_perms()
     @checks.avoid_maintenance()
-    async def item(self, ctx, *, search):
+    async def item(self, ctx, *, item_search):
         """
         \ud83c\udf7f Shows detailed information about an item.
 
@@ -360,9 +360,14 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         item in the game e.g. prices, growing times, xp rewards etc.
 
         Parameters:
-        `search` - item to lookup for. (item's name or ID)
+        `item_search` - item to lookup for. (item's name or ID)
+
+        Usage examples for checking out lettuce item details:
+        `%item lettuce seeds` - by using item's name.
+        `%item lettuce` - by using item's shorter name.
+        `%item 1` - by using item's ID.
         """
-        item = await finditem(self.client, ctx, search)
+        item = await finditem(self.client, ctx, item_search)
         if not item:
             return
 
