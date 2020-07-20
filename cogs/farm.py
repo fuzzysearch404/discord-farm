@@ -224,7 +224,6 @@ class Farm(commands.Cog):
 
     @commands.command(aliases=['h'])
     @checks.embed_perms()
-    @checks.user_cooldown(15)
     @checks.avoid_maintenance()
     async def harvest(self, ctx):
         """

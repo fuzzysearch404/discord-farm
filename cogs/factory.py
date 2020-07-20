@@ -236,7 +236,6 @@ class Factory(commands.Cog):
     @commands.command(aliases=['c'])
     @checks.reaction_perms()
     @checks.embed_perms()
-    @checks.user_cooldown(15)
     @checks.avoid_maintenance()
     async def collect(self, ctx):
         """
