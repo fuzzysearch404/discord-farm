@@ -171,6 +171,7 @@ class Shop(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['b'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -355,6 +356,7 @@ class Shop(commands.Cog):
         await self.upgrades.invoke(ctx)
 
     @upgrade.command(aliases=['field'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -420,6 +422,7 @@ class Shop(commands.Cog):
         await ctx.send(embed=embed)
 
     @upgrade.command()
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -482,6 +485,7 @@ class Shop(commands.Cog):
         await ctx.send(embed=embed)
 
     @upgrade.command()
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -558,6 +562,7 @@ class Shop(commands.Cog):
         await ctx.send(embed=embed)
 
     @upgrade.command(aliases=['trade', 'trades'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -618,6 +623,7 @@ class Shop(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.group()
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -631,6 +637,7 @@ class Shop(commands.Cog):
         await self.boosts.invoke(ctx)
 
     @boost.command()
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -645,6 +652,7 @@ class Shop(commands.Cog):
         await self.prepare_boost(ctx, boostutils.dog1)
 
     @boost.command()
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -659,6 +667,7 @@ class Shop(commands.Cog):
         await self.prepare_boost(ctx, boostutils.dog2)
 
     @boost.command()
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -673,6 +682,7 @@ class Shop(commands.Cog):
         await self.prepare_boost(ctx, boostutils.dog3)
 
     @boost.command()
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()

@@ -136,6 +136,7 @@ class Trades(commands.Cog, name="Trading"):
             print(e)
 
     @commands.command(hidden=True)
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -271,6 +272,7 @@ class Trades(commands.Cog, name="Trading"):
 
     @commands.command(aliases=['ct', 'addtrade'])
     @checks.user_cooldown(30)
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()

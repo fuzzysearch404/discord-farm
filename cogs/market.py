@@ -87,7 +87,7 @@ class Market(commands.Cog):
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @market.command(aliases=['harvested', 'crops'])
+    @market.command(aliases=['harvested', 'crops', 'crop'])
     @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
@@ -137,6 +137,7 @@ class Market(commands.Cog):
         await self.market_pages(ctx, self.client.specialitems, "\ud83d\udce6 Other items")
 
     @commands.command(aliases=['s'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()

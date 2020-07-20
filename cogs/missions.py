@@ -90,6 +90,7 @@ class Missions(commands.Cog, name="Mission"):
 
     @commands.command()
     @checks.user_cooldown(3600)
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -136,6 +137,7 @@ class Missions(commands.Cog, name="Mission"):
         await self.finish_mission(useracc, request, 'offer', ctx)
 
     @commands.group(aliases=['orders'])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
@@ -196,9 +198,10 @@ class Missions(commands.Cog, name="Mission"):
         )
 
     @missions.command()
+    @checks.user_cooldown(18000)
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
-    @checks.user_cooldown(18000)
     @checks.avoid_maintenance()
     async def refresh(self, ctx):
         """

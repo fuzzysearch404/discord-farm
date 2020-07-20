@@ -114,7 +114,7 @@ def message_history_perms():
 
         if permissions.read_message_history:
             return True
-        raise MissingAddReactionPermissions('Bot does not have read message history permission.')
+        raise MissingReadMessageHistoryPermissions('Bot does not have read message history permission.')
 
     return commands.check(pred)
 

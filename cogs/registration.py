@@ -103,7 +103,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
             command_attrs={
             'help': 'Shows help about the bot, a command, or a category',
             'aliases': ['commands', 'cmd', 'cmds', 'helpme'],
-            'checks': [checks.reaction_perms(), checks.embed_perms()]
+            'checks': [checks.reaction_perms(), checks.embed_perms(), checks.message_history_perms()]
         })
 
     async def on_help_command_error(self, ctx, error):
@@ -228,6 +228,7 @@ class Registration(commands.Cog, name="Your Game Account"):
             await ctx.send(embed=embed)
     
     @commands.command(aliases=["deleteaccount"])
+    @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
     @checks.avoid_maintenance()
