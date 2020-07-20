@@ -11,7 +11,7 @@ from classes import user as userutils
 from classes.boost import boostvalid
 
 
-class Looting(commands.Cog):
+class Looting(commands.Cog, name="Thief"):
     """
     Do you see someone having quite a lot good stuff in their farm?
     If you are evil enough, you can try to grab some stuff.

@@ -11,7 +11,7 @@ from classes.item import finditem
 from classes import user as userutils
 from classes.boost import boostvalid
 
-class Farm(commands.Cog):
+class Farm(commands.Cog, name="Actual Farm"):
     """
     Commands for seed planting, animal and tree growing.
 

@@ -184,7 +184,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
 
         await pages.paginate()
 
-class Registration(commands.Cog, name="Game Account"):
+class Registration(commands.Cog, name="Your Game Account"):
     """
     Commands for game account management.
     """
@@ -219,8 +219,8 @@ class Registration(commands.Cog, name="Game Account"):
             embed = emb.congratzembed(
                 "Your account is successfully created!\n"
                 "\u2139Now check out the commands with `%help`.\n"
-                "\ud83d\udcdaTo get detailed information on specific command's "
-                "usage, use `%help command_name`",
+                "\ud83e\udd6cFirstly you should buy some lettuce seeds from the shop " 
+                "and grow them on your farm field, to gain your first experience.",
                 ctx
             )
             await ctx.send(embed=embed)
