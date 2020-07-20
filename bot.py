@@ -1,21 +1,24 @@
-import aiohttp
 import discord
 import asyncio
 import logging
 import traceback
-import textwrap
 import websockets
 import aioredis
 import io
 import json
 import botsettings
 import classes.item as utilitems
+from aiohttp import ClientSession
+from textwrap import indent
+from collections import Counter
 from contextlib import redirect_stdout
 from asyncpg import create_pool
 from discord.ext import commands
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from utils import checks
 from utils.time import secstotime
+
+TEMP_BAN_DURATION = 604800 # 7 days
 
 
 class BotClient(commands.AutoShardedBot):
@@ -46,12 +49,18 @@ class BotClient(commands.AutoShardedBot):
         self.allitems = {}
         
         self.config = botsettings
+        self.owner_ids = botsettings.owner_ids
         self.maintenance_mode = botsettings.maintenance_mode
         
         self.initemojis()
         self.loaditems()
         self.load_news()
         self.loop.create_task(self._connectdb())
+
+        self.global_cooldown = commands.CooldownMapping.from_cooldown(3, 8.0, commands.BucketType.user)
+        self.spam_control = commands.CooldownMapping.from_cooldown(10, 12.0, commands.BucketType.user)
+        self._auto_spam_count = Counter()
+        self.add_check(self.check_global_cooldown, call_once=True)
 
         for ext in self.config.initial_extensions:
             try:
@@ -118,7 +127,7 @@ class BotClient(commands.AutoShardedBot):
 
     async def send_log(self, content, embed=None):
         """Sends message to support server's log channel."""
-        async with aiohttp.ClientSession() as session:
+        async with ClientSession() as session:
             webhook = discord.Webhook.from_url(
                 self.config.bot_log_webhook,
                 adapter=discord.AsyncWebhookAdapter(session)
@@ -152,14 +161,66 @@ class BotClient(commands.AutoShardedBot):
     async def on_shard_ready(self, shard_id):
         self.log.info(f'[Cluster#{self.cluster_name}] Shard {shard_id} ready')
 
-    async def on_message(self, message):
-        author = message.author
-        if author == self.user or author.bot:
+    async def log_spammer(self, message, banned=False):
+        if not banned:
+            await self.send_log(
+                f"\ud83d\udfe7 {message.author} (`{message.author.id}`) Mass spam: {message.clean_content[:200]}"
+            )
+        else:
+            await self.send_log(
+                f"\ud83d\udfe5 {message.author} (`{message.author.id}`) Mass spam ban: {message.clean_content[:200]}"
+            )
+
+    async def check_global_cooldown(self, ctx):
+        current = ctx.message.created_at.replace(tzinfo=timezone.utc).timestamp()
+        bucket = self.global_cooldown.get_bucket(ctx.message)
+        retry_after = bucket.update_rate_limit(current)
+        
+        if retry_after and ctx.author.id not in self.owner_ids:
+            raise checks.GlobalCooldown(ctx, retry_after)
+        
+        return True
+
+    async def process_commands(self, message):
+        ctx = await self.get_context(message, cls=commands.Context)
+
+        if ctx.command is None:
             return
+
+        author_id = message.author.id
+
+        # Check if user is banned
+        banned = await ctx.bot.redis.execute("GET", f"ban:{author_id}")
+        if banned:
+            return
+
+        # Check mass commands spam
+        current = message.created_at.replace(tzinfo=timezone.utc).timestamp()
+        bucket = self.spam_control.get_bucket(message)
+        retry_after = bucket.update_rate_limit(current)
+        if retry_after and author_id not in self.owner_ids:
+            self._auto_spam_count[author_id] += 1
+            if self._auto_spam_count[author_id] >= 3:
+                await ctx.bot.redis.execute("SET", f"ban:{author_id}", 1, "EX", TEMP_BAN_DURATION)
+                del self._auto_spam_count[author_id]
+                await self.log_spammer(message, banned=True)
+            else:
+                await self.log_spammer(message)
+            return
+        else:
+            self._auto_spam_count.pop(author_id, None)
+        
         if not message.guild:
             return await message.author.send("\u274c Sorry, this bot only accepts commands in servers...")
 
         if not message.channel.permissions_for(message.guild.me).send_messages:
+            return
+
+        await self.invoke(ctx)
+
+    async def on_message(self, message):
+        author = message.author
+        if author == self.user or author.bot:
             return
 
         try:
@@ -183,6 +244,10 @@ class BotClient(commands.AutoShardedBot):
             elif isinstance(error, checks.MissingAddReactionPermissions):
                 return await ctx.send("\u274c Please enable **Add Reactions** permission for "
                 "me in this channel's settings, to use this command!")
+        elif isinstance(error, checks.GlobalCooldown):
+            return await ctx.send(
+                f"\u23f2\ufe0f You are typing commands way too fast! Slow down for: **{secstotime(error.retry_after)}**"
+            )
         elif isinstance(error, commands.errors.CommandOnCooldown):
             return await ctx.send(f"\u23f0 This command is on cooldown for:  **{secstotime(error.retry_after)}**")
         elif isinstance(error, commands.errors.MissingRequiredArgument):

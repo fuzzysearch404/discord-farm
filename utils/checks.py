@@ -16,15 +16,20 @@ class MissingAddReactionPermissions(commands.CheckFailure):
 
     pass
 
+class GlobalCooldown(commands.CommandOnCooldown):
+    """Exception raised when global cooldown is reache."""
+    
+    pass
+
 
 def is_owner():
     async def pred(ctx):
-        return ctx.author.id in ctx.bot.config.owner_ids
+        return ctx.author.id in ctx.bot.owner_ids
     return commands.check(pred)
 
 
 def is_owner_raw(ctx):
-    return ctx.author.id in ctx.bot.config.owner_ids
+    return ctx.author.id in ctx.bot.owner_ids
 
 def user_cooldown(cooldown: int, identifier: str = None):
     async def predicate(ctx):
