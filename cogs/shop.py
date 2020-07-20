@@ -304,6 +304,7 @@ class Shop(commands.Cog):
             value=f'React with {client.gold}, to finish the purchase'
         )
         buyinfomessage = await ctx.send(embed=buyembed)
+        ctx.reply_message = buyinfomessage # To pass it to outside function
         await buyinfomessage.add_reaction(client.gold)
 
         def check(reaction, user):
@@ -332,7 +333,10 @@ class Shop(commands.Cog):
                 'You do not have enough gold to buy these items!',
                 ctx
             )
-            return await ctx.send(embed=embed)
+            try:
+                return await ctx.reply_message.edit(embed=embed)
+            except HTTPException:
+                return
 
         await useracc.add_item_to_inventory(item, amount)
         await useracc.give_money(total * -1)
@@ -341,7 +345,10 @@ class Shop(commands.Cog):
             f"You successfully purchased {amount}x{item.emoji}{item.name.capitalize()} for {total}{self.client.gold}!",
             ctx
         )
-        await ctx.send(embed=embed)
+        try:
+            await ctx.reply_message.edit(embed=embed)
+        except HTTPException:
+            pass
 
     @commands.group()
     @checks.embed_perms()
@@ -411,7 +418,10 @@ class Shop(commands.Cog):
                 'You do not have enough gems for this purchase!',
                 ctx
                 )
-            return await ctx.send(embed=embed)
+            try:
+                return await buyinfomessage.edit(embed=embed)
+            except HTTPException:
+                return
 
         await useracc.add_fields(1)
         await useracc.give_gems(-1)
@@ -419,7 +429,10 @@ class Shop(commands.Cog):
             f"You now have {client.tile} {useracc.tiles + 1} farm field tiles!",
             ctx
         )
-        await ctx.send(embed=embed)
+        try:
+            await buyinfomessage.edit(embed=embed)
+        except HTTPException:
+            pass
 
     @upgrade.command()
     @checks.message_history_perms()
@@ -474,7 +487,10 @@ class Shop(commands.Cog):
 
         if userdata['gems'] < 1:
             embed = emb.errorembed('You do not have enough gems for this purchase!', ctx)
-            return await ctx.send(embed=embed)
+            try:
+                return await buyinfomessage.edit(embed=embed)
+            except HTTPException:
+                return
 
         await useracc.add_factory_slots(1)
         await useracc.give_gems(-1)
@@ -482,7 +498,10 @@ class Shop(commands.Cog):
             f"Your factory has now production capatity of {useracc.factoryslots + 1}!",
             ctx
         )
-        await ctx.send(embed=embed)
+        try:
+            await buyinfomessage.edit(embed=embed)
+        except HTTPException:
+            pass
 
     @upgrade.command()
     @checks.message_history_perms()
@@ -544,14 +563,20 @@ class Shop(commands.Cog):
 
         if userdata['gems'] < 1:
             embed = emb.errorembed('You do not have enough gems for this purchase!', ctx)
-            return await ctx.send(embed=embed)
+            try:
+                return await buyinfomessage.edit(embed=embed)
+            except HTTPException:
+                return
 
         if userdata['factorylevel'] >= 10:
             embed = emb.errorembed(
                 'You already have reached the maximum factory worker amount.',
                 ctx
             )
-            return await ctx.send(embed=embed)
+            try:
+                return await buyinfomessage.edit(embed=embed)
+            except HTTPException:
+                return
 
         await useracc.add_factory_level(1)
         await useracc.give_gems(-1)
@@ -559,7 +584,10 @@ class Shop(commands.Cog):
             f"Your factory now produces items {(useracc.factorylevel + 1) * 5}% faster!",
             ctx
         )
-        await ctx.send(embed=embed)
+        try:
+            await ctx.send(embed=embed)
+        except HTTPException:
+            pass
 
     @upgrade.command(aliases=['trade', 'trades'])
     @checks.message_history_perms()
@@ -612,7 +640,10 @@ class Shop(commands.Cog):
                 'You do not have enough gold for this purchase!',
                 ctx
             )
-            return await ctx.send(embed=embed)
+            try:
+                return await buyinfomessage.edit(embed=embed)
+            except HTTPException:
+                return
 
         await useracc.add_store_slots(1)
         await useracc.give_money(cost * -1)
@@ -620,7 +651,10 @@ class Shop(commands.Cog):
             f"You can now create up to {useracc.storeslots + 1} trades!",
             ctx
         )
-        await ctx.send(embed=embed)
+        try:
+            await buyinfomessage.edit(embed=embed)
+        except HTTPException:
+            pass
 
     @commands.group()
     @checks.message_history_perms()
@@ -751,7 +785,10 @@ class Shop(commands.Cog):
                 'You do not have enough gold for this booster!',
                 ctx
             )
-            return await ctx.send(embed=embed)
+            try:
+                return await message.edit(embed=embed)
+            except HTTPException:
+                return
 
         duration = boostutils.DURATIONS[int(str(reaction.emoji)[0])]
 
@@ -762,7 +799,10 @@ class Shop(commands.Cog):
             f"Booster {boost.emoji} activated for {secstodays(duration)}!",
             ctx
         )
-        await ctx.send(embed=embed)
+        try:
+            await message.edit(embed=embed)
+        except HTTPException:
+            pass
 
 
 def setup(client):
