@@ -30,6 +30,7 @@ class BotClient(commands.AutoShardedBot):
         super().__init__(
             fetch_offline_members=False,
             guild_subscriptions=False,
+            max_messages=5000,
             command_prefix=commands.when_mentioned_or('%'), 
             **kwargs, loop=loop
         )
