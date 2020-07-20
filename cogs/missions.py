@@ -72,15 +72,24 @@ class Missions(commands.Cog, name="Mission"):
                 return await ctx.reply_message.edit(embed=embed)
             except HTTPException:
                 return
-
-        for task in mission.requests:
-            await useracc.remove_item_from_inventory(task[0], task[1])
-
+        
         if missionid != 'offer':
             async with self.client.db.acquire() as connection:
                 async with connection.transaction():
                     query = """DELETE FROM missions WHERE id = $1;"""
-                    await client.db.execute(query, missionid)
+                    del_results = await client.db.execute(query, missionid)
+                    if del_results[-1:] != "1":
+                        embed = emb.errorembed(
+                            f"You have already completed this mission or some error occured!",
+                            ctx
+                        )
+                        try:
+                            return await ctx.reply_message.edit(embed=embed)
+                        except HTTPException:
+                            return
+
+        for task in mission.requests:
+            await useracc.remove_item_from_inventory(task[0], task[1])
 
         await useracc.give_xp_and_level_up(mission.xpaward, ctx)
         await useracc.give_money(mission.moneyaward)
