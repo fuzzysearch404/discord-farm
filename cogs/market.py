@@ -271,6 +271,7 @@ class Market(commands.Cog):
             value='React with \u2705, to finish selling these items'
         )
         sellinfomessage = await ctx.send(embed=sellembed)
+        ctx.reply_message = sellinfomessage # To pass it to outside function
         await sellinfomessage.add_reaction('\u2705')
 
         def check(reaction, user):
@@ -300,14 +301,20 @@ class Market(commands.Cog):
                 f"You do not have **{item.emoji}{item.name.capitalize()}** in your warehouse!",
                 ctx
                 )
-            return await ctx.send(embed=embed)
+            try:
+                return await ctx.reply_message.edit(embed=embed)
+            except HTTPException:
+                return
 
         if amount > itemdata['amount']:
             embed = emb.errorembed(
                 f"You only have **{itemdata['amount']}**x {item.emoji}{item.name.capitalize()} in yout warehouse!",
                 ctx
                 )
-            return await ctx.send(embed=embed)
+            try:
+                return await ctx.reply_message.edit(embed=embed)
+            except HTTPException:
+                return
 
         await useracc.remove_item_from_inventory(item, amount)
         await useracc.give_money(total)
@@ -316,7 +323,10 @@ class Market(commands.Cog):
             f"You successfully sold {amount}x {item.emoji}{item.name.capitalize()} for {total}{self.client.gold}!",
             ctx
             )
-        await ctx.send(embed=embed)
+        try:
+            await ctx.reply_message.edit(embed=embed)
+        except HTTPException:
+            pass
 
 def setup(client):
     client.add_cog(Market(client))
