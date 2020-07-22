@@ -48,9 +48,11 @@ class Information(commands.Cog, name="Very Informative"):
         """
         await ctx.send(
             "Hello, my name is fuzzyseach, and I do bots as a free time hobby. \ud83e\udd13\n"
-            "Managing a bot is not an easy task, and it costs time and money. "
+            "Managing a bot is not an easy task, and it costs time and money.\n"
             "Any donations are appreciated, they will motivate and support me, to make this bot even better. <3"
-            "\nhttps://www.paypal.me/fuzzysearch"
+            "\nhttps://www.paypal.me/fuzzysearch\n"
+            "\nIf you want to help, without spending any money, you can upvote the bot on top.gg every 12 hours:"
+            "\n<https://top.gg/bot/526436949481881610>"
         )
 
     @commands.command()

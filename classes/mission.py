@@ -22,38 +22,31 @@ class Mission:
         self.requests = requests
 
     @classmethod
-    def generate(cls, client, level, boosted=False):
-        suitableitems, requests, alreadyused = [], [], []
+    def generate(cls, useracc, boosted=False):
+        requests, alreadyused = [], []
 
-        for item in client.crops.values():
-            if item.level <= level:
-                suitableitems.append(item)
-        for item in client.treeproducts.values():
-            if item.level <= level:
-                suitableitems.append(item)
-        for item in client.animalproducts.values():
-            if item.level <= level:
-                suitableitems.append(item)
-        for item in client.crafteditems.values():
-            if item.level <= level:
-                suitableitems.append(item)
-        for item in client.specialitems.values():
-            if item.level <= level:
-                suitableitems.append(item)
+        suitableitems = useracc.find_all_unlocked_tradeble_items()
+        user_level = useracc.level
+        requestsamount = randint(1, cls.itemsforlevel(user_level))
 
-        requestsamount = randint(1, cls.itemsforlevel(level))
-
+        # WARNING: if user doesnt have unlocked
+        # enough items, then loop would never end.
+        # Check itemsforlevel().
         for i in range(requestsamount):
             newitem = None
+            
             while not newitem or newitem in alreadyused:
                 newitem = choice(suitableitems)
-            amount = cls.calcamount(level, newitem)
+            
+            amount = cls.calcamount(user_level, newitem)
             req = (newitem, amount)
+            
             requests.append(req)
             alreadyused.append(newitem)
 
         xp, money = cls.calcreward(requests, boosted)
         buisness = cls.buisness_name()
+        
         return cls(buisness, money, xp, requests)
 
     @staticmethod
@@ -98,12 +91,14 @@ class Mission:
 
         xp = randint(int(sum / 20), sum)
         money = sum - xp
+        
         return xp, money
 
     def exportstring(self):
         string = ''
         for req in self.requests:
             string += f"{req[0].id}/{req[1]}="
+        
         return string[:-1]
 
     @classmethod

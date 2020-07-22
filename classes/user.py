@@ -305,3 +305,15 @@ class User:
                 suitableitems.append(item)
 
         return suitableitems
+
+    def find_all_unlocked_tradeble_items(self):
+        """Filters unlocked tradable items.
+        Basically items that have marketprice atribute."""
+        unlocked_items = self.find_all_items_unlocked()
+
+        tradables = []
+        for item in unlocked_items:
+            if hasattr(item, "marketprice"):
+                tradables.append(item)
+
+        return tradables

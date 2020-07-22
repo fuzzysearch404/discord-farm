@@ -73,9 +73,13 @@ class BotClient(commands.AutoShardedBot):
         self.run()
 
     async def _connectdb(self):
-        self.db = await create_pool(**self.config.database_credentials)
+        self.db = await create_pool(
+            **self.config.database_credentials, min_size=10, max_size=20, command_timeout=60.0
+        )
         try:
-            self.redis = await aioredis.create_pool("redis://localhost")
+            self.redis = await aioredis.create_pool(
+                "redis://localhost", minsize=10, maxsize=20
+            )
         except aioredis.RedisError as e:
             self.log.error(traceback.format_exc())
 

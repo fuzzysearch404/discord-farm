@@ -44,7 +44,7 @@ class Missions(commands.Cog, name="Mission"):
         async with self.client.db.acquire() as connection:
             async with connection.transaction():
                 for i in range(rrange):
-                    request = missionutils.Mission.generate(self.client, useracc.level)
+                    request = missionutils.Mission.generate(useracc)
                     string = request.exportstring()
                     query = """INSERT INTO missions(userid, requests, money, xp, buisness)
                     VALUES ($1, $2, $3, $4, $5)"""
@@ -121,7 +121,7 @@ class Missions(commands.Cog, name="Mission"):
         client = self.client
         useracc = userutils.User.get_user(userdata, client)
 
-        request = missionutils.Mission.generate(client, useracc.level, boosted=True)
+        request = missionutils.Mission.generate(useracc, boosted=True)
         requestdesign = self.createrequestdesign(request)
 
         embed = Embed(
