@@ -302,7 +302,8 @@ class Missions(commands.Cog, name="Mission"):
             embed.title = "**No active exports...** \ud83d\ude34"
             embed.description = (
                 f"\ud83d\udd8b\ufe0fSign an export contract with `{ctx.prefix}exports start`\n"
-                "\u2139\ufe0fExports are missions with increasing rewards. [more text]"
+                "\u2139\ufe0fExports are time limited missions with increasing rewards, however "
+                "you only need to gather a single type of items, but in large quantities."
             )
             
             return await ctx.send(embed=embed)
