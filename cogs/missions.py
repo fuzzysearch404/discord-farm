@@ -268,7 +268,7 @@ class Missions(commands.Cog, name="Mission"):
             if level != current_level + 1:
                 text += f"{level}x\ud83d\udce6{gold_emoji}{rewards[0]}{xp_emoji}{rewards[1]}\n"
             else:
-                text += f"__{level}x\ud83d\udce6{gold_emoji}{rewards[0]}{xp_emoji}{rewards[1]}__\n"
+                text += f"__**{level}x\ud83d\udce6{gold_emoji}{rewards[0]}{xp_emoji}{rewards[1]}**__\n"
 
         return text
 
