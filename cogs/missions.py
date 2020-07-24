@@ -283,7 +283,7 @@ class Missions(commands.Cog, name="Mission"):
         Each item package you load into a ship gives you some XP and gold rewards and increases the next reward 
         you will get.
 
-        Each ship is loadable 6 hours.
+        Each ship is loadable for 6 hours.
         You can load a package every 30 minutes.
         You can sign contracts every 1 hour, however, you can only have 1 active contract at a time.
         """
