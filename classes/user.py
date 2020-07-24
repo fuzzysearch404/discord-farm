@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+
 from utils.embeds import congratzembed
 
 
@@ -306,14 +307,31 @@ class User:
 
         return suitableitems
 
-    def find_all_unlocked_tradeble_items(self):
+    def find_all_unlocked_tradeble_items(self, special=True):
         """Filters unlocked tradable items.
         Basically items that have marketprice atribute."""
         unlocked_items = self.find_all_items_unlocked()
 
         tradables = []
         for item in unlocked_items:
-            if hasattr(item, "marketprice"):
-                tradables.append(item)
+            if special:
+                if hasattr(item, "marketprice"):
+                    tradables.append(item)
+            else:
+                if hasattr(item, "marketprice") and item.type != "special":
+                    tradables.append(item)
 
         return tradables
+
+    def find_all_unlocked_crop_items(self):
+        """This includes crop production, and tree production."""
+        suitableitems = []
+
+        for item in self.client.crops.values():
+            if item.level <= self.level:
+                suitableitems.append(item)
+        for item in self.client.treeproducts.values():
+            if item.level <= self.level:
+                suitableitems.append(item)
+
+        return suitableitems

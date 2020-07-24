@@ -1,7 +1,8 @@
 import json
-import utils.embeds as emb
 from random import randint
 from difflib import get_close_matches
+
+import utils.embeds as emb
 
 
 class Item:
@@ -407,3 +408,15 @@ def crafted_from_to_string(item):
         string += f"{product.emoji}{product.name.capitalize()} x{value},\n"
 
     return string[:-2]
+
+def base_amount_for_growables(item):
+    grow_time = item.madefrom.grows
+    items_per_hour = int(item.amount / (grow_time / 3600))
+    amount = randint(items_per_hour, int(items_per_hour * 1.5))
+        
+    if grow_time > 3600:
+        return amount
+    elif grow_time > 1800:
+        return int(amount / 2)
+    else:
+        return int(amount / 4)

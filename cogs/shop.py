@@ -775,8 +775,6 @@ class Shop(commands.Cog):
                 return await message.clear_reactions()
             else: return
 
-        price = emojis_prices[str(reaction.emoji)]
-
         userdata = await checks.check_account_data(ctx)
         if not userdata: return
 

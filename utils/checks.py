@@ -54,6 +54,18 @@ def user_cooldown(cooldown: int, identifier: str = None):
 
     return commands.check(predicate)
 
+async def get_user_cooldown(ctx, identifier: str):
+    command_ttl = await ctx.bot.redis.execute("TTL", f"cd:{ctx.author.id}:{identifier}")
+    if command_ttl == -2:
+        return False
+    else:
+        return command_ttl
+
+async def set_user_cooldown(ctx, cooldown: int, identifier: str):
+    await ctx.bot.redis.execute(
+        "SET", f"cd:{ctx.author.id}:{identifier}", identifier, "EX", cooldown,
+    )
+
 async def check_account_data(ctx, lurk=None):
     """Fetches user data from database. lurk: discord.Member."""
     if not lurk:

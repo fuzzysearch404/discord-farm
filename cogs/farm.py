@@ -1,8 +1,9 @@
-import utils.embeds as emb
 from discord.ext import commands
 from typing import Optional
 from datetime import datetime, timedelta
 from random import choice, randint
+
+import utils.embeds as emb
 from utils import checks
 from utils.time import secstotime
 from utils.paginator import Pages

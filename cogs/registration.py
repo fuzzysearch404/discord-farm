@@ -1,9 +1,10 @@
 import itertools
 import discord
 import asyncio
-import utils.embeds as emb
 from discord.ext import commands
 from random import randint
+
+import utils.embeds as emb
 from utils.paginator import Pages
 from utils import checks
 from classes import user as userutils

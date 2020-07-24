@@ -1,9 +1,10 @@
-import utils.embeds as emb
 from random import randint, choice
 from typing import Optional
 from datetime import datetime
 from discord import Embed
 from discord.ext import commands
+
+import utils.embeds as emb
 from utils.time import secstotime
 from utils.paginator import Pages
 from utils.convertors import MemberID

@@ -17,11 +17,11 @@ from utils.formats import TabularData, plural
 from contextlib import redirect_stdout
 from typing import Union, Optional
 
-from utils.paginator import TextPages
-from utils import checks
-
 # to expose to the eval command
 from collections import Counter
+
+from utils.paginator import TextPages
+from utils import checks
 
 
 class Admin(commands.Cog, command_attrs={'hidden': True}):

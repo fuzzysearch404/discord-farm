@@ -1,6 +1,8 @@
 from asyncio import TimeoutError
 from discord.ext import commands
 from discord import Embed, HTTPException
+from datetime import datetime, timedelta
+
 from utils import embeds as emb
 from utils import time
 from utils import checks
@@ -21,7 +23,7 @@ class Missions(commands.Cog, name="Mission"):
     def __init__(self, client):
         self.client = client
 
-    def createrequestdesign(self, request):
+    def create_request_design(self, request):
         client = self.client
         string = f'\ud83d\udcd1 {request.buisness}\nOrder:\n'
         money = request.moneyaward
@@ -45,7 +47,7 @@ class Missions(commands.Cog, name="Mission"):
             async with connection.transaction():
                 for i in range(rrange):
                     request = missionutils.Mission.generate(useracc)
-                    string = request.exportstring()
+                    string = request.export_as_string()
                     query = """INSERT INTO missions(userid, requests, money, xp, buisness)
                     VALUES ($1, $2, $3, $4, $5)"""
                     await self.client.db.execute(
@@ -93,6 +95,7 @@ class Missions(commands.Cog, name="Mission"):
 
         await useracc.give_xp_and_level_up(mission.xpaward, ctx)
         await useracc.give_money(mission.moneyaward)
+        
         embed = emb.congratzembed(
             "You completed the mission and got "
             f"{mission.moneyaward}{client.gold} and {mission.xpaward}{client.xp}",
@@ -103,7 +106,7 @@ class Missions(commands.Cog, name="Mission"):
         except HTTPException:
             pass
 
-    @commands.command()
+    @commands.command(aliases=["off"])
     @checks.user_cooldown(3600)
     @checks.message_history_perms()
     @checks.reaction_perms()
@@ -122,7 +125,7 @@ class Missions(commands.Cog, name="Mission"):
         useracc = userutils.User.get_user(userdata, client)
 
         request = missionutils.Mission.generate(useracc, boosted=True)
-        requestdesign = self.createrequestdesign(request)
+        requestdesign = self.create_request_design(request)
 
         embed = Embed(
             title='\ud83d\udccbSpecial request mission',
@@ -152,7 +155,7 @@ class Missions(commands.Cog, name="Mission"):
 
         await self.finish_mission(useracc, request, 'offer', ctx)
 
-    @commands.group(aliases=['orders'])
+    @commands.group(aliases=["orders", "mi"])
     @checks.message_history_perms()
     @checks.reaction_perms()
     @checks.embed_perms()
@@ -186,12 +189,12 @@ class Missions(commands.Cog, name="Mission"):
         for mission in missions:
             i += 1
             missionid = mission['id']
-            mission = missionutils.Mission.importstring(
+            mission = missionutils.Mission.import_as_string(
                 client, mission['buisness'], mission['money'],
                 mission['xp'], mission['requests']
             )
             tasks[f'{i}{emoji}'] = (mission, missionid)
-            requestdesign = self.createrequestdesign(mission)
+            requestdesign = self.create_request_design(mission)
             embed.add_field(name=f'\ud83d\udcdd Order #{i}', value=requestdesign)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
 
@@ -210,8 +213,13 @@ class Missions(commands.Cog, name="Mission"):
                 return await reply_message.clear_reactions()
             else: return
 
+        try: # If user adds own number reaction...
+            mission_data = tasks[str(reaction.emoji)]
+        except KeyError:
+            return
+
         await self.finish_mission(
-            useracc, tasks[str(reaction.emoji)][0], tasks[str(reaction.emoji)][1], ctx
+            useracc, mission_data[0], mission_data[1], ctx
         )
 
     @missions.command()
@@ -234,6 +242,216 @@ class Missions(commands.Cog, name="Mission"):
 
         await self.missions.invoke(ctx)
 
+    async def fetch_exports_data(self, ctx):
+        data = await self.client.redis.execute(
+            "GET", f"export:{ctx.author.id}"
+        )
+        if not data:
+            return None
+
+        return missionutils.ExportMission.import_from_json(self.client, data)
+
+    def create_export_design(self, export, current_level=0):
+        gold_emoji = self.client.gold
+        xp_emoji = self.client.xp
+        item = export.item
+
+        text = (
+            f"{export.port}\n{item.emoji}{item.name.capitalize()}\n"
+            f"\ud83d\udce6 Package size: {export.amount}x{item.emoji}\n\n"
+        )
+
+        for i in range(12):
+            level = i + 1
+            rewards = export.calc_reward_for_shipment(level)
+            
+            if level != current_level + 1:
+                text += f"{level}x\ud83d\udce6{gold_emoji}{rewards[0]}{xp_emoji}{rewards[1]}\n"
+            else:
+                text += f"__{level}x\ud83d\udce6{gold_emoji}{rewards[0]}{xp_emoji}{rewards[1]}__\n"
+
+        return text
+
+    @commands.group(aliases=["export", "ex"])
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def exports(self, ctx):
+        """
+        \ud83d\udea2 Export contract missions.
+
+        Sign a contract and load a ship with resources.
+        Each item package you load into a ship gives you some XP and gold rewards and increases the next reward 
+        you will get.
+
+        Each ship is loadable 6 hours.
+        You can load a package every 30 minutes.
+        You can sign contracts every 1 hour, however, you can only have 1 active contract at a time.
+        """
+        if ctx.invoked_subcommand:
+            return
+
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+        client = self.client
+        useracc = userutils.User.get_user(userdata, client)
+
+        embed = Embed(color=15171850)
+
+        export = await self.fetch_exports_data(ctx)
+        if not export:
+            embed.title = "**No active exports...** \ud83d\ude34"
+            embed.description = (
+                f"\ud83d\udd8b\ufe0fSign an export contract with `{ctx.prefix}exports start`\n"
+                "\u2139\ufe0fExports are missions with increasing rewards. [more text]"
+            )
+            
+            return await ctx.send(embed=embed)
+        else:
+            leave_time = export.ends - datetime.now()
+            leaves = time.secstotime(leave_time.total_seconds())
+            embed.title = "\ud83d\udea2Export ship"
+            embed.description = (
+                f"\ud83d\udce6Load the items into the export ship with the `{ctx.prefix}exports load` command!\n"
+                "\u2934\ufe0fYou get higher rewards for each package you load into the export ship.\n"
+                f"\u23f2\ufe0fYou can load a package every 30 minutes."
+            )
+            embed.add_field(name="\ud83d\udcddActive export", value=self.create_export_design(export, export.shipped))
+            embed.add_field(name="\ud83d\udce6Loaded packages", value=export.shipped)
+            embed.add_field(name="\ud83d\udd50Ship leaves after", value=leaves)
+            await ctx.send(embed=embed)
+
+    @exports.command()
+    @checks.user_cooldown(3600)
+    @checks.message_history_perms()
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def start(self, ctx):
+        """
+        \ud83d\udd8b\ufe0f Starts a new export mission.
+
+        This command has a cooldown, so if you don't choose
+        an export mission, you will have to wait.
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+        client = self.client
+        useracc = userutils.User.get_user(userdata, client)
+
+        existing_data = await self.fetch_exports_data(ctx)
+        if existing_data:
+            embed = emb.errorembed(
+                "You already have an active export contract!",
+                ctx
+            )
+            return await ctx.send(embed=embed)
+        
+        embed = Embed(title="\ud83d\udea2Sign an export contract", color=15171850)
+        embed.description = (
+            "\ud83d\udd8b\ufe0fPlease sign one of these contracts!\n"
+            "\u2139\ufe0f**Note: If you don't accept any contracts, you will have to wait an hour cooldown!**"
+        )
+
+        emoji, export_options = "\ufe0f\u20e3", {}
+        for i in range(3):
+            export = missionutils.ExportMission.generate(useracc)
+            embed.add_field(name="\ud83d\udea2Contract #" + str(i + 1), value=self.create_export_design(export))
+            export_options[str(i + 1) + emoji] = export
+
+        reply_message = await ctx.send(embed=embed)
+        for em in export_options.keys():
+            await reply_message.add_reaction(em)
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji).endswith(emoji) and reaction.message.id == reply_message.id
+
+        try:
+            reaction, user = await client.wait_for('reaction_add', check=check, timeout=60.0)
+        except TimeoutError:
+            if checks.can_clear_reactions(ctx):
+                return await reply_message.clear_reactions()
+            else: return
+
+        try: # If user added own number emoji
+            export = export_options[str(reaction.emoji)]
+        except KeyError:
+            return
+
+        existing_data = await self.fetch_exports_data(ctx)
+        if existing_data:
+            return
+
+        await self.client.redis.execute(
+            "SET", f"export:{ctx.author.id}", export.export_as_json(), "EX", missionutils.EXPORT_DURATION
+        )
+
+        await self.exports.invoke(ctx)
+
+        
+    @exports.command()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def load(self, ctx):
+        """
+        \ud83d\udce6 Loads a package into the export ship.
+
+        You must have an active export contract to load items to the ship.
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+        client = self.client
+        useracc = userutils.User.get_user(userdata, client)
+
+        export = await self.fetch_exports_data(ctx)
+        if not export:
+            embed = emb.errorembed(
+                f"You don't have an active export contract! Sign one with `{ctx.prefix}exports start`.",
+                ctx
+            )
+            return await ctx.send(embed=embed)
+
+        cooldown = await checks.get_user_cooldown(ctx, "export_load")
+        if cooldown:
+            return await ctx.send(
+                f"\u274c The export ship is busy loading your last package! You have to wait **{time.secstotime(cooldown)}**!"
+            )
+
+        item = export.item
+
+        itemdata = await useracc.check_inventory_item(item)
+        if not itemdata or itemdata["amount"] < export.amount:
+            embed = emb.errorembed(
+                f"You don't have enough **{item.emoji}{item.name.capitalize()}** for loading the export package!",
+                ctx
+            )
+            return await ctx.send(embed=embed)
+
+        export.shipped += 1
+
+        await checks.set_user_cooldown(ctx, 1800, "export_load")
+        await useracc.remove_item_from_inventory(item, export.amount)
+
+        rewards = export.calc_reward_for_shipment()
+        await useracc.give_money(rewards[0])
+        await useracc.give_xp_and_level_up(rewards[1], ctx)
+
+        mission_ends = export.ends - datetime.now()
+
+        remaining_seconds = int(mission_ends.total_seconds())
+        if remaining_seconds >= 1:
+            export.ends = datetime.now() + timedelta(seconds=remaining_seconds)
+            await self.client.redis.execute(
+                "SET", f"export:{ctx.author.id}", export.export_as_json(), "EX", remaining_seconds
+            )
+
+        embed = emb.congratzembed(
+            "You loaded a package to the export ship and got "
+            f"{rewards[0]}{client.gold} and {rewards[1]}{client.xp}",
+            ctx
+        )
+
+        await ctx.send(embed=embed)
+        
 
 def setup(client):
     client.add_cog(Missions(client))

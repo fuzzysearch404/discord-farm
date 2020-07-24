@@ -1,10 +1,11 @@
 import operator
 import asyncio
-import utils.embeds as emb
 from discord.ext import commands, tasks
 from discord import Embed, HTTPException
 from datetime import datetime, timedelta
 from typing import Optional
+
+import utils.embeds as emb
 from utils import checks
 from utils.paginator import Pages
 from utils.time import secstotime
