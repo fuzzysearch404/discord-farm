@@ -77,7 +77,7 @@ class Mission:
     def calc_amount(level, item):
         if level < 3: 
             if not hasattr(item, "craftedfrom"):
-                return int(base_amount_for_growables(item) / 2) or 1
+                return int(base_amount_for_growables(item) / 3) or 1
             else: return 1
         elif level < 10:
             if not hasattr(item, "craftedfrom"):
