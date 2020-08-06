@@ -336,7 +336,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         useracc = userutils.User.get_user(userdata, client)
 
         texts = []
-        items = useracc.find_all_items_unlocked()
+        items = useracc.find_all_unlocked_tradeble_items()
 
         for item in items:
             item = f"ID:{item.id} {item.emoji}{item.name.capitalize()}"
