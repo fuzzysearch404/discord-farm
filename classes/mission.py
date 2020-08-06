@@ -197,8 +197,8 @@ class ExportMission:
     def calc_reward_for_shipment(self, shipment=0):
         times_shipped = shipment or self.shipped
 
-        gold = self.base_gold + self.base_gold * (times_shipped * 0.25)
-        xp = self.base_xp + self.base_xp * (times_shipped * 0.25)
+        gold = self.base_gold + self.base_gold * (times_shipped * 0.20)
+        xp = self.base_xp + self.base_xp * (times_shipped * 0.20)
         
         return int(gold) or 1, int(xp) or 1
 
