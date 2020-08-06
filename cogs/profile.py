@@ -223,7 +223,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
             item = choice(suitableitems)
             if item.rarity <= 2:
-                amount = randint(1, 4)
+                amount = randint(1, 3)
             else:
                 amount = 1
 
