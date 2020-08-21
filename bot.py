@@ -6,15 +6,16 @@ import websockets
 import aioredis
 import io
 import json
-import botsettings
-import classes.item as utilitems
+import textwrap
 from aiohttp import ClientSession
-from textwrap import indent
 from collections import Counter
 from contextlib import redirect_stdout
 from asyncpg import create_pool
 from discord.ext import commands
 from datetime import datetime, timedelta, timezone
+
+import botsettings
+import classes.item as utilitems
 from utils import checks
 from utils.time import secstotime
 
@@ -322,7 +323,7 @@ class BotClient(commands.AutoShardedBot):
         await self.websocket.close()
         await super().close()
 
-    async def exec(self, code):
+    async def exec_eval(self, code):
         env = {
             'client': self,
             '_': self._last_result
@@ -379,7 +380,7 @@ class BotClient(commands.AutoShardedBot):
             elif cmd == 'eval':
                 self.log.info(f"received command [eval] ({data['content']})")
                 content = data['content']
-                data = await self.exec(content)
+                data = await self.exec_eval(content)
                 ret = {'response': str(data)}
             elif cmd == 'maintenance':
                 content = data['content']
