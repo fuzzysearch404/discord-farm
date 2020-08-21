@@ -182,7 +182,7 @@ class ExportMission:
 
     @staticmethod
     def calc_base_reward(item, amount):
-        money_per_item = item.minprice
+        money_per_item = item.maxprice / 8
         money = money_per_item * amount
 
         xp_per_item = int(item.xp / 3.5) or 1
@@ -197,7 +197,7 @@ class ExportMission:
     def calc_reward_for_shipment(self, shipment=0):
         times_shipped = shipment or self.shipped
 
-        gold = self.base_gold + self.base_gold * (times_shipped * 0.20)
+        gold = self.base_gold * times_shipped
         xp = self.base_xp + self.base_xp * (times_shipped * 0.20)
         
         return int(gold) or 1, int(xp) or 1
