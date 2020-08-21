@@ -1,8 +1,9 @@
-import utils.embeds as emb
 from asyncio import TimeoutError
 from discord import Embed, HTTPException
 from discord.ext import commands
 from typing import Optional
+
+import utils.embeds as emb
 from utils import checks
 from utils.time import secstodays
 from utils.paginator import Pages
@@ -777,6 +778,8 @@ class Shop(commands.Cog):
 
         userdata = await checks.check_account_data(ctx)
         if not userdata: return
+        
+        price = emojis_prices[str(reaction.emoji)]
 
         if userdata['money'] < price:
             embed = emb.errorembed(
