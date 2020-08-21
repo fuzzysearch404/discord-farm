@@ -159,11 +159,6 @@ class BotClient(commands.AutoShardedBot):
             f'Shards: `{self.shard_ids}` Total guilds: `{len(self.guilds)}`'
         )
 
-    async def on_resumed(self):
-        # There might be a bunch of other API calls queued, so we privilage them first.
-        await asyncio.sleep(15)
-        await self.send_log(f'\ud83d\udfe1 Resumed session...')
-
     async def on_shard_ready(self, shard_id):
         self.log.info(f'[Cluster#{self.cluster_name}] Shard {shard_id} ready')
 
