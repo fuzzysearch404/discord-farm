@@ -1,9 +1,11 @@
 ## Requirements:
 1) Python 3.7+ (dev version)
-2) discord.py
-3) asyncpg
-4) aioredis
-5) psutil
+2) pip install discord.py
+3) pip install asyncpg
+4) pip install aioredis
+5) pip install psutil
+6) pip install websockets
+7) pip install requests
 
 ## Instalation:
 1) Set up PostgreSQL with `schema.sql`
