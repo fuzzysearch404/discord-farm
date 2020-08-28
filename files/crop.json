@@ -163,8 +163,20 @@
         "rarity":1,
         "amount":26,
         "minprice":89,
-        "maxprice":108,
+        "maxprice":107,
         "level":18,
         "img":"https://failiem.lv/thumb_show.php?i=6h5sy93e"
+    },
+    "115": {
+        "id":115,
+        "madefrom":15,
+        "emoji":"<:redbeans:748854068604174367>",
+        "name":"red beans",
+        "rarity":1,
+        "amount":40,
+        "minprice":92,
+        "maxprice":109,
+        "level":23,
+        "img":"https://failiem.lv/thumb_show.php?i=j6j8tv4r"
     }
 }

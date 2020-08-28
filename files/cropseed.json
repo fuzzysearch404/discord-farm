@@ -138,5 +138,15 @@
         "rarity":2,
         "grows":11700,
         "gold_cost":2500
+    },
+    "15": {
+        "id":15,
+        "expandsto":115,
+        "level":23,
+        "emoji":"<:redbeans:748854068604174367>",
+        "name":"red bean seeds",
+        "rarity":2,
+        "grows":21600,
+        "gold_cost":4000
     }
 }

@@ -249,7 +249,18 @@
         "amount":1,
         "level":22,
         "img":"https://failiem.lv/thumb_show.php?i=qm7bzd23",
-        "craftedfrom":[{"108":75}, {"307":110}],
+        "craftedfrom":[{"108":75}, {"307":96}],
         "time":12000
+    },
+    "724" : {
+        "id":724,
+        "emoji":"\ud83c\udf61",
+        "name":"dango",
+        "rarity":3,
+        "amount":1,
+        "level":23,
+        "img":"https://failiem.lv/thumb_show.php?i=vpx4qbpp",
+        "craftedfrom":[{"114":68}, {"115":75}],
+        "time":7220
     }
 }
