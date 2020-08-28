@@ -403,7 +403,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         embed.add_field(name='\ud83d\udd31Required level', value=crop.level)
         embed.add_field(name=f'{client.xp}When harvested gains', value=f'{crop.xp} xp/per item.')
         embed.add_field(name='\ud83d\udcb0Seeds price', value=f'{cropseed.gold_cost}{client.gold}')
-        embed.add_field(name='\ud83d\udd70Sprouting, grows', value=secstotime(cropseed.grows))
+        embed.add_field(name='\ud83d\udd70Grows', value=secstotime(cropseed.grows))
         embed.add_field(name='\ud83d\udd70Harvestable for', value=secstotime(cropseed.dies))
         embed.add_field(name='\u2696Harvest volume', value=f'{crop.amount} items')
         embed.add_field(name='\ud83d\uded2Market price', value=f'{crop.minprice} - {crop.maxprice}{client.gold}/item')
