@@ -36,15 +36,9 @@ class Farm(commands.Cog, name="Actual Farm"):
         """Calculates time between now and item status."""
         now = datetime.now()
         if ends > now:
-            parent = item.madefrom
-            half = parent.grows / 2
             secsdelta = ends - now
-            if secsdelta.total_seconds() > half:
-                status = f'Sprouting {secstotime(secsdelta.total_seconds() - half)}'
-                stype = 'grow1'
-            else:
-                status = f'Growing {secstotime(secsdelta.total_seconds())}'
-                stype = 'grow2'
+            status = f'Growing {secstotime(secsdelta.total_seconds())}'
+            stype = 'grow'
         elif dies > now:
             secsdelta = dies - now
             status = f'Harvestable for {secstotime(secsdelta.total_seconds())}'
@@ -61,7 +55,7 @@ class Farm(commands.Cog, name="Actual Farm"):
         if ends > now:
             secsdelta = ends - now
             status = f'Growing {secstotime(secsdelta.total_seconds())}'
-            stype = 'grow1'
+            stype = 'grow'
         elif dies > now:
             secsdelta = dies - now
             status = f'Collectable for {secstotime(secsdelta.total_seconds())}'
@@ -171,7 +165,7 @@ class Farm(commands.Cog, name="Actual Farm"):
     async def check_crops(self, client, useracc, crops, ctx, unique, todelete, cat):
         for data, item in crops.items():
             status = self.get_crop_state(item, data['ends'], data['dies'])[0]
-            if status == 'grow1' or status == 'grow2':
+            if status == 'grow':
                 continue
             elif status == 'ready' or status == 'dead' and (cat or client.field_guard):
                 amount = data['amount']
@@ -188,7 +182,7 @@ class Farm(commands.Cog, name="Actual Farm"):
     async def check_animals_or_trees(self, client, useracc, crops, ctx, unique, todelete, deaditem, cat):
         for data, item in crops.items():
             status = self.get_animal_or_tree_state(data['ends'], data['dies'])[0]
-            if status == 'grow1':
+            if status == 'grow':
                 continue
             elif status == 'ready' or status == 'dead' and (cat or client.field_guard):
                 child = item.expandsto
