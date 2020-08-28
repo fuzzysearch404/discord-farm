@@ -350,7 +350,7 @@ class Missions(commands.Cog, name="Mission"):
         embed = Embed(title="\ud83d\udea2Sign an export contract", color=15171850)
         embed.description = (
             "\ud83d\udd8b\ufe0fPlease sign one of these contracts!\n"
-            "\u2139\ufe0f**Note: If you don't accept any contracts, you will have to wait an hour cooldown!**"
+            "\u2139\ufe0f**Note: If you don't accept any of these contracts, you will have to wait an hour cooldown!**"
         )
 
         emoji, export_options = "\ufe0f\u20e3", {}
