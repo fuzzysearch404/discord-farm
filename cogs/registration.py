@@ -10,7 +10,7 @@ from utils import checks
 from classes import user as userutils
 
 DEFAULT_XP = 0
-DEFAULT_MONEY = 150
+DEFAULT_MONEY = 250
 DEFAULT_GEMS = 0
 DEFAULT_TILES = 2
 DEFAULT_FACTORY_SLOTS = 1
@@ -23,7 +23,6 @@ class HelpPaginator(Pages):
         self.total = len(entries)
         self.help_command = help_command
         self.prefix = help_command.clean_prefix
-        self.is_bot = False
 
     def get_bot_page(self, page):
         cog, description, commands = self.entries[page - 1]
@@ -35,10 +34,6 @@ class HelpPaginator(Pages):
         self.embed.clear_fields()
         self.embed.description = self.description
         self.embed.title = self.title
-
-        if self.is_bot:
-            value ='For more help, join the official bot support server: https://discord.gg/MwpxKjF'
-            self.embed.add_field(name='Support', value=value, inline=False)
 
         self.embed.set_footer(text=f'Use "{self.prefix}help command" for more info on a command.')
 
@@ -146,7 +141,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
         bot = self.context.bot
         entries = await self.filter_commands(bot.commands, sort=True, key=key)
         nested_pages = []
-        per_page = 9
+        per_page = 10
         total = 0
 
         for cog, commands in itertools.groupby(entries, key=key):
@@ -165,7 +160,6 @@ class PaginatedHelpCommand(commands.HelpCommand):
 
         # swap the get_page implementation to work with our nested pages.
         pages.get_page = pages.get_bot_page
-        pages.is_bot = True
         pages.total = total
         await pages.paginate()
 
