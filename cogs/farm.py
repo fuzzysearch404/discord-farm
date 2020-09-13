@@ -404,22 +404,22 @@ class Farm(commands.Cog, name="Actual Farm"):
 
         usedtiles = await useracc.get_used_field_count()
 
-        if not customamount:
-            if usedtiles >= useracc.tiles:
-                embed = emb.errorembed(
-                    "Not enough farm space. Free up your field or expand it with the `%upgrade farm` command.",
+        def create_farm_space_error_embed():
+            embed = emb.errorembed(
+                    f"Not enough farm space. Tiles in use currently: {usedtiles}/{useracc.tiles}\n"
+                    "\ud83d\ude9cFree up your field or expand it with the `%upgrade farm` command.",
                     ctx
                 )
-                embed.set_footer(text="Harvest your field with the %harvest command")
-                return await ctx.send(embed=embed)
+            embed.set_footer(text="Harvest your field with the %harvest command")
+            
+            return embed
+
+        if not customamount:
+            if usedtiles >= useracc.tiles: 
+                return await ctx.send(embed=create_farm_space_error_embed())
         else:
             if usedtiles + amount > useracc.tiles:
-                embed = emb.errorembed(
-                    "Not enough farm space. Free up your field or expand it with the `%upgrade farm` command.",
-                    ctx
-                )
-                embed.set_footer(text="Harvest your field with the %harvest command")
-                return await ctx.send(embed=embed)
+                return await ctx.send(embed=create_farm_space_error_embed())
 
         item = await finditem(client, ctx, item_search)
         if not item:
