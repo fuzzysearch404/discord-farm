@@ -144,20 +144,20 @@ class Shop(commands.Cog):
 
         embed = Embed(title='\u2b50 Upgrades', color=82247)
         embed.add_field(
-            name=f'\ud83d\udd313 {client.tile}Expand farm size',
+            name=f'{client.tile}Expand farm size',
             value=(f"\ud83c\udd95 {useracc.tiles} \u2192 {useracc.tiles + 1} size\n"
             f"{client.gem}1\n"
             "\ud83d\uded2 `%upgrade farm`")
         )
         embed.add_field(
-            name=f'\ud83d\udd313 \ud83c\udfedFactory upgrade - capacity',
+            name=f'\ud83c\udfedFactory upgrade - capacity',
             value=(f"\ud83c\udd95 {useracc.factoryslots} \u2192 {useracc.factoryslots + 1} capacity\n"
             f"{client.gem}1\n"
             "\ud83d\uded2 `%upgrade factory1`")
         )
         if useracc.factorylevel < 10:
             embed.add_field(
-                name=f'\ud83d\udd313 \ud83c\udfedFactory upgrade - workers',
+                name=f'\ud83c\udfedFactory upgrade - workers',
                 value=(f"\ud83c\udd95 {useracc.factorylevel * 5}% \u2192 "
                 f"{(useracc.factorylevel + 1) *5}% faster production speed\n"
                 f"{client.gem}1\n"
@@ -370,7 +370,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def farm(self, ctx):
         """
-        \ud83d\uded2 [Unlocks from level 3] Adds another farm size tile.
+        \ud83d\uded2 Adds another farm size tile.
 
         If you previously could grow 2 items on your field at the time,
         after purchasing this upgrade, you can grow 3 items at the time. 
@@ -379,13 +379,6 @@ class Shop(commands.Cog):
         if not userdata: return
         client = self.client
         useracc = userutils.User.get_user(userdata, client)
-
-        if useracc.level < 3:
-            embed = emb.errorembed(
-                'Farm field expansions are available from experience level 3.',
-                ctx
-            )
-            return await ctx.send(embed=embed)
 
         buyembed = Embed(title='Purchase details', colour=9309837)
         buyembed.add_field(
@@ -442,7 +435,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def factory1(self, ctx):
         """
-        \ud83d\uded2 [Unlocks from level 3] Adds another factory capacity slot.
+        \ud83d\uded2 Adds another factory capacity slot.
 
         If you previously could queue 2 items for production at the time,
         after purchasing this upgrade, you can queue 3 items at the time. 
@@ -451,13 +444,6 @@ class Shop(commands.Cog):
         if not userdata: return
         client = self.client
         useracc = userutils.User.get_user(userdata, client)
-
-        if useracc.level < 3:
-            embed = emb.errorembed(
-                'Factory upgrades are available from experience level 3.',
-                ctx
-            )
-            return await ctx.send(embed=embed)
 
         buyembed = Embed(title='Purchase details', colour=9309837)
         buyembed.add_field(
@@ -511,7 +497,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def factory2(self, ctx):
         """
-        \ud83d\udc68\u200d\ud83c\udfed [Unlocks from level 3] Increases factory production speed by 5%.
+        \ud83d\udc68\u200d\ud83c\udfed Increases factory production speed by 5%.
 
         Makes your factory production speed a bit faster.
         Max. factory workers: 10.
@@ -520,13 +506,6 @@ class Shop(commands.Cog):
         if not userdata: return
         client = self.client
         useracc = userutils.User.get_user(userdata, client)
-
-        if useracc.level < 3:
-            embed = emb.errorembed(
-                'Factory upgrades are available from experience level 3.',
-                ctx
-            )
-            return await ctx.send(embed=embed)
 
         if useracc.factorylevel >= 10:
             embed = emb.errorembed(
