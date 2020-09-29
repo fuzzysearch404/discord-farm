@@ -21,6 +21,11 @@ from utils.time import secstotime
 
 TEMP_BAN_DURATION = 604800 # 7 days
 
+BOT_INTENTS = discord.Intents.none()
+BOT_INTENTS.guilds = True
+BOT_INTENTS.guild_messages = True
+BOT_INTENTS.guild_reactions = True
+
 
 class BotClient(commands.AutoShardedBot):
     def __init__(self, **kwargs):
@@ -29,6 +34,7 @@ class BotClient(commands.AutoShardedBot):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         super().__init__(
+            intents=BOT_INTENTS,
             chunk_guilds_at_startup=False,
             guild_subscriptions=False,
             max_messages=5000,
