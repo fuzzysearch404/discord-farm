@@ -29,7 +29,7 @@ class BotClient(commands.AutoShardedBot):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         super().__init__(
-            fetch_offline_members=False,
+            chunk_guilds_at_startup=False,
             guild_subscriptions=False,
             max_messages=5000,
             command_prefix=commands.when_mentioned_or('%'), 
