@@ -42,7 +42,7 @@ class Launcher:
         self.init = time.perf_counter()
 
     def get_shard_count(self):
-        data = requests.get('https://discordapp.com/api/v7/gateway/bot', headers={
+        data = requests.get('https://discord.com/api/v8/gateway/bot', headers={
             "Authorization": "Bot "+bot_auth_token,
             "User-Agent": "Discord Farm Bot (https://github.com/Rapptz/discord.py 1.3.3) Python/3.7 aiohttp/3.6.2"
         })
