@@ -8,12 +8,12 @@ sudo apt install -y redis-server
 sudo apt install -y postgresql postgresql-contrib
 sudo apt install -y python3.8-dev
 sudo apt install -y python3-pip
-python3.8 install discord.py
-python3.8 install asyncpg
-python3.8 install aioredis
-python3.8 install psutil
-python3.8 install websockets
-python3.8 install requests
+python3.8 -m pip install discord.py
+python3.8 -m pip install asyncpg
+python3.8 -m pip install aioredis
+python3.8 -m pip install psutil
+python3.8 -m pip install websockets
+python3.8 -m pip install requests
 sudo timedatectl set-timezone UTC
 
 # sudo su - postgres
