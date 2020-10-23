@@ -50,7 +50,6 @@ def user_cooldown(cooldown: int, identifier: str = None):
             return True
         else:
             raise commands.CommandOnCooldown(ctx, command_ttl)
-            return False
 
     return commands.check(predicate)
 
