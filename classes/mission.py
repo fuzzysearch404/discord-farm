@@ -2,7 +2,7 @@ import json
 from random import randint, choice
 from datetime import datetime, timedelta
 
-from classes.item import base_amount_for_growables
+from classes.item import base_amount_for_growables, CraftedItem
 
 BUISNESS_NAMES = (
     "Toby's Greenhouse", "FishTastic Restaurants", "Mark's Store",
@@ -39,26 +39,31 @@ class Mission:
 
     @classmethod
     def generate(cls, useracc, boosted=False):
-        requests, alreadyused = [], []
+        requests = []
 
         suitableitems = useracc.find_all_unlocked_tradeble_items(special=False)
         user_level = useracc.level
         requestsamount = randint(1, cls.items_for_level(user_level))
 
-        # WARNING: if user doesnt have unlocked
-        # enough items, then loop would never end.
-        # Check items_for_level().
+        crafted_item_count = 0
         for i in range(requestsamount):
             newitem = None
             
-            while not newitem or newitem in alreadyused:
+            while not newitem or isinstance(newitem, CraftedItem) and crafted_item_count >= 2:
                 newitem = choice(suitableitems)
             
-            amount = cls.calc_amount(user_level, newitem)
-            req = (newitem, amount)
+            if isinstance(newitem, CraftedItem):
+                crafted_item_count += 1
             
-            requests.append(req)
-            alreadyused.append(newitem)
+            amount = cls.calc_amount(user_level, newitem)
+            
+            for i_req, i_amount in requests:
+                if i_req == newitem:
+                    amount += i_amount
+                    requests.remove((i_req, i_amount)) # Remove existing mission then
+                    break
+            
+            requests.append((newitem, amount))
 
         xp, money = cls.calc_reward(requests, boosted)
         buisness = cls.get_buisness_name()
@@ -77,20 +82,20 @@ class Mission:
     def calc_amount(level, item):
         if level < 3: 
             if not hasattr(item, "craftedfrom"):
-                return int(base_amount_for_growables(item) / 3) or 1
+                return int(base_amount_for_growables(item) / 4) or 1
             else: return 1
         elif level < 10:
             if not hasattr(item, "craftedfrom"):
-                return base_amount_for_growables(item) * 3
+                return base_amount_for_growables(item) * 2
             else: return 1
         elif level < 20:
             if not hasattr(item, "craftedfrom"):
-                return base_amount_for_growables(item) * 5
+                return base_amount_for_growables(item) * 3
             elif item.rarity == 2: return randint(1, 2)
             else: return 1
         elif level < 30:
             if not hasattr(item, "craftedfrom"):
-                return base_amount_for_growables(item) * 8
+                return base_amount_for_growables(item) * 7
             elif item.rarity == 2: return randint(1, 2)
             else: return 1
         else:
