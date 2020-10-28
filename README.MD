@@ -1,5 +1,5 @@
 ## Requirements:
-1) Python 3.7+ (dev version)
+1) Python 3.8+ (dev version)
 2) pip install discord.py
 3) pip install asyncpg
 4) pip install aioredis
