@@ -38,4 +38,4 @@ def boostvalid(date):
 dog1 = Boost('dog1', '\ud83d\udc29', 50, 135, 262)
 dog2 = Boost('dog2', '\ud83d\udc36', 125, 337, 656)
 dog3 = Boost('dog3', '\ud83d\udc15', 250, 675, 1312)
-cat = Boost('cat', '\ud83d\udc31', 325, 877, 1706)
+cat = Boost('cat', '\ud83d\udc31', 280, 756, 1470)
