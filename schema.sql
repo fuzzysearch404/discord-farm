@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS public.planted(
 	fieldsused smallint DEFAULT 1, 
 	ends timestamp NOT NULL,
 	dies timestamp NOT NULL,
-	robbedfields smallint DEFAULT 0
+	robbedfields smallint DEFAULT 0,
+    catboost boolean DEFAULT false
 );
 
 ALTER TABLE ONLY public.planted
