@@ -85,11 +85,6 @@ class Farm(commands.Cog, name="Actual Farm"):
         if not userdata: return
         client = self.client
         useracc = userutils.User.get_user(userdata, client)
-        
-        cat = False
-        catdata = await useracc.get_boosts()
-        if catdata:
-            cat = boostvalid(catdata['cat'])
 
         member = member or ctx.author
 
@@ -102,9 +97,6 @@ class Farm(commands.Cog, name="Actual Farm"):
         crops, animals, trees = {}, {}, {}
         information = []
 
-        if cat:
-            information.append("\u2139\ufe0f Farm's items can be harvested even if they are rotten, "
-            " thanks to player's cat \ud83d\udc31")
         if client.field_guard:
             information.append("\u2139\ufe0f For a short period of time, farm's items can be harvested "
             "even if they are rotten, thanks to farm guard \ud83d\udee1\ufe0f")
@@ -132,6 +124,8 @@ class Farm(commands.Cog, name="Actual Farm"):
             for data, item in crops.items():
                 status = self.get_crop_state(item, data['ends'], data['dies'])[1]
                 fmt = f"{item.emoji}**{item.name.capitalize()}** x{data['amount']} - {status}"
+                if data['catboost']:
+                    fmt += " \ud83d\udc31"
                 information.append(fmt)
         if len(trees) > 0:
             information.append('__**Trees:**__')
@@ -140,6 +134,8 @@ class Farm(commands.Cog, name="Actual Farm"):
                 status = self.get_animal_or_tree_state(data['ends'], data['dies'])[1]
                 fmt = f"{item.emoji}**{item.name.capitalize()}** {data['iterations']}.lvl"
                 fmt += f" (x{data['amount']}{child.emoji}) - {status}"
+                if data['catboost']:
+                    fmt += " \ud83d\udc31"
                 information.append(fmt)
         if len(animals) > 0:
             information.append('__**Animals:**__')
@@ -148,6 +144,8 @@ class Farm(commands.Cog, name="Actual Farm"):
                 status = self.get_animal_or_tree_state(data['ends'], data['dies'])[1]
                 fmt = f"{item.emoji}**{item.name.capitalize()}** {data['iterations']}.lvl"
                 fmt += f" (x{data['amount']}{child.emoji}) - {status}"
+                if data['catboost']:
+                    fmt += " \ud83d\udc31"
                 information.append(fmt)
 
         try:
@@ -162,12 +160,12 @@ class Farm(commands.Cog, name="Actual Farm"):
         except Exception as e:
             print(e)
 
-    async def check_crops(self, client, useracc, crops, ctx, unique, todelete, cat):
+    async def check_crops(self, client, useracc, crops, ctx, unique, todelete):
         for data, item in crops.items():
             status = self.get_crop_state(item, data['ends'], data['dies'])[0]
             if status == 'grow':
                 continue
-            elif status == 'ready' or status == 'dead' and (cat or client.field_guard):
+            elif status == 'ready' or status == 'dead' and (data['catboost'] or client.field_guard):
                 amount = data['amount']
                 xp = item.xp * amount
                 await useracc.give_xp_and_level_up(xp, ctx)
@@ -179,12 +177,12 @@ class Farm(commands.Cog, name="Actual Farm"):
 
             todelete.append(data['id'])
 
-    async def check_animals_or_trees(self, client, useracc, crops, ctx, unique, todelete, deaditem, cat):
+    async def check_animals_or_trees(self, client, useracc, crops, ctx, unique, todelete, deaditem):
         for data, item in crops.items():
             status = self.get_animal_or_tree_state(data['ends'], data['dies'])[0]
             if status == 'grow':
                 continue
-            elif status == 'ready' or status == 'dead' and (cat or client.field_guard):
+            elif status == 'ready' or status == 'dead' and (data['catboost'] or client.field_guard):
                 child = item.expandsto
                 amount = data['amount']
                 xp = child.xp * amount
@@ -243,7 +241,7 @@ class Farm(commands.Cog, name="Actual Farm"):
             return await ctx.send(embed=embed)
 
         crops, animals, trees, unique = {}, {}, {}, {}
-        todelete, deaditem, cat = [], False, False
+        todelete, deaditem = [], False
 
         for data in fielddata:
             try:
@@ -257,20 +255,15 @@ class Farm(commands.Cog, name="Actual Farm"):
             except KeyError:
                 raise Exception(f"Could not find item {data['itemid']}")
 
-        
-        catdata = await useracc.get_boosts()
-        if catdata:
-            cat = boostvalid(catdata['cat'])
-
         if crops:
-            await self.check_crops(client, useracc, crops, ctx, unique, todelete, cat)
+            await self.check_crops(client, useracc, crops, ctx, unique, todelete)
         if animals:
             deaditem = await self.check_animals_or_trees(
-                client, useracc, animals, ctx, unique, todelete, deaditem, cat
+                client, useracc, animals, ctx, unique, todelete, deaditem
             )
         if trees:
             deaditem = await self.check_animals_or_trees(
-                client, useracc, trees, ctx, unique, todelete, deaditem, cat
+                client, useracc, trees, ctx, unique, todelete, deaditem
             )
 
         if len(todelete) > 0:
@@ -304,19 +297,22 @@ class Farm(commands.Cog, name="Actual Farm"):
         ends = now + timedelta(seconds=item.grows)
         dies = ends + timedelta(seconds=item.dies)
 
+        boostdata = await useracc.get_boosts()
+        cat = boostvalid(boostdata['cat'])
+
         async with client.db.acquire() as connection:
             async with connection.transaction():
-                query = """INSERT INTO planted(itemid, userid, amount, ends, dies, fieldsused)
-                VALUES($1, $2, $3, $4, $5, $6);"""
+                query = """INSERT INTO planted(itemid, userid, amount, ends, dies, fieldsused, catboost)
+                VALUES($1, $2, $3, $4, $5, $6, $7);"""
                 if not customamount:
                     await client.db.execute(
                         query, itemchild.id, useracc.userid, itemchild.amount,
-                        ends, dies, 1
+                        ends, dies, 1, cat
                     )
                 else:
                     await client.db.execute(
                         query, itemchild.id, useracc.userid, itemchild.amount * amount,
-                        ends, dies, amount
+                        ends, dies, amount, cat
                     )
 
         if not customamount:
@@ -339,19 +335,22 @@ class Farm(commands.Cog, name="Actual Farm"):
         ends = now + timedelta(seconds=item.grows)
         dies = ends + timedelta(seconds=item.dies)
 
+        boostdata = await useracc.get_boosts()
+        cat = boostvalid(boostdata['cat'])
+
         async with client.db.acquire() as connection:
             async with connection.transaction():
-                query = """INSERT INTO planted(itemid, userid, amount, ends, dies, fieldsused, iterations)
-                VALUES($1, $2, $3, $4, $5, $6, $7);"""
+                query = """INSERT INTO planted(itemid, userid, amount, ends, dies, fieldsused, iterations, catboost)
+                VALUES($1, $2, $3, $4, $5, $6, $7, $8);"""
                 if not customamount:
                     await client.db.execute(
                         query, item.id, useracc.userid, itemchild.amount,
-                        ends, dies, 1, item.amount
+                        ends, dies, 1, item.amount, cat
                     )
                 else:
                     await client.db.execute(
                         query, item.id, useracc.userid, itemchild.amount * amount,
-                        ends, dies, amount, item.amount
+                        ends, dies, amount, item.amount, cat
                     )
 
         if not customamount:
@@ -360,7 +359,7 @@ class Farm(commands.Cog, name="Actual Farm"):
                 f"Will produce {itemchild.amount}x {itemchild.emoji}**"
                 f" {itemchild.name.capitalize()}** ({item.amount} times).\n",
                 ctx
-                )
+            )
         else:
             embed = emb.confirmembed(
                 f"You started to grow {amount}x{item.emoji}{item.name.capitalize()}.\n"
