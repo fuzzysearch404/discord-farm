@@ -298,7 +298,9 @@ class Farm(commands.Cog, name="Actual Farm"):
         dies = ends + timedelta(seconds=item.dies)
 
         boostdata = await useracc.get_boosts()
-        cat = boostvalid(boostdata['cat'])
+        if boostdata:
+            cat = boostvalid(boostdata['cat'])
+        else: cat = False
 
         async with client.db.acquire() as connection:
             async with connection.transaction():
@@ -336,7 +338,9 @@ class Farm(commands.Cog, name="Actual Farm"):
         dies = ends + timedelta(seconds=item.dies)
 
         boostdata = await useracc.get_boosts()
-        cat = boostvalid(boostdata['cat'])
+        if boostdata:
+            cat = boostvalid(boostdata['cat'])
+        else: cat = False
 
         async with client.db.acquire() as connection:
             async with connection.transaction():
