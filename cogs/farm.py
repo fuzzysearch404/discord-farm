@@ -255,7 +255,7 @@ class Farm(commands.Cog, name="Actual Farm"):
                 elif item.type == 'tree':
                     trees[data] = item
             except KeyError:
-                raise Exception(f"Could not find item {object['itemid']}")
+                raise Exception(f"Could not find item {data['itemid']}")
 
         
         catdata = await useracc.get_boosts()
