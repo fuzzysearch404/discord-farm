@@ -705,7 +705,7 @@ class Shop(commands.Cog):
         \ud83d\udc31 Purchase cat "Leo" to look after your farm's field.
 
         Allows to collect rotten crops and rotten production from your farm's 
-        field for the period of booster's duration.
+        field, by giving them immortaly for the period of booster's duration.
         Boost's price increases by increasing the farm field size.
         """
         await self.prepare_boost(ctx, boostutils.cat)
