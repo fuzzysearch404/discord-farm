@@ -92,3 +92,17 @@ CREATE TABLE IF NOT EXISTS public.boosts(
 
 ALTER TABLE ONLY public.boosts
     ADD CONSTRAINT boosts_user_fkey FOREIGN KEY (userid) REFERENCES public.profile(userid) ON DELETE CASCADE;
+
+
+CREATE TABLE IF NOT EXISTS public.modifications(
+    id SERIAL,
+    itemid bigint NOT NULL,
+	userid bigint NOT NULL,
+	time1 smallint DEFAULT 0,
+	time2 smallint DEFAULT 0,
+	volume smallint DEFAULT 0,
+    CONSTRAINT PK_item_mod PRIMARY KEY (userid, itemid)
+);
+
+ALTER TABLE ONLY public.modifications
+    ADD CONSTRAINT modifications_user_fkey FOREIGN KEY (userid) REFERENCES public.profile(userid) ON DELETE CASCADE;
