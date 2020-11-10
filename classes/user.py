@@ -215,15 +215,14 @@ class User:
                 if not olditem:
                     query = """INSERT INTO inventory(itemid, userid, amount)
                     VALUES($1, $2, $3);"""
-                else:
-                    query = """UPDATE inventory SET amount = $1
-                    WHERE userid = $2 AND itemid = $3;"""
 
-                if not olditem:
                     await self.client.db.execute(
                         query, item.id, self.userid, amount
                     )
                 else:
+                    query = """UPDATE inventory SET amount = $1
+                    WHERE userid = $2 AND itemid = $3;"""
+
                     await self.client.db.execute(
                         query, olditem['amount'] + amount, self.userid, item.id
                     )
