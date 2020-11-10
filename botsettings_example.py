@@ -27,6 +27,7 @@ initial_extensions = (
     'cogs.trades',
     'cogs.looting',
     'cogs.registration',
+    'cogs.modifications',
     'cogs.usercontrol'
 )
 
