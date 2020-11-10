@@ -19,10 +19,10 @@ CREATE TABLE IF NOT EXISTS public.profile(
 );
 
 CREATE TABLE IF NOT EXISTS public.inventory(
-	id SERIAL,
+    id SERIAL,
     userid bigint NOT NULL,
     itemid smallint NOT NULL,
-	amount integer NOT NULL,
+    amount integer NOT NULL,
     PK_item_user PRIMARY KEY (userid, itemid)
 );
 
