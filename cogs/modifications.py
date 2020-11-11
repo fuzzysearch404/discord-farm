@@ -40,13 +40,13 @@ class Modifications(commands.Cog):
 
     def calculate_mod_cooldown(self, level):
         if level == 1:
-            return 300
+            return 120
         elif level < 5:
-            return level * 400
+            return level * 300
         elif level < 8:
-            return level * 500
+            return level * 400
         else:
-            return level * 600
+            return level * 500
 
     @commands.command(aliases=['lab'])
     @checks.message_history_perms()
@@ -87,7 +87,7 @@ class Modifications(commands.Cog):
                 ))
         
         try:
-            p = Pages(ctx, entries=information, per_page=15, show_entry_count=False)
+            p = Pages(ctx, entries=information, per_page=12, show_entry_count=False)
             p.embed.title = f"\ud83e\uddec {member}'s laboratory"
             p.embed.color = 143995
             p.embed.set_footer(
