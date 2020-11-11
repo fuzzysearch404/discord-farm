@@ -143,8 +143,24 @@ class User:
 
     async def get_guild_store(self, guild):
         query = """SELECT * FROM store WHERE guildid = $1
-            ORDER BY userid;"""
+        ORDER BY userid;"""
         data = await self.client.db.fetch(query, guild.id)
+        
+        return data
+
+    async def get_item_modification(self, item):
+        """Fetches modification data for specific item"""
+        query = """SELECT * FROM modifications WHERE userid = $1
+        AND itemid = $2;"""
+        data = await self.client.db.fetchrow(query, self.userid, item.id)
+        
+        return data
+
+    async def get_all_item_modifications(self):
+        """Fetches all user item modifications"""
+        query = """SELECT * FROM modifications WHERE userid = $1
+        ORDER BY itemid;"""
+        data = await self.client.db.fetch(query, self.userid)
         
         return data
 
