@@ -109,10 +109,10 @@ class Mission:
         sum = 0
 
         for item in items:
-            sum += int(item[0].maxprice * 1.37 * item[1])
+            sum += int(item[0].maxprice * 1.54 * item[1])
 
         if boosted:
-            sum = int(sum * 1.5)
+            sum = int(sum * 2)
 
         xp = randint(int(sum / 20), sum)
         money = sum - xp
@@ -187,7 +187,7 @@ class ExportMission:
 
     @staticmethod
     def calc_base_reward(item, amount):
-        money_per_item = item.maxprice / 8
+        money_per_item = item.maxprice / 7
         money = money_per_item * amount
 
         xp_per_item = int(item.xp / 3.5) or 1
