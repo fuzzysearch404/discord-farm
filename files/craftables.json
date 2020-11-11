@@ -29,7 +29,7 @@
         "amount":1,
         "level":4,
         "img":"https://failiem.lv/thumb_show.php?i=qr88nngm",
-        "craftedfrom":[{"501":15}],
+        "craftedfrom":[{"501":24}],
         "time":420
     },
     "704" : {
@@ -40,7 +40,7 @@
         "amount":1,
         "level":5,
         "img":"https://failiem.lv/thumb_show.php?i=ngrzhvcb",
-        "craftedfrom":[{"502":16}],
+        "craftedfrom":[{"502":32}],
         "time":600
     },
     "705" : {
@@ -51,7 +51,7 @@
         "amount":1,
         "level":6,
         "img":"https://failiem.lv/thumb_show.php?i=xm68e72g",
-        "craftedfrom":[{"104":50}, {"502":12}],
+        "craftedfrom":[{"104":50}, {"502":24}],
         "time":2000
     },
     "706" : {
@@ -84,7 +84,7 @@
         "amount":1,
         "level":7,
         "img":"https://failiem.lv/thumb_show.php?i=ry785umq",
-        "craftedfrom":[{"104":100}, {"501":14}, {"707":4}],
+        "craftedfrom":[{"104":100}, {"501":28}, {"707":4}],
         "time":3600
     },
     "709" : {
@@ -95,7 +95,7 @@
         "amount":1,
         "level":7,
         "img":"https://failiem.lv/thumb_show.php?i=vzv7sr7d",
-        "craftedfrom":[{"104":80}, {"301":40}, {"501":8}, {"707":2}],
+        "craftedfrom":[{"104":80}, {"301":40}, {"501":16}, {"707":2}],
         "time":5400
     },
     "710" : {
@@ -238,7 +238,7 @@
         "amount":1,
         "level":21,
         "img":"https://failiem.lv/thumb_show.php?i=6efp5rek",
-        "craftedfrom":[{"501":40}, {"503":20}],
+        "craftedfrom":[{"501":50}, {"503":40}],
         "time":3600
     },
     "723" : {

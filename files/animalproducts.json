@@ -6,9 +6,9 @@
         "name":"chicken eggs",
         "rarity":2,
         "madefrom":401,
-        "amount":3,
-        "minprice":9,
-        "maxprice":16
+        "amount":10,
+        "minprice":2,
+        "maxprice":5
     },
     "502" : {
         "id":502,
@@ -17,9 +17,9 @@
         "name":"cow's milk",
         "rarity":2,
         "madefrom":402,
-        "amount":5,
-        "minprice":6,
-        "maxprice":10
+        "amount":11,
+        "minprice":3,
+        "maxprice":5
     },
     "503" : {
         "id":503,
@@ -28,8 +28,8 @@
         "name":"honey",
         "rarity":2,
         "madefrom":403,
-        "amount":4,
-        "minprice":150,
-        "maxprice":235
+        "amount":12,
+        "minprice":50,
+        "maxprice":79
     }
 }
