@@ -117,13 +117,18 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
                 f'`%trades` {member.mention}'
             )
         )
+        
+        lab_cd = await checks.get_user_cooldown(ctx, "recent_research")
+        lab_str = f'`%lab` {member.mention}\n'
+        if lab_cd:
+            lab_str += f"\ud83e\uddf9 Busy for {secstotime(lab_cd)}"
+        embed.add_field(
+            name='\ud83e\uddecLaboratory',
+            value=lab_str
+        )
         embed.add_field(
             name='\u2b06Boosters',
             value=f'`%boosts` {member.mention}'
-        )
-        embed.add_field(
-            name='\ud83d\ude9cAlliance',
-            value='Coming in future updates...'
         )
 
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
