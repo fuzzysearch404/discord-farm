@@ -197,24 +197,35 @@ class Farm(commands.Cog, name="Actual Farm"):
                 deaditem = True
 
             if data['iterations'] > 1:
-                await self.setnextcycle(client, data['id'], item, data)
+                await self.setnextcycle(client, data['id'], item, data, useracc)
             else:
                 todelete.append(data['id'])
 
         return deaditem
 
-    async def setnextcycle(self, client, id, item, data):
+    async def setnextcycle(self, client, id, item, data, useracc):
+        itemchild = item.expandsto
+
         now = datetime.now().replace(microsecond=0)
-        ends = now + timedelta(seconds=item.grows)
-        dies = ends + timedelta(seconds=item.dies)
-        child = item.expandsto
+        
+        item_mods = await useracc.get_item_modification(item)
+        if not item_mods:
+            ends = now + timedelta(seconds=item.grows)
+            dies = ends + timedelta(seconds=item.dies)
+            vol = itemchild.amount
+        else:
+            grow = item.grows - int(item.grows / 100 * (item_mods['time1'] * 5))
+            harv = item.dies + int(item.dies / 100 * (item_mods['time2'] * 10))
+            ends = now + timedelta(seconds=grow)
+            dies = ends + timedelta(seconds=harv)
+            vol = itemchild.amount + int(itemchild.amount / 100 * (item_mods['volume'] * 10))
 
         async with client.db.acquire() as connection:
             async with connection.transaction():
                 query = """UPDATE planted
                 SET ends = $1, dies = $2, iterations = $3,
                 amount = $4, robbedfields=0 WHERE id = $5;"""
-            await client.db.execute(query, ends, dies, data['iterations'] - 1, child.amount * data['fieldsused'], id)
+            await client.db.execute(query, ends, dies, data['iterations'] - 1, vol * data['fieldsused'], id)
 
     @commands.command(aliases=['h'])
     @checks.embed_perms()
@@ -293,9 +304,20 @@ class Farm(commands.Cog, name="Actual Farm"):
 
     async def plant_crop_seeds(self, client, item, ctx, customamount, amount, useracc):
         itemchild = item.expandsto
+
         now = datetime.now().replace(microsecond=0)
-        ends = now + timedelta(seconds=item.grows)
-        dies = ends + timedelta(seconds=item.dies)
+        
+        item_mods = await useracc.get_item_modification(item)
+        if not item_mods:
+            ends = now + timedelta(seconds=item.grows)
+            dies = ends + timedelta(seconds=item.dies)
+            vol = itemchild.amount
+        else:
+            grow = item.grows - int(item.grows / 100 * (item_mods['time1'] * 5))
+            harv = item.dies + int(item.dies / 100 * (item_mods['time2'] * 10))
+            ends = now + timedelta(seconds=grow)
+            dies = ends + timedelta(seconds=harv)
+            vol = itemchild.amount + int(itemchild.amount / 100 * (item_mods['volume'] * 10))
 
         boostdata = await useracc.get_boosts()
         if boostdata:
@@ -308,34 +330,45 @@ class Farm(commands.Cog, name="Actual Farm"):
                 VALUES($1, $2, $3, $4, $5, $6, $7);"""
                 if not customamount:
                     await client.db.execute(
-                        query, itemchild.id, useracc.userid, itemchild.amount,
+                        query, itemchild.id, useracc.userid, vol,
                         ends, dies, 1, cat
                     )
                 else:
                     await client.db.execute(
-                        query, itemchild.id, useracc.userid, itemchild.amount * amount,
+                        query, itemchild.id, useracc.userid, vol * amount,
                         ends, dies, amount, cat
                     )
 
         if not customamount:
             embed = emb.confirmembed(
                 f"You planted {item.emoji}{item.name.capitalize()}.\n"
-                f"That will grow into {itemchild.amount}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n",
+                f"That will grow into {vol}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n",
                 ctx
                 )
         else:
             embed = emb.confirmembed(
                 f"You planted {amount}x{item.emoji}{item.name.capitalize()}.\n"
-                f"That will grow into {itemchild.amount * amount}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n",
+                f"That will grow into {vol * amount}x {itemchild.emoji}**{itemchild.name.capitalize()}**\n",
                 ctx
             )
         await ctx.send(embed=embed)
 
     async def plant_animal_or_tree(self, client, item, ctx, customamount, amount, useracc):
         itemchild = item.expandsto
+        
         now = datetime.now().replace(microsecond=0)
-        ends = now + timedelta(seconds=item.grows)
-        dies = ends + timedelta(seconds=item.dies)
+        
+        item_mods = await useracc.get_item_modification(item)
+        if not item_mods:
+            ends = now + timedelta(seconds=item.grows)
+            dies = ends + timedelta(seconds=item.dies)
+            vol = itemchild.amount
+        else:
+            grow = item.grows - int(item.grows / 100 * (item_mods['time1'] * 5))
+            harv = item.dies + int(item.dies / 100 * (item_mods['time2'] * 10))
+            ends = now + timedelta(seconds=grow)
+            dies = ends + timedelta(seconds=harv)
+            vol = itemchild.amount + int(itemchild.amount / 100 * (item_mods['volume'] * 10))
 
         boostdata = await useracc.get_boosts()
         if boostdata:
@@ -348,26 +381,26 @@ class Farm(commands.Cog, name="Actual Farm"):
                 VALUES($1, $2, $3, $4, $5, $6, $7, $8);"""
                 if not customamount:
                     await client.db.execute(
-                        query, item.id, useracc.userid, itemchild.amount,
+                        query, item.id, useracc.userid, vol,
                         ends, dies, 1, item.amount, cat
                     )
                 else:
                     await client.db.execute(
-                        query, item.id, useracc.userid, itemchild.amount * amount,
+                        query, item.id, useracc.userid, vol * amount,
                         ends, dies, amount, item.amount, cat
                     )
 
         if not customamount:
             embed = emb.confirmembed(
                 f"You started to grow {item.emoji}{item.name.capitalize()}.\n"
-                f"Will produce {itemchild.amount}x {itemchild.emoji}**"
+                f"Will produce {vol}x {itemchild.emoji}**"
                 f" {itemchild.name.capitalize()}** ({item.amount} times).\n",
                 ctx
             )
         else:
             embed = emb.confirmembed(
                 f"You started to grow {amount}x{item.emoji}{item.name.capitalize()}.\n"
-                f"Will produce {itemchild.amount * amount}x {itemchild.emoji}**"
+                f"Will produce {vol * amount}x {itemchild.emoji}**"
                 f" {itemchild.name.capitalize()}** ({item.amount} times).\n",
                 ctx
             )
