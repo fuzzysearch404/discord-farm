@@ -26,8 +26,12 @@ def get_boost_price(price, tiles):
         return price * int(tiles * 1.5)
     elif tiles < 15:
         return price * int(tiles * 2)
-    else:
+    elif tiles < 18:
         return price * int(tiles * 2.5)
+    elif tiles < 22:
+        return price * int(tiles * 3)
+    else:
+        return price * int(tiles * 3.5)
 
 def boostvalid(date):
     if not date:
