@@ -178,5 +178,17 @@
         "maxprice":109,
         "level":23,
         "img":"https://failiem.lv/thumb_show.php?i=j6j8tv4r"
+    },
+    "116": {
+        "id":116,
+        "madefrom":16,
+        "emoji":"\ud83e\uded0",
+        "name":"blueberries",
+        "rarity":1,
+        "amount":48,
+        "minprice":86,
+        "maxprice":103,
+        "level":25,
+        "img":"https://failiem.lv/thumb_show.php?i=2x4wqhzrz"
     }
 }

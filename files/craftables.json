@@ -273,5 +273,16 @@
         "img":"https://failiem.lv/thumb_show.php?i=n4y78vqgc",
         "craftedfrom":[{"308":122}],
         "time":4210
+    },
+    "726" : {
+        "id":726,
+        "emoji":"\ud83e\uded6",
+        "name":"blue tea",
+        "rarity":3,
+        "amount":1,
+        "level":25,
+        "img":"https://failiem.lv/thumb_show.php?i=m32zxr4xe",
+        "craftedfrom":[{"304":90}, {"116":99}],
+        "time":6201
     }
 }

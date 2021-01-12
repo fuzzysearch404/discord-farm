@@ -148,5 +148,15 @@
         "rarity":2,
         "grows":21600,
         "gold_cost":4000
+    },
+    "16": {
+        "id":16,
+        "expandsto":116,
+        "level":25,
+        "emoji":"\ud83e\uded0",
+        "name":"blueberry seeds",
+        "rarity":2,
+        "grows":32400,
+        "gold_cost":4500
     }
 }
