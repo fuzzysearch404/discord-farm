@@ -10,14 +10,14 @@ https://discord.com/oauth2/authorize?client_id=526436949481881610&scope=bot&perm
 
 
 **This project is in a maintenance mode**  
-This means that this project is kept alive, by only updating mandatory things 
-- the bot is not planned to be reworked and no new features are planned for now.  
+This means that this project is kept alive, by only updating mandatory things - 
+the bot is not planned to be reworked and no new features are planned for now.  
 I have been programming this bot for couple years, alongside learning Python 
 programming language on my own. So the code you see here is the result of 
 years of experimenting, copying other code snippets, reworking features. 
 That means that you should not use this code as an example for your own projects.  
 
-You **should not** run this bot on your own. If you really want to,  
+You **should not** run this bot on your own. If you really want to, 
 I have abstractly described installation steps in `setup.sh` file.  
 ## Requirements:
 1) Python 3.8+ (dev version)
