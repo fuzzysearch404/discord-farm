@@ -262,5 +262,16 @@
         "img":"https://failiem.lv/thumb_show.php?i=vpx4qbpp",
         "craftedfrom":[{"114":68}, {"115":75}],
         "time":7220
+    },
+    "725" : {
+        "id":725,
+        "emoji":"\ud83e\udd6b",
+        "name":"canned olives",
+        "rarity":2,
+        "amount":1,
+        "level":24,
+        "img":"https://failiem.lv/thumb_show.php?i=n4y78vqgc",
+        "craftedfrom":[{"308":122}],
+        "time":4210
     }
 }

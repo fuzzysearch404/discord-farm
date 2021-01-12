@@ -75,5 +75,16 @@
         "grows":14400,
         "amount":2,
         "gold_cost":4000
+    },
+    "208" : {
+        "id":208,
+        "expandsto":308,
+        "level":24,
+        "emoji":"\ud83e\uded2",
+        "name":"olive tree",
+        "rarity":2,
+        "grows":21600,
+        "amount":2,
+        "gold_cost":4500
     }
 }

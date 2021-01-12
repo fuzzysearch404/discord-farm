@@ -82,5 +82,17 @@
         "maxprice":64,
         "level":22,
         "img":"https://failiem.lv/thumb_show.php?i=rn2metwf"
+    },
+    "308": {
+        "id":308,
+        "madefrom":208,
+        "emoji":"\ud83e\uded2",
+        "name":"olives",
+        "rarity":1,
+        "amount":45,
+        "minprice":44,
+        "maxprice":58,
+        "level":24,
+        "img":"https://failiem.lv/thumb_show.php?i=p3rs5bk59"
     }
 }
