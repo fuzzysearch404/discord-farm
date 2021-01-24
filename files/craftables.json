@@ -339,5 +339,16 @@
         "img":"https://failiem.lv/thumb_show.php?i=tpxmp6ytu",
         "craftedfrom":[{"310":127}, {"727":1}],
         "time":6500
+    },
+    "732" : {
+        "id":732,
+        "emoji":"\ud83c\udf6d",
+        "name":"lollipop",
+        "rarity":3,
+        "amount":1,
+        "level":30,
+        "img":"https://failiem.lv/thumb_show.php?i=yjff3p9wv",
+        "craftedfrom":[{"307":64}, {"311":145}],
+        "time":2640
     }
 }

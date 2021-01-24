@@ -108,5 +108,16 @@
         "grows":36000,
         "amount":2,
         "gold_cost":7000
+    },
+    "211" : {
+        "id":211,
+        "expandsto":311,
+        "level":30,
+        "emoji":"\ud83e\udd6d",
+        "name":"mango tree",
+        "rarity":2,
+        "grows":43200,
+        "amount":2,
+        "gold_cost":8000
     }
 }

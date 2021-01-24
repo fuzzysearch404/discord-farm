@@ -30,7 +30,7 @@
         "name":"pears",
         "rarity":1,
         "amount":29,
-        "minprice":10,
+        "minprice":11,
         "maxprice":20,
         "level":10,
         "img":"https://failiem.lv/thumb_show.php?i=weg8hny7"
@@ -42,7 +42,7 @@
         "name":"grapes",
         "rarity":1,
         "amount":24,
-        "minprice":16,
+        "minprice":17,
         "maxprice":22,
         "level":12,
         "img":"https://failiem.lv/thumb_show.php?i=pftbuxn4"
@@ -54,7 +54,7 @@
         "name":"avocados",
         "rarity":1,
         "amount":16,
-        "minprice":30,
+        "minprice":31,
         "maxprice":44,
         "level":19,
         "img":"https://failiem.lv/thumb_show.php?i=8ea6w37n"
@@ -66,7 +66,7 @@
         "name":"lemons",
         "rarity":1,
         "amount":34,
-        "minprice":25,
+        "minprice":26,
         "maxprice":36,
         "level":20,
         "img":"https://failiem.lv/thumb_show.php?i=eb9mjrme"
@@ -78,7 +78,7 @@
         "name":"bananas",
         "rarity":1,
         "amount":36,
-        "minprice":49,
+        "minprice":50,
         "maxprice":64,
         "level":22,
         "img":"https://failiem.lv/thumb_show.php?i=rn2metwf"
@@ -90,7 +90,7 @@
         "name":"olives",
         "rarity":1,
         "amount":45,
-        "minprice":44,
+        "minprice":45,
         "maxprice":58,
         "level":24,
         "img":"https://failiem.lv/thumb_show.php?i=p3rs5bk59"
@@ -102,7 +102,7 @@
         "name":"tangerines",
         "rarity":1,
         "amount":27,
-        "minprice":55,
+        "minprice":54,
         "maxprice":62,
         "level":26,
         "img":"https://failiem.lv/thumb_show.php?i=87hd8vtyy"
@@ -118,5 +118,17 @@
         "maxprice":78,
         "level":29,
         "img":"https://failiem.lv/thumb_show.php?i=c29mmeg7q"
+    },
+    "311": {
+        "id":311,
+        "madefrom":211,
+        "emoji":"\ud83e\udd6d",
+        "name":"mangos",
+        "rarity":1,
+        "amount":58,
+        "minprice":68,
+        "maxprice":79,
+        "level":30,
+        "img":"https://failiem.lv/thumb_show.php?i=qfgp5wgky"
     }
 }
