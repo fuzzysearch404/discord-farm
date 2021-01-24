@@ -295,5 +295,16 @@
         "img":"https://failiem.lv/thumb_show.php?i=nxj3a2fwn",
         "craftedfrom":[{"309":106}],
         "time":7820
+    },
+    "728" : {
+        "id":728,
+        "emoji":"\ud83e\udd6a",
+        "name":"hot sandwich",
+        "rarity":3,
+        "amount":1,
+        "level":27,
+        "img":"https://failiem.lv/thumb_show.php?i=pkmv9huwk",
+        "craftedfrom":[{"117":128, "705":5}],
+        "time":8120
     }
 }

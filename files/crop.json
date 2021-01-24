@@ -190,5 +190,17 @@
         "maxprice":103,
         "level":25,
         "img":"https://failiem.lv/thumb_show.php?i=2x4wqhzrz"
+    },
+    "117": {
+        "id":117,
+        "madefrom":17,
+        "emoji":"\ud83e\uded1",
+        "name":"bell peppers",
+        "rarity":1,
+        "amount":51,
+        "minprice":120,
+        "maxprice":136,
+        "level":27,
+        "img":"https://failiem.lv/thumb_show.php?i=frwkhhpz4"
     }
 }

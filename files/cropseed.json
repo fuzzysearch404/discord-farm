@@ -158,5 +158,15 @@
         "rarity":2,
         "grows":32400,
         "gold_cost":4500
+    },
+    "17": {
+        "id":17,
+        "expandsto":117,
+        "level":27,
+        "emoji":"\ud83e\uded1",
+        "name":"bell pepper seeds",
+        "rarity":2,
+        "grows":38700,
+        "gold_cost":6500
     }
 }
