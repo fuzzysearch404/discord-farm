@@ -97,5 +97,16 @@
         "grows":5400,
         "amount":4,
         "gold_cost":6000
+    },
+    "210" : {
+        "id":210,
+        "expandsto":310,
+        "level":29,
+        "emoji":"\ud83c\udf51",
+        "name":"peach tree",
+        "rarity":2,
+        "grows":36000,
+        "amount":2,
+        "gold_cost":7000
     }
 }

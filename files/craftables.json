@@ -328,5 +328,16 @@
         "img":"https://failiem.lv/thumb_show.php?i=czxmgvq8u",
         "craftedfrom":[{"101":100}, {"504":56}, {"705":1}, {"729":2}],
         "time":3600
+    },
+    "731" : {
+        "id":731,
+        "emoji":"\ud83c\udf79",
+        "name":"tropical drink",
+        "rarity":3,
+        "amount":1,
+        "level":29,
+        "img":"https://failiem.lv/thumb_show.php?i=tpxmp6ytu",
+        "craftedfrom":[{"310":127}, {"727":1}],
+        "time":6500
     }
 }

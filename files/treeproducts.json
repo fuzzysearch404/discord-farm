@@ -106,5 +106,17 @@
         "maxprice":62,
         "level":26,
         "img":"https://failiem.lv/thumb_show.php?i=87hd8vtyy"
+    },
+    "310": {
+        "id":310,
+        "madefrom":210,
+        "emoji":"\ud83c\udf51",
+        "name":"peaches",
+        "rarity":1,
+        "amount":50,
+        "minprice":66,
+        "maxprice":78,
+        "level":29,
+        "img":"https://failiem.lv/thumb_show.php?i=c29mmeg7q"
     }
 }
