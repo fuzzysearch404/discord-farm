@@ -304,7 +304,29 @@
         "amount":1,
         "level":27,
         "img":"https://failiem.lv/thumb_show.php?i=pkmv9huwk",
-        "craftedfrom":[{"117":128, "705":5}],
+        "craftedfrom":[{"117":128}, {"705":5}],
         "time":8120
+    },
+    "729" : {
+        "id":729,
+        "emoji":"\ud83e\uddc0",
+        "name":"cheese",
+        "rarity":2,
+        "amount":1,
+        "level":28,
+        "img":"https://failiem.lv/thumb_show.php?i=kz62f79kd",
+        "craftedfrom":[{"502":60}],
+        "time":1500
+    },
+    "730" : {
+        "id":730,
+        "emoji":"\ud83c\udf54",
+        "name":"hamburger",
+        "rarity":3,
+        "amount":1,
+        "level":28,
+        "img":"https://failiem.lv/thumb_show.php?i=czxmgvq8u",
+        "craftedfrom":[{"101":100}, {"504":56}, {"705":1}, {"729":2}],
+        "time":3600
     }
 }

@@ -34,5 +34,17 @@
         "amount":4,
         "gold_cost":3000,
         "img":"https://failiem.lv/thumb_show.php?i=qfyqts88"
+    },
+    "404" : {
+        "id":404,
+        "expandsto":504,
+        "level":28,
+        "emoji":"\ud83d\udc02",
+        "name":"cattles",
+        "rarity":2,
+        "grows":12000,
+        "amount":3,
+        "gold_cost":6000,
+        "img":"https://failiem.lv/thumb_show.php?i=jkxbkqtvz"
     }
 }

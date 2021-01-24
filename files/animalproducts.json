@@ -29,7 +29,18 @@
         "rarity":2,
         "madefrom":403,
         "amount":12,
-        "minprice":50,
-        "maxprice":79
+        "minprice":56,
+        "maxprice":81
+    },
+    "504" : {
+        "id":504,
+        "level":28,
+        "emoji":"\ud83e\udd69",
+        "name":"beef",
+        "rarity":2,
+        "madefrom":404,
+        "amount":22,
+        "minprice":90,
+        "maxprice":107
     }
 }
