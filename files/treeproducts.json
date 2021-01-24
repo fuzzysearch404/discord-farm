@@ -94,5 +94,17 @@
         "maxprice":58,
         "level":24,
         "img":"https://failiem.lv/thumb_show.php?i=p3rs5bk59"
+    },
+    "309": {
+        "id":309,
+        "madefrom":209,
+        "emoji":"\ud83c\udf4a",
+        "name":"tangerines",
+        "rarity":1,
+        "amount":27,
+        "minprice":55,
+        "maxprice":62,
+        "level":26,
+        "img":"https://failiem.lv/thumb_show.php?i=87hd8vtyy"
     }
 }

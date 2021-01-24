@@ -86,5 +86,16 @@
         "grows":21600,
         "amount":2,
         "gold_cost":4500
+    },
+    "209" : {
+        "id":209,
+        "expandsto":309,
+        "level":26,
+        "emoji":"\ud83c\udf4a",
+        "name":"tangerine tree",
+        "rarity":2,
+        "grows":5400,
+        "amount":4,
+        "gold_cost":6000
     }
 }

@@ -284,5 +284,16 @@
         "img":"https://failiem.lv/thumb_show.php?i=m32zxr4xe",
         "craftedfrom":[{"304":90}, {"116":99}],
         "time":6201
+    },
+    "727" : {
+        "id":727,
+        "emoji":"\ud83e\uddc3",
+        "name":"juice",
+        "rarity":3,
+        "amount":1,
+        "level":26,
+        "img":"https://failiem.lv/thumb_show.php?i=nxj3a2fwn",
+        "craftedfrom":[{"309":106}],
+        "time":7820
     }
 }
