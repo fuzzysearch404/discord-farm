@@ -219,7 +219,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
             embed = emb.congratzembed(f"Here is your daily bonus: 1{client.gem}!", ctx)
         elif mode <= 10:
-            moneywon = randint(1, useracc.level * 100)
+            moneywon = randint(50, useracc.level * 200)
             await useracc.give_money(moneywon)
 
             embed = emb.congratzembed(f"Here is your daily bonus: {moneywon}{client.gold}!", ctx)
@@ -238,6 +238,27 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
                 f"Here is your daily bonus: {amount}x {item.emoji}{item.name.capitalize()}!",
                 ctx
             )
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=['hourly'])
+    @checks.user_cooldown(3600)
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def hourlybonus(self, ctx):
+        """
+        \ud83d\udcb8 Get some gold for free every hour.
+        
+        Possible rewards: gold.
+        """
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+        client = self.client
+        useracc = userutils.User.get_user(userdata, client)
+
+        moneywon = randint(1, useracc.level * 80)
+        await useracc.give_money(moneywon)
+
+        embed = emb.congratzembed(f"Here is your hourly bonus: {moneywon}{client.gold}!", ctx)
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['inv', 'warehouse'])
