@@ -218,7 +218,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             await useracc.give_gems(1)
 
             embed = emb.congratzembed(f"Here is your daily bonus: 1{client.gem}!", ctx)
-        elif mode <= 10:
+        elif mode <= 20:
             moneywon = randint(50, useracc.level * 200)
             await useracc.give_money(moneywon)
 
@@ -255,7 +255,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         client = self.client
         useracc = userutils.User.get_user(userdata, client)
 
-        moneywon = randint(1, useracc.level * 80)
+        moneywon = randint(1, useracc.level * 45)
         await useracc.give_money(moneywon)
 
         embed = emb.congratzembed(f"Here is your hourly bonus: {moneywon}{client.gold}!", ctx)
