@@ -1,12 +1,10 @@
-from discord import Embed, HTTPException
+from discord import HTTPException
 from discord.ext import commands
 from datetime import datetime
 from random import randint, choice
 
 from utils import checks
 from utils import embeds as emb
-from utils.time import secstotime
-from utils.paginator import Pages
 from utils.convertors import MemberID
 from classes import user as userutils
 from classes.boost import boostvalid
@@ -75,7 +73,7 @@ class Looting(commands.Cog, name="Thief"):
             elif boostvalid(boostdata['dog2']): dog_chance = 4
             elif boostvalid(boostdata['dog1']): dog_chance = 8
 
-        field, cought, field_volume = [], False, 0
+        field, cought = [], False
 
         for data in fielddata:
             for _ in range(data['fieldsused'] - data['robbedfields']):
@@ -110,7 +108,6 @@ class Looting(commands.Cog, name="Thief"):
                             witem = witem.expandsto
 
                         item_amount_on_field = robitem['amount']
-                        amount_per_field = int(item_amount_on_field / robitem['fieldsused'])
                         robbed_per_field = int(witem.amount * 0.2) or 1
                         cnt = robbed_per_field * robfields
                         amount = item_amount_on_field - cnt
