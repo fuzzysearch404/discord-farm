@@ -11,7 +11,6 @@ import io
 import json
 import copy
 import subprocess
-import datetime
 import time
 from utils.formats import TabularData, plural
 from contextlib import redirect_stdout

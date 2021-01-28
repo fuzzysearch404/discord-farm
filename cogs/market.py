@@ -1,4 +1,3 @@
-import operator
 import asyncio
 from discord.ext import commands, tasks
 from discord import Embed, HTTPException

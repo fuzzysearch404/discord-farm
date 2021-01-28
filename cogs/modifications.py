@@ -1,6 +1,5 @@
 from discord import Embed
 from typing import Optional
-from classes.item import Item
 from discord.ext import commands
 
 import utils.embeds as emb

@@ -32,7 +32,7 @@ class Farm(commands.Cog, name="Actual Farm"):
             'crop', 'animalproduct', 'treeproduct'
         )
 
-    def get_crop_state(self, item, ends, dies):
+    def get_crop_state(self, ends, dies):
         """Calculates time between now and item status."""
         now = datetime.now()
         if ends > now:
@@ -122,7 +122,7 @@ class Farm(commands.Cog, name="Actual Farm"):
         if len(crops) > 0:
             information.append('__**Crops:**__')
             for data, item in crops.items():
-                status = self.get_crop_state(item, data['ends'], data['dies'])[1]
+                status = self.get_crop_state(data['ends'], data['dies'])[1]
                 fmt = f"{item.emoji}**{item.name.capitalize()}** x{data['amount']} - {status}"
                 if data['catboost']:
                     fmt += " \ud83d\udc31"
@@ -162,7 +162,7 @@ class Farm(commands.Cog, name="Actual Farm"):
 
     async def check_crops(self, client, useracc, crops, ctx, unique, todelete):
         for data, item in crops.items():
-            status = self.get_crop_state(item, data['ends'], data['dies'])[0]
+            status = self.get_crop_state(data['ends'], data['dies'])[0]
             if status == 'grow':
                 continue
             elif status == 'ready' or status == 'dead' and (data['catboost'] or client.field_guard):

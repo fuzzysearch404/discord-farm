@@ -312,7 +312,7 @@ class Shop(commands.Cog):
             return user == ctx.author and str(reaction.emoji) == client.gold and reaction.message.id == buyinfomessage.id
 
         try:
-            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+            await client.wait_for('reaction_add', check=check, timeout=30.0)
         except TimeoutError:
             if checks.can_clear_reactions(ctx):
                 return await buyinfomessage.clear_reactions()
@@ -398,7 +398,7 @@ class Shop(commands.Cog):
             return user == ctx.author and str(reaction.emoji) == client.gem and reaction.message.id == buyinfomessage.id
 
         try:
-            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+            await client.wait_for('reaction_add', check=check, timeout=30.0)
         except TimeoutError:
             if checks.can_clear_reactions(ctx):
                 return await buyinfomessage.clear_reactions()
@@ -463,7 +463,7 @@ class Shop(commands.Cog):
             return user == ctx.author and str(reaction.emoji) == client.gem and reaction.message.id == buyinfomessage.id
 
         try:
-            reaction, user = await client.wait_for('reaction_add', check=check, timeout=30.0)
+            await client.wait_for('reaction_add', check=check, timeout=30.0)
         except TimeoutError:
             if checks.can_clear_reactions(ctx):
                 return await buyinfomessage.clear_reactions()

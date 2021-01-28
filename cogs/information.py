@@ -3,7 +3,6 @@ import pkg_resources
 from discord import Embed, Activity
 from discord.ext import commands, tasks
 
-from utils import embeds as emb
 from utils import checks
 
 class Information(commands.Cog, name="Very Informative"):
