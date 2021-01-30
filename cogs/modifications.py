@@ -68,11 +68,9 @@ class Modifications(commands.Cog):
         information = []
 
         mod_data = await useracc.get_all_item_modifications()
-        if not mod_data:
-            information.append(("\u274c No item modifications.\n\ud83d\udd2cUpgrade items with "
-            "command `%modifications item_name`"))
-        else:
-            information.append("Item - Growing time - Harvesting time - Item volume\n")
+        information.append(("\ud83d\udd2cUpgrade items with command `%mods item_name`\n"))
+        if mod_data:
+            information.append("Item - Growing time - Harvesting time - Item volume")
             for data in mod_data:
                 item = client.allitems[data['itemid']]
                 itemchild = item.expandsto
@@ -81,8 +79,8 @@ class Modifications(commands.Cog):
                 harv = time.secstotime(item.dies + int(item.dies / 100 * (data['time2'] * 10)))
                 vol = itemchild.amount + int(itemchild.amount / 100 * (data['volume'] * 10))
                 information.append((
-                    f"{item.emoji} \ud83d\udd70\ufe0f{grow} \ud83d\udd70\ufe0f{harv} "
-                    f"\u2696\ufe0f{vol} items\n`%modifications {item.name}`"
+                    f"{item.emoji} \ud83d\udd70\ufe0f\u2b06\ufe0f {grow} \ud83d\udd70\ufe0f\u2b07\ufe0f {harv} "
+                    f"\u2696\ufe0f {vol} items\n`%modifications {itemchild.name}`"
                 ))
         
         try:
@@ -156,6 +154,8 @@ class Modifications(commands.Cog):
                 "for faster growing, longer harvesting or more items."
             )
         )
+
+        itemchild = item.expandsto
         
         grow_cost = calculate_mod_data("time1")
         if grow_cost:
@@ -171,7 +171,7 @@ class Modifications(commands.Cog):
                 f"\ud83d\udd2cLevel {currentlevel+1}/10\n"
                 f"**\ud83c\udd95 {oldtime} -> {newtime}\n**"
                 f"{client.gold} {grow_cost}\n"
-                f"\ud83d\uded2`%research growing {item.name}`"
+                f"\ud83d\uded2`%research growing {itemchild.name}`"
             )
         else:
             desc = (
@@ -194,7 +194,7 @@ class Modifications(commands.Cog):
                 f"\ud83d\udd2cLevel {currentlevel+1}/10\n"
                 f"**\ud83c\udd95 {oldtime} -> {newtime}\n**"
                 f"{client.gold} {harv_cost}\n"
-                f"\ud83d\uded2`%research harvesting {item.name}`"
+                f"\ud83d\uded2`%research harvesting {itemchild.name}`"
             )
         else:
             desc = (
@@ -202,8 +202,6 @@ class Modifications(commands.Cog):
                 f"**{time.secstotime(item.dies * 2)}**"
             )
         embed.add_field(name="\ud83d\udd70\ufe0fHarvesting time", value=desc)
-        
-        itemchild = item.expandsto
 
         vol_cost = calculate_mod_data("volume")
         if vol_cost:
@@ -218,7 +216,7 @@ class Modifications(commands.Cog):
                 f"\ud83d\udd2cLevel {currentlevel+1}/10\n"
                 f"**\ud83c\udd95 {oldvolume} -> {newvolume} items\n**"
                 f"{client.gold} {vol_cost}\n"
-                f"\ud83d\uded2`%research volume {item.name}`"
+                f"\ud83d\uded2`%research volume {itemchild.name}`"
             )
         else:
             desc = (
