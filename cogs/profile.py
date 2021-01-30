@@ -9,7 +9,7 @@ from utils.time import secstotime
 from utils.paginator import Pages
 from utils.convertors import MemberID
 from utils import checks
-from classes.item import finditem, crafted_from_to_string
+from classes import item as itemutils
 from classes import user as userutils
 from classes.boost import boostvalid
 
@@ -288,23 +288,24 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         if not inventory:
             embed = emb.errorembed(f"{member} has an empty warehouse", ctx)
             return await ctx.send(embed=embed)
+        
         for item, value in inventory.items():
-            itemtype = item.type
-            if itemtype == 'cropseed':
+            if isinstance(item, itemutils.CropSeed):
                 cropseeds[item] = value
-            elif itemtype == 'crop' or itemtype == 'treeproduct':
+            elif isinstance(item, itemutils.Crop) or isinstance(item, itemutils.TreeProduct):
                 crops[item] = value
-            elif itemtype == 'crafteditem' or itemtype == 'animalproduct':
+            elif isinstance(item, itemutils.CraftedItem) or isinstance(item, itemutils.AnimalProduct):
                 crafteditems[item] = value
-            elif itemtype == 'animal':
-                animals[item] = value
-            elif itemtype == 'tree':
+            elif isinstance(item, itemutils.Tree):
                 trees[item] = value
-            elif itemtype == 'special':
+            elif isinstance(item, itemutils.Animal):
+                animals[item] = value
+            elif isinstance(item, itemutils.SpecialItem):
                 special[item] = value
-        await self.embedinventory(ctx, member, cropseeds, crops, crafteditems, animals, trees, special)
+        
+        await self.create_inventory_embed(ctx, member, cropseeds, crops, crafteditems, animals, trees, special)
 
-    async def embedinventory(self, ctx, member, cropseeds, crops, crafteditems, animals, trees, special):
+    async def create_inventory_embed(self, ctx, member, cropseeds, crops, crafteditems, animals, trees, special):
         items = []
 
         if cropseeds:
@@ -367,7 +368,9 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         for item in items:
             item = f"ID:{item.id} {item.emoji}{item.name.capitalize()}"
             texts.append(item)
+        
         texts.append("\u2139Get detailed information about an item - `%item ID or name`")
+        
         try:
             p = Pages(ctx, entries=texts, per_page=18, show_entry_count=False)
             p.embed.title = 'Unlocked items for your level:'
@@ -394,30 +397,39 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         `%item lettuce` - by using item's shorter name.
         `%item 1` - by using item's ID.
         """
-        item = await finditem(self.client, ctx, item_search)
+        userdata = await checks.check_account_data(ctx)
+        if not userdata: return
+        client = self.client
+        useracc = userutils.User.get_user(userdata, client)
+
+        item = await itemutils.finditem(self.client, ctx, item_search)
         if not item:
             return
 
-        itemtype = item.type
+        mod_data = None
+        if isinstance(item, (itemutils.Crop, itemutils.TreeProduct, itemutils.AnimalProduct)):
+            mod_data = await useracc.get_item_modification(item.madefrom)
+        elif isinstance(item, (itemutils.CropSeed, itemutils.Tree, itemutils.Animal)):
+            mod_data = await useracc.get_item_modification(item)
 
-        if itemtype == 'crop':
-            await self.crop_info(ctx, item.madefrom)
-        elif itemtype == 'cropseed':
-            await self.crop_info(ctx, item)
-        elif itemtype == 'treeproduct':
-            await self.tree_info(ctx, item.madefrom)
-        elif itemtype == 'tree':
-            await self.tree_info(ctx, item)
-        elif itemtype == 'animal':
-            await self.animal_info(ctx, item)
-        elif itemtype == 'animalproduct':
-            await self.animal_info(ctx, item.madefrom)
-        elif itemtype == 'crafteditem':
+        if isinstance(item, itemutils.Crop):
+            await self.crop_info(ctx, item.madefrom, mod_data)
+        elif isinstance(item, itemutils.CropSeed):
+            await self.crop_info(ctx, item, mod_data)
+        elif isinstance(item, itemutils.TreeProduct):
+            await self.tree_info(ctx, item.madefrom, mod_data)
+        elif isinstance(item, itemutils.Tree):
+            await self.tree_info(ctx, item, mod_data)
+        elif isinstance(item, itemutils.Animal):
+            await self.animal_info(ctx, item, mod_data)
+        elif isinstance(item, itemutils.AnimalProduct):
+            await self.animal_info(ctx, item.madefrom, mod_data)
+        elif isinstance(item, itemutils.CraftedItem):
             await self.crafted_item_info(ctx, item)
-        elif itemtype == 'special':
+        elif isinstance(item, itemutils.SpecialItem):
             await self.special_info(ctx, item)
 
-    async def crop_info(self, ctx, cropseed):
+    async def crop_info(self, ctx, cropseed, mod_data):
         client = self.client
         crop = cropseed.expandsto
 
@@ -426,21 +438,46 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             description=f'\ud83c\udf31**Seed ID:** {cropseed.id} \ud83c\udf3e**Crop ID:** {crop.id}',
             colour=851836
         )
+        
+        if not mod_data:
+            grow = secstotime(cropseed.grows)
+            harv = secstotime(cropseed.dies)
+            vol = crop.amount
+        else:
+            time1_mod = mod_data['time1']
+            if time1_mod:
+                grow = '\ud83e\uddec ' + secstotime(cropseed.grows - int(cropseed.grows / 100 * (time1_mod * 5)))
+            else:
+                grow = secstotime(cropseed.grows)
+            
+            time2_mod = mod_data['time2']
+            if time2_mod:
+                harv = '\ud83e\uddec ' + secstotime(cropseed.dies + int(cropseed.dies / 100 * (time2_mod * 10)))
+            else:
+                harv = secstotime(cropseed.dies)
+            
+            volume_mod = mod_data['volume']
+            if volume_mod:
+                vol = '\ud83e\uddec ' + str(crop.amount + int(crop.amount / 100 * (volume_mod * 10)))
+            else:
+                vol = crop.amount
+
         embed.add_field(name='\ud83d\udd31Required level', value=crop.level)
         embed.add_field(name=f'{client.xp}When harvested gains', value=f'{crop.xp} xp/per item.')
         embed.add_field(name='\ud83d\udcb0Seeds price', value=f'{cropseed.gold_cost}{client.gold}')
-        embed.add_field(name='\ud83d\udd70Grows', value=secstotime(cropseed.grows))
-        embed.add_field(name='\ud83d\udd70Harvestable for', value=secstotime(cropseed.dies))
-        embed.add_field(name='\u2696Harvest volume', value=f'{crop.amount} items')
+        embed.add_field(name='\ud83d\udd70Grows', value=grow)
+        embed.add_field(name='\ud83d\udd70Harvestable for', value=harv)
+        embed.add_field(name='\u2696Harvest volume', value=f'{vol} items')
         embed.add_field(name='\ud83d\uded2Market price', value=f'{crop.minprice} - {crop.maxprice}{client.gold}/item')
         embed.add_field(name='\ud83d\udcc8Current market price', value=f'{crop.marketprice}{client.gold}/item.')
         embed.add_field(name=f'{cropseed.emoji}Grow', value=f'`%plant {cropseed.name}`')
 
         embed.set_thumbnail(url=crop.img)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        
         await ctx.send(embed=embed)
 
-    async def tree_info(self, ctx, item):
+    async def tree_info(self, ctx, item, mod_data):
         client = self.client
         product = item.expandsto
 
@@ -449,12 +486,36 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             description=f'\ud83c\udf33**Tree/Bush ID:** {item.id} {product.emoji}**Product ID:** {product.id}',
             colour=851836
         )
+
+        if not mod_data:
+            grow = secstotime(item.grows)
+            harv = secstotime(item.dies)
+            vol = product.amount
+        else:
+            time1_mod = mod_data['time1']
+            if time1_mod:
+                grow = '\ud83e\uddec ' + secstotime(item.grows - int(item.grows / 100 * (time1_mod * 5)))
+            else:
+                grow = secstotime(item.grows)
+            
+            time2_mod = mod_data['time2']
+            if time2_mod:
+                harv = '\ud83e\uddec ' + secstotime(item.dies + int(item.dies / 100 * (time2_mod * 10)))
+            else:
+                harv = secstotime(item.dies)
+            
+            volume_mod = mod_data['volume']
+            if volume_mod:
+                vol = '\ud83e\uddec ' + str(product.amount + int(product.amount / 100 * (volume_mod * 10)))
+            else:
+                vol = product.amount
+
         embed.add_field(name='\ud83d\udd31Required level', value=item.level)
         embed.add_field(name=f'{client.xp}When harvested gains', value=f'{product.xp} xp/per item')
         embed.add_field(name='\ud83d\udcb0Plant price', value=f'{item.gold_cost}{client.gold}')
-        embed.add_field(name='\ud83d\udd70Grows', value=secstotime(item.grows))
-        embed.add_field(name='\ud83d\udd70Harvestable for', value=secstotime(item.dies))
-        embed.add_field(name='\u2696Harvest volume (per cycle)', value=f"{product.amount} items")
+        embed.add_field(name='\ud83d\udd70Grows', value=grow)
+        embed.add_field(name='\ud83d\udd70Harvestable for', value=harv)
+        embed.add_field(name='\u2696Harvest volume (per cycle)', value=f"{vol} items")
         embed.add_field(name='\u2696Harvest cycles', value=f'{item.amount}')
         embed.add_field(name='\ud83d\uded2Market price', value=f'{product.minprice} - {product.maxprice}{client.gold}/item')
         embed.add_field(name='\ud83d\udcc8Current market price', value=f'{product.marketprice}{client.gold}/item.')
@@ -462,9 +523,10 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
         embed.set_thumbnail(url=product.img)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        
         await ctx.send(embed=embed)
 
-    async def animal_info(self, ctx, item):
+    async def animal_info(self, ctx, item, mod_data):
         client = self.client
         product = item.expandsto
 
@@ -473,12 +535,36 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             description=f'{item.emoji}**Animal ID:** {item.id} {product.emoji}**Product ID:** {product.id}',
             colour=851836
         )
+
+        if not mod_data:
+            grow = secstotime(item.grows)
+            harv = secstotime(item.dies)
+            vol = product.amount
+        else:
+            time1_mod = mod_data['time1']
+            if time1_mod:
+                grow = '\ud83e\uddec ' + secstotime(item.grows - int(item.grows / 100 * (time1_mod * 5)))
+            else:
+                grow = secstotime(item.grows)
+            
+            time2_mod = mod_data['time2']
+            if time2_mod:
+                harv = '\ud83e\uddec ' + secstotime(item.dies + int(item.dies / 100 * (time2_mod * 10)))
+            else:
+                harv = secstotime(item.dies)
+            
+            volume_mod = mod_data['volume']
+            if volume_mod:
+                vol = '\ud83e\uddec ' + str(product.amount + int(product.amount / 100 * (volume_mod * 10)))
+            else:
+                vol = product.amount
+
         embed.add_field(name='\ud83d\udd31Required level', value=item.level)
         embed.add_field(name=f'{client.xp}When produced gains', value=f'{product.xp} xp/per item')
         embed.add_field(name='\ud83d\udcb0Animal price', value=f'{item.gold_cost}{client.gold}')
-        embed.add_field(name='\ud83d\udd70Grows', value=secstotime(item.grows))
-        embed.add_field(name='\ud83d\udd70Collectable for', value=secstotime(item.dies))
-        embed.add_field(name='\u2696Production volume (per cycle)', value=f"{product.amount} items")
+        embed.add_field(name='\ud83d\udd70Grows', value=grow)
+        embed.add_field(name='\ud83d\udd70Collectable for', value=harv)
+        embed.add_field(name='\u2696Production volume (per cycle)', value=f"{vol} items")
         embed.add_field(name='\u2696Production cycles', value=f'{item.amount}')
         embed.add_field(name='\ud83d\uded2Market price', value=f'{product.minprice} - {product.maxprice}{client.gold}/item')
         embed.add_field(name='\ud83d\udcc8Current market price', value=f'{product.marketprice}{client.gold}/item.')
@@ -486,6 +572,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
         embed.set_thumbnail(url=item.img)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        
         await ctx.send(embed=embed)
 
     async def crafted_item_info(self, ctx, item):
@@ -497,7 +584,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             colour=851836
         )
 
-        craftedfrom = crafted_from_to_string(item)
+        craftedfrom = itemutils.crafted_from_to_string(item)
 
         embed.add_field(name='\ud83d\udd31Required level', value=item.level)
         embed.add_field(name=f'{client.xp}When produced gains', value=f'{item.xp} xp/per item')
@@ -509,6 +596,7 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
 
         embed.set_thumbnail(url=item.img)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        
         await ctx.send(embed=embed)
 
     async def special_info(self, ctx, item):
@@ -519,12 +607,14 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             description=f'{item.emoji}**Item ID:** {item.id}',
             colour=851836
         )
+
         embed.add_field(name='\ud83d\udd31Required level', value=item.level)
         embed.add_field(name='\ud83d\uded2Market price', value=f'{item.minprice} - {item.maxprice} /item. {client.gold}')
         embed.add_field(name='\ud83d\udcc8Current market price', value=f'{item.marketprice}{client.gold}/item.\n')
 
         embed.set_thumbnail(url=item.img)
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        
         await ctx.send(embed=embed)
 
 
