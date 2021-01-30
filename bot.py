@@ -247,13 +247,13 @@ class BotClient(commands.AutoShardedBot):
                     "\ud83d\udcf0 For more information use command - `%news`.")
             elif isinstance(error, checks.MissingEmbedPermissions):
                 return await ctx.send("\u274c Please enable **Embed Links** permission for "
-                "me in this channel's settings, to use this command!")
+                    "me in this channel's settings, to use this command!")
             elif isinstance(error, checks.MissingAddReactionPermissions):
                 return await ctx.send("\u274c Please enable **Add Reactions** permission for "
-                "me in this channel's settings, to use this command!")
+                    "me in this channel's settings, to use this command!")
             elif isinstance(error, checks.MissingReadMessageHistoryPermissions):
                 return await ctx.send("\u274c Please enable **Read Message History** permission for "
-                "me in this channel's settings, to use this command!")
+                    "me in this channel's settings, to use this command!")
         elif isinstance(error, checks.GlobalCooldown):
             return await ctx.send(
                 f"\u23f2\ufe0f You are typing commands way too fast! Slow down for: **{secstotime(error.retry_after)}**"
@@ -261,9 +261,11 @@ class BotClient(commands.AutoShardedBot):
         elif isinstance(error, commands.errors.CommandOnCooldown):
             return await ctx.send(f"\u23f0 This command is on cooldown for:  **{secstotime(error.retry_after)}**")
         elif isinstance(error, commands.errors.MissingRequiredArgument):
-            return await ctx.send("\u274c This command requires additional parameters.")
+            return await ctx.send("\u274c This command requires additional parameters. For this command's usage "
+                f"information please see `%help {ctx.invoked_with}`.")
         elif isinstance(error, commands.errors.BadArgument):
-            return await ctx.send("\u274c Invalid command parameters provided.")
+            return await ctx.send("\u274c Invalid command parameters provided. For this command's usage "
+                f"information please see `%help {ctx.invoked_with}`.")
         elif isinstance(error, commands.NoPrivateMessage):
             return await ctx.author.send("\u274c This command is disabled for Direct Messages.")
         elif isinstance(error, commands.DisabledCommand):
@@ -284,7 +286,7 @@ class BotClient(commands.AutoShardedBot):
 
     async def on_guild_join(self, guild):
         message = ("Hello! \ud83d\udc4b\nThanks for adding me here! Access the command list with: `%help`.\n"
-        "Happy farming! \ud83d\udc68\u200d\ud83c\udf3e")
+            "Happy farming! \ud83d\udc68\u200d\ud83c\udf3e")
 
         channels = list(
             filter(
