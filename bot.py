@@ -275,7 +275,7 @@ class BotClient(commands.AutoShardedBot):
             if not isinstance(original, discord.HTTPException):
                 self.log.critical(f'In {ctx.command.qualified_name}:')
                 self.log.critical(str(original))
-                self.log.critical(traceback.format_tb(original))
+                self.log.critical(traceback.format_tb(original.__traceback__))
         elif isinstance(error, commands.ArgumentParsingError):
             return await ctx.send(error)
         else:
