@@ -42,8 +42,7 @@ class User:
             49000, 69420, 100000, 140000, 200000, # 11 - 15
             280000, 380000, 500000, 650000, 900000, # 16 - 20
             1_200_000, 1_600_000, 2_100_000, 2_850_000, 3_850_000, # 21 - 25
-            5_000_000, 6_500_000, 8_000_000, 9_500_000, 11_000_000, # 26 - 30
-            13_000_000, 15_000_000, 17_000_000, 19_000_000, 21_000_000 # 31 - 35
+            5_000_000, 6_500_000, 8_000_000, 9_500_000, 11_000_000 # 26 - 30
         )
         level = 0
 
@@ -51,9 +50,13 @@ class User:
             if self.xp >= points:
                 level += 1
             else:
-                break
+                return level, points
+        
+        # We reached high levels with constant XP growth
+        remaining = self.xp - points
+        lev, _ = divmod(remaining, 2_000_000)
 
-        return level, points
+        return level + lev, points + ((lev + 1) * 2_000_000)
 
     def get_store_upgrade_cost(self):
         return self.storeslots * 5000
