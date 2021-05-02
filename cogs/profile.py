@@ -40,10 +40,25 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         
         member = member or ctx.author
 
+        farm_tiles = useracc.tiles
+        farm_tiles_formatted = farm_tiles
+        factory_slots_formatted = useracc.factoryslots
+
+        boost_data = await useracc.get_boosts()
+        if boost_data:
+            if boostvalid(boost_data['farm_slots']):
+                farm_tiles += 2
+                farm_tiles_formatted = f"{farm_tiles} \ud83d\udc39"
+
+            if boostvalid(boost_data['factory_slots']):
+                factory_slots_formatted = f"{useracc.factoryslots + 2} \ud83e\udd89"
+
         query = """SELECT sum(amount) FROM inventory
         WHERE userid = $1;"""
+        
         inventory = await client.db.fetchrow(query, useracc.userid)
         inventory = inventory[0]
+        
         if not inventory:
             inventory = 0
 
@@ -63,21 +78,26 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         query = """SELECT ends, (SELECT SUM(fieldsused) FROM planted WHERE userid = $1) 
         FROM planted WHERE userid = $1 
         ORDER BY ends LIMIT 1;"""
+        
         fielddata = await client.db.fetchrow(query, useracc.userid)
+        
         if not fielddata:
             nearestharvest = '-'
-            freetiles = useracc.tiles
+            freetiles = farm_tiles
         else:
             nearestharvest = fielddata[0]
+            
             if nearestharvest > datetime.now():
                 nearestharvest = nearestharvest - datetime.now()
                 nearestharvest = secstotime(nearestharvest.total_seconds())
             else:
                 nearestharvest = '\u2705'
-            freetiles = useracc.tiles - fielddata[1]
+            
+            freetiles = farm_tiles - fielddata[1]
+        
         embed.add_field(
             name='\ud83c\udf31Farm',
-            value=f"{client.tile}{freetiles}/{useracc.tiles} free tiles"
+            value=f"{client.tile}{freetiles}/{farm_tiles_formatted} free tiles"
             f"\n\u23f0Next harvest: {nearestharvest}"
             f"\n\u2139`%farm` {member.mention}"
         )
@@ -85,7 +105,9 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         if useracc.level > 2:
             query = """SELECT ends FROM factory
             WHERE userid = $1 ORDER BY ends;"""
+            
             nearestprod = await client.db.fetchrow(query, useracc.userid)
+            
             if not nearestprod:
                 nearestprod = '-'
             else:
@@ -94,7 +116,8 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
                     nearestprod = secstotime(nearestprod.total_seconds())
                 else:
                     nearestprod = '\u2705'
-            factorytext = f"\ud83d\udce6Max. production cap.: {useracc.factoryslots}"
+            
+            factorytext = f"\ud83d\udce6Max. capacity: {factory_slots_formatted}"
             factorytext += f"\n\ud83d\udc68\u200d\ud83c\udfedWorkers: {useracc.factorylevel}/10"
             factorytext += f"\n\u23f0Next production: {nearestprod}"
             factorytext += f"\n\u2139`%factory` {member.mention}"
@@ -120,8 +143,10 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         
         lab_cd = await checks.get_user_cooldown(ctx, "recent_research")
         lab_str = f'`%lab` {member.mention}\n'
+        
         if lab_cd:
             lab_str += f"\ud83e\uddf9 Busy for {secstotime(lab_cd)}"
+        
         embed.add_field(
             name='\ud83e\uddecLaboratory',
             value=lab_str
@@ -130,8 +155,8 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             name='\u2b06Boosters',
             value=f'`%boosts` {member.mention}'
         )
-
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['boosts'])
@@ -162,8 +187,11 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
         else:
             embed.description = ''
             now = datetime.now()
+            
             dog1, dog2, dog3 = boostdata['dog1'], boostdata['dog2'], boostdata['dog3']
             cat = boostdata['cat']
+            farm_slots, factory_slots = boostdata['farm_slots'], boostdata['factory_slots']
+
             if boostvalid(dog1):
                 deltasecs = (dog1 - now).total_seconds()
                 embed.description += f'\ud83d\udc29 Squealer - **{secstotime(deltasecs)}** remaining\n'
@@ -176,6 +204,12 @@ class Profile(commands.Cog, name="Profile and Item Statistics"):
             if boostvalid(cat):
                 deltasecs = (cat - now).total_seconds()
                 embed.description += f'\ud83d\udc31 Leo - **{secstotime(deltasecs)}** remaining\n'
+            if boostvalid(farm_slots):
+                deltasecs = (farm_slots - now).total_seconds()
+                embed.description += f'\ud83d\udc39 Susan - **{secstotime(deltasecs)}** remaining\n'
+            if boostvalid(factory_slots):
+                deltasecs = (factory_slots - now).total_seconds()
+                embed.description += f'\ud83e\udd89 Alice - **{secstotime(deltasecs)}** remaining\n'
             if embed.description == '':
                 embed.description = "\u274c No active boosters"
 

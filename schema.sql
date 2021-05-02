@@ -87,7 +87,9 @@ CREATE TABLE IF NOT EXISTS public.boosts(
     dog1 timestamp,
     dog2 timestamp,
     dog3 timestamp,
-    cat timestamp
+    cat timestamp,
+    farm_slots timestamp,
+    factory_slots timestamp
 );
 
 ALTER TABLE ONLY public.boosts

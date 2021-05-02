@@ -7,11 +7,9 @@ DURATIONS = {
 }
 
 class Boost:
-    __slots__ = ('id', 'emoji', 'one_day_price',
-    'three_day_price', 'seven_day_price')
+    __slots__ = ('id', 'emoji', 'one_day_price', 'three_day_price', 'seven_day_price')
     
-    def __init__(self, id, emoji, one_day_price, 
-    three_day_price, seven_day_price):
+    def __init__(self, id, emoji, one_day_price, three_day_price, seven_day_price):
         self.id = id
         self.emoji = emoji
         self.one_day_price = one_day_price
@@ -36,10 +34,13 @@ def get_boost_price(price, tiles):
 def boostvalid(date):
     if not date:
         return False
+    
     return date > datetime.now()
 
 # emoji 100% 90% 75%
 dog1 = Boost('dog1', '\ud83d\udc29', 50, 135, 262)
 dog2 = Boost('dog2', '\ud83d\udc36', 125, 337, 656)
 dog3 = Boost('dog3', '\ud83d\udc15', 250, 675, 1312)
-cat = Boost('cat', '\ud83d\udc31', 280, 756, 1470)
+cat = Boost('cat', '\ud83d\udc31', 320, 928, 2160)
+farm_slots = Boost('farm_slots', '\ud83d\udc39', 280, 756, 1470)
+factory_slots = Boost('factory_slots', '\ud83e\udd89', 200, 540, 1050)

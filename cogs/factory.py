@@ -9,6 +9,7 @@ from utils.time import secstotime
 from utils.convertors import MemberID
 from classes import user as userutils
 from classes.item import finditem
+from classes.boost import boostvalid
 
 
 class Factory(commands.Cog):
@@ -59,7 +60,13 @@ class Factory(commands.Cog):
         if not userdata: return
         client = self.client
         useracc = userutils.User.get_user(userdata, client)
-        
+
+        boost_data = await useracc.get_boosts()
+        factory_slots_formatted = useracc.factoryslots
+        if boost_data:
+            if boostvalid(boost_data['factory_slots']):
+                factory_slots_formatted = f"{useracc.factoryslots + 2} \ud83e\udd89"
+
         allitems = {}
         information = []
         member = member or ctx.author
@@ -80,7 +87,7 @@ class Factory(commands.Cog):
                 raise Exception(f"Could not find item {data['itemid']}")
 
         information.append(
-            f"\ud83d\udce6 Used factory's capacity: {usedcap}/{useracc.factoryslots}\n"
+            f"\ud83d\udce6 Used factory's capacity: {usedcap}/{factory_slots_formatted}\n"
             f"\ud83d\udc68\u200d\ud83c\udfed Factory workers: {useracc.factorylevel} "
             f"({useracc.factorylevel * 5}% faster production)\n"
         )
@@ -124,6 +131,12 @@ class Factory(commands.Cog):
         useracc = userutils.User.get_user(userdata, client)
 
         usedslots = await useracc.check_used_factory_slots()
+        user_factory_slots = useracc.factoryslots
+        
+        boost_data = await useracc.get_boosts()
+        if boost_data:
+            if boostvalid(boost_data['factory_slots']):
+                user_factory_slots += 2
 
         customamount = False
         try:
@@ -136,14 +149,14 @@ class Factory(commands.Cog):
             pass
 
         if not customamount:
-            if usedslots >= useracc.factoryslots:
+            if usedslots >= user_factory_slots:
                 embed = emb.errorembed(
                     "Your factory is full! Free up some space or upgrade the factory with `%upgrade`.",
                     ctx
                 )
                 return await ctx.send(embed=embed)
         else:
-            if usedslots + amount > useracc.factoryslots:
+            if usedslots + amount > user_factory_slots:
                 embed = emb.errorembed(
                     "Your factory is full! Free up some space or upgrade the factory with `%upgrade`.",
                     ctx

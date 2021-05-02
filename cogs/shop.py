@@ -123,6 +123,16 @@ class Shop(commands.Cog):
             value="""Keeps your harvest fresh. Don't ask me how...
             `%boost cat`"""
         )
+        embed.add_field(
+            name='\ud83d\udc39Susan',
+            value="""Temporarily adds 2 more farm slots
+            `%boost susan`"""
+        )
+        embed.add_field(
+            name='\ud83e\udd89Alice',
+            value="""Temporarily adds 2 more factory slots
+            `%boost alice`"""
+        )
         embed.set_footer(
             text="To view your currently active boosters, use the %boosts command", 
             icon_url=ctx.author.avatar_url
@@ -708,6 +718,36 @@ class Shop(commands.Cog):
         Boost's price increases by increasing the farm field size.
         """
         await self.prepare_boost(ctx, boostutils.cat)
+
+    @boost.command()
+    @checks.message_history_perms()
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def susan(self, ctx):
+        """
+        \ud83d\udc39 Purchase hamster "Susan" to temporarily increase farm capacity by 2.
+
+        Allows to plant 2 more items on your farm field.
+        For example, if your farm has a capacity of 3 farm tiles - you will be
+        able to plant 5 items on the field at a time.
+        """
+        await self.prepare_boost(ctx, boostutils.farm_slots)
+
+    @boost.command()
+    @checks.message_history_perms()
+    @checks.reaction_perms()
+    @checks.embed_perms()
+    @checks.avoid_maintenance()
+    async def alice(self, ctx):
+        """
+        \ud83e\udd89 Purchase owl "Alice" to temporarily increase factory capacity by 2.
+
+        Allows to queue 2 more items in your factory.
+        For example, if your factory has a capacity of 3, you will be
+        able to queue 5 items to produce at a time.
+        """
+        await self.prepare_boost(ctx, boostutils.factory_slots)
 
     async def prepare_boost(self, ctx, boost):
         userdata = await checks.check_account_data(ctx)
