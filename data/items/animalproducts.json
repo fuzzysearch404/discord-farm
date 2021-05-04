@@ -1,0 +1,46 @@
+{
+    "501" : {
+        "id":501,
+        "level":4,
+        "emoji":"\ud83e\udd5a",
+        "name":"chicken eggs",
+        "rarity":2,
+        "madefrom":401,
+        "amount":10,
+        "minprice":2,
+        "maxprice":5
+    },
+    "502" : {
+        "id":502,
+        "level":5,
+        "emoji":"\ud83e\udd5b",
+        "name":"cow's milk",
+        "rarity":2,
+        "madefrom":402,
+        "amount":11,
+        "minprice":3,
+        "maxprice":5
+    },
+    "503" : {
+        "id":503,
+        "level":21,
+        "emoji":"\ud83c\udf6f",
+        "name":"honey",
+        "rarity":2,
+        "madefrom":403,
+        "amount":12,
+        "minprice":56,
+        "maxprice":81
+    },
+    "504" : {
+        "id":504,
+        "level":28,
+        "emoji":"\ud83e\udd69",
+        "name":"beef",
+        "rarity":2,
+        "madefrom":404,
+        "amount":22,
+        "minprice":90,
+        "maxprice":107
+    }
+}

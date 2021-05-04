@@ -1,4 +1,5 @@
+.vscode
 __pycache__
 botsettings.py
-.vscode
+config.json
 *.log

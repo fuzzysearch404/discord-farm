@@ -1,0 +1,50 @@
+{
+    "401" : {
+        "id":401,
+        "expandsto":501,
+        "level":4,
+        "emoji":"\ud83d\udc14",
+        "name":"chickens",
+        "rarity":2,
+        "grows":300,
+        "amount":3,
+        "gold_cost":80,
+        "img":"https://failiem.lv/thumb_show.php?i=wddbjvvn"
+    },
+    "402" : {
+        "id":402,
+        "expandsto":502,
+        "level":5,
+        "emoji":"\ud83d\udc04",
+        "name":"cows",
+        "rarity":2,
+        "grows":600,
+        "amount":2,
+        "gold_cost":70,
+        "img":"https://failiem.lv/thumb_show.php?i=qbufg3z8"
+    },
+    "403" : {
+        "id":403,
+        "expandsto":503,
+        "level":21,
+        "emoji":"\ud83d\udc1d",
+        "name":"bees",
+        "rarity":2,
+        "grows":6300,
+        "amount":4,
+        "gold_cost":3000,
+        "img":"https://failiem.lv/thumb_show.php?i=qfyqts88"
+    },
+    "404" : {
+        "id":404,
+        "expandsto":504,
+        "level":28,
+        "emoji":"\ud83d\udc02",
+        "name":"cattles",
+        "rarity":2,
+        "grows":12000,
+        "amount":3,
+        "gold_cost":6000,
+        "img":"https://failiem.lv/thumb_show.php?i=jkxbkqtvz"
+    }
+}
