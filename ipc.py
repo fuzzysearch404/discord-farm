@@ -22,7 +22,7 @@ class IPC:
 
         redis_channels = self._config['redis']['channels']
         self.global_channel = redis_channels['global-channel-name']
-        self.cluster_channels = redis_channels['cluster-channel-prefix'] + "*"
+        self.cluster_channel_prefix = redis_channels['cluster-channel-prefix']
 
         self.active_clusters = []
         self.total_guild_count = 0
@@ -57,11 +57,11 @@ class IPC:
 
     async def _register_redis_channels(self) -> None:
         await self.redis_pubsub.subscribe(self.global_channel)
-        await self.redis_pubsub.psubscribe(self.cluster_channels)
+        await self.redis_pubsub.psubscribe(self.cluster_channel_prefix + "*")
 
     async def _unregister_redis_channels(self) -> None:
         await self.redis_pubsub.unsubscribe(self.global_channel)
-        await self.redis_pubsub.punsubscribe(self.cluster_channels)
+        await self.redis_pubsub.punsubscribe(self.cluster_channel_prefix + "*")
 
     async def _redis_event_handler(self) -> None:
         async for message in self.redis_pubsub.listen():
