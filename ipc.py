@@ -26,6 +26,7 @@ class IPC:
 
         self.active_clusters = []
         self.total_guild_count = 0
+        self.total_shard_count = 0
 
         self.redis = self._connect_redis()
         self.redis_pubsub = self.redis.pubsub()
@@ -118,7 +119,7 @@ class IPC:
         while not self._loop.is_closed():
             await asyncio.sleep(self.cluster_check_delay)
 
-            guild_count = 0
+            guild_count, shard_count = 0, 0
             for cluster in self.active_clusters:
                 delta_time = datetime.now() - cluster.last_ping
                 
@@ -128,8 +129,10 @@ class IPC:
                     continue
 
                 guild_count += cluster.guild_count
+                shard_count += len(cluster.latencies)
 
             self.total_guild_count = guild_count
+            self.total_shard_count = shard_count
 
     async def _cluster_update_task(self) -> None:
         while not self._loop.is_closed():
