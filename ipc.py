@@ -2,7 +2,7 @@ import json
 import asyncio
 import aioredis
 import jsonpickle
-from datetime import date, datetime
+from datetime import datetime
 
 from core.cluster import Cluster
 from core.ipc_message import IPCMessage
@@ -11,7 +11,7 @@ from core.ipc_message import IPCMessage
 class IPC:
     def __init__(self) -> None:
         self._loop = asyncio.get_event_loop()
-        
+
         self._config = self._load_config()
 
         ipc_config = self._config['ipc']
@@ -73,7 +73,7 @@ class IPC:
                 ipc_message = jsonpickle.decode(message['data'])
             except TypeError:
                 continue
-            
+
             if ipc_message.author == self.ipc_name:
                 continue
 
@@ -85,7 +85,7 @@ class IPC:
         self._loop.create_task(self._redis_event_handler())
         self._loop.create_task(self._cluster_check_task())
         self._loop.create_task(self._cluster_update_task())
-  
+
         while not self._loop.is_closed():
             cluster = Cluster(
                 name="bot1",
@@ -107,12 +107,12 @@ class IPC:
 
     def _update_cluster_status(self, message: IPCMessage) -> None:
         cluster = jsonpickle.decode(message.data)
-        
+
         for saved_cluster in self.active_clusters:
             if cluster.name == saved_cluster.name:
                 self.active_clusters.remove(saved_cluster)
                 break
-        
+
         self.active_clusters.append(cluster)
 
     async def _cluster_check_task(self) -> None:
@@ -122,7 +122,7 @@ class IPC:
             guild_count, shard_count = 0, 0
             for cluster in self.active_clusters:
                 delta_time = datetime.now() - cluster.last_ping
-                
+
                 if delta_time.total_seconds() >= self.cluster_inactive_timeout:
                     self.active_clusters.remove(cluster)
 
@@ -148,6 +148,7 @@ class IPC:
                 self.global_channel,
                 jsonpickle.encode(message)
             )
+
 
 if __name__ == "__main__":
     ipc = IPC()

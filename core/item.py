@@ -1,421 +1,239 @@
 import json
-from random import randint
-from difflib import get_close_matches
+import random
+from dataclasses import dataclass
 
-import utils.embeds as emb
+# 10 Minutes
+VERY_SHORT_PERIOD = 600
+# 1 Hour
+SHORT_PERIOD = 3600
+# 6 Hours
+MEDIUM_PERIOD = 21600
+# 12 hours
+LONG_PERIOD = 43200
+
+GOLD_GAIN_PER_HOUR_VERY_SHORT = 500
+GOLD_GAIN_PER_HOUR_SHORT = 250
+GOLD_GAIN_PER_HOUR_MEDIUM = 180
+GOLD_GAIN_PER_HOUR_LONG = 125
+GOLD_GAIN_PER_HOUR_VERY_LONG = 85
+
+GROWABLE_XP_GAIN_PER_HOUR = 200
+CRAFTABLE_XP_GAIN_PER_HOUR = 400
+
+# TODO: XP, price gen.
 
 
-class Item:
+@dataclass
+class GameItem:
 
     __slots__ = (
         'id',
         'level',
         'emoji',
         'name',
-        'rarity',
         'amount'
     )
 
-    def __init__(self, id, level, emoji, name, rarity, amount):
-        self.id = id
-        self.level = level
-        self.emoji = emoji
-        self.name = name
-        self.rarity = rarity
-        self.amount = amount
+    id: int
+    level: int
+    emoji: str
+    name: str
+    amount: int
 
 
-class CropSeed(Item):
-    def __init__(self, grows, expandsto, gold_cost, *args, **kw):
-        super().__init__(*args, **kw)
-        self.grows = grows
-        self.dies = int(grows * 1.5)
-        self.expandsto = expandsto
-        self.gold_cost = gold_cost
+@dataclass
+class PurchasableItem:
+    gold_price: int
+    gems_price: int
 
 
-class Crop(Item):
-    def __init__(self, img, minprice, maxprice, madefrom, *args, **kw):
-        super().__init__(*args, **kw)
-        self.img = img
-        self.minprice = minprice
-        self.maxprice = maxprice
-        self.madefrom = madefrom
-
-    @property
-    def xp(self):
-        xp = int((self.madefrom.grows / 3600) * 200 / self.amount)
-        
-        return xp or 1
+@dataclass
+class SellableItem:
+    gold_reward: int
+    gems_reward: int
 
 
-class Animal(Item):
-    def __init__(self, grows, expandsto, img, gold_cost, *args, **kw):
-        super().__init__(*args, **kw)
-        self.grows = grows
-        self.dies = int(grows * 1.5)
-        self.expandsto = expandsto
-        self.img = img
-        self.gold_cost = gold_cost
+class MarketItem:
+    pass
 
 
-class AnimalProduct(Item):
-    def __init__(self, minprice, maxprice, madefrom, *args, **kw):
-        super().__init__(*args, **kw)
-        self.minprice = minprice
-        self.maxprice = maxprice
-        self.madefrom = madefrom
+class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
 
-    @property
-    def xp(self):
-        xp = int((self.madefrom.grows / 3600) * 200 / self.amount)
-        
-        return xp or 1
+    __slots__ = (
+        'grow_time',
+        'image_url',
+        'collect_time',
+        'xp',
+        'min_market_price',
+        'max_market_price',
+        'gold_price',
+        'gems_price',
+        'gold_reward',
+        'gems_reward',
+    )
 
+    def __init__(
+        self,
+        id: int,
+        level: int,
+        emoji: str,
+        name: str,
+        amount: int,
+        gold_price: int,
+        grow_time: int,
+        image_url: str,
+        gems_price: int = -1,
+        gems_reward: int = -1,
+    ) -> None:
+        GameItem.__init__(self, id, level, emoji, name, amount)
+        PurchasableItem.__init__(self, gold_price, gems_price)
+        SellableItem.__init__(self, 0, gems_reward)
 
-class Tree(Item):
-    def __init__(self, grows, expandsto, gold_cost, *args, **kw):
-        super().__init__(*args, **kw)
-        self.grows = grows
-        self.dies = int(grows * 1.5)
-        self.expandsto = expandsto
-        self.gold_cost = gold_cost
+        self.grow_time = grow_time
+        self.image_url = image_url
 
+        self.collect_time = int(grow_time * 1.5)
+        self.xp = self._calculate_xp()
 
-class TreeProduct(Item):
-    def __init__(self, img, minprice, maxprice, madefrom, *args, **kw):
-        super().__init__(*args, **kw)
-        self.img = img
-        self.minprice = minprice
-        self.maxprice = maxprice
-        self.madefrom = madefrom
+        self.min_market_price = self._calculate_min_market_price()
+        self.max_market_price = self._calculate_max_market_price()
 
-    @property
-    def xp(self):
-        xp = int((self.madefrom.grows / 3600) * 200 / self.amount)
-        
-        return xp or 1
+        self.generate_new_price()
 
-
-class CraftedItem(Item):
-    def __init__(self, img, craftedfrom, time, *args, **kw):
-        super().__init__(*args, **kw)
-        self.img = img
-        self.unpackmadefrom(craftedfrom)
-        self.time = time
-
-    @property
-    def minprice(self):
-        price = 0
-        for item, amount in self.craftedfrom.items():
-            price += item.maxprice * amount
-
-        return int(price - (price / 8))
-
-    @property
-    def maxprice(self):
-        price = 0
-        for item, amount in self.craftedfrom.items():
-            price += item.maxprice * amount
-
-        return int(price + (price / 10) + (self.time / 2000))
-
-    @property
-    def xp(self):
-        return int((self.time / 3600) * 240)
-
-    def unpackmadefrom(self, craftedfrom):
-        temp = {}
-        real = {}
-
-        for pack in craftedfrom:
-            temp.update(pack)
-
-        for key, value in temp.items():
-            real[int(key)] = value
-
-        self.craftedfrom = real
-
-class SpecialItem(Item):
-    def __init__(self, xp, minprice, maxprice, img, *args, **kw):
-        super().__init__(*args, **kw)
-        self.xp = xp
-        self.minprice = minprice
-        self.maxprice = maxprice
-        self.img = img
-
-
-def cropseedloader():
-    rseeds = {}
-
-    with open("files/cropseed.json", "r", encoding="UTF8") as file:
-        seeds = json.load(file)
-
-    for c, v in seeds.items():
-        crop = CropSeed(
-            level=v['level'],
-            grows=v['grows'],
-            expandsto=v['expandsto'],
-            id=v['id'],
-            emoji=v['emoji'],
-            name=v['name'],
-            rarity=v['rarity'],
-            amount=1,
-            gold_cost=v['gold_cost']
+    def generate_new_price(self) -> None:
+        self.gold_reward = random.randint(
+            self.min_market_price, self.max_market_price
         )
-        rseeds[int(c)] = crop
 
-    return rseeds
+    def _calculate_xp(self) -> int:
+        return int(
+            (self.grow_time / 3600) * GROWABLE_XP_GAIN_PER_HOUR / self.amount
+        ) or 1
+
+    def _calculate_min_market_price(self) -> int:
+        total_new_value = self.gold_price - (self.gold_price * 0.25)
+
+        return int(total_new_value / self.amount) or 1
+
+    def _calculate_max_market_price(self) -> int:
+        gold_per_item = self.gold_price / self.amount
+
+        if self.grow_time <= VERY_SHORT_PERIOD:
+            gain = GOLD_GAIN_PER_HOUR_VERY_SHORT
+        elif self.grow_time <= SHORT_PERIOD:
+            gain = GOLD_GAIN_PER_HOUR_SHORT
+        elif self.grow_time <= MEDIUM_PERIOD:
+            gain = GOLD_GAIN_PER_HOUR_MEDIUM
+        elif self.grow_time <= LONG_PERIOD:
+            gain = GOLD_GAIN_PER_HOUR_LONG
+        else:
+            gain = GOLD_GAIN_PER_HOUR_VERY_LONG
+
+        total_profit = (self.grow_time / 3600) * gain
+
+        return int(gold_per_item + (total_profit / self.amount)) or 1
 
 
-def croploader():
-    rcrops = {}
+@dataclass
+class ReplantableItem(PlantableItem):
 
-    with open("files/crop.json", "r", encoding="UTF8") as file:
-        crops = json.load(file)
+    __slots__ = ('iterations')
 
-    for c, v in crops.items():
-        crop = Crop(
-            id=v['id'],
-            level=v['level'],
-            img=v['img'],
-            minprice=v['minprice'], 
-            maxprice=v['maxprice'],
-            madefrom=v['madefrom'],
-            emoji=v['emoji'],
-            name=v['name'],
-            rarity=v['rarity'],
-            amount=v['amount']
+    iterations: int
+
+
+class Crop(PlantableItem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class Tree(ReplantableItem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class Animal(ReplantableItem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class CraftableItem(GameItem, SellableItem, MarketItem):
+
+    __slots__ = (
+        'made_from',
+        'craft_time',
+        'image_url',
+        'xp'
+        'min_market_price',
+        'max_market_price',
+        'gold_reward',
+        'gems_reward'
+    )
+
+    def __init__(
+        self,
+        id: int,
+        level: int,
+        emoji: str,
+        name: str,
+        amount: int,
+        #gold_reward: int,
+        made_from: list,
+        craft_time: int,
+        image_url: str,
+        gems_reward: int = -1
+    ) -> None:
+        GameItem.__init__(self, id, level, emoji, name, amount)
+        SellableItem.__init__(self, 0, gems_reward)
+
+        self.made_from = made_from
+        self.craft_time = craft_time
+        self.image_url = image_url
+
+        self.xp = self._calculate_xp()
+
+        #self.min_market_price = min_market_price
+        #self.max_market_price = max_market_price
+
+        self.generate_new_price()
+
+    def generate_new_price(self) -> None:
+        self.gold_reward = random.randint(
+            self.min_market_price, self.max_market_price
         )
-        rcrops[int(c)] = crop
 
-    return rcrops
-
-
-def treeloader():
-    ritems = {}
-
-    with open("files/trees.json", "r", encoding="UTF8") as file:
-        litems = json.load(file)
-
-    for c, v in litems.items():
-        item = Tree(
-            level=v['level'],
-            grows=v['grows'],
-            expandsto=v['expandsto'],
-            id=v['id'],
-            emoji=v['emoji'],
-            name=v['name'],
-            rarity=v['rarity'],
-            amount=v['amount'],
-            gold_cost=v['gold_cost']
-        )
-        ritems[int(c)] = item
-
-    return ritems
+    def _calculate_xp(self) -> int:
+        return int((self.time / 3600) * CRAFTABLE_XP_GAIN_PER_HOUR)
 
 
-def treeproductloader():
-    rprods = {}
-
-    with open("files/treeproducts.json", "r", encoding="UTF8") as file:
-        prods = json.load(file)
-
-    for c, v in prods.items():
-        prod = TreeProduct(
-            id=v['id'],
-            level=v['level'],
-            img=v['img'],
-            minprice=v['minprice'], 
-            maxprice=v['maxprice'],
-            madefrom=v['madefrom'],
-            emoji=v['emoji'],
-            name=v['name'],
-            rarity=v['rarity'],
-            amount=v['amount']
-        )
-        rprods[int(c)] = prod
-
-    return rprods
+@dataclass
+class Boost():
+    pass
 
 
-def animalloader():
-    ritems = {}
+def load_all_items() -> list:
+    all_items = []
 
-    with open("files/animals.json", "r", encoding="UTF8") as file:
-        litems = json.load(file)
+    with open("data/items/crops.json", "r") as file:
+        data = json.load(file)
 
-    for c, v in litems.items():
-        item = Animal(
-            level=v['level'],
-            grows=v['grows'],
-            expandsto=v['expandsto'],
-            img=v['img'],
-            id=v['id'],
-            emoji=v['emoji'],
-            name=v['name'],
-            rarity=v['rarity'],
-            amount=v['amount'],
-            gold_cost=v['gold_cost']
-        )
-        ritems[int(c)] = item
+        for item_data in data['crops']:
+            item = Crop(
+                id=item_data['id'],
+                level=item_data['level'],
+                emoji=item_data['emoji'],
+                name=item_data['name'],
+                amount=item_data['amount'],
+                gold_price=item_data['gold_price'],
+                grow_time=item_data['grow_time'],
+                image_url=item_data['image_url']
+            )
 
-    return ritems
+            all_items.append(item)
 
-
-def animalproductloader():
-    ritems = {}
-
-    with open("files/animalproducts.json", "r", encoding="UTF8") as file:
-        litems = json.load(file)
-
-    for c, v in litems.items():
-        item = AnimalProduct(
-            minprice=v['minprice'],
-            maxprice=v['maxprice'],
-            level=v['level'],
-            id=v['id'],
-            emoji=v['emoji'],
-            name=v['name'],
-            rarity=v['rarity'],
-            amount=v['amount'],
-            madefrom=v['madefrom']
-        )
-        ritems[int(c)] = item
-
-    return ritems
+    return all_items
 
 
-def crafteditemloader():
-    ritems = {}
-
-    with open("files/craftables.json", "r", encoding="UTF8") as file:
-        litems = json.load(file)
-
-    for c, v in litems.items():
-        item = CraftedItem(
-            level=v['level'],
-            img=v['img'],
-            craftedfrom=v['craftedfrom'],
-            time=v['time'],
-            id=v['id'],
-            emoji=v['emoji'],
-            name=v['name'],
-            rarity=v['rarity'],
-            amount=v['amount']
-        )
-        ritems[int(c)] = item
-
-    return ritems
-
-def specialitemloader():
-    sitems = {}
-
-    with open("files/specialitems.json", "r", encoding="UTF8") as file:
-        litems = json.load(file)
-
-    for c, v in litems.items():
-        item = SpecialItem(
-            level=v['level'],
-            xp=v['xp'],
-            img=v['img'],
-            minprice=v['minprice'], 
-            maxprice=v['maxprice'],
-            id=v['id'],
-            emoji=v['emoji'],
-            name=v['name'],
-            rarity=v['rarity'],
-            amount=v['amount']
-        )
-        sitems[int(c)] = item
-
-    return sitems
-
-
-def update_market_prices(client):
-    
-    def update_price(item):
-        item.marketprice = randint(item.minprice, item.maxprice)
-
-    for item in client.crops.values():
-        update_price(item)
-    for item in client.treeproducts.values():
-        update_price(item)
-    for item in client.animalproducts.values():
-        update_price(item)
-    for item in client.crafteditems.values():
-        update_price(item)
-    for item in client.specialitems.values():
-        update_price(item)
-
-def update_item_relations(client):
-    for item in client.allitems.values():
-        if hasattr(item, 'expandsto'):
-            item.expandsto = client.allitems[item.expandsto]
-        elif hasattr(item, 'madefrom'):
-            item.madefrom = client.allitems[item.madefrom]
-        elif hasattr(item, 'craftedfrom'):
-            dct = {}
-            for product, amount in item.craftedfrom.items():
-                product = client.allitems[product]
-                dct[product] = amount
-
-            item.craftedfrom = dct
-
-
-def find_item_by_name(client, name):
-    itemslist = list(client.allitems.values())
-
-    tempitems = {}
-    tempwords = []
-    for item in itemslist:
-        tempitems[item.name] = item
-        tempwords.append(item.name)
-
-    matches = get_close_matches(name, tempwords, cutoff=0.72)
-    if not matches:
-        return False
-    return tempitems[matches[0]]
-
-
-async def finditem(client, ctx, possibleitem):
-    try:
-        possibleitem = int(possibleitem)
-    except ValueError:
-        pass
-
-    if isinstance(possibleitem, int):
-        try:
-            item = client.allitems[possibleitem]
-        except KeyError:
-            embed = emb.errorembed("I didn't find any items by this ID \ud83e\udd14", ctx)
-            await ctx.send(embed=embed)
-            return None
-    else:
-        item = find_item_by_name(client, possibleitem)
-        if not item:
-            embed = emb.errorembed("I didn't find any items named like that \ud83e\udd14", ctx)
-            await ctx.send(embed=embed)
-            return None
-
-    return item
-
-
-def crafted_from_to_string(item):
-    string = ''
-    for product, value in item.craftedfrom.items():
-        string += f"{product.emoji}{product.name.capitalize()} x{value},\n"
-
-    return string[:-2]
-
-def base_amount_for_growables(item):
-    grow_time = item.madefrom.grows
-    items_per_hour = int(item.amount / (grow_time / 3600))
-    amount = randint(items_per_hour, int(items_per_hour * 1.5))
-        
-    if grow_time > 3600:
-        return amount
-    elif grow_time > 1800:
-        return int(amount / 2)
-    else:
-        return int(amount / 4)
+all_items = load_all_items()
+for item in all_items:
+    print(f"{item.emoji}{item.name}: min: {item.min_market_price}, max: {item.max_market_price}")
