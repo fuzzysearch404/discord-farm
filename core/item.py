@@ -4,8 +4,8 @@ from enum import Enum
 from dataclasses import dataclass
 from difflib import get_close_matches
 
-from user import User
-from exceptions import ItemNotFoundException
+from core.user import User
+from core.exceptions import ItemNotFoundException
 
 
 # 10 Minutes
@@ -45,6 +45,7 @@ CRAFTABLE_XP_GAIN_PER_HOUR = 400
 BOOST_THREE_DAYS_DISCOUNT = 0.10
 # 25% discount
 BOOST_SEVEN_DAYS_DISCOUNT = 0.25
+
 
 @dataclass
 class GameItem:
@@ -295,6 +296,9 @@ class CraftableItem(GameItem, SellableItem, MarketItem):
         self.min_market_price = 0
         self.max_market_price = 0
 
+        # WARNING: Must manually init min, max market prices
+        # after the made_from list is parsed into list of ItemAndAmount objects
+
     def generate_new_price(self) -> None:
         self.gold_reward = random.randint(
             self.min_market_price, self.max_market_price
@@ -446,6 +450,11 @@ class ItemPool:
         boost = next(x for x in self.all_boosts if x.id == boost_id)
 
         return boost
+
+    def update_market_prices(self) -> None:
+        for item in self.all_items:
+            if isinstance(item, MarketItem):
+                item.generate_new_price()
 
     def _group_items_per_name(self) -> dict:
         items_per_name = {}
@@ -639,13 +648,3 @@ def load_all_items() -> ItemPool:
     all_boosts = _load_boosts()
 
     return ItemPool(all_items, all_boosts)
-
-
-all_items_pool = load_all_items()
-for item in all_items_pool.all_items:
-    print(f"{item.emoji}{item.name}: min: {item.min_market_price}, max: {item.max_market_price}, cur: {item.gold_reward} xp: {item.xp}")
-
-print(all_items_pool.find_item_by_name("lettuce"))
-
-dog_1 = all_items_pool.find_boost_by_id("dog_1")
-print(dog_1)
