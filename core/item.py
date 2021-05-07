@@ -183,8 +183,9 @@ class Tree(ReplantableItem):
 
 
 class Animal(ReplantableItem):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, emoji_animal: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.emoji_animal = emoji_animal
 
 
 class CraftableItem(GameItem, SellableItem, MarketItem):
@@ -241,7 +242,7 @@ class Boost():
     pass
 
 
-def load_all_items() -> list:
+def _load_crops() -> list:
     all_items = []
 
     with open("data/items/crops.json", "r") as file:
@@ -260,6 +261,12 @@ def load_all_items() -> list:
             )
 
             all_items.append(item)
+
+    return all_items
+
+
+def _load_trees() -> list:
+    all_items = []
 
     with open("data/items/trees.json", "r") as file:
         data = json.load(file)
@@ -282,6 +289,44 @@ def load_all_items() -> list:
     return all_items
 
 
+def _load_animals() -> list:
+    all_items = []
+
+    with open("data/items/animals.json", "r") as file:
+        data = json.load(file)
+
+        for item_data in data['animals']:
+            item = Animal(
+                id=item_data['id'],
+                level=item_data['level'],
+                emoji=item_data['emoji'],
+                name=item_data['name'],
+                amount=item_data['amount'],
+                gold_price=item_data['gold_price'],
+                grow_time=item_data['grow_time'],
+                image_url=item_data['image_url'],
+                iterations=item_data['iterations'],
+                emoji_animal=item_data['emoji_animal']
+            )
+
+            all_items.append(item)
+
+    return all_items
+
+
+def load_all_items() -> list:
+    all_items = []
+
+    all_items.extend(_load_crops())
+    all_items.extend(_load_trees())
+    all_items.extend(_load_animals())
+
+    return all_items
+
+
 all_items = load_all_items()
 for item in all_items:
     print(f"{item.emoji}{item.name}: min: {item.min_market_price}, max: {item.max_market_price}, xp: {item.xp}")
+
+    if hasattr(item, "emoji_animal"):
+        print(item.emoji_animal)
