@@ -17,10 +17,14 @@ GOLD_GAIN_PER_HOUR_MEDIUM = 180
 GOLD_GAIN_PER_HOUR_LONG = 125
 GOLD_GAIN_PER_HOUR_VERY_LONG = 85
 
+REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT = 700
+REPLANTABLE_GOLD_GAIN_PER_HOUR_SHORT = 375
+REPLANTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 245
+REPLANTABLE_GOLD_GAIN_PER_HOUR_LONG = 150
+REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 95
+
 GROWABLE_XP_GAIN_PER_HOUR = 200
 CRAFTABLE_XP_GAIN_PER_HOUR = 400
-
-# TODO: XP, price gen.
 
 
 @dataclass
@@ -134,12 +138,38 @@ class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
         return int(gold_per_item + (total_profit / self.amount)) or 1
 
 
-@dataclass
 class ReplantableItem(PlantableItem):
 
     __slots__ = ('iterations')
 
-    iterations: int
+    def __init__(self, iterations: int, *args, **kwargs):
+        self.iterations = iterations
+        super().__init__(*args, **kwargs)
+
+    def _calculate_min_market_price(self) -> int:
+        total_new_value = self.gold_price - (self.gold_price * 0.25)
+
+        return int(total_new_value / (self.amount * self.iterations)) or 1
+
+    def _calculate_max_market_price(self) -> int:
+        gold_per_item = self.gold_price / (self.amount * self.iterations)
+
+        if self.grow_time <= VERY_SHORT_PERIOD:
+            gain = REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT
+        elif self.grow_time <= SHORT_PERIOD:
+            gain = REPLANTABLE_GOLD_GAIN_PER_HOUR_SHORT
+        elif self.grow_time <= MEDIUM_PERIOD:
+            gain = REPLANTABLE_GOLD_GAIN_PER_HOUR_MEDIUM
+        elif self.grow_time <= LONG_PERIOD:
+            gain = REPLANTABLE_GOLD_GAIN_PER_HOUR_LONG
+        else:
+            gain = REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG
+
+        total_profit = (self.grow_time / 3600) * gain
+
+        return int(
+            gold_per_item + (total_profit / (self.amount * self.iterations))
+        ) or 1
 
 
 class Crop(PlantableItem):
@@ -231,9 +261,27 @@ def load_all_items() -> list:
 
             all_items.append(item)
 
+    with open("data/items/trees.json", "r") as file:
+        data = json.load(file)
+
+        for item_data in data['trees']:
+            item = Tree(
+                id=item_data['id'],
+                level=item_data['level'],
+                emoji=item_data['emoji'],
+                name=item_data['name'],
+                amount=item_data['amount'],
+                gold_price=item_data['gold_price'],
+                grow_time=item_data['grow_time'],
+                image_url=item_data['image_url'],
+                iterations=item_data['iterations']
+            )
+
+            all_items.append(item)
+
     return all_items
 
 
 all_items = load_all_items()
 for item in all_items:
-    print(f"{item.emoji}{item.name}: min: {item.min_market_price}, max: {item.max_market_price}")
+    print(f"{item.emoji}{item.name}: min: {item.min_market_price}, max: {item.max_market_price}, xp: {item.xp}")
