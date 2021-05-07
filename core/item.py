@@ -1,8 +1,10 @@
 import json
 import random
+from enum import Enum
 from dataclasses import dataclass
 from difflib import get_close_matches
 
+from user import User
 from exceptions import ItemNotFoundException
 
 
@@ -39,6 +41,10 @@ CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 50
 GROWABLE_XP_GAIN_PER_HOUR = 200
 CRAFTABLE_XP_GAIN_PER_HOUR = 400
 
+# 10% discount
+BOOST_THREE_DAYS_DISCOUNT = 0.10
+# 25% discount
+BOOST_SEVEN_DAYS_DISCOUNT = 0.25
 
 @dataclass
 class GameItem:
@@ -343,29 +349,80 @@ class CraftableItem(GameItem, SellableItem, MarketItem):
         return int((self.craft_time / 3600) * CRAFTABLE_XP_GAIN_PER_HOUR)
 
 
-@dataclass
-class Boost():
-    pass
+class BoostDuration(Enum):
+    ONE_DAY = 86400
+    THREE_DAYS = 259200
+    SEVEN_DAYS = 604800
+
+
+class Boost:
+
+    __slots__ = (
+        'id',
+        'name',
+        'emoji',
+        'base_price',
+        'price_increase_per_farm_slots',
+        'price_increase_per_factory_slots',
+        'price_increase_per_user_level'
+    )
+
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        emoji: str,
+        base_price: int,
+        price_increase_per_farm_slots: int,
+        price_increase_per_factory_slots: int,
+        price_increase_per_user_level: int
+    ) -> None:
+        self.id = id
+        self.name = name
+        self.emoji = emoji
+        self.base_price = base_price
+        self.price_increase_per_farm_slots = price_increase_per_farm_slots
+        self.price_increase_per_factory_slots = \
+            price_increase_per_factory_slots
+        self.price_increase_per_user_level = price_increase_per_user_level
+
+    def get_boost_price(self, duration: BoostDuration, user: User) -> int:
+        price_per_day = self.base_price
+
+        price_per_day += self.price_increase_per_farm_slots * user.farm_slots
+        price_per_day += \
+            self.price_increase_per_factory_slots * user.factory_slots
+        price_per_day += self.price_increase_per_user_level * user.level
+
+        if duration.ONE_DAY:
+            # No discount
+            return price_per_day
+        elif duration.THREE_DAYS:
+            total = price_per_day * 3
+
+            return int(total - total * BOOST_THREE_DAYS_DISCOUNT)
+        else:
+            total = price_per_day * 7
+
+            return int(total - total * BOOST_SEVEN_DAYS_DISCOUNT)
 
 
 class ItemPool:
 
-    __slots__ = ('all_items', 'items_per_name', 'all_item_names')
+    __slots__ = (
+        'all_items',
+        'all_boosts',
+        'items_per_name',
+        'all_item_names'
+    )
 
-    def __init__(self, all_items: list) -> None:
+    def __init__(self, all_items: list, all_boosts: list) -> None:
         self.all_items = all_items
+        self.all_boosts = all_boosts
         self.items_per_name = self._group_items_per_name()
         self.all_item_names = self.items_per_name.keys()
 
-    def _group_items_per_name(self):
-        items_per_name = {}
-
-        for item in self.all_items:
-            items_per_name[item.name] = item
-
-        return items_per_name
-
-    def find_item_by_id(self, item_id: int):
+    def find_item_by_id(self, item_id: int) -> GameItem:
         try:
             item = next(x for x in self.all_items if x.id == item_id)
         except StopIteration:
@@ -373,7 +430,7 @@ class ItemPool:
 
         return item
 
-    def find_item_by_name(self, item_name: str):
+    def find_item_by_name(self, item_name: str) -> GameItem:
         matches = get_close_matches(
             item_name,
             self.all_item_names,
@@ -384,6 +441,19 @@ class ItemPool:
             raise ItemNotFoundException(f"Item \"{item_name}\" not found!")
 
         return self.items_per_name[matches[0]]
+
+    def find_boost_by_id(self, boost_id: str) -> Boost:
+        boost = next(x for x in self.all_boosts if x.id == boost_id)
+
+        return boost
+
+    def _group_items_per_name(self) -> dict:
+        items_per_name = {}
+
+        for item in self.all_items:
+            items_per_name[item.name] = item
+
+        return items_per_name
 
 
 def _load_crops() -> list:
@@ -528,6 +598,33 @@ def _load_craftables(all_loaded_items: list) -> None:
         craftable.generate_new_price()
 
 
+def _load_boosts() -> list:
+    all_boosts = []
+
+    with open("data/items/boosts.json", "r") as file:
+        data = json.load(file)
+
+        for boost_data in data['boosts']:
+            increase_farm_slots = boost_data['price_increase_per_farm_slots']
+            increase_factory_slots = \
+                boost_data['price_increase_per_factory_slots']
+            increase_user_level = boost_data['price_increase_per_user_level']
+
+            boost = Boost(
+                id=boost_data['id'],
+                name=boost_data['name'],
+                emoji=boost_data['emoji'],
+                base_price=boost_data['base_price'],
+                price_increase_per_farm_slots=increase_farm_slots,
+                price_increase_per_factory_slots=increase_factory_slots,
+                price_increase_per_user_level=increase_user_level
+            )
+
+            all_boosts.append(boost)
+
+    return all_boosts
+
+
 def load_all_items() -> ItemPool:
     all_items = []
 
@@ -539,11 +636,16 @@ def load_all_items() -> ItemPool:
     # This has to be loaded last, to attach made_from subobject references
     _load_craftables(all_items)
 
-    return ItemPool(all_items)
+    all_boosts = _load_boosts()
+
+    return ItemPool(all_items, all_boosts)
 
 
 all_items_pool = load_all_items()
 for item in all_items_pool.all_items:
     print(f"{item.emoji}{item.name}: min: {item.min_market_price}, max: {item.max_market_price}, cur: {item.gold_reward} xp: {item.xp}")
 
-print(all_items_pool.find_item_by_name("pog"))
+print(all_items_pool.find_item_by_name("lettuce"))
+
+dog_1 = all_items_pool.find_boost_by_id("dog_1")
+print(dog_1)

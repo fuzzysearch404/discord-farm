@@ -1,0 +1,58 @@
+{
+    "boosts" : [
+        {
+            "id":"dog_1",
+            "name":"Squealer Mike",
+            "emoji":"\ud83d\udc29",
+            "base_price":50,
+            "price_increase_per_farm_slots":0,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":0
+        },
+        {
+            "id":"dog_2",
+            "name":"Saliva Toby",
+            "emoji":"\ud83d\udc36",
+            "base_price":125,
+            "price_increase_per_farm_slots":0,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":0
+        },
+        {
+            "id":"dog_3",
+            "name":"Guard Rex",
+            "emoji":"\ud83d\udc15",
+            "base_price":250,
+            "price_increase_per_farm_slots":0,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":0
+        },
+        {
+            "id":"cat",
+            "name":"Leo",
+            "emoji":"\ud83d\udc31",
+            "base_price":320,
+            "price_increase_per_farm_slots":0,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":0
+        },
+        {
+            "id":"farm_slots",
+            "name":"Susan",
+            "emoji":"\ud83d\udc39",
+            "base_price":280,
+            "price_increase_per_farm_slots":0,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":0
+        },
+        {
+            "id":"factory_slots",
+            "name":"Alice",
+            "emoji":"\ud83e\udd89",
+            "base_price":200,
+            "price_increase_per_farm_slots":0,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":0
+        }
+    ]
+}
