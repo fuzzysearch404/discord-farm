@@ -15,6 +15,8 @@ class IPC:
         self._loop = asyncio.get_event_loop()
 
         self._config = self._load_config()
+        self.game_news = self._load_game_news()
+        self.eval_responses = {}
 
         log = logging.getLogger("IPC")
         log.setLevel(logging.DEBUG)
@@ -44,6 +46,7 @@ class IPC:
         self.cluster_inactive_timeout = ipc_config['cluster-inactive-timeout']
         self.cluster_check_delay = ipc_config['cluster-check-delay']
         self.cluster_update_delay = ipc_config['cluster-update-delay']
+        self.is_beta = ipc_config['beta']
 
         redis_config = self._config['redis']
         self.global_channel = redis_config['global-channel-name']
