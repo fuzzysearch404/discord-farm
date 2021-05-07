@@ -1,0 +1,15 @@
+{
+    "special_unpurchasables" : [
+       {
+          "id":600,
+          "level":17,
+          "xp":10,
+          "emoji":"\ud83d\udc1f",
+          "name":"fish",
+          "amount":1,
+          "min_market_price":8,
+          "max_market_price":10,
+          "image_url":"https://failiem.lv/thumb_show.php?i=yvk2wekx"
+       }
+    ]
+ }

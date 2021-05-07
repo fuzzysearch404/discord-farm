@@ -188,6 +188,46 @@ class Animal(ReplantableItem):
         self.emoji_animal = emoji_animal
 
 
+class SpecialUnpurchasableItem(GameItem, SellableItem, MarketItem):
+
+    __slots__ = (
+        'xp',
+        'min_market_price',
+        'max_market_price',
+        'image_url',
+        'gold_reward',
+        'gems_reward'
+    )
+
+    def __init__(
+        self,
+        id: int,
+        level: int,
+        emoji: str,
+        name: str,
+        amount: int,
+        xp: int,
+        min_market_price: int,
+        max_market_price: int,
+        image_url: str,
+        gems_reward: int = -1
+    ) -> None:
+        GameItem.__init__(self, id, level, emoji, name, amount)
+        SellableItem.__init__(self, 0, gems_reward)
+
+        self.xp = xp
+        self.min_market_price = min_market_price
+        self.max_market_price = max_market_price
+        self.image_url = image_url
+
+        self.generate_new_price()
+
+    def generate_new_price(self) -> None:
+        self.gold_reward = random.randint(
+            self.min_market_price, self.max_market_price
+        )
+
+
 class CraftableItem(GameItem, SellableItem, MarketItem):
 
     __slots__ = (
@@ -314,12 +354,37 @@ def _load_animals() -> list:
     return all_items
 
 
+def _load_special_unpurchasables() -> list:
+    all_items = []
+
+    with open("data/items/special_unpurchasable_items.json", "r") as file:
+        data = json.load(file)
+
+        for item_data in data['special_unpurchasables']:
+            item = SpecialUnpurchasableItem(
+                id=item_data['id'],
+                level=item_data['level'],
+                emoji=item_data['emoji'],
+                name=item_data['name'],
+                amount=item_data['amount'],
+                xp=item_data['xp'],
+                min_market_price=item_data['min_market_price'],
+                max_market_price=item_data['max_market_price'],
+                image_url=item_data['image_url']
+            )
+
+            all_items.append(item)
+
+    return all_items
+
+
 def load_all_items() -> list:
     all_items = []
 
     all_items.extend(_load_crops())
     all_items.extend(_load_trees())
     all_items.extend(_load_animals())
+    all_items.extend(_load_special_unpurchasables())
 
     return all_items
 
