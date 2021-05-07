@@ -11,17 +11,26 @@ MEDIUM_PERIOD = 21600
 # 12 hours
 LONG_PERIOD = 43200
 
-GOLD_GAIN_PER_HOUR_VERY_SHORT = 500
-GOLD_GAIN_PER_HOUR_SHORT = 250
-GOLD_GAIN_PER_HOUR_MEDIUM = 180
-GOLD_GAIN_PER_HOUR_LONG = 125
-GOLD_GAIN_PER_HOUR_VERY_LONG = 85
+# We lose 25% of item's value if we sell it at lowest price
+MIN_MARKET_PRICE_LOSS = 0.25
+
+PLANTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT = 500
+PLANTABLE_GOLD_GAIN_PER_HOUR_SHORT = 250
+PLANTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 180
+PLANTABLE_GOLD_GAIN_PER_HOUR_LONG = 125
+PLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 85
 
 REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT = 700
 REPLANTABLE_GOLD_GAIN_PER_HOUR_SHORT = 375
 REPLANTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 245
 REPLANTABLE_GOLD_GAIN_PER_HOUR_LONG = 150
 REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 95
+
+CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT = 250
+CRAFTABLE_GOLD_GAIN_PER_HOUR_SHORT = 200
+CRAFTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 150
+CRAFTABLE_GOLD_GAIN_PER_HOUR_LONG = 100
+CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 50
 
 GROWABLE_XP_GAIN_PER_HOUR = 200
 CRAFTABLE_XP_GAIN_PER_HOUR = 400
@@ -115,7 +124,8 @@ class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
         ) or 1
 
     def _calculate_min_market_price(self) -> int:
-        total_new_value = self.gold_price - (self.gold_price * 0.25)
+        total_new_value = \
+            self.gold_price - (self.gold_price * MIN_MARKET_PRICE_LOSS)
 
         return int(total_new_value / self.amount) or 1
 
@@ -123,15 +133,15 @@ class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
         gold_per_item = self.gold_price / self.amount
 
         if self.grow_time <= VERY_SHORT_PERIOD:
-            gain = GOLD_GAIN_PER_HOUR_VERY_SHORT
+            gain = PLANTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT
         elif self.grow_time <= SHORT_PERIOD:
-            gain = GOLD_GAIN_PER_HOUR_SHORT
+            gain = PLANTABLE_GOLD_GAIN_PER_HOUR_SHORT
         elif self.grow_time <= MEDIUM_PERIOD:
-            gain = GOLD_GAIN_PER_HOUR_MEDIUM
+            gain = PLANTABLE_GOLD_GAIN_PER_HOUR_MEDIUM
         elif self.grow_time <= LONG_PERIOD:
-            gain = GOLD_GAIN_PER_HOUR_LONG
+            gain = PLANTABLE_GOLD_GAIN_PER_HOUR_LONG
         else:
-            gain = GOLD_GAIN_PER_HOUR_VERY_LONG
+            gain = PLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG
 
         total_profit = (self.grow_time / 3600) * gain
 
@@ -147,7 +157,8 @@ class ReplantableItem(PlantableItem):
         super().__init__(*args, **kwargs)
 
     def _calculate_min_market_price(self) -> int:
-        total_new_value = self.gold_price - (self.gold_price * 0.25)
+        total_new_value = \
+            self.gold_price - (self.gold_price * MIN_MARKET_PRICE_LOSS)
 
         return int(total_new_value / (self.amount * self.iterations)) or 1
 
@@ -228,6 +239,15 @@ class SpecialUnpurchasableItem(GameItem, SellableItem, MarketItem):
         )
 
 
+@dataclass
+class ItemAndAmount:
+
+    __slots__ = ('item', 'amount')
+
+    item: GameItem
+    amount: int
+
+
 class CraftableItem(GameItem, SellableItem, MarketItem):
 
     __slots__ = (
@@ -248,7 +268,6 @@ class CraftableItem(GameItem, SellableItem, MarketItem):
         emoji: str,
         name: str,
         amount: int,
-        #gold_reward: int,
         made_from: list,
         craft_time: int,
         image_url: str,
@@ -263,23 +282,80 @@ class CraftableItem(GameItem, SellableItem, MarketItem):
 
         self.xp = self._calculate_xp()
 
-        #self.min_market_price = min_market_price
-        #self.max_market_price = max_market_price
-
-        self.generate_new_price()
+        self.min_market_price = 0
+        self.max_market_price = 0
 
     def generate_new_price(self) -> None:
         self.gold_reward = random.randint(
             self.min_market_price, self.max_market_price
         )
 
+    def _calculate_total_value(self) -> int:
+        # Just to check if we have items at all,
+        # and if there are ItemAndAmount instances, not dicts.
+        if not isinstance(self.made_from[0], ItemAndAmount):
+            raise Exception(
+                f"CraftedItem ID: {self.id} made_from not initialized"
+            )
+
+        value = 0
+
+        for item_and_amount in self.made_from:
+            if isinstance(item_and_amount.item, CraftableItem):
+                value += item_and_amount.item._calculate_total_value()
+            else:
+                value += \
+                    item_and_amount.item.max_market_price \
+                    * item_and_amount.amount
+
+        return value
+
+    def _calculate_min_market_price(self) -> int:
+        total_value = self._calculate_total_value()
+        total_new_value = \
+            total_value - (total_value * MIN_MARKET_PRICE_LOSS)
+
+        return int(total_new_value) or 1
+
+    def _calculate_max_market_price(self) -> int:
+        total_value = self._calculate_total_value()
+
+        if self.craft_time <= VERY_SHORT_PERIOD:
+            gain = CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT
+        elif self.craft_time <= SHORT_PERIOD:
+            gain = CRAFTABLE_GOLD_GAIN_PER_HOUR_SHORT
+        elif self.craft_time <= MEDIUM_PERIOD:
+            gain = CRAFTABLE_GOLD_GAIN_PER_HOUR_MEDIUM
+        elif self.craft_time <= LONG_PERIOD:
+            gain = CRAFTABLE_GOLD_GAIN_PER_HOUR_LONG
+        else:
+            gain = CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG
+
+        total_profit = (self.craft_time / 3600) * gain
+
+        return int(total_value + total_profit) or 1
+
     def _calculate_xp(self) -> int:
-        return int((self.time / 3600) * CRAFTABLE_XP_GAIN_PER_HOUR)
+        return int((self.craft_time / 3600) * CRAFTABLE_XP_GAIN_PER_HOUR)
 
 
 @dataclass
 class Boost():
     pass
+
+
+class ItemPool:
+
+    __slots__ = ('all_items')
+
+    def __init__(self, all_items: list) -> None:
+        all_items = all_items
+
+    def find_item_by_id(item_id: int):
+        pass
+
+    def find_item_by_name(item_name: str):
+        pass
 
 
 def _load_crops() -> list:
@@ -378,6 +454,52 @@ def _load_special_unpurchasables() -> list:
     return all_items
 
 
+def _load_craftables(all_loaded_items: list) -> None:
+    all_items = []
+
+    with open("data/items/craftables.json", "r") as file:
+        data = json.load(file)
+
+        for item_data in data['craftables']:
+            item = CraftableItem(
+                id=item_data['id'],
+                level=item_data['level'],
+                emoji=item_data['emoji'],
+                name=item_data['name'],
+                amount=item_data['amount'],
+                made_from=item_data['made_from'],
+                craft_time=item_data['craft_time'],
+                image_url=item_data['image_url']
+            )
+
+            all_items.append(item)
+
+    all_loaded_items.extend(all_items)
+
+    # Update relations
+    for craftable in all_items:
+        made_from_list = craftable.made_from
+
+        made_from_new_list = []
+        for requirement in made_from_list:
+            for item, amount in requirement.items():
+                item_obj = next(
+                    obj for obj in all_loaded_items if obj.id == int(item)
+                )
+
+                item_and_amount = ItemAndAmount(item_obj, amount)
+                made_from_new_list.append(item_and_amount)
+
+        craftable.made_from = made_from_new_list
+
+    # Fully init craftables
+    for craftable in all_items:
+        craftable.min_market_price = craftable._calculate_min_market_price()
+        craftable.max_market_price = craftable._calculate_max_market_price()
+
+        craftable.generate_new_price()
+
+
 def load_all_items() -> list:
     all_items = []
 
@@ -386,12 +508,12 @@ def load_all_items() -> list:
     all_items.extend(_load_animals())
     all_items.extend(_load_special_unpurchasables())
 
+    # This has to be loaded last, to attach made_from subobject references
+    _load_craftables(all_items)
+
     return all_items
 
 
 all_items = load_all_items()
 for item in all_items:
-    print(f"{item.emoji}{item.name}: min: {item.min_market_price}, max: {item.max_market_price}, xp: {item.xp}")
-
-    if hasattr(item, "emoji_animal"):
-        print(item.emoji_animal)
+    print(f"{item.emoji}{item.name}: min: {item.min_market_price}, max: {item.max_market_price}, cur: {item.gold_reward} xp: {item.xp}")
