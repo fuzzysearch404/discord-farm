@@ -1,6 +1,10 @@
 import json
 import random
 from dataclasses import dataclass
+from difflib import get_close_matches
+
+from exceptions import ItemNotFoundException
+
 
 # 10 Minutes
 VERY_SHORT_PERIOD = 600
@@ -346,16 +350,40 @@ class Boost():
 
 class ItemPool:
 
-    __slots__ = ('all_items')
+    __slots__ = ('all_items', 'items_per_name', 'all_item_names')
 
     def __init__(self, all_items: list) -> None:
-        all_items = all_items
+        self.all_items = all_items
+        self.items_per_name = self._group_items_per_name()
+        self.all_item_names = self.items_per_name.keys()
 
-    def find_item_by_id(item_id: int):
-        pass
+    def _group_items_per_name(self):
+        items_per_name = {}
 
-    def find_item_by_name(item_name: str):
-        pass
+        for item in self.all_items:
+            items_per_name[item.name] = item
+
+        return items_per_name
+
+    def find_item_by_id(self, item_id: int):
+        try:
+            item = next(x for x in self.all_items if x.id == item_id)
+        except StopIteration:
+            raise ItemNotFoundException(f"Item {item_id} not found!")
+
+        return item
+
+    def find_item_by_name(self, item_name: str):
+        matches = get_close_matches(
+            item_name,
+            self.all_item_names,
+            cutoff=0.72
+        )
+
+        if not matches:
+            raise ItemNotFoundException(f"Item \"{item_name}\" not found!")
+
+        return self.items_per_name[matches[0]]
 
 
 def _load_crops() -> list:
@@ -500,7 +528,7 @@ def _load_craftables(all_loaded_items: list) -> None:
         craftable.generate_new_price()
 
 
-def load_all_items() -> list:
+def load_all_items() -> ItemPool:
     all_items = []
 
     all_items.extend(_load_crops())
@@ -511,9 +539,11 @@ def load_all_items() -> list:
     # This has to be loaded last, to attach made_from subobject references
     _load_craftables(all_items)
 
-    return all_items
+    return ItemPool(all_items)
 
 
-all_items = load_all_items()
-for item in all_items:
+all_items_pool = load_all_items()
+for item in all_items_pool.all_items:
     print(f"{item.emoji}{item.name}: min: {item.min_market_price}, max: {item.max_market_price}, cur: {item.gold_reward} xp: {item.xp}")
+
+print(all_items_pool.find_item_by_name("pog"))
