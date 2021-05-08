@@ -10,6 +10,7 @@ from collections import Counter
 from logging.handlers import RotatingFileHandler
 from discord.ext import commands
 
+from .utils.context import Context
 from .utils.time import seconds_to_time
 from core import exceptions
 
@@ -133,7 +134,7 @@ class BotClient(commands.AutoShardedBot):
             "host": self.config['postgres']['host']
         }
 
-        self.db = await asyncpg.create_pool(
+        self.db_pool = await asyncpg.create_pool(
             **connect_args,
             min_size=20,
             max_size=20,
@@ -186,7 +187,7 @@ class BotClient(commands.AutoShardedBot):
 
         # Check if Postgres is connected
         try:
-            async with self.db.acquire() as con:
+            async with self.db_pool.acquire() as con:
                 await con.fetchrow("SELECT NOW();")
         except Exception:
             await self.log_to_discord("\u274c Postgres not connected!")
@@ -270,7 +271,7 @@ class BotClient(commands.AutoShardedBot):
         )
 
     async def on_guild_remove(self, guild) -> None:
-        async with self.db.acquire() as con:
+        async with self.db_pool.acquire() as con:
             query = """DELETE FROM store WHERE guild_id = $1;"""
 
             await con.execute(query, guild.id)
@@ -299,7 +300,7 @@ class BotClient(commands.AutoShardedBot):
         bucket = self.global_cooldown.get_bucket(ctx.message)
         retry_after = bucket.update_rate_limit(current)
 
-        if retry_after and ctx.author.id not in self.owner_ids:
+        if retry_after and not await self.is_owner(ctx.author):
             raise exceptions.GlobalCooldownException(ctx, retry_after)
 
         return True
@@ -317,7 +318,7 @@ class BotClient(commands.AutoShardedBot):
             )
 
     async def process_commands(self, message) -> None:
-        ctx = await self.get_context(message, cls=commands.Context)
+        ctx = await self.get_context(message, cls=Context)
 
         if ctx.command is None:
             return
@@ -358,14 +359,17 @@ class BotClient(commands.AutoShardedBot):
         if not message.channel.permissions_for(message.guild.me).send_messages:
             return
 
-        await self.invoke(ctx)
+        try:
+            await self.invoke(ctx)
+        finally:
+            await ctx.release()
 
     async def close(self) -> None:
         self.log.info("Shutting down")
         await self.log_to_discord("Shutting down")
 
         await super().close()
-        await self.db.close()
+        await self.db_pool.close()
         await self.redis.connection_pool.disconnect()
 
     def run(self) -> None:

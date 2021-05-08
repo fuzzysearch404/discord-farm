@@ -7,6 +7,10 @@ class Admin(commands.Cog):
         super().__init__()
         self.bot = bot
 
+    @commands.command()
+    async def test(self, ctx, a:int =2):
+        await ctx.send("1")
+
 
 def setup(bot) -> None:
-    Admin(bot)
+    bot.add_cog(Admin(bot))
