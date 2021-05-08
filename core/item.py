@@ -49,15 +49,6 @@ BOOST_SEVEN_DAYS_DISCOUNT = 0.25
 
 @dataclass
 class GameItem:
-
-    __slots__ = (
-        'id',
-        'level',
-        'emoji',
-        'name',
-        'amount'
-    )
-
     id: int
     level: int
     emoji: str
@@ -82,19 +73,6 @@ class MarketItem:
 
 
 class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
-
-    __slots__ = (
-        'grow_time',
-        'image_url',
-        'collect_time',
-        'xp',
-        'min_market_price',
-        'max_market_price',
-        'gold_price',
-        'gems_price',
-        'gold_reward',
-        'gems_reward',
-    )
 
     def __init__(
         self,
@@ -159,8 +137,6 @@ class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
 
 class ReplantableItem(PlantableItem):
 
-    __slots__ = ('iterations')
-
     def __init__(self, iterations: int, *args, **kwargs):
         self.iterations = iterations
         super().__init__(*args, **kwargs)
@@ -210,15 +186,6 @@ class Animal(ReplantableItem):
 
 class SpecialUnpurchasableItem(GameItem, SellableItem, MarketItem):
 
-    __slots__ = (
-        'xp',
-        'min_market_price',
-        'max_market_price',
-        'image_url',
-        'gold_reward',
-        'gems_reward'
-    )
-
     def __init__(
         self,
         id: int,
@@ -256,17 +223,6 @@ class ItemAndAmount:
 
 
 class CraftableItem(GameItem, SellableItem, MarketItem):
-
-    __slots__ = (
-        'made_from',
-        'craft_time',
-        'image_url',
-        'xp'
-        'min_market_price',
-        'max_market_price',
-        'gold_reward',
-        'gems_reward'
-    )
 
     def __init__(
         self,
@@ -638,6 +594,9 @@ def load_all_items() -> ItemPool:
     # This has to be loaded last, to attach made_from subobject references
     _load_craftables(all_items)
 
+    # Items have no market prices, so we generate them
+    # Can't do this in any __init__ to not regenerate
+    # That is needed to have identical market prices across all bot clients
     for item in all_items:
         if isinstance(item, MarketItem):
             item.generate_new_price()
