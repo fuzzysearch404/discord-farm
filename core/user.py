@@ -1,11 +1,9 @@
-from core.exceptions import UserNotFoundException
-import discord
+import jsonpickle
 
 
 class User:
 
     __slots__ = (
-        'bot',
         'user_id',
         'xp',
         'gold',
@@ -22,50 +20,27 @@ class User:
 
     def __init__(
         self,
-        bot: discord.Client,
         user_id: int,
         xp: int,
         gold: int,
         gems: int,
         farm_slots: int,
         factory_slots: int,
+        factory_level: int,
         store_slots: int,
         notifications: bool,
 
     ) -> None:
-        self.bot = bot
-        self.user_id = user_id,
-        self.xp = xp,
-        self.gold = gold,
-        self.gems = gems,
-        self.farm_slots = farm_slots,
-        self.factory_slots = factory_slots,
-        self.store_slots = store_slots,
-        notifications = notifications
-
+        self.user_id = user_id
+        self.xp = xp
+        self.gold = gold
+        self.gems = gems
+        self.farm_slots = farm_slots
+        self.factory_slots = factory_slots
+        self.factory_level = factory_level
+        self.store_slots = store_slots
+        self.notifications = notifications
         self.level, self.next_level_xp = self._calculate_user_level()
-
-    @classmethod
-    async def get_user_from_db_data(cls, bot: discord.Client, user_id: int):
-        """Converts database object to User object."""
-        query = "SELECT * FROM profile WHERE user_id = $1;"
-
-        data = await bot.db.fetchrow(query, user_id)
-
-        if not data:
-            raise UserNotFoundException(f"User ID: {user_id} not found!")
-
-        return cls(
-            bot=bot,
-            user_id=data['user_id'],
-            xp=data['xp'],
-            gold=data['gold'],
-            gems=data['gems'],
-            farm_slots=data['farm_slots'],
-            factory_slots=data['factory_slots'],
-            store_slots=data['store_slots'],
-            notifications=data['notifications']
-        )
 
     def _calculate_user_level(self) -> tuple:
         """Calculates current player level and xp to the next level."""
@@ -89,3 +64,148 @@ class User:
         lev, _ = divmod(remaining, 2_000_000)
 
         return level + lev, points + ((lev + 1) * 2_000_000)
+
+    async def give_xp_and_level_up(self, ctx, xp: int):
+        old_level = self.level
+        self.xp += xp
+
+        self.level, self.next_level_xp = self._calculate_user_level()
+
+        if old_level == self.level:
+            return
+
+        # If we level up multiple levels at a time, give all gems
+        self.gems += self.level - old_level
+
+        msg = (
+            f"You reached level {self.level} and "
+            f"you got a {ctx.bot.gem_emoji}!"
+        )
+        # TODO: shoW new items, embed?
+        await ctx.send(msg)
+
+
+class UserCacheManager:
+
+    __slots__ = ('redis', 'db_pool')
+
+    def __init__(self, redis, db_pool) -> None:
+        self.redis = redis
+        self.db_pool = db_pool
+
+    async def get_user(self, user_id: int, conn=None) -> User:
+        user_data = await self.redis.execute_command(
+            "GET", f"user_profile:{user_id}"
+        )
+
+        if user_data:
+            return jsonpickle.decode(user_data)
+
+        if not conn:
+            release_required = True
+            conn = await self.db_pool.acquire()
+        else:
+            release_required = False
+
+        query = "SELECT * FROM profile WHERE user_id = $1;"
+        user_data = await conn.fetchrow(query, user_id)
+
+        if release_required:
+            await self.db_pool.release(conn)
+
+        if not user_data:
+            return None
+
+        user = User(
+            user_id=user_data['user_id'],
+            xp=user_data['xp'],
+            gold=user_data['gold'],
+            gems=user_data['gems'],
+            farm_slots=user_data['farm_slots'],
+            factory_slots=user_data['factory_slots'],
+            factory_level=user_data['factory_level'],
+            store_slots=user_data['store_slots'],
+            notifications=user_data['notifications']
+        )
+
+        # Keep in Redis for 10 minutes, then refetch
+        await self.redis.execute_command(
+            "SET", f"user_profile:{user_id}",
+            jsonpickle.encode(user),
+            "EX", 600
+        )
+
+        return user
+
+    async def create_user(self, user_id: int, conn=None) -> User:
+        if not conn:
+            release_required = True
+            conn = await self.db_pool.acquire()
+        else:
+            release_required = False
+
+        query = "INSERT INTO profile (user_id) VALUES ($1);"
+        await conn.execute(query, user_id)
+
+        if release_required:
+            await self.db_pool.release(conn)
+
+        user = await self.get_user(user_id)
+
+        return user
+
+    async def update_user(self, user: User, conn=None) -> None:
+        if not conn:
+            release_required = True
+            conn = await self.db_pool.acquire()
+        else:
+            release_required = False
+
+        query = """
+                UPDATE profile SET
+                xp = $1,
+                gold = $2,
+                gems = $3,
+                farm_slots = $4,
+                factory_slots = $5,
+                factory_level = $6,
+                store_slots = $7,
+                notifications = $8
+                WHERE user_id = $9
+                """
+        await conn.execute(
+            query,
+            user.xp,
+            user.gold,
+            user.gems,
+            user.farm_slots,
+            user.factory_slots,
+            user.factory_level,
+            user.store_slots,
+            user.notifications,
+            user.user_id
+        )
+
+        if release_required:
+            await self.db_pool.release(conn)
+
+        await self.redis.execute_command(
+            "SET", f"user_profile:{user.user_id}",
+            jsonpickle.encode(user),
+            "EX", 600
+        )
+
+    async def delete_user(self, user_id: int, conn=None) -> None:
+        if not conn:
+            release_required = True
+            conn = await self.db_pool.acquire()
+        else:
+            release_required = False
+
+        query = "DELETE FROM profile WHERE user_id = $1;"
+        await conn.execute(query, user_id)
+
+        if release_required:
+            await self.db_pool.release(conn)
+
+        await self.redis.execute_command("DEL", f"user_profile:{user_id}")

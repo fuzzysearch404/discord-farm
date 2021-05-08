@@ -12,6 +12,7 @@ from discord.ext import commands
 
 from .utils.context import Context
 from .utils.time import seconds_to_time
+from core.user import UserCacheManager
 from core import exceptions
 
 
@@ -33,6 +34,12 @@ class BotClient(commands.AutoShardedBot):
         self.maintenance_mode = config['bot']['start-in-maintenance']
         self.enable_field_guard(config['bot']['startup-farm-guard-duration'])
 
+        # Common emojis
+        self.gold_emoji = config['emoji']['gold']
+        self.gem_emoji = config['emoji']['gem']
+        self.tile_emoji = config['emoji']['farm_tile']
+        self.xp_emoji = config['emoji']['xp']
+
         self._init_logger()
         self.log.info(
             f"Shards: {kwargs['shard_ids']}"
@@ -45,6 +52,8 @@ class BotClient(commands.AutoShardedBot):
             self.log.exception("Could not connect to Postgres")
 
         self._connect_redis()
+
+        self.user_cache = UserCacheManager(self.redis, self.db_pool)
 
         intents = discord.Intents.none()
         intents.guilds = True
@@ -148,7 +157,6 @@ class BotClient(commands.AutoShardedBot):
         )
 
         self.redis = aioredis.Redis(connection_pool=pool)
-        self.redis_pubsub = self.redis.pubsub()
 
     async def log_to_discord(
         self,
@@ -241,7 +249,10 @@ class BotClient(commands.AutoShardedBot):
         elif isinstance(error, commands.errors.CommandInvokeError):
             original = error.original
             if not isinstance(original, discord.HTTPException):
-                self.log.exception(f'In {ctx.command.qualified_name}:')
+                exc_info = (type(original), original, original.__traceback__)
+                self.log.error(
+                    f"In {ctx.command.qualified_name}:", exc_info=exc_info
+                )
         elif isinstance(error, commands.errors.ArgumentParsingError):
             return await ctx.send(error)
         else:

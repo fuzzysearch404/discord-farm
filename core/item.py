@@ -122,8 +122,6 @@ class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
         self.min_market_price = self._calculate_min_market_price()
         self.max_market_price = self._calculate_max_market_price()
 
-        self.generate_new_price()
-
     def generate_new_price(self) -> None:
         self.gold_reward = random.randint(
             self.min_market_price, self.max_market_price
@@ -242,8 +240,6 @@ class SpecialUnpurchasableItem(GameItem, SellableItem, MarketItem):
         self.max_market_price = max_market_price
         self.image_url = image_url
 
-        self.generate_new_price()
-
     def generate_new_price(self) -> None:
         self.gold_reward = random.randint(
             self.min_market_price, self.max_market_price
@@ -293,11 +289,10 @@ class CraftableItem(GameItem, SellableItem, MarketItem):
 
         self.xp = self._calculate_xp()
 
-        self.min_market_price = 0
-        self.max_market_price = 0
-
         # WARNING: Must manually init min, max market prices
         # after the made_from list is parsed into list of ItemAndAmount objects
+        self.min_market_price = 0
+        self.max_market_price = 0
 
     def generate_new_price(self) -> None:
         self.gold_reward = random.randint(
@@ -604,8 +599,6 @@ def _load_craftables(all_loaded_items: list) -> None:
         craftable.min_market_price = craftable._calculate_min_market_price()
         craftable.max_market_price = craftable._calculate_max_market_price()
 
-        craftable.generate_new_price()
-
 
 def _load_boosts() -> list:
     all_boosts = []
@@ -644,6 +637,10 @@ def load_all_items() -> ItemPool:
 
     # This has to be loaded last, to attach made_from subobject references
     _load_craftables(all_items)
+
+    for item in all_items:
+        if isinstance(item, MarketItem):
+            item.generate_new_price()
 
     all_boosts = _load_boosts()
 
