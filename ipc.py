@@ -93,12 +93,10 @@ class IPC:
     def _connect_redis(self) -> aioredis.Redis:
         self.log.debug("Connecting Redis")
 
-        pool = aioredis.ConnectionPool.from_url(
+        return aioredis.from_url(
             self._config['redis']['host'],
             password=self._config['redis']['password']
         )
-
-        return aioredis.Redis(connection_pool=pool)
 
     async def _register_redis_channels(self) -> None:
         await self.redis_pubsub.subscribe(self.global_channel)
