@@ -56,8 +56,10 @@ class IPC:
         self.total_guild_count = 0
         self.total_shard_count = 0
 
-        self.redis = self._connect_redis()
-        self.redis_pubsub = self.redis.pubsub()
+        try:
+            self._connect_redis()
+        except Exception:
+            log.exception("Could not connect to Redis")
 
         log.debug("Loading game items")
 
@@ -90,13 +92,14 @@ class IPC:
         with open("data/news.txt", "r") as file:
             return file.read()
 
-    def _connect_redis(self) -> aioredis.Redis:
+    def _connect_redis(self) -> None:
         self.log.debug("Connecting Redis")
 
-        return aioredis.from_url(
+        self.redis = aioredis.from_url(
             self._config['redis']['host'],
             password=self._config['redis']['password']
         )
+        self.redis_pubsub = self.redis.pubsub()
 
     async def _register_redis_channels(self) -> None:
         await self.redis_pubsub.subscribe(self.global_channel)
