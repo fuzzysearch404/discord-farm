@@ -1,4 +1,18 @@
-class FarmException(Exception):
+from discord.ext import commands
+
+
+class GlobalCooldownException(commands.CommandOnCooldown):
+    """Exception raised when user is spamming commands"""
+    pass
+
+
+class GameIsInMaintenance(commands.CheckFailure):
+    """Exception raised when game is in maintenance."""
+
+    pass
+
+
+class FarmException(commands.CommandError):
     """Base exception class"""
     pass
 
