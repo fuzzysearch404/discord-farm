@@ -1,10 +1,14 @@
+import io
 import json
 import datetime
+import asyncio
+import textwrap
+import traceback
+import contextlib
+import logging
 import aiohttp
 import aioredis
 import asyncpg
-import logging
-import asyncio
 import discord
 from collections import Counter
 from logging.handlers import RotatingFileHandler
@@ -153,7 +157,8 @@ class BotClient(commands.AutoShardedBot):
     def _connect_redis(self) -> None:
         pool = aioredis.ConnectionPool.from_url(
             self.config['redis']['host'],
-            password=self.config['redis']['password']
+            password=self.config['redis']['password'],
+            db=self.config['redis']['db-index']
         )
 
         self.redis = aioredis.Redis(connection_pool=pool)
@@ -256,7 +261,10 @@ class BotClient(commands.AutoShardedBot):
         elif isinstance(error, commands.errors.ArgumentParsingError):
             return await ctx.send(error)
         else:
-            self.log.exception("Uncought error occured: ")
+            exc_info = (type(error), error, error.__traceback__)
+            self.log.error(
+                f"In {ctx.command.qualified_name}:", exc_info=exc_info
+            )
 
     async def on_guild_join(self, guild) -> None:
         message = (
@@ -374,6 +382,50 @@ class BotClient(commands.AutoShardedBot):
             await self.invoke(ctx)
         finally:
             await ctx.release()
+
+    def cleanup_code(self, content: str) -> str:
+        if content.startswith("```") and content.endswith("```"):
+            return "\n".join(content.split("\n")[1:-1])
+
+        return content.strip("` \n")
+
+    async def eval_code(self, code: str, ctx=None) -> str:
+        env = {
+            "bot": self,
+            "ctx": ctx
+        }
+
+        env.update(globals())
+
+        body = self.cleanup_code(code)
+        stdout = io.StringIO()
+
+        to_compile = f"async def func():\n{textwrap.indent(body, '  ')}"
+
+        try:
+            exec(to_compile, env)
+        except Exception as e:
+            return f'{e.__class__.__name__}: {e}'
+
+        func = env['func']
+
+        try:
+            with contextlib.redirect_stdout(stdout):
+                ret = await func()
+        except Exception:
+            value = stdout.getvalue()
+
+            return f'{value}{traceback.format_exc()}'
+        else:
+            value = stdout.getvalue()
+
+            if ret is None:
+                if value:
+                    return str(value)
+                else:
+                    return "None"
+            else:
+                return f"{value}{ret}"
 
     async def close(self) -> None:
         self.log.info("Shutting down")

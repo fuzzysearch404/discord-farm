@@ -83,10 +83,10 @@ ALTER TABLE ONLY public.store
 CREATE TABLE IF NOT EXISTS public.modifications(
     id SERIAL,
     item_id bigint NOT NULL,
-	user_id bigint NOT NULL,
-	time1 smallint DEFAULT 0,
-	time2 smallint DEFAULT 0,
-	volume smallint DEFAULT 0,
+    user_id bigint NOT NULL,
+    time1 smallint DEFAULT 0,
+    time2 smallint DEFAULT 0,
+    volume smallint DEFAULT 0,
     CONSTRAINT PK_item_mod PRIMARY KEY (user_id, item_id)
 );
 

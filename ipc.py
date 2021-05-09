@@ -97,7 +97,8 @@ class IPC:
 
         self.redis = aioredis.from_url(
             self._config['redis']['host'],
-            password=self._config['redis']['password']
+            password=self._config['redis']['password'],
+            db=self._config['redis']['db-index']
         )
         self.redis_pubsub = self.redis.pubsub()
 
@@ -123,7 +124,7 @@ class IPC:
         if message.reply_global:
             return self.global_channel
         else:
-            return self.cluster_channel_prefix + message.author
+            return message.author
 
     async def _redis_event_handler(self) -> None:
         async for message in self.redis_pubsub.listen():
@@ -147,7 +148,7 @@ class IPC:
             reply_channel = self._resolve_reply_channel(ipc_message)
 
             if ipc_message.action == "ping":
-                self._update_cluster_status(ipc_message, reply_channel)
+                await self._update_cluster_status(ipc_message, reply_channel)
             elif ipc_message.action == "get_items":
                 await self._send_update_items_message(reply_channel)
             elif ipc_message.action == "get_game_news":
@@ -167,7 +168,7 @@ class IPC:
             else:
                 self.log.error(f"Unknown action: {ipc_message.action}")
 
-    def _update_cluster_status(
+    async def _update_cluster_status(
         self,
         message: IPCMessage,
         reply_channel: str
@@ -184,7 +185,7 @@ class IPC:
 
         self.active_clusters.append(cluster)
 
-        self._send_ping_message(reply_channel)
+        await self._send_ping_message(reply_channel)
 
     async def _cluster_check_task(self) -> None:
         while not self._loop.is_closed():
