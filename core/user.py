@@ -85,7 +85,7 @@ class User:
         await ctx.send(msg)
 
 
-class UserCacheManager:
+class UserManager:
 
     __slots__ = ('redis', 'db_pool')
 

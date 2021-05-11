@@ -16,7 +16,7 @@ from discord.ext import commands
 
 from .utils.context import Context
 from .utils.time import seconds_to_time
-from core.user import UserCacheManager
+from core.user import UserManager
 from core import exceptions
 
 
@@ -37,6 +37,9 @@ class BotClient(commands.AutoShardedBot):
         self._log_webhook = config['bot']['logs-webhook']
         self.maintenance_mode = config['bot']['start-in-maintenance']
         self.enable_field_guard(config['bot']['startup-farm-guard-duration'])
+        self.is_beta = config['bot']['beta']
+
+        self.ipc_ping = 0
 
         # Common emojis
         self.gold_emoji = config['emoji']['gold']
@@ -57,7 +60,7 @@ class BotClient(commands.AutoShardedBot):
 
         self._connect_redis()
 
-        self.user_cache = UserCacheManager(self.redis, self.db_pool)
+        self.user_cache = UserManager(self.redis, self.db_pool)
 
         intents = discord.Intents.none()
         intents.guilds = True
@@ -122,7 +125,12 @@ class BotClient(commands.AutoShardedBot):
 
     def _init_logger(self) -> None:
         log = logging.getLogger(f"Cluster#{self.cluster_name}")
-        log.setLevel(logging.DEBUG)
+
+        if self.is_beta:
+            log.setLevel(logging.DEBUG)
+        else:
+            log.setLevel(logging.INFO)
+
         log_formatter = logging.Formatter(
             "[%(asctime)s %(name)s/%(levelname)s] %(message)s"
         )

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 @dataclass
@@ -25,10 +25,12 @@ class Cluster:
         'name',
         'latencies',
         'guild_count',
-        'last_ping'
+        'last_ping',
+        'uptime'
     )
 
     name: str
     latencies: list
     guild_count: int
     last_ping: datetime
+    uptime: timedelta

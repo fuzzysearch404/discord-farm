@@ -16,7 +16,7 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
         return await self.bot.is_owner(ctx.author)
 
     @commands.command(name="eval")
-    async def _eval(self, ctx, *, body: str) -> None:
+    async def _eval(self, ctx, *, body: str):
         """Evaluates Python code"""
         results = await self.bot.eval_code(body, ctx=ctx)
 
@@ -27,7 +27,7 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
         await ctx.send(f"```py\n{results}\n```")
 
     @commands.command()
-    async def sql(self, ctx, *, query: str) -> None:
+    async def sql(self, ctx, *, query: str):
         """Execute SQL"""
         query = self.cleanup_code(query)
 
@@ -64,7 +64,7 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
             await ctx.send(fmt)
 
     @commands.command()
-    async def redis(self, ctx, *, query: str) -> None:
+    async def redis(self, ctx, *, query: str):
         """Execute Redis command"""
         results = await ctx.redis.execute_command(query)
 
@@ -83,7 +83,7 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
             await ctx.send(result_str)
 
     @commands.command()
-    async def uptime(self, ctx) -> None:
+    async def uptime(self, ctx):
         """Get instance uptime"""
         await ctx.send(self.bot.uptime)
 

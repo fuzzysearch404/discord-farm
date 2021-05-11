@@ -38,19 +38,27 @@ class IPC:
         log.debug("Launching...")
 
         self.game_news = self._load_game_news()
-        self.eval_responses = {}
 
         ipc_config = self._config['ipc']
         self.ipc_name = ipc_config['ipc-author']
         self.is_beta = ipc_config['beta']
         self.cluster_inactive_timeout = ipc_config['cluster-inactive-timeout']
         self.cluster_check_delay = ipc_config['cluster-check-delay']
-        self.cluster_update_delay = ipc_config['cluster-update-delay']
-        self.is_beta = ipc_config['beta']
 
         redis_config = self._config['redis']
         self.global_channel = redis_config['global-channel-name']
         self.cluster_channel_prefix = redis_config['cluster-channel-prefix']
+
+        self.ignore_actions = (
+            "maintenance",
+            "enable_guard",
+            "eval",
+            "result",
+            "reload",
+            "load",
+            "unload",
+            "shutdown"
+        )
 
         self.active_clusters = []
         self.total_guild_count = 0
@@ -133,7 +141,7 @@ class IPC:
 
             try:
                 ipc_message = jsonpickle.decode(message['data'])
-            except TypeError:
+            except Exception:
                 continue
 
             if ipc_message.author == self.ipc_name:
@@ -142,7 +150,7 @@ class IPC:
             self.log.info(
                 f"Received message from: {ipc_message.author} "
                 f"Action: {ipc_message.action} "
-                f"Global: {ipc_message.reply_global}"
+                f"Reply global: {ipc_message.reply_global}"
             )
 
             reply_channel = self._resolve_reply_channel(ipc_message)
@@ -153,18 +161,16 @@ class IPC:
                 await self._send_update_items_message(reply_channel)
             elif ipc_message.action == "get_game_news":
                 await self._send_update_game_news_message(reply_channel)
-            elif ipc_message.action == "eval_result":
-                self.eval_responses[ipc_message.author] = ipc_message.data
-            elif ipc_message.action == "eval":
-                await self._handle_eval_command(ipc_message, reply_channel)
+            elif ipc_message.action == "set_items":
+                await self._handle_set_items()
             elif ipc_message.action == "set_game_news":
-                await self._handle_set_news(reply_channel)
+                await self._handle_set_news(ipc_message)
             elif ipc_message.action == "set_farm_guard":
                 await self._send_set_game_guard_message(
                     reply_channel, ipc_message.data
                 )
-            elif ipc_message.action == "shutdown":
-                await self._send_shutdown_message(reply_channel)
+            elif ipc_message.action in self.ignore_actions:
+                continue
             else:
                 self.log.error(f"Unknown action: {ipc_message.action}")
 
@@ -206,21 +212,6 @@ class IPC:
             self.total_guild_count = guild_count
             self.total_shard_count = shard_count
 
-    async def _handle_eval_command(
-        self,
-        message: IPCMessage,
-        reply_channel: str
-    ) -> None:
-        # Publish eval job
-        await self._send_eval_message(reply_channel, message.data)
-
-        # Wait for responses
-        await asyncio.sleep(3)
-
-        # Publish results and clear results
-        await self._send_eval_results(reply_channel)
-        self.eval_responses = {}
-
     async def _handle_set_news(self, message: IPCMessage) -> None:
         self.game_news = message.data
 
@@ -228,6 +219,13 @@ class IPC:
             file.write(self.game_news)
 
         await self._send_update_game_news_message(self.global_channel)
+
+    async def _handle_set_items(self) -> None:
+        self.item_pool = load_all_items()
+
+        self.item_pool.update_market_prices()
+
+        await self._send_update_items_message(self.global_channel)
 
     async def _send_ping_message(self, channel: str) -> None:
         message = IPCMessage(
@@ -242,7 +240,7 @@ class IPC:
     async def _send_update_game_news_message(self, channel: str) -> None:
         message = IPCMessage(
             author=self.ipc_name,
-            action="set_game_news",
+            action="get_game_news",
             reply_global=False,
             data=self.game_news
         )
@@ -266,39 +264,9 @@ class IPC:
     async def _send_update_items_message(self, channel: str) -> None:
         message = IPCMessage(
             author=self.ipc_name,
-            action="set_items",
+            action="get_items",
             reply_global=False,
             data=jsonpickle.encode(self.item_pool)
-        )
-
-        await self.redis.publish(channel, jsonpickle.encode(message))
-
-    async def _send_eval_message(self, channel: str, eval_code: str) -> None:
-        message = IPCMessage(
-            author=self.ipc_name,
-            action="eval",
-            reply_global=False,
-            data=eval_code
-        )
-
-        await self.redis.publish(channel, jsonpickle.encode(message))
-
-    async def _send_eval_results(self, channel: str) -> None:
-        message = IPCMessage(
-            author=self.ipc_name,
-            action="eval_result",
-            reply_global=False,
-            data=self.eval_responses
-        )
-
-        await self.redis.publish(channel, jsonpickle.encode(message))
-
-    async def _send_shutdown_message(self, channel: str) -> None:
-        message = IPCMessage(
-            author=self.ipc_name,
-            action="shutdown",
-            reply_global=False,
-            data=None
         )
 
         await self.redis.publish(channel, jsonpickle.encode(message))

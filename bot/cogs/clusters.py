@@ -1,3 +1,4 @@
+import io
 import asyncio
 import discord
 import jsonpickle
@@ -8,7 +9,7 @@ from discord.ext import commands
 from core.ipc_classes import Cluster, IPCMessage
 
 
-class Clusters(commands.Cog):
+class Clusters(commands.Cog, command_attrs={"hidden": True}):
 
     def __init__(self, bot) -> None:
         super().__init__()
@@ -20,12 +21,41 @@ class Clusters(commands.Cog):
         cluster_channel_prefix = redis_config['cluster-channel-prefix']
         self.self_name = cluster_channel_prefix + bot.cluster_name
 
-        self.bot.loop.run_until_complete(self._register_tasks())
-        self.bot.loop.run_until_complete(self._request_all_required_data())
-        self.bot.loop.run_until_complete(self._ensure_all_required_data())
+        self.cluster_update_delay = bot.config['ipc']['cluster-update-delay']
+        self.last_ping = None
+
+        # We will execute these too (don't ignore as self author)
+        self.self_execute_actions = (
+            "maintenance",
+            "enable_guard",
+            "eval",
+            "result",
+            "reload",
+            "load",
+            "unload",
+            "shutdown"
+        )
+
+        self.responses = {}
+        self.response_lock = asyncio.Lock()
+
+        self.bot.loop.create_task(
+            self._register_tasks()
+        )
+        self.bot.loop.create_task(
+            self._request_all_required_data()
+        )
+        # Block the bot from firing ready until
+        # ensuring that we have the mandatory data
+        self.bot.loop.run_until_complete(
+            self._ensure_all_required_data()
+        )
+
+    async def cog_check(self, ctx) -> None:
+        return await self.bot.is_owner(ctx.author)
 
     def cog_unload(self) -> None:
-        self.bot.loop.create_task(self._unregister_tasks)
+        self.bot.loop.create_task(self._unregister_tasks())
 
     async def _register_redis_channels(self) -> None:
         await self.redis_pubsub.subscribe(self.global_channel)
@@ -42,16 +72,15 @@ class Clusters(commands.Cog):
             self._redis_event_handler()
         )
 
+        self._ping_task = self.bot.loop.create_task(
+            self._cluster_ping_task()
+        )
+
     async def _unregister_tasks(self) -> None:
         self._handler_task.cancel()
+        self._ping_task.cancel()
 
         await self._unregister_redis_channels()
-
-    def _resolve_reply_channel(self, message: IPCMessage) -> str:
-        if message.reply_global:
-            return self.global_channel
-        else:
-            return self.self_name
 
     async def _redis_event_handler(self) -> None:
         async for message in self.redis_pubsub.listen():
@@ -63,27 +92,36 @@ class Clusters(commands.Cog):
             except TypeError:
                 continue
 
-            if ipc_message.author == self.self_name:
+            if ipc_message.author == self.self_name \
+                    and ipc_message.action not in self.self_execute_actions:
                 continue
 
-            self.bot.log.info(
+            self.bot.log.debug(
                 f"Received message from: {ipc_message.author} "
                 f"Action: {ipc_message.action} "
-                f"Global: {ipc_message.reply_global}"
+                f"Reply global: {ipc_message.reply_global}"
             )
-
-            reply_channel = self._resolve_reply_channel(ipc_message)
 
             if ipc_message.action == "ping":
                 self._handle_update_cluster_data(ipc_message)
-            elif ipc_message.action == "set_items":
+            elif ipc_message.action == "get_items":
                 self._handle_update_items(ipc_message)
-            elif ipc_message.action == "set_game_news":
+            elif ipc_message.action == "get_game_news":
                 self._handle_update_game_news(ipc_message)
+            elif ipc_message.action == "maintenance":
+                await self._handle_maintenance(ipc_message)
+            elif ipc_message.action == "enable_guard":
+                await self._handle_farm_guard(ipc_message)
+            elif ipc_message.action == "reload":
+                await self._handle_reload_extension(ipc_message)
+            elif ipc_message.action == "load":
+                await self._handle_load_extension(ipc_message)
+            elif ipc_message.action == "unload":
+                await self._handle_unload_extension(ipc_message)
             elif ipc_message.action == "eval":
-                pass
-            elif ipc_message.action == "eval_result":
-                pass
+                await self._handle_eval_command(ipc_message)
+            elif ipc_message.action == "result":
+                self.responses[ipc_message.author] = ipc_message.data
             elif ipc_message.action == "shutdown":
                 await self._handle_shutdown()
             else:
@@ -101,6 +139,9 @@ class Clusters(commands.Cog):
 
     async def _ensure_all_required_data(self) -> None:
         retry_in = 0
+
+        # Well, we can't get the responses instantly
+        await asyncio.sleep(0.1)
 
         while not self.bot.is_closed():
             missing = False
@@ -128,30 +169,88 @@ class Clusters(commands.Cog):
                 await self._request_all_required_data()
 
     async def _cluster_ping_task(self) -> None:
-        pass
+        await self.bot.wait_until_ready()
+
+        while not self.bot.is_closed():
+            await self._send_ping_message()
+
+            await asyncio.sleep(self.cluster_update_delay)
 
     def _handle_update_items(self, message: IPCMessage) -> None:
         item_pool = jsonpickle.decode(message.data)
 
         self.bot.item_pool = item_pool
 
+    async def _handle_maintenance(self, message: IPCMessage) -> None:
+        self.bot.maintenance_mode = message.data
+
+        await self._send_results(f"\u2705 {self.bot.maintenance_mode}")
+
+    async def _handle_farm_guard(self, message: IPCMessage) -> None:
+        self.bot.enable_field_guard(message.data)
+
+        await self._send_results(self.bot.guard_mode)
+
     def _handle_update_cluster_data(self, message: IPCMessage) -> None:
         cluster_data = jsonpickle.decode(message.data)
+
+        time_delta = datetime.datetime.now() - self.last_ping
+        self.bot.ipc_ping = time_delta.total_seconds() * 1000  # ms
 
         self.bot.cluster_data = cluster_data
 
     def _handle_update_game_news(self, message: IPCMessage) -> None:
         self.bot.game_news = message.data
 
+    async def _handle_eval_command(self, message: IPCMessage) -> None:
+        result = await self.bot.eval_code(message.data)
+
+        await self._send_results(result)
+
+    async def _handle_reload_extension(self, message: IPCMessage) -> None:
+        try:
+            self.bot.reload_extension(message.data)
+        except Exception as e:
+            await self._send_results(str(e))
+            return
+
+        await self._send_results("\u2705")
+
+    async def _handle_load_extension(self, message: IPCMessage) -> None:
+        try:
+            self.bot.load_extension(message.data)
+        except Exception as e:
+            await self._send_results(str(e))
+            return
+
+        await self._send_results("\u2705")
+
+    async def _handle_unload_extension(self, message: IPCMessage) -> None:
+        try:
+            self.bot.unload_extension(message.data)
+        except Exception as e:
+            await self._send_results(str(e))
+            return
+
+        await self._send_results("\u2705")
+
     async def _handle_shutdown(self) -> None:
         await self.bot.close()
 
     async def _send_ping_message(self) -> None:
+        self.last_ping = datetime.datetime.now()
+
+        if hasattr(self.bot, "launch_time"):
+            uptime = self.bot.uptime
+        else:
+            uptime = datetime.timedelta(seconds=0)
+
         cluster = Cluster(
             self.bot.cluster_name,
             self.bot.latencies,
             len(self.bot.guilds),
-            datetime.datetime.now()
+            self.last_ping,
+            uptime
         )
 
         message = IPCMessage(
@@ -166,7 +265,8 @@ class Clusters(commands.Cog):
         )
 
     async def _send_get_items_message(
-        self, reply_global: bool = False
+        self,
+        reply_global: bool = False
     ) -> None:
         message = IPCMessage(
             author=self.self_name,
@@ -179,8 +279,21 @@ class Clusters(commands.Cog):
             self.self_name, jsonpickle.encode(message)
         )
 
+    async def _send_set_items_message(self) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="set_items",
+            reply_global=True,
+            data=None
+        )
+
+        await self.bot.redis.publish(
+            self.self_name, jsonpickle.encode(message)
+        )
+
     async def _send_get_game_news_message(
-        self, reply_global: bool = False
+        self,
+        reply_global: bool = False
     ) -> None:
         message = IPCMessage(
             author=self.self_name,
@@ -193,32 +306,176 @@ class Clusters(commands.Cog):
             self.self_name, jsonpickle.encode(message)
         )
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def logout(self, ctx, run_global: str = None) -> None:
+    async def _send_set_game_news_message(
+        self,
+        game_news: str
+    ) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="set_game_news",
+            reply_global=False,
+            data=game_news
+        )
+
+        await self.bot.redis.publish(
+            self.self_name, jsonpickle.encode(message)
+        )
+
+    async def _send_set_field_guard_message(
+        self,
+        duration: int
+    ) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="enable_guard",
+            reply_global=True,
+            data=duration
+        )
+
+        await self.bot.redis.publish(
+            self.self_name, jsonpickle.encode(message)
+        )
+
+    async def _send_set_maintenance_message(
+        self,
+        enabled: bool
+    ) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="maintenance",
+            reply_global=True,
+            data=enabled
+        )
+
+        await self.bot.redis.publish(
+            self.self_name, jsonpickle.encode(message)
+        )
+
+    async def _send_eval_message(self, eval_code: str) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="eval",
+            reply_global=True,
+            data=eval_code
+        )
+
+        await self.bot.redis.publish(
+            self.global_channel, jsonpickle.encode(message)
+        )
+
+    async def _send_results(self, result: str) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="result",
+            reply_global=True,
+            data=result
+        )
+
+        await self.bot.redis.publish(
+            self.global_channel, jsonpickle.encode(message)
+        )
+
+    async def _send_reload_message(self, extension: str) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="reload",
+            reply_global=True,
+            data=extension
+        )
+
+        await self.bot.redis.publish(
+            self.global_channel, jsonpickle.encode(message)
+        )
+
+    async def _send_load_message(self, extension: str) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="load",
+            reply_global=True,
+            data=extension
+        )
+
+        await self.bot.redis.publish(
+            self.global_channel, jsonpickle.encode(message)
+        )
+
+    async def _send_unload_message(self, extenstion: str) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="unload",
+            reply_global=True,
+            data=extenstion
+        )
+
+        await self.bot.redis.publish(
+            self.global_channel, jsonpickle.encode(message)
+        )
+
+    async def _send_shutdown_message(self) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="shutdown",
+            reply_global=True,
+            data=None
+        )
+
+        await self.bot.redis.publish(
+            self.global_channel, jsonpickle.encode(message)
+        )
+
+    async def _publish_responses(self, ctx) -> None:
+        # Wait for responses
+        await asyncio.sleep(3)
+
+        fmt = ""
+        for cluster_name, result in self.responses.items():
+            fmt += f"{cluster_name}: {result}\n"
+
+        if len(fmt) + 6 > 2000:
+            fp = io.BytesIO(fmt.encode("utf-8"))
+            await ctx.send(
+                "Output too long...", file=discord.File(fp, "data.txt")
+            )
+        else:
+            await ctx.send(f"```{fmt}```")
+
+    @commands.command()
+    async def logout(
+        self,
+        ctx,
+        run_local: bool = False
+    ):
         """
         Logout instance or all clusters
 
         Optional arguments:
-        `run_global` - "on" - Shut down all clusters.
+        `run_local` - Shut down only this cluster.
         """
-        if run_global == "on":
-            pass
-            # TODO: run global
+        if run_local:
+            await self.bot.close()
 
-        await self.bot.close()
+            return
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def load(self, ctx, extension: str, run_local: str = None) -> None:
+        await self._send_shutdown_message(self.global_channel)
+
+    @commands.command()
+    async def load(
+        self,
+        ctx,
+        extension: str,
+        run_local: bool = False
+    ):
         """
         Loads an extension on this insance or all clusters.
         Defaults on all clusters.
 
-        Parameters:
-        `run_local` - "on" - Load extension only locally.
+        Optional arguments:
+        `run_local` - Load extension only only on this cluster.
         """
-        if run_local == "on":
+        if not extension.startswith("bot.cogs."):
+            extension = "bot.cogs." + extension
+
+        if run_local:
             try:
                 self.bot.load_extension(extension)
 
@@ -231,19 +488,30 @@ class Clusters(commands.Cog):
             finally:
                 return
 
-        # TODO: run global
+        async with self.response_lock:
+            self.responses = {}
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def unload(self, ctx, extension: str, run_local: str = None) -> None:
+            await self._send_load_message(extension)
+            await self._publish_responses(ctx)
+
+    @commands.command()
+    async def unload(
+        self,
+        ctx,
+        extension: str,
+        run_local: bool = False
+    ):
         """
         Unloads an extension on this insance or all clusters.
         Defaults on all clusters.
 
-        Parameters:
-        `run_local` - "on" - Unload extension only locally.
+        Optional arguments:
+        `run_local` - Unload extension only only on this cluster.
         """
-        if run_local == "on":
+        if not extension.startswith("bot.cogs."):
+            extension = "bot.cogs." + extension
+
+        if run_local:
             try:
                 self.bot.unload_extension(extension)
 
@@ -255,20 +523,30 @@ class Clusters(commands.Cog):
                 await ctx.send(f"{e.__class__.__name__}: {e}")
             finally:
                 return
+        async with self.response_lock:
+            self.responses = {}
 
-        # TODO: run global
+            await self._send_unload_message(extension)
+            await self._publish_responses(ctx)
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def reload(self, ctx, extension: str, run_local: str = None) -> None:
+    @commands.command()
+    async def reload(
+        self,
+        ctx,
+        extension: str,
+        run_local: bool = False
+    ):
         """
         Reloads an extension on this insance or all clusters.
         Defaults on all clusters.
 
-        Parameters:
-        `run_local` - "on" - Reload extension only locally.
+        Optional arguments:
+        `run_local` - Reload extension only only on this cluster.
         """
-        if run_local == "on":
+        if not extension.startswith("bot.cogs."):
+            extension = "bot.cogs." + extension
+
+        if run_local:
             try:
                 self.bot.reload_extension(extension)
 
@@ -280,38 +558,54 @@ class Clusters(commands.Cog):
                 await ctx.send(f"{e.__class__.__name__}: {e}")
             finally:
                 return
+        async with self.response_lock:
+            self.responses = {}
 
-        # TODO: run global
+            await self._send_reload_message(extension)
+            await self._publish_responses(ctx)
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def reloaditems(self, ctx) -> None:
+    @commands.command()
+    async def reloaditems(self, ctx):
         """Reloads game item data on all clusters."""
-        pass
+        await self._send_set_items_message()
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def editnews(self, ctx) -> None:
+        await ctx.send("\u2705 Sent reload items request to IPC")
+
+    @commands.command()
+    async def editnews(self, ctx, *, news: str):
         """Edits game news"""
-        pass
+        await self._send_set_game_news_message(news)
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def maintenance(self, ctx) -> None:
+        await asyncio.sleep(2)
+
+        await ctx.send(self.bot.game_news)
+
+    @commands.command()
+    async def maintenance(self, ctx, enabled: bool):
         """Edits game maintenance status"""
-        pass
+        async with self.response_lock:
+            self.responses = {}
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def enableguard(self, ctx) -> None:
+            await self._send_set_maintenance_message(enabled)
+            await self._publish_responses(ctx)
+
+    @commands.command()
+    async def enableguard(self, ctx, duration: int):
         """Enables farm guard"""
-        pass
+        async with self.response_lock:
+            self.responses = {}
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def evall(self, ctx) -> None:
+            await self._send_set_field_guard_message(duration)
+            await self._publish_responses(ctx)
+
+    @commands.command()
+    async def evall(self, ctx, *, body: str):
         """Runs code on all clusters"""
-        pass
+        async with self.response_lock:
+            self.responses = {}
+
+            await self._send_eval_message(body)
+            await self._publish_responses(ctx)
 
 
 def setup(bot):

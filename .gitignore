@@ -2,4 +2,6 @@
 __pycache__
 botsettings.py
 config.json
+news.txt
 *.log
+dump.rdb
