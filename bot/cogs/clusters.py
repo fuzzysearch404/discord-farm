@@ -458,7 +458,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
 
             return
 
-        await self._send_shutdown_message(self.global_channel)
+        await self._send_shutdown_message()
 
     @commands.command()
     async def load(
