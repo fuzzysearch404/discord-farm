@@ -47,10 +47,21 @@ class Info(commands.Cog):
         """
         \ud83d\udcf2 Invite bot to your own server or join support server
         """
+        permissions = discord.Permissions.none()
+        permissions.read_messages = True
+        permissions.send_messages = True
+        permissions.external_emojis = True
+        permissions.embed_links = True
+        permissions.manage_messages = True
+        permissions.read_message_history = True
+        permissions.attach_files = True
+        permissions.add_reactions = True
+
+        oauth_link = discord.utils.oauth_url(self.bot.user.id, permissions)
+
         await ctx.send(
             "Support server invite: https://discord.gg/MwpxKjF"
-            "\nBot invite: <https://discord.com/oauth2/authorize?client_id="
-            "526436949481881610&scope=bot&permissions=387136>"
+            f"\nBot invite: <{oauth_link}>"
         )
 
     @commands.command()
