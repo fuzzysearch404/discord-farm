@@ -14,8 +14,8 @@ from collections import Counter
 from logging.handlers import RotatingFileHandler
 from discord.ext import commands
 
-from .utils.context import Context
-from .utils.time import seconds_to_time
+from .cogs.utils.context import Context
+from .cogs.utils.time import seconds_to_time
 from core.user import UserManager
 from core import exceptions
 
@@ -194,8 +194,11 @@ class BotClient(commands.AutoShardedBot):
     async def on_ready(self) -> None:
         self.log.info("Cluster ready called")
 
-        self.pipe.send(1)
-        self.pipe.close()
+        try:
+            self.pipe.send(1)
+            self.pipe.close()
+        except OSError:
+            pass
 
         if not hasattr(self, 'launch_time'):
             self.launch_time = datetime.datetime.now()

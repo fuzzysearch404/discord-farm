@@ -29,7 +29,7 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
     @commands.command()
     async def sql(self, ctx, *, query: str):
         """Execute SQL"""
-        query = self.cleanup_code(query)
+        query = self.bot.cleanup_code(query)
 
         is_multi = query.count(';') > 1
         if is_multi:

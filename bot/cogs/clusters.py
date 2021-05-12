@@ -333,7 +333,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         )
 
         await self.bot.redis.publish(
-            self.self_name, jsonpickle.encode(message)
+            self.global_channel, jsonpickle.encode(message)
         )
 
     async def _send_set_maintenance_message(
@@ -348,7 +348,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         )
 
         await self.bot.redis.publish(
-            self.self_name, jsonpickle.encode(message)
+            self.global_channel, jsonpickle.encode(message)
         )
 
     async def _send_eval_message(self, eval_code: str) -> None:
@@ -431,13 +431,15 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         for cluster_name, result in self.responses.items():
             fmt += f"{cluster_name}: {result}\n"
 
-        if len(fmt) + 6 > 2000:
+        fmt = f"```{fmt}```"
+
+        if len(fmt) > 2000:
             fp = io.BytesIO(fmt.encode("utf-8"))
             await ctx.send(
                 "Output too long...", file=discord.File(fp, "data.txt")
             )
         else:
-            await ctx.send(f"```{fmt}```")
+            await ctx.send(fmt)
 
     @commands.command()
     async def logout(
@@ -466,7 +468,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         run_local: bool = False
     ):
         """
-        Loads an extension on this insance or all clusters.
+        Loads an extension on this insance or all clusters
         Defaults on all clusters.
 
         Optional arguments:
@@ -502,7 +504,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         run_local: bool = False
     ):
         """
-        Unloads an extension on this insance or all clusters.
+        Unloads an extension on this insance or all clusters
         Defaults on all clusters.
 
         Optional arguments:
@@ -537,7 +539,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         run_local: bool = False
     ):
         """
-        Reloads an extension on this insance or all clusters.
+        Reloads an extension on this insance or all clusters
         Defaults on all clusters.
 
         Optional arguments:
