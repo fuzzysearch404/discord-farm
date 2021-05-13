@@ -75,6 +75,8 @@ class BotClient(commands.AutoShardedBot):
             command_prefix=commands.when_mentioned_or(
                 self.def_prefix
             ),
+            case_insensitive=True,
+            strip_after_prefix=True,
             **kwargs,
             loop=loop
         )
