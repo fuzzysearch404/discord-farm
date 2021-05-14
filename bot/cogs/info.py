@@ -1,12 +1,58 @@
 import psutil
 import pkg_resources
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands, tasks, menus
 
 from .utils import time as time_util
+from .utils import pages
 
 
-class Info(commands.Cog):
+class HelpMessageSource(menus.ListPageSource):
+    def __init__(self, entries):
+        super().__init__(entries, per_page=1)
+
+    async def format_page(self, menu, page):
+        embed = discord.Embed(
+            color=discord.Color.from_rgb(88, 101, 242),
+            description=page
+        )
+
+        return embed
+
+
+class HelpCommand(commands.MinimalHelpCommand):
+    def __init__(self):
+        super().__init__(
+            verify_checks=False,
+            command_attrs={
+                "help": "Shows help about a command, or a category",
+                "aliases": ["commands", "comands", "cmd", "helpme"]
+            }
+        )
+
+    def get_command_signature(self, command):
+        cmd = f"**{self.context.prefix}{command.name}**"
+
+        if command.signature:
+            cmd += f" `{command.signature}`"
+
+        return cmd
+
+    def add_bot_commands_formatting(self, commands, heading):
+        if commands:
+            joined = '\u2002'.join(c.name for c in commands)
+            self.paginator.add_line(f"**{heading}**")
+            self.paginator.add_line(joined)
+
+    async def send_pages(self):
+        paginator = pages.MenuPages(
+            source=HelpMessageSource(self.paginator.pages)
+        )
+
+        await paginator.start(self.context)
+
+
+class Info(commands.Cog, name="Information"):
     """
     Get information about the bot - news, events, some links, etc.
     """
@@ -14,10 +60,21 @@ class Info(commands.Cog):
     def __init__(self, bot) -> None:
         super().__init__()
         self.bot = bot
+
         self.version = self.bot.config['bot']['version']
         self.activity_status = self.bot.config['bot']['activity-status']
+
         self.process = psutil.Process()
+
+        self.old_help_command = bot.help_command
+        self.bot.help_command = HelpCommand()
+
         self._status_task = self.update_status_task.start()
+
+    def cog_unload(self):
+        self.bot.help_command = self.old_help_command
+
+        self._status_task.cancel()
 
     @commands.command()
     async def news(self, ctx):
@@ -28,7 +85,7 @@ class Info(commands.Cog):
         """
         embed = discord.Embed(
             title='\ud83d\udcf0 News',
-            colour=15129855,
+            colour=discord.Color.from_rgb(222, 222, 222),
             description=self.bot.game_news
         )
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
@@ -69,17 +126,25 @@ class Info(commands.Cog):
         """
         \u2764\ufe0f If you are really kind and like this bot
         """
-        await ctx.send(
+        message = (
             "Hello, my name is fuzzyseach, and I do bots as a free time hobby."
             " \ud83e\udd13\nManaging a bot is not an easy task, "
-            "and hosting it costs lots of my time and also money.\n"
+            "and hosting it costs lots of my time and also money.\n\n"
             "Any donations are appreciated, they are going to cover hosting "
             "expenses and help to make this bot even better. <3"
             "\nhttps://www.paypal.me/fuzzysearch\n"
             "\nYou can also help out, without spending any money, "
-            "if you upvote the bot on top.gg every 12 hours:"
+            "if you upvote the bot on the \"top.gg\" website every 12 hours:"
             "\n<https://top.gg/bot/526436949481881610>"
         )
+
+        embed = discord.Embed(
+            title="\u2764\ufe0f Support Discord Farm",
+            color=discord.Color.from_rgb(245, 35, 35),
+            description=message
+        )
+
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def about(self, ctx):
@@ -162,9 +227,6 @@ class Info(commands.Cog):
     @update_status_task.before_loop
     async def before_update_status_task(self):
         await self.bot.wait_until_ready()
-
-    def cog_unload(self):
-        self._status_task.cancel()
 
 
 def setup(bot):

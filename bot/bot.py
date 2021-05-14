@@ -242,7 +242,7 @@ class BotClient(commands.AutoShardedBot):
         elif isinstance(error, commands.errors.MissingRequiredArgument):
             return await ctx.send(
                 "\u274c This command requires additional argument: "
-                f"`{error.param}`. For this command's usage information "
+                f"`{error.param.name}`. For this command's usage information "
                 f"please see `{ctx.prefix}help {ctx.invoked_with}`."
             )
         elif isinstance(error, commands.errors.BadArgument):

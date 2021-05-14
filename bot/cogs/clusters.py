@@ -450,7 +450,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         """
         Logout instance or all clusters
 
-        Optional arguments:
+        __Optional arguments__:
         `run_local` - Shut down only this cluster.
         """
         if run_local:
@@ -471,7 +471,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         Loads an extension on this insance or all clusters
         Defaults on all clusters.
 
-        Optional arguments:
+        __Optional arguments__:
         `run_local` - Load extension only only on this cluster.
         """
         if not extension.startswith("bot.cogs."):
@@ -507,7 +507,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         Unloads an extension on this insance or all clusters
         Defaults on all clusters.
 
-        Optional arguments:
+        __Optional arguments__:
         `run_local` - Unload extension only only on this cluster.
         """
         if not extension.startswith("bot.cogs."):
@@ -542,7 +542,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         Reloads an extension on this insance or all clusters
         Defaults on all clusters.
 
-        Optional arguments:
+        __Optional arguments__:
         `run_local` - Reload extension only only on this cluster.
         """
         if not extension.startswith("bot.cogs."):
