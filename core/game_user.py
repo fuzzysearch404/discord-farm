@@ -1,4 +1,5 @@
 import jsonpickle
+from datetime import datetime
 
 from bot.cogs.utils import embeds
 
@@ -67,7 +68,7 @@ class User:
 
         return level + lev, points + ((lev + 1) * 2_000_000)
 
-    async def give_xp_and_level_up(self, ctx, xp: int):
+    async def give_xp_and_level_up(self, ctx, xp: int) -> None:
         old_level = self.level
         self.xp += xp
 
@@ -98,6 +99,46 @@ class User:
             embed.description += ", ".join(fmt)
 
         await ctx.send(embed=embed)
+
+    async def get_all_boosts(self, ctx) -> list:
+        boosts = await ctx.redis.execute_command(
+            "GET", f"user_boosts:{self.user_id}"
+        )
+
+        if not boosts:
+            return []
+
+        boosts = jsonpickle.decode(boosts)
+
+        # Removes expired boosts
+        return [x for x in boosts if x.duration > datetime.now()]
+
+    async def is_boost_active(self, ctx, boost_id: str) -> bool:
+        all_boosts = await self.get_all_boosts(ctx)
+
+        return boost_id in [x.id for x in all_boosts]
+
+    async def give_boost(self, ctx, boost) -> list:
+        existing_boosts = await self.get_all_boosts(ctx)
+
+        try:
+            # Extend duration if already currently active
+            existing = next(x for x in existing_boosts if x.id == boost.id)
+            existing.duration += (boost.duration - datetime.now())
+        except StopIteration:
+            existing_boosts.append(boost)
+
+        # Find the longest boost
+        longest = max(existing_boosts, key=lambda b: b.duration)
+        seconds_until = (longest.duration - datetime.now()).total_seconds()
+
+        await ctx.redis.execute_command(
+            "SET", f"user_boosts:{self.user_id}",
+            jsonpickle.encode(existing_boosts),
+            "EX", round(seconds_until)
+        )
+
+        return existing_boosts
 
 
 class UserManager:
@@ -226,8 +267,4 @@ class UserManager:
         await self.redis.execute_command("DEL", f"user_profile:{user_id}")
 
         # Leave cooldowns etc. in Redis, just delete boosts
-        for boost in bot.item_pool.all_boosts:
-            await self.redis.execute_command(
-                "DEL",
-                f"user_boost:{user_id}:{boost.id}"
-            )
+        await self.redis.execute_command("DEL", f"user_boosts:{user_id}")

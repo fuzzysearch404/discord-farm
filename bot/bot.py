@@ -16,7 +16,7 @@ from discord.ext import commands
 
 from .cogs.utils.context import Context
 from .cogs.utils.time import seconds_to_time
-from core.user import UserManager
+from core.game_user import UserManager
 from core import exceptions
 
 
@@ -82,7 +82,7 @@ class BotClient(commands.AutoShardedBot):
         )
 
         self.global_cooldown = commands.CooldownMapping.from_cooldown(
-            3, 8.0, commands.BucketType.user
+            3, 9, commands.BucketType.user
         )
         self.spam_control = commands.CooldownMapping.from_cooldown(
             10, 12.0, commands.BucketType.user
@@ -159,8 +159,8 @@ class BotClient(commands.AutoShardedBot):
 
         self.db_pool = await asyncpg.create_pool(
             **connect_args,
-            min_size=20,
-            max_size=20,
+            min_size=10,
+            max_size=15,
             command_timeout=60.0
         )
 

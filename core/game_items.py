@@ -2,9 +2,10 @@ import json
 import random
 from enum import Enum
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from difflib import get_close_matches
 
-from core.user import User
+from core.game_user import User
 from core.exceptions import ItemNotFoundException
 
 
@@ -360,6 +361,19 @@ class Boost:
             total = price_per_day * 7
 
             return int(total - total * BOOST_SEVEN_DAYS_DISCOUNT)
+
+
+class ObtainedBoost:
+
+    __slots__ = ('id', 'duration')
+
+    def __init__(self, id: str, duration: datetime) -> None:
+        self.id = id
+        self.duration = duration
+
+    @classmethod
+    def from_seconds(cls, id: str, duration: int):
+        return cls(id, datetime.now() + timedelta(seconds=duration))
 
 
 class ItemPool:

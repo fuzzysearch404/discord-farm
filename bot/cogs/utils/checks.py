@@ -1,4 +1,5 @@
 
+from discord import Member
 from discord.ext import commands
 
 from core import exceptions
@@ -27,9 +28,12 @@ def user_cooldown(cooldown: int, identifier: str = None) -> commands.check:
     return commands.check(predicate)
 
 
-async def get_user_cooldown(ctx, identifier: str):
+async def get_user_cooldown(ctx, identifier: str, other_user_id: int = 0):
+    # other_user_id is used if we want to check other user's cooldown
+    user_id = other_user_id if other_user_id != 0 else ctx.author.id
+
     command_ttl = await ctx.bot.redis.execute_command(
-        "TTL", f"cd:{ctx.author.id}:{identifier}"
+        "TTL", f"cd:{user_id}:{identifier}"
     )
 
     if command_ttl == -2:
@@ -58,6 +62,18 @@ def has_account() -> commands.check:
         )
 
     return commands.check(pred)
+
+
+async def get_other_member(ctx, member: Member, conn=None):
+    user_data = await ctx.users.get_user(member.id, conn=conn)
+
+    if not user_data:
+        raise exceptions.UserNotFoundException(
+            f"Whoops. `{member.nick or member.name}` does not have a "
+            "game account. Maybe tell them to check this bot out? \ud83e\udd14"
+        )
+
+    return user_data
 
 
 def avoid_maintenance() -> commands.check:

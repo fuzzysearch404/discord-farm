@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 from datetime import datetime, timedelta
 
 from core.ipc_classes import IPCMessage
-from core.item import load_all_items
+from core.game_items import load_all_items
 
 
 class IPC:
