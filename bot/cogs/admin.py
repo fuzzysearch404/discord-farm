@@ -66,7 +66,10 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
     @commands.command()
     async def redis(self, ctx, *, query: str):
         """Execute Redis command"""
-        results = await ctx.redis.execute_command(query)
+        try:
+            results = await ctx.redis.execute_command(query)
+        except Exception as e:
+            return await ctx.send(str(e))
 
         if not results:
             with suppress(discord.HTTPException):

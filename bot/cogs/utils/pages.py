@@ -146,3 +146,24 @@ class MenuPages(menus.Menu):
         """go to the last page"""
         # The call here is safe because it's guarded by skip_if
         await self.show_page(self._source.get_max_pages() - 1)
+
+
+class ConfirmPrompt(menus.Menu):
+    def __init__(self, msg: str = None, embed=None):
+        super().__init__(timeout=30.0, clear_reactions_after=True)
+        self.msg = msg
+        self.embed = embed
+        self._result = False
+
+    async def send_initial_message(self, ctx, channel):
+        return await channel.send(self.msg, embed=self.embed)
+
+    @menus.button("\u2705")
+    async def do_confirm(self, payload):
+        self._result = True
+        self.stop()
+
+    async def prompt(self, ctx):
+        await self.start(ctx, wait=True)
+
+        return self._result, self.message

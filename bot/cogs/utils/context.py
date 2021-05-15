@@ -26,6 +26,7 @@ class Context(commands.Context):
         super().__init__(**kwargs)
         self.pool = self.bot.db_pool
         self.redis = self.bot.redis
+        self.users = self.bot.user_cache
         self._db = None
 
     @property
