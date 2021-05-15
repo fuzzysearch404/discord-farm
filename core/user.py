@@ -1,5 +1,7 @@
 import jsonpickle
 
+from bot.cogs.utils import embeds
+
 
 class User:
 
@@ -61,7 +63,7 @@ class User:
 
         # We reached high levels with constant XP growth
         remaining = self.xp - points
-        lev, _ = divmod(remaining, 2_000_000)
+        lev = int(remaining / 2_000_000)
 
         return level + lev, points + ((lev + 1) * 2_000_000)
 
@@ -74,15 +76,28 @@ class User:
         if old_level == self.level:
             return
 
-        # If we level up multiple levels at a time, give all gems
+        # If we somehow level up multiple levels at a time, give all gems
         self.gems += self.level - old_level
 
-        msg = (
-            f"You reached level {self.level} and "
-            f"you got a {ctx.bot.gem_emoji}!"
+        embed = embeds.congratulations_embed(
+            title=(
+                "Level up! You have reached: "
+                f"\ud83d\udd31 Level **{self.level}**"
+            ),
+            text=f"You have been rewarded with a shiny {ctx.bot.gem_emoji}",
+            footer=f"Congratulations, {ctx.author.name} ;)",
+            ctx=ctx
         )
-        # TODO: shoW new items, embed?
-        await ctx.send(msg)
+
+        unlocked_items = ctx.bot.item_pool.find_items_by_level(self.level)
+
+        if unlocked_items:
+            fmt = [f"{x.emoji} {x.name.capitalize()}" for x in unlocked_items]
+            embed.description += \
+                "\n\nAnd also you have unlocked the following items: "
+            embed.description += ", ".join(fmt)
+
+        await ctx.send(embed=embed)
 
 
 class UserManager:

@@ -120,8 +120,8 @@ class Account(commands.Cog):
                 title="Direct message notifications disabled",
                 text=(
                     "Okay, so: I told the *mail man* **not to "
-                    "bother you** with all those private messages \ud83d\udced\n"
-                    "He said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74"
+                    "bother you** with all those private messages \ud83d\udced"
+                    "\nHe then said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74"
                 ),
                 ctx=ctx
             )
@@ -130,8 +130,8 @@ class Account(commands.Cog):
                 title="Direct message notifications enabled",
                 text=(
                     "Okay, so: I told the *mail man* **to "
-                    "send you** private messages about the game \ud83d\udcec\n"
-                    "He said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74"
+                    "send you** private messages about the game \ud83d\udcec"
+                    "\nHe then said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74"
                 ),
                 ctx=ctx
             )

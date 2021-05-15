@@ -397,6 +397,9 @@ class ItemPool:
 
         return self.items_per_name[matches[0]]
 
+    def find_items_by_level(self, item_level: int) -> list:
+        return [x for x in self.all_items if x.level == item_level]
+
     def find_boost_by_id(self, boost_id: str) -> Boost:
         boost = next(x for x in self.all_boosts if x.id == boost_id)
 
