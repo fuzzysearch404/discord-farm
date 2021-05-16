@@ -415,7 +415,10 @@ class ItemPool:
         return [x for x in self.all_items if x.level == item_level]
 
     def find_boost_by_id(self, boost_id: str) -> Boost:
-        boost = next(x for x in self.all_boosts if x.id == boost_id)
+        try:
+            boost = next(x for x in self.all_boosts if x.id == boost_id)
+        except StopIteration:
+            return None
 
         return boost
 

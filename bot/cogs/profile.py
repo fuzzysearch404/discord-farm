@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from .utils import checks
 from .utils import time
+from. utils import embeds
 
 
 class Profile(commands.Cog):
@@ -189,6 +190,72 @@ class Profile(commands.Cog):
 
         await ctx.reply(embed=embed)
 
+    @commands.command(aliases=["boosts"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def boosters(self, ctx, member: discord.Member = None):
+        """
+        \u2b06 Lists your or someone else's boosters.
+
+        Boosters speed up your overall game progression in various ways.
+
+        __Optional arguments__:
+        `member` - some user in your server. (tagged user or user's ID)
+
+        __Usage examples__:
+        `%boosters` - view your active boosters
+        `%boosters @user` - view user's active boosters
+        """
+        if not member:
+            user = ctx.user_data
+        else:
+            user = await checks.get_other_member(ctx, member)
+
+        all_boosts = await user.get_all_boosts(ctx)
+
+        if not all_boosts:
+            if not member:
+                error_title = "Nope, you don't have any active boosters!"
+            else:
+                error_title = (
+                    f"Nope, {member} does not have any active boosters!"
+                )
+
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title=error_title,
+                    text=(
+                        "\u2b06\ufe0f Purchase boosters with the "
+                        f"**{ctx.prefix}boost** command"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        target_user = member or ctx.author
+
+        embed = discord.Embed(
+            title=f"\u2b06\ufe0f {target_user}'s active boosters",
+            color=discord.Color.from_rgb(39, 128, 184),
+            description=(
+                "\ud83d\udecd\ufe0f Purchase boosters with the "
+                f"**{ctx.prefix}boost** command"
+            )
+        )
+
+        for boost in all_boosts:
+            boost_info = self.bot.item_pool.find_boost_by_id(boost.id)
+
+            remaining_duration = boost.duration - datetime.now()
+            time_str = time.seconds_to_time(remaining_duration.total_seconds())
+
+            embed.add_field(
+                name=f"{boost_info.emoji} {boost_info.name}",
+                value=f"{time_str} remaining"
+            )
+
+        await ctx.reply(embed=embed)
+
     @commands.command()
     @checks.has_account()
     async def boost_test(self, ctx):
@@ -196,6 +263,14 @@ class Profile(commands.Cog):
         from core import game_items
 
         b = game_items.ObtainedBoost("farm_slots", datetime.now() + timedelta(seconds=60))
+        await ctx.user_data.give_boost(ctx, b)
+        b = game_items.ObtainedBoost("factory_slots", datetime.now() + timedelta(seconds=160))
+        await ctx.user_data.give_boost(ctx, b)
+        b = game_items.ObtainedBoost("cat", datetime.now() + timedelta(seconds=86900))
+        await ctx.user_data.give_boost(ctx, b)
+        b = game_items.ObtainedBoost("cat", datetime.now() + timedelta(seconds=10))
+        await ctx.user_data.give_boost(ctx, b)
+        b = game_items.ObtainedBoost("dog_1", datetime.now() + timedelta(seconds=101))
         await ctx.user_data.give_boost(ctx, b)
 
 

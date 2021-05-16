@@ -89,15 +89,3 @@ def avoid_maintenance() -> commands.check:
         )
 
     return commands.check(pred)
-
-
-def can_clear_reactions(ctx) -> bool:
-    if ctx.guild is not None:
-        permissions = ctx.channel.permissions_for(ctx.guild.me)
-    else:
-        permissions = ctx.channel.permissions_for(ctx.bot.user)
-
-    if permissions.manage_messages:
-        return True
-
-    return False
