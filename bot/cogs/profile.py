@@ -190,6 +190,21 @@ class Profile(commands.Cog):
 
         await ctx.reply(embed=embed)
 
+    @commands.command(aliases=["bal", "gold", "gems", "money"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def balance(self, ctx):
+        """
+        \ud83d\udcb0 Quickly check your gold and gem amounts.
+
+        For more detailed information about your profile,
+        check out command `%profile`.
+        """
+        await ctx.reply(
+            f"{self.bot.gold_emoji} **Gold:** {ctx.user_data.gold} "
+            f"{self.bot.gem_emoji} **Gems:** {ctx.user_data.gems}"
+        )
+
     @commands.command(aliases=["boosts"])
     @checks.has_account()
     @checks.avoid_maintenance()
