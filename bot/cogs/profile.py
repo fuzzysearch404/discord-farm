@@ -1,10 +1,30 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, menus
 from datetime import datetime, timedelta
 
 from .utils import checks
 from .utils import time
-from. utils import embeds
+from .utils import embeds
+from .utils import pages
+
+
+class AllItemsSource(menus.ListPageSource):
+    def __init__(self, entries):
+        super().__init__(entries, per_page=15)
+
+    async def format_page(self, menu, page):
+        head = (
+            "| \ud83c\udff7\ufe0f Item | \ud83d\udd0e View item "
+            "command |\n\n"
+        )
+
+        embed = discord.Embed(
+            title="\ud83d\udd13 Items unlocked for your level:",
+            color=discord.Color.from_rgb(88, 101, 242),
+            description=head + "\n".join(page)
+        )
+
+        return embed
 
 
 class Profile(commands.Cog):
@@ -119,7 +139,7 @@ class Profile(commands.Cog):
         lab_cooldown = await checks.get_user_cooldown(
             ctx, "recent_research", other_user_id=user.user_id
         )
-        lab_info = f"\u2139 **{prefix}lab** {target_user.mention}"
+        lab_info = f"\ud83d\udd0e **{prefix}lab** {target_user.mention}"
 
         if lab_cooldown:
             lab_info = (
@@ -141,7 +161,7 @@ class Profile(commands.Cog):
             name="\ud83d\udd12 Warehouse",
             value=(
                 f"\ud83c\udff7\ufe0f {inventory_size} inventory items"
-                f"\n\u2139 **{prefix}inventory** {target_user.mention}"
+                f"\n\ud83d\udd0e **{prefix}inventory** {target_user.mention}"
             )
         )
         embed.add_field(
@@ -149,7 +169,7 @@ class Profile(commands.Cog):
             value=(
                 f"{bot.tile_emoji} {free_farm_slots}/{farm_slots_formatted} "
                 f"free tiles\n\u23f0 Next harvest: {nearest_harvest}"
-                f"\n\u2139 **{prefix}farm** {target_user.mention}"
+                f"\n\ud83d\udd0e **{prefix}farm** {target_user.mention}"
             )
         )
         if user.level > 2:
@@ -160,7 +180,7 @@ class Profile(commands.Cog):
                     "\n\ud83d\udc68\u200d\ud83c\udfed Workers: "
                     f"{user.factory_level}/10"
                     f"\n\u23f0 Next production: {nearest_factory}"
-                    f"\n\u2139 **{prefix}factory** {target_user.mention}"
+                    f"\n\ud83d\udd0e **{prefix}factory** {target_user.mention}"
                 )
             )
         else:
@@ -173,7 +193,7 @@ class Profile(commands.Cog):
             value=(
                 "\ud83d\udcb0 Active trades: "
                 f"{used_store_slots}/{user.store_slots}\n"
-                f"\u2139 **{prefix}trades** {target_user.mention}"
+                f"\ud83d\udd0e **{prefix}trades** {target_user.mention}"
             )
         )
         embed.add_field(
@@ -184,7 +204,7 @@ class Profile(commands.Cog):
             name="\u2b06 Boosters",
             value=(
                 f"\ud83d\udcc8 {len(all_boosts)} boosters active"
-                f"\n\u2139 **{prefix}boosts** {target_user.mention}"
+                f"\n\ud83d\udd0e **{prefix}boosts** {target_user.mention}"
             )
         )
 
@@ -204,6 +224,11 @@ class Profile(commands.Cog):
             f"{self.bot.gold_emoji} **Gold:** {ctx.user_data.gold} "
             f"{self.bot.gem_emoji} **Gems:** {ctx.user_data.gems}"
         )
+
+    @commands.command()
+    async def inventory(self, ctx):
+        raise NotImplementedError("Not implemented")
+
 
     @commands.command(aliases=["boosts"])
     @checks.has_account()
@@ -270,6 +295,42 @@ class Profile(commands.Cog):
             )
 
         await ctx.reply(embed=embed)
+
+    @commands.command(aliases=["all", "unlocked"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def allitems(self, ctx):
+        """
+        \ud83d\udd0d Shows all unlocked items for your level.
+
+        Useful to check what items you can grow or make.
+        """
+        all_items = self.bot.item_pool.find_all_items_by_level(
+            ctx.user_data.level
+        )
+
+        fmt = []
+        for item in all_items:
+            fmt.append(
+                f"{item.emoji} {item.name.capitalize()} - "
+                f"**{ctx.prefix}item {item.id}**"
+            )
+
+        paginator = pages.MenuPages(source=AllItemsSource(fmt))
+
+        await paginator.start(ctx)
+
+    @commands.command()
+    async def daily(self, ctx):
+        raise NotImplementedError("Not implemented")
+
+    @commands.command()
+    async def hourly(self, ctx):
+        raise NotImplementedError("Not implemented")
+
+    @commands.command()
+    async def item(self, ctx):
+        raise NotImplementedError("Not implemented")
 
     @commands.command()
     @checks.has_account()
