@@ -58,11 +58,8 @@ ALTER TABLE ONLY public.factory
 
 CREATE TABLE IF NOT EXISTS public.missions(
     id SERIAL PRIMARY KEY,
-    user_id bigint NOT NULL, 
-    requests text NOT NULL, 
-    gold_reward integer NOT NULL, 
-    xp_reward integer NOT NULL,
-    buisness_name varchar(128) NOT NULL
+    user_id bigint NOT NULL,
+    payload text NOT NULL
 );
 
 ALTER TABLE ONLY public.missions

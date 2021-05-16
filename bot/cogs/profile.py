@@ -155,7 +155,7 @@ class Profile(commands.Cog):
         )
         embed.add_field(
             name=f"\ud83d\udd31 {user.level}. level",
-            value=f"{bot.xp_emoji}{user.xp}/{user.next_level_xp}"
+            value=f"{bot.xp_emoji} {user.xp}/{user.next_level_xp}"
         )
         embed.add_field(name=f"{bot.gold_emoji} Gold", value=user.gold)
         embed.add_field(name=f"{bot.gem_emoji} Gems", value=user.gems)
