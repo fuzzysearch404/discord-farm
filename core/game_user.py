@@ -140,6 +140,144 @@ class User:
 
         return existing_boosts
 
+    async def get_all_items(self, ctx, conn=None) -> None:
+        if not conn:
+            release_required = True
+            conn = await ctx.acquire()
+        else:
+            release_required = False
+
+        query = """
+                SELECT * FROM inventory
+                WHERE user_id = $1;
+                """
+
+        items = await conn.fetch(query, self.user_id)
+
+        if release_required:
+            await ctx.release(conn)
+
+        return items
+
+    async def get_item(self, ctx, item_id: int, conn=None) -> None:
+        if not conn:
+            release_required = True
+            conn = await ctx.acquire()
+        else:
+            release_required = False
+
+        query = """
+                SELECT * FROM inventory
+                WHERE user_id = $1
+                AND item_id = $2;
+                """
+
+        item = await conn.fetchrow(query, self.user_id, item_id)
+
+        if release_required:
+            await ctx.release(conn)
+
+        return item
+
+    async def give_item(
+        self,
+        ctx,
+        item_id: int,
+        amount: int,
+        conn=None
+    ) -> None:
+        """
+        Adds a single type of items to inventory
+        """
+        if not conn:
+            release_required = True
+            conn = await ctx.acquire()
+        else:
+            release_required = False
+
+        query = """
+                INSERT INTO inventory(user_id, item_id, amount)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (user_id, item_id)
+                DO UPDATE
+                SET amount = inventory.amount + $3;
+                """
+
+        await conn.execute(query, self.user_id, item_id, amount)
+
+        if release_required:
+            await ctx.release(conn)
+
+    async def give_items(self, ctx, items: list, conn=None) -> None:
+        """
+        Accepts a list of tuples with items IDs and amounts
+        """
+        items_with_user_id = []
+        for item, amount in items:
+            items_with_user_id.append((self.user_id, item, amount))
+
+        if not conn:
+            release_required = True
+            conn = await ctx.acquire()
+        else:
+            release_required = False
+
+        query = """
+                INSERT INTO inventory(user_id, item_id, amount)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (user_id, item_id)
+                DO UPDATE
+                SET amount = inventory.amount + $3;
+                """
+
+        await conn.executemany(query, items_with_user_id)
+
+        if release_required:
+            await ctx.release(conn)
+
+    async def remove_item(
+        self,
+        ctx,
+        item_id: int,
+        amount: int,
+        conn=None
+    ) -> None:
+        """
+        Removes a single type of items from inventory
+        """
+        if not conn:
+            release_required = True
+            conn = await ctx.acquire()
+        else:
+            release_required = False
+
+        query = """
+                SELECT id, amount FROM inventory
+                WHERE user_id = $1
+                AND item_id = $2;
+                """
+        current_data = await conn.fetchrow(query, self.user_id, item_id)
+
+        if current_data:
+            if current_data['amount'] - amount > 0:
+                query = """
+                        UPDATE inventory
+                        SET amount = inventory.amount - $2
+                        WHERE id = $1;
+                        """
+
+                await conn.execute(query, current_data['id'], amount)
+            else:
+                query = """
+                        DELETE FROM inventory
+                        WHERE id = $1;
+                        """
+
+                await conn.execute(query, current_data['id'])
+
+        if release_required:
+            await ctx.release(conn)
+
 
 class UserManager:
 

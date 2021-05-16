@@ -1,4 +1,5 @@
 import discord
+import random
 from discord.ext import commands, menus
 from datetime import datetime, timedelta
 
@@ -288,7 +289,62 @@ class Profile(commands.Cog):
     async def open(self, ctx, *, chest: converters.Chest):
         """
         \ud83e\uddf0 Opens a chest (if you actually have it)
+
+        __Arguments__:
+        `chest` - chest to open. Can be chest name or chest ID
+
+        __Usage examples__:
+        `%chests open rare` - open "rare" chest
+        `%chests open 1002` - also opens "rare" chest
         """
+        async with ctx.db.acquire() as conn:
+            chest_data = await ctx.user_data.get_item(ctx, chest.id, conn=conn)
+
+        if not chest_data:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title=f"You don't have any {chest.name} chests",
+                    text=(
+                        "I just contacted our warehouse manager, and with a "
+                        "deep regret, I have to say that *inhales*, you don't "
+                        f"have any **{chest.emoji} {chest.name} chests** "
+                        "in your inventory. Obtain one or try another chest."
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        gold_reward, gems_reward = 0, 0
+        items_won = []
+
+        # This time we just hardcode this in.
+        # Gold chest
+        if chest.id == 1000:
+            min_gold = 25 * ctx.user_data.level
+            max_gold = 125 * ctx.user_data.level
+
+            gold_reward = random.randint(min_gold, max_gold)
+        # Common
+        elif chest.id == 1001:
+            pass
+        # Rare
+        elif chest.id == 1002:
+            pass
+        # Legendary
+        elif chest.id == 1003:
+            pass
+
+        if gold_reward:
+            ctx.user_data.gold += gold_reward
+        if gems_reward:
+            ctx.user_data.gems += gems_reward
+
+        async with ctx.db.acquire() as conn:
+            async with conn.transaction():
+                await ctx.user_data.remove_item(ctx, chest.id, 1, conn=conn)
+
+                if gold_reward or gems_reward:
+                    await ctx.users.update_user(ctx.user_data, conn=conn)
 
         await ctx.reply(chest)
 
