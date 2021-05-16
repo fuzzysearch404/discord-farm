@@ -214,10 +214,16 @@ class SpecialUnpurchasableItem(GameItem, SellableItem, MarketItem):
         )
 
 
+class ChestItem(GameItem):
+    def __init__(self, image_url: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.image_url = image_url
+
+
 @dataclass
 class ItemAndAmount:
 
-    __slots__ = ('item', 'amount')
+    __slots__ = ("item", "amount")
 
     item: GameItem
     amount: int
@@ -314,13 +320,13 @@ class BoostDuration(Enum):
 class Boost:
 
     __slots__ = (
-        'id',
-        'name',
-        'emoji',
-        'base_price',
-        'price_increase_per_farm_slots',
-        'price_increase_per_factory_slots',
-        'price_increase_per_user_level'
+        "id",
+        "name",
+        "emoji",
+        "base_price",
+        "price_increase_per_farm_slots",
+        "price_increase_per_factory_slots",
+        "price_increase_per_user_level"
     )
 
     def __init__(
@@ -365,7 +371,7 @@ class Boost:
 
 class ObtainedBoost:
 
-    __slots__ = ('id', 'duration')
+    __slots__ = ("id", "duration")
 
     def __init__(self, id: str, duration: datetime) -> None:
         self.id = id
@@ -379,17 +385,24 @@ class ObtainedBoost:
 class ItemPool:
 
     __slots__ = (
-        'all_items',
-        'all_boosts',
-        'items_per_name',
-        'all_item_names'
+        "all_items",
+        "all_boosts",
+        "all_chests",
+        "items_per_name",
+        "all_item_names"
     )
 
-    def __init__(self, all_items: list, all_boosts: list) -> None:
+    def __init__(
+        self,
+        all_items: list,
+        all_boosts: list,
+        all_chests: list
+    ) -> None:
         self.all_items = all_items
         self.all_boosts = all_boosts
+        self.all_chests = all_chests
         self.items_per_name = self._group_items_per_name()
-        self.all_item_names = self.items_per_name.keys()
+        self.all_item_names = list(self.items_per_name.keys())
 
     def find_item_by_id(self, item_id: int) -> GameItem:
         try:
@@ -417,13 +430,53 @@ class ItemPool:
     def find_all_items_by_level(self, user_level: int) -> list:
         return [x for x in self.all_items if x.level <= user_level]
 
+    def find_boost_by_name(self, boost_name: str) -> Boost:
+        boosts_per_name = {}
+
+        for boost in self.all_boosts:
+            boosts_per_name[boost.name] = boost
+
+        matches = get_close_matches(
+            boost_name,
+            list(boosts_per_name.keys())
+        )
+
+        if not matches:
+            raise ItemNotFoundException(f"Boost \"{boost_name}\" not found!")
+
+        return boosts_per_name[matches[0]]
+
     def find_boost_by_id(self, boost_id: str) -> Boost:
         try:
             boost = next(x for x in self.all_boosts if x.id == boost_id)
         except StopIteration:
-            return None
+            raise ItemNotFoundException(f"Boost {boost_id} not found!")
 
         return boost
+
+    def find_chest_by_name(self, chest_name: str) -> ChestItem:
+        chests_per_name = {}
+
+        for chest in self.all_chests:
+            chests_per_name[chest.name] = chest
+
+        matches = get_close_matches(
+            chest_name,
+            list(chests_per_name.keys())
+        )
+
+        if not matches:
+            raise ItemNotFoundException(f"Chest \"{chest_name}\" not found!")
+
+        return chests_per_name[matches[0]]
+
+    def find_chest_by_id(self, chest_id: int) -> Boost:
+        try:
+            chest = next(x for x in self.all_chests if x.id == chest_id)
+        except StopIteration:
+            raise ItemNotFoundException(f"Chest {chest_id} not found!")
+
+        return chest
 
     def update_market_prices(self) -> None:
         for item in self.all_items:
@@ -606,6 +659,27 @@ def _load_boosts() -> list:
     return all_boosts
 
 
+def _load_chests() -> list:
+    all_chests = []
+
+    with open("data/items/chests.json", "r") as file:
+        data = json.load(file)
+
+        for chest_data in data['chests']:
+            chest = ChestItem(
+                id=chest_data['id'],
+                level=chest_data['level'],
+                emoji=chest_data['emoji'],
+                name=chest_data['name'],
+                amount=chest_data['amount'],
+                image_url=chest_data['image_url']
+            )
+
+            all_chests.append(chest)
+
+    return all_chests
+
+
 def load_all_items() -> ItemPool:
     all_items = []
 
@@ -625,5 +699,6 @@ def load_all_items() -> ItemPool:
             item.generate_new_price()
 
     all_boosts = _load_boosts()
+    all_chests = _load_chests()
 
-    return ItemPool(all_items, all_boosts)
+    return ItemPool(all_items, all_boosts, all_chests)

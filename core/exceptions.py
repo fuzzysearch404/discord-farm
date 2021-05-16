@@ -25,3 +25,8 @@ class ItemNotFoundException(FarmException):
 class UserNotFoundException(FarmException):
     """Exception raised when user profile could not be found"""
     pass
+
+
+class InvalidAmountException(FarmException):
+    """Exception raised when user inputs negative or invalid number"""
+    pass

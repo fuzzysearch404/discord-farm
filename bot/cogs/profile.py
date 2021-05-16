@@ -6,6 +6,7 @@ from .utils import checks
 from .utils import time
 from .utils import embeds
 from .utils import pages
+from .utils import converters
 
 
 class AllItemsSource(menus.ListPageSource):
@@ -215,7 +216,7 @@ class Profile(commands.Cog):
     @checks.avoid_maintenance()
     async def balance(self, ctx):
         """
-        \ud83d\udcb0 Quickly check your gold and gem amounts.
+        \ud83d\udcb0 Quickly check your gold and gem amounts
 
         For more detailed information about your profile,
         check out command `%profile`.
@@ -230,12 +231,73 @@ class Profile(commands.Cog):
         raise NotImplementedError("Not implemented")
 
 
+    @commands.group(case_insensitive=True, aliases=["chest"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def chests(self, ctx):
+        """
+        \ud83e\uddf0 Shows your chests
+
+        Chests could contain random goodies, that you can obtain, by
+        opening these chests.
+        """
+        if ctx.invoked_subcommand:
+            return
+
+        async with ctx.db.acquire() as conn:
+            # When adding new chests, please increase this range
+            query = """
+                    SELECT * FROM inventory
+                    WHERE user_id = $1
+                    AND
+                    item_id BETWEEN 1000 AND 1003;
+                    """
+
+            chest_data = await conn.fetch(query, ctx.author.id)
+
+        chest_ids_and_amounts = {}
+        if chest_data:
+            for chest in chest_data:
+                chest_ids_and_amounts[chest['item_id']] = chest['amount']
+
+        embed = discord.Embed(
+            title="\ud83e\uddf0 Your chests",
+            color=discord.Color.from_rgb(196, 145, 16),
+            description=(
+                f"Open chests by typing **{ctx.prefix}chests open name**. "
+                f"For example: **{ctx.prefix}chests open rare**"
+            )
+        )
+
+        for chest in self.bot.item_pool.all_chests:
+            try:
+                amount = chest_ids_and_amounts[chest.id]
+            except KeyError:
+                amount = 0
+
+            embed.add_field(
+                name=f"{chest.emoji} {chest.name.capitalize()} chest",
+                value=(f"Available: **{amount}**")
+            )
+
+        await ctx.reply(embed=embed)
+
+    @chests.command()
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def open(self, ctx, *, chest: converters.Chest):
+        """
+        \ud83e\uddf0 Opens a chest (if you actually have it)
+        """
+
+        await ctx.reply(chest)
+
     @commands.command(aliases=["boosts"])
     @checks.has_account()
     @checks.avoid_maintenance()
     async def boosters(self, ctx, member: discord.Member = None):
         """
-        \u2b06 Lists your or someone else's boosters.
+        \u2b06 Lists your or someone else's boosters
 
         Boosters speed up your overall game progression in various ways.
 
@@ -301,7 +363,7 @@ class Profile(commands.Cog):
     @checks.avoid_maintenance()
     async def allitems(self, ctx):
         """
-        \ud83d\udd0d Shows all unlocked items for your level.
+        \ud83d\udd0d Shows all unlocked items for your level
 
         Useful to check what items you can grow or make.
         """

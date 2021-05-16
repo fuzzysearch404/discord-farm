@@ -1,0 +1,36 @@
+{
+    "chests" : [
+        {
+            "id":1000,
+            "name":"gold",
+            "emoji":"<:gold_chest:843489541062393907>",
+            "level":1,
+            "amount":1,
+            "image_url":"https://failiem.lv/thumb_show.php?i=vnwtpw9ap"
+        },
+        {
+            "id":1001,
+            "name":"common",
+            "emoji":"<:common_chest:843489540911136778>",
+            "level":1,
+            "amount":1,
+            "image_url":"https://failiem.lv/thumb_show.php?i=c8k8uw8az"
+        },
+        {
+            "id":1002,
+            "name":"rare",
+            "emoji":"<:rare_chest:843489540756078592>",
+            "level":1,
+            "amount":1,
+            "image_url":"https://failiem.lv/thumb_show.php?i=m6rs48hpy"
+        },
+        {
+            "id":1003,
+            "name":"legendary",
+            "emoji":"<:legendary_chest:843489540931846155>",
+            "level":1,
+            "amount":1,
+            "image_url":"https://failiem.lv/thumb_show.php?i=frz3y5mmm"
+        }
+    ]
+}

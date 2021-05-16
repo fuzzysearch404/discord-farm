@@ -227,40 +227,40 @@ class BotClient(commands.AutoShardedBot):
         if isinstance(error, commands.errors.CommandNotFound):
             return
         elif isinstance(error, exceptions.FarmException):
-            await ctx.send(f"\u274c {str(error)}")
+            await ctx.reply(f"\u274c {str(error)}")
         elif isinstance(error, exceptions.GlobalCooldownException):
-            return await ctx.send(
+            return await ctx.reply(
                 f"\u23f2\ufe0f You are typing commands way too fast! "
                 f"Slow down for: **{seconds_to_time(error.retry_after)}**. "
                 f"Otherwise, you might get temporarily banned."
             )
         elif isinstance(error, commands.errors.CommandOnCooldown):
-            return await ctx.send(
+            return await ctx.reply(
                 f"\u23f0 This command is on cooldown for:  "
                 f"**{seconds_to_time(error.retry_after)}**"
             )
         elif isinstance(error, commands.errors.MissingRequiredArgument):
-            return await ctx.send(
+            return await ctx.reply(
                 "\u274c This command requires additional argument: "
                 f"`{error.param.name}`. For this command's usage information "
                 f"please see `{ctx.prefix}help {ctx.invoked_with}`."
             )
         elif isinstance(error, commands.errors.BadArgument):
-            return await ctx.send(
+            return await ctx.reply(
                 "\u274c Invalid command argument provided. "
                 "For this command's usage information please see "
                 f"`{ctx.prefix}help {ctx.invoked_with}`."
             )
         elif isinstance(error, commands.errors.BotMissingPermissions):
-            return await ctx.send(
+            return await ctx.reply(
                 f"\u274c {str(error)} "
                 "Please ask a server admin to enable them. "
                 "Otherwise, I can't function normally \ud83d\ude2b"
             )
         elif isinstance(error, exceptions.GameIsInMaintenance):
-            await ctx.send(str(error))
+            await ctx.reply(str(error))
         elif isinstance(error, commands.errors.DisabledCommand):
-            return await ctx.send(
+            return await ctx.reply(
                 "\u274c Sorry, this command currently has been "
                 "disabled and it cannot be used right now."
             )
@@ -272,7 +272,7 @@ class BotClient(commands.AutoShardedBot):
                     f"In {ctx.command.qualified_name}:", exc_info=exc_info
                 )
         elif isinstance(error, commands.errors.ArgumentParsingError):
-            return await ctx.send(error)
+            return await ctx.reply(error)
         else:
             exc_info = (type(error), error, error.__traceback__)
             self.log.error(
