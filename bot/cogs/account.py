@@ -24,13 +24,17 @@ class Account(commands.Cog):
         """
         async with ctx.db.acquire() as conn:
             if await ctx.users.get_user(ctx.author.id, conn=conn):
-                return await ctx.send(
+                return await ctx.reply(
                     embed=embeds.error_embed(
                         title="You already own a farm!",
                         text=(
-                            "What do you mean? \ud83e\udd14 You already own a "
-                            "farm! It's time to get back working, there's "
-                            "always lots to do! \ud83d\udc68\u200d\ud83c\udf3e"
+                            "What do you mean? You already own a cool farm! "
+                            "It's time to get back working on the field. "
+                            "There's always lots of work to do! "
+                            "\ud83d\udc68\u200d\ud83c\udf3e"
+                        ),
+                        footer=(
+                            "Maybe plant some lettuce? Carrots? \ud83e\udd14"
                         ),
                         ctx=ctx
                     )
@@ -38,11 +42,12 @@ class Account(commands.Cog):
 
             await ctx.users.create_user(ctx.author.id, conn=conn)
 
-        await ctx.send(
+        await ctx.reply(
             embed=embeds.congratulations_embed(
+                # TODO: Better starting tutorial
                 title="Your new account is successfully created! \ud83e\udd73",
                 text=(
-                    f"Check out all commands with `{ctx.prefix}help`\n"
+                    f"Check out all commands with **{ctx.prefix}help**\n"
                     "For now, you should be interested in planting commands. "
                     "Firstly you need to plant and grow your first lettuce. "
                     "When it's ready, harvest it and sell it or complete some "
@@ -91,11 +96,12 @@ class Account(commands.Cog):
                     f"Goodbye, {ctx.author}! Thanks for playing! \ud83d\udc4b"
                 ),
                 text=(
-                    "Your account has been deleted! We are going to miss you! "
+                    "Your account has been deleted! "
                     "If you ever consider playing again, then just type "
-                    f"`{ctx.prefix}register` again and you are ready to go! "
+                    f"**{ctx.prefix}register** again and you are ready to go! "
                     "Take care for now! :)"
                 ),
+                footer="We are going to miss you!",
                 ctx=ctx
             )
         )
@@ -121,7 +127,9 @@ class Account(commands.Cog):
                 text=(
                     "Okay, so: I told the *mail man* **not to "
                     "bother you** with all those private messages \ud83d\udced"
-                    "\nHe then said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74"
+                ),
+                footer=(
+                    "He then said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74"
                 ),
                 ctx=ctx
             )
@@ -131,12 +139,14 @@ class Account(commands.Cog):
                 text=(
                     "Okay, so: I told the *mail man* **to "
                     "send you** private messages about the game \ud83d\udcec"
-                    "\nHe then said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74"
+                ),
+                footer=(
+                    "He then said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74"
                 ),
                 ctx=ctx
             )
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
 
 def setup(bot):

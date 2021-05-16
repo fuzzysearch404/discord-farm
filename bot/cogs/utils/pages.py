@@ -84,7 +84,7 @@ class MenuPages(menus.Menu):
         """
         page = await self._source.get_page(0)
         kwargs = await self._get_kwargs_from_page(page)
-        return await channel.send(**kwargs)
+        return await ctx.reply(**kwargs)
 
     async def start(self, ctx, *, channel=None, wait=False):
         await self._source._prepare_once()
@@ -156,7 +156,7 @@ class ConfirmPrompt(menus.Menu):
         self._result = False
 
     async def send_initial_message(self, ctx, channel):
-        return await channel.send(self.msg, embed=self.embed)
+        return await ctx.reply(self.msg, embed=self.embed)
 
     @menus.button("\u2705")
     async def do_confirm(self, payload):

@@ -98,7 +98,7 @@ class User:
                 "\n\nAnd also you have unlocked the following items: "
             embed.description += ", ".join(fmt)
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     async def get_all_boosts(self, ctx) -> list:
         boosts = await ctx.redis.execute_command(

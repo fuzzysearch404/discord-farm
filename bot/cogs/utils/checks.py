@@ -85,7 +85,7 @@ def avoid_maintenance() -> commands.check:
             "\u26a0\ufe0f Game's commands are disabled for bot's maintenance "
             "or update.\n\ud83d\udd50 Please try again after a while... :)"
             "\n\ud83d\udcf0 For more information "
-            f"use command - `{ctx.prefix}news`."
+            f"use command - **{ctx.prefix}news**."
         )
 
     return commands.check(pred)

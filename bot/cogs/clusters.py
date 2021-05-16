@@ -439,7 +439,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
                 "Output too long...", file=discord.File(fp, "data.txt")
             )
         else:
-            await ctx.send(fmt)
+            await ctx.reply(fmt)
 
     @commands.command()
     async def logout(
@@ -486,7 +486,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
             except Exception as e:
                 self.bot.log.exception(f"Failed to load: {extension}")
 
-                await ctx.send(f"{e.__class__.__name__}: {e}")
+                await ctx.reply(f"{e.__class__.__name__}: {e}")
             finally:
                 return
 
@@ -522,7 +522,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
             except Exception as e:
                 self.bot.log.exception(f"Failed to unload: {extension}")
 
-                await ctx.send(f"{e.__class__.__name__}: {e}")
+                await ctx.reply(f"{e.__class__.__name__}: {e}")
             finally:
                 return
         async with self.response_lock:
@@ -557,7 +557,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
             except Exception as e:
                 self.bot.log.exception(f"Failed to reload: {extension}")
 
-                await ctx.send(f"{e.__class__.__name__}: {e}")
+                await ctx.reply(f"{e.__class__.__name__}: {e}")
             finally:
                 return
         async with self.response_lock:
@@ -571,7 +571,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         """Reloads game item data on all clusters."""
         await self._send_set_items_message()
 
-        await ctx.send("\u2705 Sent reload items request to IPC")
+        await ctx.reply("\u2705 Sent reload items request to IPC")
 
     @commands.command()
     async def editnews(self, ctx, *, news: str):
@@ -580,7 +580,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
 
         await asyncio.sleep(2)
 
-        await ctx.send(self.bot.game_news)
+        await ctx.reply(self.bot.game_news)
 
     @commands.command()
     async def maintenance(self, ctx, enabled: bool):

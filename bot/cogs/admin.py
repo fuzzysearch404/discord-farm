@@ -24,7 +24,7 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
             with suppress(discord.HTTPException):
                 return await ctx.message.add_reaction("\u2705")
 
-        await ctx.send(f"```py\n{results}\n```")
+        await ctx.reply(f"```py\n{results}\n```")
 
     @commands.command()
     async def sql(self, ctx, *, query: str):
@@ -43,11 +43,11 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
                 results = await strategy(query)
                 dt = (time.perf_counter() - start) * 1000.0
             except Exception:
-                return await ctx.send(f'```py\n{traceback.format_exc()}\n```')
+                return await ctx.reply(f'```py\n{traceback.format_exc()}\n```')
 
         rows = len(results)
         if is_multi or rows == 0:
-            return await ctx.send(f'`{dt:.3f}ms: {results}`')
+            return await ctx.reply(f'`{dt:.3f}ms: {results}`')
 
         fmt = "```"
         for num, res in enumerate(results):
@@ -57,11 +57,11 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
 
         if len(fmt) > 2000:
             fp = io.BytesIO(fmt.encode("utf-8"))
-            await ctx.send(
+            await ctx.reply(
                 "Output too long...", file=discord.File(fp, "data.txt")
             )
         else:
-            await ctx.send(fmt)
+            await ctx.reply(fmt)
 
     @commands.command()
     async def redis(self, ctx, *, query: str):
@@ -69,7 +69,7 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
         try:
             results = await ctx.redis.execute_command(query)
         except Exception as e:
-            return await ctx.send(str(e))
+            return await ctx.reply(str(e))
 
         if not results:
             with suppress(discord.HTTPException):
@@ -79,16 +79,16 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
 
         if len(result_str) > 2000:
             fp = io.BytesIO(result_str.encode("utf-8"))
-            await ctx.send(
+            await ctx.reply(
                 "Output too long...", file=discord.File(fp, "data.txt")
             )
         else:
-            await ctx.send(result_str)
+            await ctx.reply(result_str)
 
     @commands.command()
     async def uptime(self, ctx):
         """Get instance uptime"""
-        await ctx.send(self.bot.uptime)
+        await ctx.reply(self.bot.uptime)
 
 
 def setup(bot) -> None:

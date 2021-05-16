@@ -40,7 +40,7 @@ class HelpCommand(commands.MinimalHelpCommand):
 
     def add_bot_commands_formatting(self, commands, heading):
         if commands:
-            joined = '\u2002'.join(c.name for c in commands)
+            joined = "\u2002".join(f"`{c.name}`" for c in commands)
             self.paginator.add_line(f"**{heading}**")
             self.paginator.add_line(joined)
 
@@ -81,23 +81,27 @@ class Info(commands.Cog, name="Information"):
         """
         \ud83d\udcf0 Get latest update and bot's status information
 
-        For more information join official support server.
+        For more information join bot's official support server.
         """
         embed = discord.Embed(
             title='\ud83d\udcf0 News',
             colour=discord.Color.from_rgb(222, 222, 222),
             description=self.bot.game_news
         )
-        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
 
-        await ctx.send(embed=embed)
+        embed.set_footer(
+            text="For more information join bot's official support server",
+            icon_url=ctx.bot.user.avatar_url
+        )
+
+        await ctx.reply(embed=embed)
 
     @commands.command(hidden=True)
     async def ping(self, ctx):
         """
         Check if the bot even wants to talk to you
         """
-        await ctx.send('ponh!')
+        await ctx.reply('ponh!')
 
     @commands.command(aliases=['support'])
     async def invite(self, ctx):
@@ -116,7 +120,7 @@ class Info(commands.Cog, name="Information"):
 
         oauth_link = discord.utils.oauth_url(self.bot.user.id, permissions)
 
-        await ctx.send(
+        await ctx.reply(
             "Support server invite: https://discord.gg/MwpxKjF"
             f"\nBot invite: <{oauth_link}>"
         )
@@ -144,7 +148,7 @@ class Info(commands.Cog, name="Information"):
             description=message
         )
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.command()
     async def about(self, ctx):
@@ -174,10 +178,10 @@ class Info(commands.Cog, name="Information"):
         memory_usage = self.process.memory_full_info().uss / 1024**2
         cpu_usage = self.process.cpu_percent() / psutil.cpu_count()
         embed.add_field(
-            name='Process',
-            value=f'{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU'
+            name="Process",
+            value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU"
         )
-        embed.add_field(name='Uptime', value=self.bot.uptime)
+        embed.add_field(name="Uptime", value=self.bot.uptime)
         embed.add_field(name="Bot version", value=self.version)
         embed.set_footer(
             text=(
@@ -186,7 +190,7 @@ class Info(commands.Cog, name="Information"):
             )
         )
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.command()
     async def clusters(self, ctx):
@@ -213,7 +217,7 @@ class Info(commands.Cog, name="Information"):
 
         embed.set_footer(text=f"\nIPC ping: {'%.0f' % self.bot.ipc_ping}ms")
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @tasks.loop(seconds=1800)
     async def update_status_task(self):

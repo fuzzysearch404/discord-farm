@@ -139,14 +139,14 @@ class Profile(commands.Cog):
         embed.add_field(
             name="\ud83d\udd12 Warehouse",
             value=(
-                f"\ud83c\udff7\ufe0f{inventory_size} inventory items"
+                f"\ud83c\udff7\ufe0f {inventory_size} inventory items"
                 f"\n\u2139 **{prefix}inventory** {target_user.mention}"
             )
         )
         embed.add_field(
             name='\ud83c\udf31 Farm',
             value=(
-                f"{bot.tile_emoji}{free_farm_slots}/{farm_slots_formatted} "
+                f"{bot.tile_emoji} {free_farm_slots}/{farm_slots_formatted} "
                 f"free tiles\n\u23f0 Next harvest: {nearest_harvest}"
                 f"\n\u2139 **{prefix}farm** {target_user.mention}"
             )
@@ -155,8 +155,8 @@ class Profile(commands.Cog):
             embed.add_field(
                 name='\ud83c\udfed Factory',
                 value=(
-                    f"\ud83d\udce6Max. capacity: {factory_slots_formatted}"
-                    "\n\ud83d\udc68\u200d\ud83c\udfedWorkers: "
+                    f"\ud83d\udce6 Max. capacity: {factory_slots_formatted}"
+                    "\n\ud83d\udc68\u200d\ud83c\udfed Workers: "
                     f"{user.factory_level}/10"
                     f"\n\u23f0 Next production: {nearest_factory}"
                     f"\n\u2139 **{prefix}factory** {target_user.mention}"
@@ -165,7 +165,7 @@ class Profile(commands.Cog):
         else:
             embed.add_field(
                 name="\ud83c\udfed Factory",
-                value="Unlocks at level 3."
+                value="\ud83d\udd12 Unlocks at level 3."
             )
         embed.add_field(
             name='\ud83e\udd1d Server trades',
@@ -186,9 +186,8 @@ class Profile(commands.Cog):
                 f"\n\u2139 **{prefix}boosts** {target_user.mention}"
             )
         )
-        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.command()
     @checks.has_account()
