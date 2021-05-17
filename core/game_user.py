@@ -1,4 +1,5 @@
 import jsonpickle
+import asyncpg
 from datetime import datetime
 
 from bot.cogs.utils import embeds
@@ -7,18 +8,18 @@ from bot.cogs.utils import embeds
 class User:
 
     __slots__ = (
-        'user_id',
-        'xp',
-        'gold',
-        'gems',
-        'farm_slots',
-        'factory_slots',
-        'factory_level',
-        'store_slots',
-        'notifications',
-        'registration_date',
-        'level',
-        'next_level_xp'
+        "user_id",
+        "xp",
+        "gold",
+        "gems",
+        "farm_slots",
+        "factory_slots",
+        "factory_level",
+        "store_slots",
+        "notifications",
+        "registration_date",
+        "level",
+        "next_level_xp"
     )
 
     def __init__(
@@ -140,7 +141,7 @@ class User:
 
         return existing_boosts
 
-    async def get_all_items(self, ctx, conn=None) -> None:
+    async def get_all_items(self, ctx, conn=None) -> list:
         if not conn:
             release_required = True
             conn = await ctx.acquire()
@@ -149,17 +150,18 @@ class User:
 
         query = """
                 SELECT * FROM inventory
-                WHERE user_id = $1;
+                WHERE user_id = $1
+                ORDER BY item_id;
                 """
 
         items = await conn.fetch(query, self.user_id)
 
         if release_required:
-            await ctx.release(conn)
+            await ctx.release()
 
         return items
 
-    async def get_item(self, ctx, item_id: int, conn=None) -> None:
+    async def get_item(self, ctx, item_id: int, conn=None) -> asyncpg.Record:
         if not conn:
             release_required = True
             conn = await ctx.acquire()
@@ -175,7 +177,7 @@ class User:
         item = await conn.fetchrow(query, self.user_id, item_id)
 
         if release_required:
-            await ctx.release(conn)
+            await ctx.release()
 
         return item
 
@@ -206,7 +208,7 @@ class User:
         await conn.execute(query, self.user_id, item_id, amount)
 
         if release_required:
-            await ctx.release(conn)
+            await ctx.release()
 
     async def give_items(self, ctx, items: list, conn=None) -> None:
         """
@@ -233,7 +235,7 @@ class User:
         await conn.executemany(query, items_with_user_id)
 
         if release_required:
-            await ctx.release(conn)
+            await ctx.release()
 
     async def remove_item(
         self,
@@ -276,7 +278,7 @@ class User:
                 await conn.execute(query, current_data['id'])
 
         if release_required:
-            await ctx.release(conn)
+            await ctx.release()
 
 
 class UserManager:

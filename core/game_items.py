@@ -185,7 +185,7 @@ class Animal(ReplantableItem):
         self.emoji_animal = emoji_animal
 
 
-class SpecialUnpurchasableItem(GameItem, SellableItem, MarketItem):
+class Special(GameItem, SellableItem, MarketItem):
 
     def __init__(
         self,
@@ -214,7 +214,7 @@ class SpecialUnpurchasableItem(GameItem, SellableItem, MarketItem):
         )
 
 
-class ChestItem(GameItem):
+class Chest(GameItem):
     def __init__(self, image_url: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.image_url = image_url
@@ -229,7 +229,7 @@ class ItemAndAmount:
     amount: int
 
 
-class CraftableItem(GameItem, SellableItem, MarketItem):
+class Product(GameItem, SellableItem, MarketItem):
 
     def __init__(
         self,
@@ -267,13 +267,13 @@ class CraftableItem(GameItem, SellableItem, MarketItem):
         # and if there are ItemAndAmount instances, not dicts.
         if not isinstance(self.made_from[0], ItemAndAmount):
             raise Exception(
-                f"CraftedItem ID: {self.id} made_from not initialized"
+                f"Product ID: {self.id} made_from not initialized"
             )
 
         value = 0
 
         for item_and_amount in self.made_from:
-            if isinstance(item_and_amount.item, CraftableItem):
+            if isinstance(item_and_amount.item, Product):
                 value += item_and_amount.item._calculate_total_value()
             else:
                 value += \
@@ -388,6 +388,7 @@ class ItemPool:
         "all_items",
         "all_boosts",
         "all_chests",
+        "items_per_id",
         "items_per_name",
         "all_item_names"
     )
@@ -401,13 +402,14 @@ class ItemPool:
         self.all_items = all_items
         self.all_boosts = all_boosts
         self.all_chests = all_chests
+        self.items_per_id = self._group_items_per_id()
         self.items_per_name = self._group_items_per_name()
         self.all_item_names = list(self.items_per_name.keys())
 
     def find_item_by_id(self, item_id: int) -> GameItem:
         try:
-            item = next(x for x in self.all_items if x.id == item_id)
-        except StopIteration:
+            item = self.items_per_id[str(item_id)]
+        except KeyError:
             raise ItemNotFoundException(f"Item {item_id} not found!")
 
         return item
@@ -454,7 +456,7 @@ class ItemPool:
 
         return boost
 
-    def find_chest_by_name(self, chest_name: str) -> ChestItem:
+    def find_chest_by_name(self, chest_name: str) -> Chest:
         chests_per_name = {}
 
         for chest in self.all_chests:
@@ -482,6 +484,14 @@ class ItemPool:
         for item in self.all_items:
             if isinstance(item, MarketItem):
                 item.generate_new_price()
+
+    def _group_items_per_id(self) -> dict:
+        items_per_id = {}
+
+        for item in self.all_items:
+            items_per_id[item.id] = item
+
+        return items_per_id
 
     def _group_items_per_name(self) -> dict:
         items_per_name = {}
@@ -564,14 +574,14 @@ def _load_animals() -> list:
     return all_items
 
 
-def _load_special_unpurchasables() -> list:
+def _load_special_items() -> list:
     all_items = []
 
-    with open("data/items/special_unpurchasable_items.json", "r") as file:
+    with open("data/items/special_items.json", "r") as file:
         data = json.load(file)
 
-        for item_data in data['special_unpurchasables']:
-            item = SpecialUnpurchasableItem(
+        for item_data in data['special']:
+            item = Special(
                 id=item_data['id'],
                 level=item_data['level'],
                 emoji=item_data['emoji'],
@@ -595,7 +605,7 @@ def _load_craftables(all_loaded_items: list) -> None:
         data = json.load(file)
 
         for item_data in data['craftables']:
-            item = CraftableItem(
+            item = Product(
                 id=item_data['id'],
                 level=item_data['level'],
                 emoji=item_data['emoji'],
@@ -666,7 +676,7 @@ def _load_chests() -> list:
         data = json.load(file)
 
         for chest_data in data['chests']:
-            chest = ChestItem(
+            chest = Chest(
                 id=chest_data['id'],
                 level=chest_data['level'],
                 emoji=chest_data['emoji'],
@@ -686,7 +696,7 @@ def load_all_items() -> ItemPool:
     all_items.extend(_load_crops())
     all_items.extend(_load_trees())
     all_items.extend(_load_animals())
-    all_items.extend(_load_special_unpurchasables())
+    all_items.extend(_load_special_items())
 
     # This has to be loaded last, to attach made_from subobject references
     _load_craftables(all_items)

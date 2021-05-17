@@ -57,12 +57,12 @@ def _item_conversion(ctx, argument) -> game_items.GameItem:
         # but I just want a friendlier message
         raise exceptions.ItemNotFoundException(
             f"I could not find item \"{argument}\". \ud83d\ude10 "
-            "Maybe check item names and IDs you have unlocked with "
+            "Maybe check out item names and IDs you have unlocked with "
             f"**{ctx.prefix}allitems** and then try again."
         )
 
 
-def _chest_conversion(ctx, argument) -> game_items.ChestItem:
+def _chest_conversion(ctx, argument) -> game_items.Chest:
     try:
         chest_id = int(argument)
         chest = ctx.bot.item_pool.find_chest_by_id(chest_id)
@@ -79,7 +79,7 @@ def _chest_conversion(ctx, argument) -> game_items.ChestItem:
     except exceptions.ItemNotFoundException:
         raise exceptions.ItemNotFoundException(
             f"I could not find chest \"{argument}\". \ud83d\ude10 "
-            f"Maybe check chest names with **{ctx.prefix}chests** "
+            f"Maybe check out chest names with **{ctx.prefix}chests** "
             "and then try again."
         )
 
@@ -117,7 +117,7 @@ class ItemAndAmount(commands.Converter):
 
 
 class Chest(commands.Converter):
-    async def convert(self, ctx, argument) -> game_items.ChestItem:
+    async def convert(self, ctx, argument) -> game_items.Chest:
         return _chest_conversion(ctx, argument)
 
 

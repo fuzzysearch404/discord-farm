@@ -136,7 +136,7 @@ class Info(commands.Cog, name="Information"):
             "and hosting it costs lots of my time and also money.\n\n"
             "Any donations are appreciated, they are going to cover hosting "
             "expenses and help to make this bot even better. <3"
-            "\nhttps://www.paypal.me/fuzzysearch\n"
+            "\nhttps://ko-fi.com/fuzzysearch\n"
             "\nYou can also help out, without spending any money, "
             "if you upvote the bot on the \"top.gg\" website every 12 hours:"
             "\n<https://top.gg/bot/526436949481881610>"

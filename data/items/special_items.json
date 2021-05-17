@@ -1,5 +1,5 @@
 {
-    "special_unpurchasables" : [
+    "special" : [
        {
           "id":600,
           "level":17,

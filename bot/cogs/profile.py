@@ -3,11 +3,71 @@ import random
 from discord.ext import commands, menus
 from datetime import datetime, timedelta
 
+from core import game_items
+from core.exceptions import ItemNotFoundException
 from .utils import checks
 from .utils import time
 from .utils import embeds
 from .utils import pages
 from .utils import converters
+
+
+class InventorySource(menus.ListPageSource):
+    def __init__(self, entries, target_user: discord.Member):
+        super().__init__(entries, per_page=30)
+        self.target = target_user
+
+    async def format_page(self, menu, page):
+        target = self.target
+
+        embed = discord.Embed(
+            title=f"\ud83d\udd12 {target.nick or target.name}'s warehouse",
+            color=discord.Color.from_rgb(255, 172, 51)
+        )
+
+        if not page:
+            fmt = "\ud83d\udc00 It's empty. There are only a few rats in here"
+        else:
+            # NOTE: We have different ID prefixes for different item classes.
+            # Also we have ordered the items by ID in our query for this.
+
+            def get_item_class_name(item_and_amount):
+                return item_and_amount.item.__class__.__name__ + "s"
+
+            last_class = get_item_class_name(page[0])
+            fmt = f"**{last_class}**\n"
+
+            iteration = 0
+            for item_and_amount in page:
+                iteration += 1
+
+                current_item_class = get_item_class_name(item_and_amount)
+                if current_item_class != last_class:
+                    last_class = current_item_class
+
+                    fmt += f"\n**{last_class}**\n"
+                    iteration = 0
+
+                item = item_and_amount.item
+                amount = item_and_amount.amount
+
+                # 3 items per line
+                if iteration <= 3:
+                    fmt += f"{item.emoji} {item.name.capitalize()} x{amount} "
+                else:
+                    fmt += (
+                        f"\n{item.emoji} {item.name.capitalize()} x{amount} "
+                    )
+                    iteration = 0
+
+            embed.set_footer(
+                text="These items can only be accessed by their owner",
+                icon_url=target.avatar_url
+            )
+
+        embed.description = fmt
+
+        return embed
 
 
 class AllItemsSource(menus.ListPageSource):
@@ -22,7 +82,7 @@ class AllItemsSource(menus.ListPageSource):
 
         embed = discord.Embed(
             title="\ud83d\udd13 Items unlocked for your level:",
-            color=discord.Color.from_rgb(88, 101, 242),
+            color=discord.Color.from_rgb(255, 172, 51),
             description=head + "\n".join(page)
         )
 
@@ -150,7 +210,7 @@ class Profile(commands.Cog):
             ) + lab_info
 
         embed = discord.Embed(
-            title=f"{target_user}'s profile",
+            title=f"{target_user.nick or target_user.name}'s profile",
             color=discord.Color.from_rgb(189, 66, 17)
         )
         embed.add_field(
@@ -227,9 +287,48 @@ class Profile(commands.Cog):
             f"{self.bot.gem_emoji} **Gems:** {ctx.user_data.gems}"
         )
 
-    @commands.command()
-    async def inventory(self, ctx):
-        raise NotImplementedError("Not implemented")
+    @commands.command(aliases=["warehouse", "inv"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def inventory(self, ctx, member: discord.Member = None):
+        """
+        \ud83d\udd12 Shows your or someone's inventory
+
+        Useful to see what items you or someone else owns in their warehouse.
+
+        __Optional arguments__:
+        `member` - some user in your server. (tagged user or user's ID)
+
+        __Usage examples__:
+        `%inventory` - view your inventory
+        `%inventory @user` - view user's inventory
+        """
+        if not member:
+            user = ctx.user_data
+        else:
+            user = await checks.get_other_member(ctx, member)
+
+        target_user = member or ctx.author
+
+        async with ctx.db.acquire() as conn:
+            all_items_data = await user.get_all_items(ctx, conn=conn)
+
+        items_and_amounts = []
+        for data in all_items_data:
+            try:
+                item = ctx.items.find_item_by_id(data['item_id'])
+            except ItemNotFoundException:
+                # Could be a chest
+                continue
+
+            item_and_amt = game_items.ItemAndAmount(item, data['amount'])
+            items_and_amounts.append(item_and_amt)
+
+        paginator = pages.MenuPages(
+            source=InventorySource(items_and_amounts, target_user)
+        )
+
+        await paginator.start(ctx)
 
 
     @commands.group(case_insensitive=True, aliases=["chest"])
@@ -270,7 +369,7 @@ class Profile(commands.Cog):
             )
         )
 
-        for chest in self.bot.item_pool.all_chests:
+        for chest in ctx.items.all_chests:
             try:
                 amount = chest_ids_and_amounts[chest.id]
             except KeyError:
@@ -369,6 +468,8 @@ class Profile(commands.Cog):
         else:
             user = await checks.get_other_member(ctx, member)
 
+        target_user = member or ctx.author
+
         all_boosts = await user.get_all_boosts(ctx)
 
         if not all_boosts:
@@ -390,8 +491,6 @@ class Profile(commands.Cog):
                 )
             )
 
-        target_user = member or ctx.author
-
         embed = discord.Embed(
             title=f"\u2b06\ufe0f {target_user}'s active boosters",
             color=discord.Color.from_rgb(39, 128, 184),
@@ -402,7 +501,7 @@ class Profile(commands.Cog):
         )
 
         for boost in all_boosts:
-            boost_info = self.bot.item_pool.find_boost_by_id(boost.id)
+            boost_info = ctx.items.find_boost_by_id(boost.id)
 
             remaining_duration = boost.duration - datetime.now()
             time_str = time.seconds_to_time(remaining_duration.total_seconds())
@@ -423,7 +522,7 @@ class Profile(commands.Cog):
 
         Useful to check what items you can grow or make.
         """
-        all_items = self.bot.item_pool.find_all_items_by_level(
+        all_items = ctx.items.find_all_items_by_level(
             ctx.user_data.level
         )
 

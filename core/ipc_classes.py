@@ -6,10 +6,10 @@ from datetime import datetime, timedelta
 class IPCMessage:
 
     __slots__ = (
-        'author',
-        'action',
-        'reply_global',
-        'data',
+        "author",
+        "action",
+        "reply_global",
+        "data",
     )
 
     author: str
@@ -22,11 +22,11 @@ class IPCMessage:
 class Cluster:
 
     __slots__ = (
-        'name',
-        'latencies',
-        'guild_count',
-        'last_ping',
-        'uptime'
+        "name",
+        "latencies",
+        "guild_count",
+        "last_ping",
+        "uptime"
     )
 
     name: str

@@ -27,6 +27,7 @@ class Context(commands.Context):
         self.pool = self.bot.db_pool
         self.redis = self.bot.redis
         self.users = self.bot.user_cache
+        self.items = self.bot.item_pool
         self._db = None
 
     @property
@@ -44,5 +45,5 @@ class Context(commands.Context):
 
     async def release(self):
         if self._db is not None:
-            await self.bot.pool.release(self._db)
+            await self.pool.release(self._db)
             self._db = None
