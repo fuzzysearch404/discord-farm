@@ -13,16 +13,17 @@ from .utils import converters
 
 
 class InventorySource(menus.ListPageSource):
-    def __init__(self, entries, target_user: discord.Member):
+    def __init__(self, entries, inv_emoji: str, target_user: discord.Member):
         super().__init__(entries, per_page=30)
+        self.emoji = inv_emoji
         self.target = target_user
 
     async def format_page(self, menu, page):
         target = self.target
 
         embed = discord.Embed(
-            title=f"\ud83d\udd12 {target.nick or target.name}'s warehouse",
-            color=discord.Color.from_rgb(255, 172, 51)
+            title=f"{self.emoji} {target.nick or target.name}'s warehouse",
+            color=discord.Color.from_rgb(234, 231, 231)
         )
 
         if not page:
@@ -220,7 +221,7 @@ class Profile(commands.Cog):
         embed.add_field(name=f"{bot.gold_emoji} Gold", value=user.gold)
         embed.add_field(name=f"{bot.gem_emoji} Gems", value=user.gems)
         embed.add_field(
-            name="\ud83d\udd12 Warehouse",
+            name=f"{bot.warehouse_emoji} Warehouse",
             value=(
                 f"\ud83c\udff7\ufe0f {inventory_size} inventory items"
                 f"\n\ud83d\udd0e **{prefix}inventory** {target_user.mention}"
@@ -325,7 +326,11 @@ class Profile(commands.Cog):
             items_and_amounts.append(item_and_amt)
 
         paginator = pages.MenuPages(
-            source=InventorySource(items_and_amounts, target_user)
+            source=InventorySource(
+                items_and_amounts,
+                self.bot.warehouse_emoji,
+                target_user
+            )
         )
 
         await paginator.start(ctx)

@@ -42,10 +42,12 @@ class BotClient(commands.AutoShardedBot):
         self.ipc_ping = 0
 
         # Common emojis
-        self.gold_emoji = config['emoji']['gold']
-        self.gem_emoji = config['emoji']['gem']
-        self.tile_emoji = config['emoji']['farm_tile']
-        self.xp_emoji = config['emoji']['xp']
+        emojis = config['emoji']
+        self.gold_emoji = emojis['gold']
+        self.gem_emoji = emojis['gem']
+        self.tile_emoji = emojis['farm_tile']
+        self.xp_emoji = emojis['xp']
+        self.warehouse_emoji = emojis['warehouse']
 
         self._init_logger()
         self.log.info(
