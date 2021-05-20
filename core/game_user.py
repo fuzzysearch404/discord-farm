@@ -2,6 +2,7 @@ import jsonpickle
 import asyncpg
 from datetime import datetime
 
+from core.game_items import GameItem
 from bot.cogs.utils import embeds
 
 
@@ -216,6 +217,10 @@ class User:
         """
         items_with_user_id = []
         for item, amount in items:
+
+            if isinstance(item, GameItem):
+                item = item.id
+
             items_with_user_id.append((self.user_id, item, amount))
 
         if not conn:

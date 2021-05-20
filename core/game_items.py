@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from difflib import get_close_matches
 
-from core.game_user import User
 from core.exceptions import ItemNotFoundException
 
 
@@ -348,7 +347,7 @@ class Boost:
             price_increase_per_factory_slots
         self.price_increase_per_user_level = price_increase_per_user_level
 
-    def get_boost_price(self, duration: BoostDuration, user: User) -> int:
+    def get_boost_price(self, duration: BoostDuration, user) -> int:
         price_per_day = self.base_price
 
         price_per_day += self.price_increase_per_farm_slots * user.farm_slots
@@ -500,6 +499,74 @@ class ItemPool:
             items_per_name[item.name] = item
 
         return items_per_name
+
+    def get_random_rewards(
+        self,
+        user_level: int,
+        extra_luck: float = 0,  # 0 - 1.0
+        total_draws: int = 1,
+        growables_multiplier: int = 1,
+        products_multiplier: int = 1,
+        growables: bool = True,
+        products: bool = True,
+        specials: bool = False
+    ) -> list:
+        items = self.find_all_items_by_level(user_level)
+
+        population, weights = [], []
+        max_weight = 0
+        for item in items:
+            if not growables and isinstance(item, PlantableItem):
+                continue
+
+            if not products and isinstance(item, Product):
+                continue
+
+            if not specials and isinstance(item, Special):
+                continue
+
+            if item.gold_reward > max_weight:
+                max_weight = item.gold_reward
+
+            population.append(item)
+            weights.append(item.gold_reward)
+
+        weights_size = len(weights)
+        new_weights = [0] * weights_size
+
+        for i in range(weights_size):
+            current = weights[i]
+            # If extra luck is 1 (max), then all items have equal weights
+            with_luck = current - (current * extra_luck)
+
+            new_weights[i] = (max_weight + 1) - with_luck
+
+        items = random.choices(population, weights=new_weights, k=total_draws)
+
+        rewards = []
+        for item in items:
+            # Generate amounts
+            # Hardcore to make it balanced by my liking
+            if isinstance(item, PlantableItem):
+                gold_reward = item.gold_reward
+                if gold_reward <= 10:
+                    min, max = 5, 16
+                elif gold_reward <= 50:
+                    min, max = 3, 10
+                else:
+                    min, max = 2, 5
+
+                min *= growables_multiplier
+                max *= growables_multiplier
+            else:
+                min, max = 1, 1
+
+                max *= products_multiplier
+
+            amount = random.randint(min, max)
+            rewards.append((item, amount))
+
+        return rewards
 
 
 def _load_crops() -> list:

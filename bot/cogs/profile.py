@@ -47,7 +47,7 @@ class InventorySource(menus.ListPageSource):
                     last_class = current_item_class
 
                     fmt += f"\n**{last_class}**\n"
-                    iteration = 0
+                    iteration = 1
 
                 item = item_and_amount.item
                 amount = item_and_amount.amount
@@ -59,7 +59,7 @@ class InventorySource(menus.ListPageSource):
                     fmt += (
                         f"\n{item.emoji} {item.name.capitalize()} x{amount} "
                     )
-                    iteration = 0
+                    iteration = 1
 
             embed.set_footer(
                 text="These items can only be accessed by their owner",
@@ -355,7 +355,7 @@ class Profile(commands.Cog):
                     SELECT * FROM inventory
                     WHERE user_id = $1
                     AND
-                    item_id BETWEEN 1000 AND 1003;
+                    item_id BETWEEN 1000 AND 1005;
                     """
 
             chest_data = await conn.fetch(query, ctx.author.id)
@@ -418,25 +418,107 @@ class Profile(commands.Cog):
                 )
             )
 
+        user_level = ctx.user_data.level
+
         gold_reward, gems_reward = 0, 0
         items_won = []
 
-        # This time we just hardcode this in.
+        base_growables_multiplier = int(user_level / 5) + 1
+
+        # This time we just hardcode this all in.
         # Gold chest
         if chest.id == 1000:
-            min_gold = 25 * ctx.user_data.level
-            max_gold = 125 * ctx.user_data.level
+            min_gold = 25 * user_level
+            max_gold = 100 * user_level
 
             gold_reward = random.randint(min_gold, max_gold)
         # Common
         elif chest.id == 1001:
-            pass
-        # Rare
+            if bool(random.getrandbits(1)):
+                multiplier = int(base_growables_multiplier / 2) or 1
+
+                items_won = ctx.items.get_random_rewards(
+                    user_level,
+                    growables_multiplier=multiplier,
+                    products=False,
+                    total_draws=1
+                )
+            else:
+                min_gold = 5 * user_level
+                max_gold = 10 * user_level
+
+                gold_reward = random.randint(min_gold, max_gold)
+        # Uncommon
         elif chest.id == 1002:
-            pass
-        # Legendary
+            items_won = ctx.items.get_random_rewards(
+                user_level,
+                extra_luck=0.05,
+                growables_multiplier=base_growables_multiplier,
+                products=False,
+                total_draws=random.randint(1, 2)
+            )
+
+            if not random.randint(0, 4):
+                min_gold = 3 * user_level
+                max_gold = 6 * user_level
+
+                gold_reward = random.randint(min_gold, max_gold)
+        # Rare
         elif chest.id == 1003:
-            pass
+            items_won = ctx.items.get_random_rewards(
+                user_level,
+                extra_luck=0.25,
+                growables_multiplier=base_growables_multiplier + 1,
+                total_draws=random.randint(1, 3)
+            )
+
+            if not random.randint(0, 4):
+                min_gold = 4 * user_level
+                max_gold = 8 * user_level
+
+                gold_reward = random.randint(min_gold, max_gold)
+        # Epic
+        elif chest.id == 1004:
+            if not random.randint(0, 9):
+                base_growables_multiplier += random.randint(1, 3)
+
+            items_won = ctx.items.get_random_rewards(
+                user_level,
+                extra_luck=0.455,
+                growables_multiplier=base_growables_multiplier + 5,
+                products_multiplier=2,
+                total_draws=random.randint(2, 4)
+            )
+
+            if bool(random.getrandbits(1)):
+                min_gold = 8 * user_level
+                max_gold = 15 * user_level
+
+                gold_reward = random.randint(min_gold, max_gold)
+        # Legendary
+        elif chest.id == 1005:
+            if not random.randint(0, 4):
+                base_growables_multiplier += random.randint(1, 5)
+
+            items_won = ctx.items.get_random_rewards(
+                user_level,
+                extra_luck=0.777,
+                growables_multiplier=base_growables_multiplier + 8,
+                products_multiplier=3,
+                total_draws=random.randint(3, 5)
+            )
+
+            min_gold = 10 * user_level
+            max_gold = 30 * user_level
+
+            if not random.randint(0, 4):
+                min_gold += 20 * user_level
+                max_gold += 50 * user_level
+
+            gold_reward = random.randint(min_gold, max_gold)
+
+            if not random.randint(0, 14):
+                gems_reward = 1
 
         if gold_reward:
             ctx.user_data.gold += gold_reward
@@ -450,7 +532,33 @@ class Profile(commands.Cog):
                 if gold_reward or gems_reward:
                     await ctx.users.update_user(ctx.user_data, conn=conn)
 
-        await ctx.reply(chest)
+                if items_won:
+                    await ctx.user_data.give_items(ctx, items_won, conn=conn)
+
+        rewards = "\n\n"
+
+        if items_won:
+            for item, amount in items_won:
+                rewards += (
+                    f"**{item.emoji} {item.name.capitalize()}**: {amount} "
+                )
+        if gold_reward:
+            rewards += f"**{self.bot.gold_emoji} {gold_reward} gold** "
+        if gems_reward:
+            rewards += f"**{self.bot.gem_emoji} {gems_reward} gems** "
+
+        await ctx.reply(
+            embed=embeds.congratulations_embed(
+                title=f"{chest.name.capitalize()} chest opened!",
+                text=(
+                    f"{ctx.author.mention} tried their luck, by opening "
+                    f"their {chest.emoji} **{chest.name.capitalize()} "
+                    "chest**, and won these awesome rewards:" + rewards
+                ),
+                footer="These items are now moved to your inventory",
+                ctx=ctx
+            )
+        )
 
     @commands.command(aliases=["boosts"])
     @checks.has_account()
