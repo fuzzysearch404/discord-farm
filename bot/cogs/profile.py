@@ -1,7 +1,8 @@
+import aiohttp
 import discord
 import random
 from discord.ext import commands, menus
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from core import game_items
 from core.exceptions import ItemNotFoundException
@@ -98,6 +99,7 @@ class Profile(commands.Cog):
     def __init__(self, bot) -> None:
         super().__init__()
         self.bot = bot
+        self.topgg_token = bot.config['topgg']['auth_token']
 
     @commands.command(aliases=["prof", "account", "acc"])
     @checks.has_account()
@@ -334,7 +336,6 @@ class Profile(commands.Cog):
         )
 
         await paginator.start(ctx)
-
 
     @commands.group(case_insensitive=True, aliases=["chest"])
     @checks.has_account()
@@ -693,29 +694,115 @@ class Profile(commands.Cog):
         )
 
     @commands.command()
+    @checks.user_cooldown(5)
+    @checks.has_account()
+    @checks.avoid_maintenance()
     async def hourly(self, ctx):
-        raise NotImplementedError("Not implemented")
+        """
+        \ud83d\udcb8 Get more rewards every hour, if you have upvoted this bot
+
+        Upvote this bot once per 12 hours on bot list site "top.gg", and
+        unlock getting additional rewards every hour with this command.
+        """
+        user_cooldown = await checks.get_user_cooldown(ctx, "hourly_bonus")
+
+        if user_cooldown:
+            raise commands.CommandOnCooldown(ctx, user_cooldown)
+
+        headers = {
+            "Authorization": self.topgg_token
+        }
+        url = (
+            f"https://top.gg/api/bots/{self.bot.user.id}/"
+            f"check?userId={ctx.author.id}"
+        )
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers) as r:
+                if r.status != 200:
+                    return await ctx.reply(
+                        embed=embeds.error_embed(
+                            title="Oopsie doopsie!",
+                            text=(
+                                "We are currently having some problems with "
+                                "hourly bonuses. \ud83d\ude28 We got this "
+                                "cool squid \ud83d\udc49\ud83e\udd91 fixing "
+                                "things already, so could you please check "
+                                "hourly bonus again a bit later? \ud83d\ude14"
+                            ),
+                            ctx=ctx
+                        )
+                    )
+
+                js = await r.json()
+
+        voted = js['voted']
+
+        if not voted:
+            upvote_url = f"<https://top.gg/bot/{ctx.bot.user.id}>"
+
+            await ctx.reply(
+                embed=embeds.error_embed(
+                    title="Please upvote this bot!",
+                    text=(
+                        "\ud83d\udd10 To unlock hourly bonuses, you have to "
+                        f"upvote the bot here: {upvote_url}\n"
+                        "\ud83d\udcb8 After upvoting, you will unlock this "
+                        "command for 12 hours, and you will be able to collect"
+                        " your hourly bonuses, by using this same command. "
+                    ),
+                    footer=(
+                        "The site you are about to visit might contain some"
+                        " ads, sorry about that"
+                    ),
+                    ctx=ctx
+                )
+            )
+        else:
+            chests_and_rarities = {
+                1000: 2,  # Gold
+                1001: 100,  # Common
+                1002: 50,  # Uncommon
+                1003: 5  # Rare
+            }
+
+            chest = random.choices(
+                population=list(chests_and_rarities.keys()),
+                weights=chests_and_rarities.values(),
+                k=1
+            )[0]
+
+            amount = 1
+            # If common chest, give multiple
+            if chest == 1001:
+                min = int(ctx.user_data.level / 10) or 1
+                max = int(ctx.user_data.level / 5) or 1
+                amount = random.randint(min, max)
+
+            await ctx.user_data.give_item(ctx, chest, amount)
+            await checks.set_user_cooldown(ctx, 3600, "hourly_bonus")
+
+            chest_data = ctx.items.find_chest_by_id(chest)
+
+            await ctx.reply(
+                embed=embeds.congratulations_embed(
+                    title="Hourly bonus chest received!",
+                    text=(
+                        f"You won {chest_data.emoji} "
+                        f"**{amount}x {chest_data.name.capitalize()} "
+                        "chest** as your hourly bonus! \ud83e\udd20"
+                    ),
+                    footer=(
+                        f"Use command \"chests open {chest_data.name}\""
+                        ", to open"
+                    ),
+                    ctx=ctx
+                )
+            )
 
     @commands.command()
     async def item(self, ctx):
         raise NotImplementedError("Not implemented")
-
-    @commands.command()
-    @checks.has_account()
-    async def boost_test(self, ctx):
-        # TODO: temp for testing
-        from core import game_items
-
-        b = game_items.ObtainedBoost("farm_slots", datetime.now() + timedelta(seconds=60))
-        await ctx.user_data.give_boost(ctx, b)
-        b = game_items.ObtainedBoost("factory_slots", datetime.now() + timedelta(seconds=160))
-        await ctx.user_data.give_boost(ctx, b)
-        b = game_items.ObtainedBoost("cat", datetime.now() + timedelta(seconds=86900))
-        await ctx.user_data.give_boost(ctx, b)
-        b = game_items.ObtainedBoost("cat", datetime.now() + timedelta(seconds=10))
-        await ctx.user_data.give_boost(ctx, b)
-        b = game_items.ObtainedBoost("dog_1", datetime.now() + timedelta(seconds=101))
-        await ctx.user_data.give_boost(ctx, b)
 
 
 def setup(bot):

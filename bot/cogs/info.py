@@ -13,7 +13,7 @@ class HelpMessageSource(menus.ListPageSource):
 
     async def format_page(self, menu, page):
         embed = discord.Embed(
-            color=discord.Color.from_rgb(88, 101, 242),
+            color=discord.Color.blurple(),
             description=page
         )
 
