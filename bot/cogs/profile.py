@@ -651,8 +651,46 @@ class Profile(commands.Cog):
         await paginator.start(ctx)
 
     @commands.command()
+    @checks.user_cooldown(82800)
+    @checks.has_account()
+    @checks.avoid_maintenance()
     async def daily(self, ctx):
-        raise NotImplementedError("Not implemented")
+        """
+        \ud83c\udfb0 Get free random chest every day.
+        """
+        # Yes, there is no common chest in here.
+        chests_and_rarities = {
+            1000: 75,  # Gold
+            1002: 100,  # Uncommon
+            1003: 65,  # Rare
+            1004: 25,  # Epic
+            1005: 3  # Legendary
+        }
+
+        chest = random.choices(
+            population=list(chests_and_rarities.keys()),
+            weights=chests_and_rarities.values(),
+            k=1
+        )[0]
+
+        await ctx.user_data.give_item(ctx, chest, 1)
+
+        chest_data = ctx.items.find_chest_by_id(chest)
+
+        await ctx.reply(
+            embed=embeds.congratulations_embed(
+                title="Daily bonus chest received!",
+                text=(
+                    f"You won {chest_data.emoji} "
+                    f"**{chest_data.name.capitalize()} chest** as "
+                    "your daily bonus! \ud83e\udd20"
+                ),
+                footer=(
+                    f"Use command \"chests open {chest_data.name}\", to open"
+                ),
+                ctx=ctx
+            )
+        )
 
     @commands.command()
     async def hourly(self, ctx):
