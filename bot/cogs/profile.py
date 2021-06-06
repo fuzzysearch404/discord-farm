@@ -5,6 +5,7 @@ from discord.ext import commands, menus
 from datetime import datetime
 
 from core import game_items
+from core import modifications
 from core.exceptions import ItemNotFoundException
 from .utils import checks
 from .utils import time
@@ -651,7 +652,7 @@ class Profile(commands.Cog):
 
         await paginator.start(ctx)
 
-    @commands.command()
+    @commands.command(aliases=["dailybonus"])
     @checks.user_cooldown(82800)
     @checks.has_account()
     @checks.avoid_maintenance()
@@ -693,7 +694,7 @@ class Profile(commands.Cog):
             )
         )
 
-    @commands.command()
+    @commands.command(aliases=["hourlybonus"])
     @checks.user_cooldown(5)
     @checks.has_account()
     @checks.avoid_maintenance()
@@ -800,9 +801,128 @@ class Profile(commands.Cog):
                 )
             )
 
-    @commands.command()
-    async def item(self, ctx):
-        raise NotImplementedError("Not implemented")
+    @commands.command(aliases=["i", "info"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def item(self, ctx, *, item: converters.Item):
+        """
+        \ud83c\udf7f Shows detailed information about a game item
+
+        This command is useful to get various information about some
+        item in the game e.g. prices, growing times, rewards etc.
+
+        __Arguments__:
+        `item` - item to lookup information for (item's name or ID)
+
+        __Usage examples__:
+        `%item lettuce` - view lettuce stats
+        `%item 1` - view lettuce stats
+        """
+        embed = discord.Embed(
+            title=f"{item.emoji} {item.name.capitalize()}",
+            description=f"\ud83d\udd0e **Item ID: {item.id}**",
+            color=discord.Color.teal()
+        )
+
+        embed.add_field(
+            name="\ud83d\udd31 Required level",
+            value=f"{item.level}"
+        )
+        embed.add_field(
+            name=f"{ctx.bot.xp_emoji} Experience reward",
+            value=f"{item.xp} xp / per item"
+        )
+        if isinstance(item, game_items.PurchasableItem):
+            embed.add_field(
+                name="\ud83d\udcb0 Shop price (buying cost)",
+                value=f"{item.gold_price} {ctx.bot.gold_emoji}"
+            )
+
+        if isinstance(item, game_items.MarketItem):
+            embed.add_field(
+                name="\ud83d\uded2 Market price range",
+                value=(
+                    f"{item.min_market_price} - {item.max_market_price}"
+                    f" {ctx.bot.gold_emoji} / item"
+                )
+            )
+
+        if isinstance(item, game_items.SellableItem):
+            embed.add_field(
+                name="\ud83d\udcc8 Current market price",
+                value=f"{item.gold_reward} {ctx.bot.gold_emoji} / per item"
+            )
+
+        if isinstance(item, game_items.ReplantableItem):
+            embed.add_field(
+                name="\ud83d\udd01 Production cycles",
+                value=f"Grows {item.iterations} times"
+            )
+
+        if isinstance(item, game_items.PlantableItem):
+            mods = await ctx.user_data.get_item_modification(ctx, item.id)
+
+            grow_time = time.seconds_to_time(item.grow_time)
+            harv_time = time.seconds_to_time(item.collect_time)
+            volume = item.amount
+
+            if mods:
+                time1_mod = mods['time1']
+                time2_mod = mods['time2']
+                vol_mod = mods['volume']
+
+                if time1_mod:
+                    new_time = modifications.get_growing_time(item, time1_mod)
+                    fmt = time.seconds_to_time(new_time)
+                    grow_time = f"\ud83e\uddec {fmt}"
+                if time2_mod:
+                    new_time = modifications.get_harvest_time(item, time2_mod)
+                    fmt = time.seconds_to_time(new_time)
+                    harv_time = f"\ud83e\uddec {fmt}"
+                if vol_mod:
+                    new_vol = modifications.get_volume(item, vol_mod)
+                    volume = f"\ud83e\uddec {new_vol}"
+
+            embed.add_field(
+                name="\u2696 Harvest volume",
+                value=f"{volume} items"
+            )
+            embed.add_field(
+                name="\ud83d\udd70 Growing time",
+                value=f"{grow_time}"
+            )
+            embed.add_field(
+                name="\ud83d\udd70 Harvestable for",
+                value=f"{harv_time}"
+            )
+            embed.add_field(
+                name=f"{item.emoji} Grow",
+                value=f"**{ctx.prefix}grow {item.name}**"
+            )
+
+        if isinstance(item, game_items.Product):
+            made_from = ""
+            for iaa in item.made_from:
+                i = iaa.item
+                made_from += f"{i.emoji} {i.name.capitalize()} x{iaa.amount}\n"
+
+            embed.add_field(
+                name="\ud83d\udcdc Required raw materials",
+                value=made_from
+            )
+            embed.add_field(
+                name="\ud83d\udd70 Production duration",
+                value=time.seconds_to_time(item.craft_time)
+            )
+            embed.add_field(
+                name=f"{item.emoji} Produce",
+                value=f"**{ctx.prefix}make {item.name}**"
+            )
+
+        if hasattr(item, "image_url"):
+            embed.set_thumbnail(url=item.image_url)
+
+        await ctx.reply(embed=embed)
 
 
 def setup(bot):

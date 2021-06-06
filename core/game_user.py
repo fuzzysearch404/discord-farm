@@ -285,6 +285,31 @@ class User:
         if release_required:
             await ctx.release()
 
+    async def get_item_modification(
+        self,
+        ctx,
+        item_id: int,
+        conn=None
+    ) -> None:
+        if not conn:
+            release_required = True
+            conn = await ctx.acquire()
+        else:
+            release_required = False
+
+        query = """
+                SELECT * FROM modifications
+                WHERE user_id = $1
+                AND item_id = $2;
+                """
+
+        data = await conn.fetchrow(query, self.user_id, item_id)
+
+        if release_required:
+            await ctx.release()
+
+        return data
+
 
 class UserManager:
 

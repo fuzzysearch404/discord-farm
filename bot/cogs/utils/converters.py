@@ -56,7 +56,7 @@ def _item_conversion(ctx, argument) -> game_items.GameItem:
         # I know, that I could just raise,
         # but I just want a friendlier message
         raise exceptions.ItemNotFoundException(
-            f"I could not find item \"{argument}\". \ud83d\ude10 "
+            f"I could not find item \"{argument}\". \ud83d\ude10\n"
             "Maybe check out item names and IDs you have unlocked with "
             f"**{ctx.prefix}allitems** and then try again."
         )
@@ -78,7 +78,7 @@ def _chest_conversion(ctx, argument) -> game_items.Chest:
         return ctx.bot.item_pool.find_chest_by_name(argument.lower())
     except exceptions.ItemNotFoundException:
         raise exceptions.ItemNotFoundException(
-            f"I could not find chest \"{argument}\". \ud83d\ude10 "
+            f"I could not find chest \"{argument}\". \ud83d\ude10\n"
             f"Maybe check out chest names with **{ctx.prefix}chests** "
             "and then try again."
         )
@@ -96,7 +96,7 @@ def _boost_conversion(ctx, argument) -> game_items.Boost:
         return ctx.bot.item_pool.find_boost_by_name(argument.lower())
     except exceptions.ItemNotFoundException:
         raise exceptions.ItemNotFoundException(
-            f"I could not find boost \"{argument}\". \ud83d\ude10 "
+            f"I could not find boost \"{argument}\". \ud83d\ude10\n"
             "Maybe you made some kind of typo?"
         )
 
