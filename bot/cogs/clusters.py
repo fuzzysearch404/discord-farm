@@ -248,6 +248,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
         cluster = Cluster(
             self.bot.cluster_name,
             self.bot.latencies,
+            self.bot.ipc_ping,
             len(self.bot.guilds),
             self.last_ping,
             uptime

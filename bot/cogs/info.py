@@ -163,7 +163,10 @@ class Info(commands.Cog, name="Information"):
 
         embed.add_field(
             name="Your server's cluster",
-            value=self.bot.cluster_name
+            value=(
+                f"**{self.bot.cluster_name}**\n"
+                f"IPC ping: {'%.0f' % self.bot.ipc_ping}ms"
+            )
         )
 
         shards_and_lat = ""
@@ -174,7 +177,10 @@ class Info(commands.Cog, name="Information"):
             )
 
         embed.add_field(name="Cluter's shards", value=shards_and_lat)
-        embed.add_field(name="Your server's shard", value=ctx.guild.shard_id)
+        embed.add_field(
+            name="Your server's shard",
+            value=f"#{ctx.guild.shard_id}"
+        )
         memory_usage = self.process.memory_full_info().uss / 1024**2
         cpu_usage = self.process.cpu_percent() / psutil.cpu_count()
         embed.add_field(
@@ -205,17 +211,18 @@ class Info(commands.Cog, name="Information"):
 
             for id, ping in cluster.latencies:
                 ping = ping * 1000
-                fmt += f"#{id} - {'%.0f' % ping}ms\n"
+                fmt += (
+                    f"> **#{id} - {'%.0f' % ping}ms** "
+                    f"IPC: {'%.0f' % self.bot.ipc_ping}ms\n"
+                )
 
             uptime = time_util.seconds_to_time(cluster.uptime.total_seconds())
-            fmt += f"\nUptime: {uptime} "
+            fmt += f"\n**Uptime: {uptime} **"
 
             embed.add_field(
                 name=f"**{cluster.name} ({cluster.guild_count} guilds)**",
                 value=fmt
             )
-
-        embed.set_footer(text=f"\nIPC ping: {'%.0f' % self.bot.ipc_ping}ms")
 
         await ctx.reply(embed=embed)
 

@@ -24,6 +24,7 @@ class Cluster:
     __slots__ = (
         "name",
         "latencies",
+        "ipc_latency",
         "guild_count",
         "last_ping",
         "uptime"
@@ -31,6 +32,7 @@ class Cluster:
 
     name: str
     latencies: list
+    ipc_latency: datetime
     guild_count: int
     last_ping: datetime
     uptime: timedelta

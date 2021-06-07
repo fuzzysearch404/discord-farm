@@ -821,7 +821,7 @@ class Profile(commands.Cog):
         embed = discord.Embed(
             title=f"{item.emoji} {item.name.capitalize()}",
             description=f"\ud83d\udd0e **Item ID: {item.id}**",
-            color=discord.Color.teal()
+            color=discord.Color.from_rgb(38, 202, 49)
         )
 
         embed.add_field(
