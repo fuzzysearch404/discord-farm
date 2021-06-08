@@ -45,8 +45,14 @@ class HelpCommand(commands.MinimalHelpCommand):
             self.paginator.add_line(joined)
 
     async def send_pages(self):
+        # Replace prefix with invoked prefix
+        new_pages = []
+
+        for page in self.paginator.pages:
+            new_pages.append(page.replace("{prefix}", self.context.prefix))
+
         paginator = pages.MenuPages(
-            source=HelpMessageSource(self.paginator.pages)
+            source=HelpMessageSource(new_pages)
         )
 
         await paginator.start(self.context)

@@ -18,7 +18,7 @@ class Account(commands.Cog):
     @checks.avoid_maintenance()
     async def register(self, ctx):
         """
-        \ud83c\udd95 Creates a new game account (new farm)
+        \ud83c\udd95 Creates a new game account
 
         You can only use this command if you don't already have an account.
         """

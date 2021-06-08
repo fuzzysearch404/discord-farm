@@ -115,8 +115,8 @@ class Profile(commands.Cog):
         `member` - some user in your server. (tagged user or user's ID)
 
         __Usage examples__:
-        `%profile` - view your profile
-        `%profile @user` - view user's profile
+        {prefix} `profile` - view your profile
+        {prefix} `profile @user` - view user's profile
         """
         if not member:
             user = ctx.user_data
@@ -284,7 +284,7 @@ class Profile(commands.Cog):
         \ud83d\udcb0 Quickly check your gold and gem amounts
 
         For more detailed information about your profile,
-        check out command `%profile`.
+        check out command {prefix}`profile`.
         """
         await ctx.reply(
             f"{self.bot.gold_emoji} **Gold:** {ctx.user_data.gold} "
@@ -304,8 +304,8 @@ class Profile(commands.Cog):
         `member` - some user in your server. (tagged user or user's ID)
 
         __Usage examples__:
-        `%inventory` - view your inventory
-        `%inventory @user` - view user's inventory
+        {prefix} `inventory` - view your inventory
+        {prefix} `inventory @user` - view user's inventory
         """
         if not member:
             user = ctx.user_data
@@ -345,8 +345,10 @@ class Profile(commands.Cog):
         """
         \ud83e\uddf0 Shows your chests
 
-        Chests could contain random goodies, that you can obtain, by
-        opening these chests.
+        Chests are containing random goodies, that you can obtain, by
+        opening these chests. Each different chest type has different
+        possible rewards and odds. You can obtain chests in various ways
+        by playing the game, for example, by collecting daily bonuses.
         """
         if ctx.invoked_subcommand:
             return
@@ -394,14 +396,14 @@ class Profile(commands.Cog):
     @checks.avoid_maintenance()
     async def open(self, ctx, *, chest: converters.Chest):
         """
-        \ud83e\uddf0 Opens a chest (if you actually have it)
+        \ud83e\uddf0 Opens a chest (if you own one)
 
         __Arguments__:
         `chest` - chest to open. Can be chest name or chest ID
 
         __Usage examples__:
-        `%chests open rare` - open "rare" chest
-        `%chests open 1002` - also opens "rare" chest
+        {prefix} `chests open rare` - opens "rare" chest (by chest's name)
+        {prefix} `chests open 1002` - opens "rare" chest (by chest's ID)
         """
         async with ctx.db.acquire() as conn:
             chest_data = await ctx.user_data.get_item(ctx, chest.id, conn=conn)
@@ -575,8 +577,8 @@ class Profile(commands.Cog):
         `member` - some user in your server. (tagged user or user's ID)
 
         __Usage examples__:
-        `%boosters` - view your active boosters
-        `%boosters @user` - view user's active boosters
+        {prefix} `boosters` - view your active boosters
+        {prefix} `boosters @user` - view user's active boosters
         """
         if not member:
             user = ctx.user_data
@@ -636,6 +638,7 @@ class Profile(commands.Cog):
         \ud83d\udd0d Shows all unlocked items for your level
 
         Useful to check what items you can grow or make.
+        As you level up, this command is going to show more items.
         """
         all_items = ctx.items.find_all_items_by_level(
             ctx.user_data.level
@@ -744,7 +747,7 @@ class Profile(commands.Cog):
 
             await ctx.reply(
                 embed=embeds.error_embed(
-                    title="Please upvote this bot!",
+                    title="Please upvote this bot, to unlock!",
                     text=(
                         "\ud83d\udd10 To unlock hourly bonuses, you have to "
                         f"upvote the bot here: {upvote_url}\n"
@@ -815,8 +818,8 @@ class Profile(commands.Cog):
         `item` - item to lookup information for (item's name or ID)
 
         __Usage examples__:
-        `%item lettuce` - view lettuce stats
-        `%item 1` - view lettuce stats
+        {prefix} `item lettuce` - view lettuce stats
+        {prefix} `item 1` - view lettuce stats
         """
         embed = discord.Embed(
             title=f"{item.emoji} {item.name.capitalize()}",
@@ -882,6 +885,13 @@ class Profile(commands.Cog):
                 if vol_mod:
                     new_vol = modifications.get_volume(item, vol_mod)
                     volume = f"\ud83e\uddec {new_vol}"
+
+                embed.set_footer(
+                    text=(
+                        "The \ud83e\uddec emoji is indicating, that the "
+                        "property is upgraded for this item"
+                    )
+                )
 
             embed.add_field(
                 name="\u2696 Harvest volume",
