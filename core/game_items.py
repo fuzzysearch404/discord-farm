@@ -59,13 +59,11 @@ class GameItem:
 @dataclass
 class PurchasableItem:
     gold_price: int
-    gems_price: int
 
 
 @dataclass
 class SellableItem:
     gold_reward: int
-    gems_reward: int
 
 
 class MarketItem:
@@ -83,13 +81,11 @@ class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
         amount: int,
         gold_price: int,
         grow_time: int,
-        image_url: str,
-        gems_price: int = -1,
-        gems_reward: int = -1,
+        image_url: str
     ) -> None:
         GameItem.__init__(self, id, level, emoji, name, amount)
-        PurchasableItem.__init__(self, gold_price, gems_price)
-        SellableItem.__init__(self, 0, gems_reward)
+        PurchasableItem.__init__(self, gold_price)
+        SellableItem.__init__(self, 0)
 
         self.grow_time = grow_time
         self.image_url = image_url
@@ -196,11 +192,10 @@ class Special(GameItem, SellableItem, MarketItem):
         xp: int,
         min_market_price: int,
         max_market_price: int,
-        image_url: str,
-        gems_reward: int = -1
+        image_url: str
     ) -> None:
         GameItem.__init__(self, id, level, emoji, name, amount)
-        SellableItem.__init__(self, 0, gems_reward)
+        SellableItem.__init__(self, 0)
 
         self.xp = xp
         self.min_market_price = min_market_price
@@ -239,11 +234,10 @@ class Product(GameItem, SellableItem, MarketItem):
         amount: int,
         made_from: list,
         craft_time: int,
-        image_url: str,
-        gems_reward: int = -1
+        image_url: str
     ) -> None:
         GameItem.__init__(self, id, level, emoji, name, amount)
-        SellableItem.__init__(self, 0, gems_reward)
+        SellableItem.__init__(self, 0)
 
         self.made_from = made_from
         self.craft_time = craft_time
