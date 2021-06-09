@@ -64,7 +64,10 @@ class InventorySource(menus.ListPageSource):
                     iteration = 1
 
             embed.set_footer(
-                text="These items can only be accessed by their owner",
+                text=(
+                    f"Page {menu.current_page + 1}/{self.get_max_pages()} | "
+                    "These items can only be accessed by their owner"
+                ),
                 icon_url=target.avatar_url
             )
 
@@ -87,6 +90,10 @@ class AllItemsSource(menus.ListPageSource):
             title="\ud83d\udd13 Items unlocked for your level:",
             color=discord.Color.from_rgb(255, 172, 51),
             description=head + "\n".join(page)
+        )
+
+        embed.set_footer(
+            text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
         )
 
         return embed
@@ -214,7 +221,10 @@ class Profile(commands.Cog):
             ) + lab_info
 
         embed = discord.Embed(
-            title=f"{target_user.nick or target_user.name}'s profile",
+            title=(
+                f"\ud83c\udfe1 {target_user.nick or target_user.name}'s "
+                "profile"
+            ),
             color=discord.Color.from_rgb(189, 66, 17)
         )
         embed.add_field(

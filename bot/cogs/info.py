@@ -107,9 +107,9 @@ class Info(commands.Cog, name="Information"):
         """
         Check if the bot even wants to talk to you
         """
-        await ctx.reply('ponh!')
+        await ctx.reply("ponh!")
 
-    @commands.command(aliases=['support'])
+    @commands.command(aliases=["support"])
     async def invite(self, ctx):
         """
         \ud83d\udcf2 Invite bot to your own server or join support server
@@ -137,15 +137,19 @@ class Info(commands.Cog, name="Information"):
         \u2764\ufe0f If you are really kind and like this bot
         """
         message = (
-            "Hello, my name is fuzzyseach, and I do bots as a free time hobby."
+            "Labdien! My name is fuzzysearch. I am the solo developer from "
+            "Latvia behind this bot. I do bots as a free time hobby and "
+            "lots of other stuff. This bot has been one of my favorite "
+            "projects, that I have put countless hours in the recent years. "
             " \ud83e\udd13\nManaging a bot is not an easy task, "
-            "and hosting it costs lots of my time and also money.\n\n"
+            "and hosting it, costs lots of my time and also money.\n\n"
             "Any donations are appreciated, they are going to cover hosting "
             "expenses and help to make this bot even better. <3"
             "\nhttps://ko-fi.com/fuzzysearch\n"
             "\nYou can also help out, without spending any money, "
-            "if you upvote the bot on the \"top.gg\" website every 12 hours:"
-            "\n<https://top.gg/bot/526436949481881610>"
+            "if you upvote the bot on the \"top.gg\" website every 12 hours "
+            f"(This command also unlocks the {ctx.prefix}`hourly` "
+            "bonus command):\n<https://top.gg/bot/526436949481881610>"
         )
 
         embed = discord.Embed(
@@ -198,7 +202,8 @@ class Info(commands.Cog, name="Information"):
         embed.set_footer(
             text=(
                 "Made with discord.py v"
-                f"{pkg_resources.get_distribution('discord.py').version}"
+                f"{pkg_resources.get_distribution('discord.py').version} "
+                "| This bot is not made or maintained by Discord"
             )
         )
 

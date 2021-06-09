@@ -310,6 +310,26 @@ class User:
 
         return data
 
+    async def get_farm_field(self, ctx, conn=None) -> list:
+        if not conn:
+            release_required = True
+            conn = await ctx.acquire()
+        else:
+            release_required = False
+
+        query = """
+                SELECT * FROM farm
+                WHERE user_id = $1
+                ORDER BY item_id;
+                """
+
+        data = await conn.fetch(query, self.user_id)
+
+        if release_required:
+            await ctx.release()
+
+        return data
+
 
 class UserManager:
 
