@@ -1,5 +1,5 @@
 import discord
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from discord.ext import commands, menus
 
@@ -9,6 +9,7 @@ from .utils import checks
 from .utils import embeds
 from .utils.converters import ItemAndAmount
 from core import game_items
+from core import modifications
 
 
 class PlantState(Enum):
@@ -286,6 +287,7 @@ class Farm(commands.Cog):
             )
 
         field_parsed = self.parse_db_rows_to_plant_data_classes(field_data)
+        used_fields = sum(x.fields_used for x in field_parsed)
 
         field_guard = 0
         if self.bot.field_guard:
@@ -298,7 +300,7 @@ class Farm(commands.Cog):
             source=FarmFieldSource(
                 field_parsed,
                 target_user,
-                len(field_data),
+                used_fields,
                 user.farm_slots,
                 has_slots_boost,
                 field_guard,
@@ -341,7 +343,229 @@ class Farm(commands.Cog):
         {prefix} `plant 1 2` - plant 2 lettuce items (by using item's ID)
         {prefix} `plant 1` - plant 1 lettuce item (no amount)
         """
-        raise NotImplementedError()
+        item, amount = item
+        item_name_capitalized = item.name.capitalize()
+
+        if not isinstance(item, game_items.PlantableItem):
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title=f"{item_name_capitalized} is not a growable item!",
+                    text=(
+                        "Hey! HEY! YOU! STOP it right there! \ud83d\ude40 "
+                        f"You can't just plant {item.emoji} **"
+                        f"{item_name_capitalized}** on your farm field! "
+                        "\ud83d\ude33 That's illegal! \ud83e\udd26 "
+                        "Would be cool tho. \ud83e\udd14"
+                    ),
+                    footer="Check out shop to discover plantable items",
+                    ctx=ctx
+                )
+            )
+
+        if item.level > ctx.user_data.level:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="Insufficient experience level!",
+                    text=(
+                        f"**Sorry, you can't grow {item.emoji} "
+                        f"{item_name_capitalized} just yet!** "
+                        "I was told by shop cashier that they can't "
+                        "let you purchase these, because you are not "
+                        "experienced enough to handle these, you know? "
+                        "Anyways, this item unlocks from level "
+                        f"\ud83d\udd31 **{item.level}**."
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        grow_time = item.grow_time
+        collect_time = item.collect_time
+        base_volume = item.amount
+
+        mods = await ctx.user_data.get_item_modification(ctx, item.id)
+        if mods:
+            time1_mod = mods['time1']
+            time2_mod = mods['time2']
+            vol_mod = mods['volume']
+
+            if time1_mod:
+                grow_time = modifications.get_growing_time(item, time1_mod)
+            if time2_mod:
+                collect_time = modifications.get_harvest_time(item, time2_mod)
+            if vol_mod:
+                base_volume = modifications.get_volume(item, vol_mod)
+
+        total_cost = amount * item.gold_price
+        total_items = amount * base_volume
+
+        embed = embeds.prompt_embed(
+            title=(
+                f"Are you really going to grow {amount}x "
+                f"{item.emoji} {item_name_capitalized}?"
+            ),
+            text=(
+                "Check out these details and let me know if you approve"
+            ),
+            ctx=ctx
+        )
+        embed.add_field(
+            name="\ud83e\uddfe Item",
+            value=f"{item.emoji} {item_name_capitalized}"
+        )
+        embed.add_field(
+            name="\u2696\ufe0f Quantity",
+            value=amount
+        )
+        embed.add_field(
+            name="\ud83d\udcb0 Total costs",
+            value=f"{total_cost} {self.bot.gold_emoji}"
+        )
+
+        if isinstance(item, game_items.ReplantableItem):
+            grow_info = (
+                f"{total_items}x {item.emoji} "
+                f"{item_name_capitalized} ({item.iterations} times)"
+            )
+        else:
+            grow_info = f"{total_items}x {item.emoji} {item_name_capitalized}"
+
+        grow_time_str = time.seconds_to_time(grow_time)
+        coll_time_str = time.seconds_to_time(collect_time)
+
+        embed.add_field(
+            name="\ud83c\udff7\ufe0f Will grow into",
+            value=grow_info
+        )
+        embed.add_field(
+            name="\ud83d\udd70\ufe0f Growing duration",
+            value=grow_time_str
+        )
+        embed.add_field(
+            name=(
+                "\ud83d\udd70\ufe0f Maximum harvesting period before "
+                "item gets rotten"
+            ),
+            value=coll_time_str
+        )
+
+        confirm, msg = await pages.ConfirmPrompt(embed=embed).prompt(ctx)
+
+        if not confirm:
+            return
+
+        boosts = await ctx.user_data.get_all_boosts(ctx)
+        slots_boost = "farm_slots" in [x.id for x in boosts]
+        cat_boost = "cat" in [x.id for x in boosts]
+
+        conn = await ctx.acquire()
+        # Refetch user data, because user could have no money after the prompt
+        user_data = await ctx.users.get_user(ctx.author.id, conn=conn)
+
+        if total_cost > user_data.gold:
+            await ctx.release()
+
+            return await msg.edit(
+                embed=embeds.error_embed(
+                    title="Insufficient gold coins!",
+                    text=(
+                        f"**You are missing {total_cost - user_data.gold} "
+                        f"{self.bot.gold_emoji} for this purchase!** "
+                        "I just smashed the piggy and there were no coins "
+                        "left too! No, not the pig! \ud83d\udc37 "
+                        "The piggy bank!\n "
+                    ),
+                    footer=f"You have a total of {user_data.gold} gold coins",
+                    ctx=ctx
+                )
+            )
+
+        query = """
+                SELECT sum(fields_used)
+                FROM farm WHERE user_id = $1;
+                """
+
+        used_fields = await conn.fetchval(query, ctx.author.id) or 0
+
+        total_slots = ctx.user_data.farm_slots
+        if slots_boost:
+            total_slots += 2
+        available_slots = total_slots - used_fields
+
+        if available_slots < amount:
+            await ctx.release()
+
+            return await msg.edit(
+                embed=embeds.error_embed(
+                    title="Not enough farm space!",
+                    text=(
+                        f"**Currently you are already using {used_fields} of "
+                        f"your {total_slots} farm space tiles**!\n"
+                        "I'm sorry to say, but there is no more space for "
+                        f"**{amount}x {item.emoji} {item_name_capitalized}**."
+                        "\n\nWhat you can do about this:\na) Wait for "
+                        "your currently planted items to grow and harvest them"
+                        " \nb) Upgrade your farm size if you have gems "
+                        f"with **{ctx.prefix}upgrade farm**"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        iterations = None
+        if isinstance(item, game_items.ReplantableItem):
+            iterations = item.iterations
+
+        transaction = conn.transaction()
+        await transaction.start()
+
+        try:
+            query = """
+                    INSERT INTO farm
+                    (user_id, item_id, amount, iterations, fields_used,
+                    ends, dies, cat_boost)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+                    """
+
+            await conn.execute(
+                query,
+                ctx.author.id,
+                item.id,
+                total_items,
+                iterations,
+                amount,
+                datetime.now() + timedelta(seconds=grow_time),
+                datetime.now() + timedelta(seconds=collect_time),
+                cat_boost
+            )
+
+            user_data.gold -= total_cost
+            await ctx.users.update_user(user_data, conn=conn)
+        except Exception:
+            await transaction.rollback()
+            raise
+        else:
+            await transaction.commit()
+
+        await ctx.release()
+
+        await msg.edit(
+            embed=embeds.success_embed(
+                title=(
+                    f"Successfully started growing {item.emoji} "
+                    f"{item_name_capitalized}!"
+                ),
+                text=(
+                    f"Nicely done! **You are now growing {item.emoji} "
+                    f"{item_name_capitalized}!** \ud83e\udd20\n"
+                    f"You will be able to collect it in: **{grow_time_str}**. "
+                    "Just remember to harvest in time, because you will only "
+                    f"have limited time to do so... (**{coll_time_str}**)"
+                ),
+                footer="Check out your farm field with the \"farm\" command",
+                ctx=ctx
+            )
+        )
 
     @commands.command()
     @checks.has_account()
