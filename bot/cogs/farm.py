@@ -459,7 +459,7 @@ class Farm(commands.Cog):
         cat_boost = "cat" in [x.id for x in boosts]
 
         conn = await ctx.acquire()
-        # Refetch user data, because user could have no money after the prompt
+        # Refetch user data, because user could have no money after prompt
         user_data = await ctx.users.get_user(ctx.author.id, conn=conn)
 
         if total_cost > user_data.gold:
@@ -574,13 +574,97 @@ class Farm(commands.Cog):
         """
         \ud83e\uddf9 Clear your farm field
 
-        Removes ALL of your planted items from your farm field for some gold.
-        This command is useful if you planted something by accident and you
-        want to get rid of those items, because they take up your farm field
-        space. These items WILL NOT be moved to your inventory and WILL BE
-        LOST without any compensation, so be careful with this feature.
+        Removes ALL of your planted items from your farm field for some small
+        gold price. This command is useful if you planted something by accident
+        and you want to get rid of those items, because they take up your farm
+        field space. These items WILL NOT be moved to your inventory and WILL
+        BE LOST without any compensation, so be careful with this feature.
         """
-        raise NotImplementedError()
+        field_data = await ctx.user_data.get_farm_field(ctx)
+
+        if not field_data:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="You are not growing anything!",
+                    text=(
+                        "Hmmm... This is weird. So you are telling me, that "
+                        "you want to clear your farm field, but you are not "
+                        "even growing anything? \ud83e\udd14"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        total_cost, total_fields = 0, 0
+        for data in field_data:
+            item = ctx.items.find_item_by_id(data['item_id'])
+
+            fields_used = data['fields_used']
+            total_cost += item.gold_price * fields_used
+            total_fields += fields_used
+
+        # 5% of total
+        total_cost = int(total_cost / 20) or 1
+
+        embed = embeds.prompt_embed(
+            title="Are you sure that you want to clear your field?",
+            text=(
+                f"\u26a0\ufe0f **You are about to lose ALL ({total_fields}) "
+                "of your  currently growing items on farm field!**\nAnd they "
+                "are NOT going to be refunded, neither moved to your "
+                f"inventory. And this is going to cost extra **{total_cost}** "
+                f"{self.bot.gold_emoji}! Let's do this? \ud83e\udd14"
+            ),
+            ctx=ctx
+        )
+
+        confirm, msg = await pages.ConfirmPrompt(embed=embed).prompt(ctx)
+
+        if not confirm:
+            return
+
+        async with ctx.acquire() as conn:
+            # Refetch user data, because user could have no money after prompt
+            user_data = await ctx.users.get_user(ctx.author.id, conn=conn)
+
+            if total_cost > user_data.gold:
+                return await msg.edit(
+                    embed=embeds.error_embed(
+                        title="Insufficient gold coins!",
+                        text=(
+                            f"**You are missing {total_cost - user_data.gold} "
+                            f"{self.bot.gold_emoji} for this action!**\n "
+                            "It looks like you will just need to harvest "
+                            "those items, if you like it or not. \ud83d\ude44"
+                        ),
+                        footer=(
+                            f"You have a total of {user_data.gold} gold coins"
+                        ),
+                        ctx=ctx
+                    )
+                )
+
+            query = """
+                    DELETE FROM farm
+                    WHERE user_id = $1;
+                    """
+
+            await conn.execute(query, ctx.author.id)
+
+            user_data.gold -= total_cost
+            await ctx.users.update_user(user_data, conn=conn)
+
+        await ctx.reply(
+            embed=embeds.success_embed(
+                title="Farm field cleared!",
+                text=(
+                    "Okey, I sent some or my workers to clear up "
+                    "the farm for you! \ud83e\uddf9"
+                ),
+                footer="Your farm field items have been discarded",
+                ctx=ctx
+            )
+        )
 
     @commands.command()
     @checks.has_account()

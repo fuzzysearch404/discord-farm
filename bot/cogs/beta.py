@@ -28,6 +28,24 @@ class Beta(commands.Cog, command_attrs={"hidden": True}):
         b = game_items.ObtainedBoost("dog_1", datetime.now() + timedelta(seconds=101))
         await ctx.user_data.give_boost(ctx, b)
 
+    @commands.command()
+    @checks.has_account()
+    async def setgold(self, ctx, money: int = 0):
+        ctx.user_data.gold = money
+        await ctx.users.update_user(ctx.user_data)
+
+    @commands.command()
+    @checks.has_account()
+    async def setgems(self, ctx, gems: int = 0):
+        ctx.user_data.gems = gems
+        await ctx.users.update_user(ctx.user_data)
+
+    @commands.command()
+    @checks.has_account()
+    async def setxp(self, ctx, xp: int = 0):
+        ctx.user_data.xp = xp
+        await ctx.users.update_user(ctx.user_data)
+
 
 def setup(bot):
     bot.add_cog(Beta(bot))
