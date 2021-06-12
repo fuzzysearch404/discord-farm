@@ -55,6 +55,9 @@ class GameItem:
     name: str
     amount: int
 
+    def __hash__(self) -> int:
+        return self.id
+
 
 @dataclass
 class PurchasableItem:
@@ -411,7 +414,7 @@ class ItemPool:
         matches = get_close_matches(
             item_name,
             self.all_item_names,
-            cutoff=0.72
+            cutoff=0.65
         )
 
         if not matches:

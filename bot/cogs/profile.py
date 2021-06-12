@@ -200,6 +200,8 @@ class Profile(commands.Cog):
                 nearest_harvest = "\u2705"
 
             free_farm_slots = farm_slots - field_data[1]
+            if free_farm_slots < 0:  # Expired slots booster visual bug fix
+                free_farm_slots = 0
 
         if not nearest_factory:
             nearest_factory = "-"
@@ -938,6 +940,7 @@ class Profile(commands.Cog):
                 name=f"{item.emoji} Produce",
                 value=f"**{ctx.prefix}make {item.name}**"
             )
+            embed.color = discord.Color.from_rgb(113, 204, 39)
 
         if hasattr(item, "image_url"):
             embed.set_thumbnail(url=item.image_url)

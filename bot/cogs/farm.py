@@ -21,6 +21,7 @@ class PlantState(Enum):
 class PlantedFieldItem:
 
     __slots__ = (
+        "id",
         "item",
         "amount",
         "iterations",
@@ -33,6 +34,7 @@ class PlantedFieldItem:
 
     def __init__(
         self,
+        id: int,
         item: game_items.PlantableItem,
         amount: int,
         iterations: int,
@@ -42,6 +44,7 @@ class PlantedFieldItem:
         robbed_fields: int,
         cat_boost: bool
     ) -> None:
+        self.id = id
         self.item = item
         self.amount = amount
         self.iterations = iterations
@@ -99,7 +102,7 @@ class FarmFieldSource(menus.ListPageSource):
 
         embed = discord.Embed(
             title=f"\ud83c\udf31 {target.nick or target.name}'s farm field",
-            color=discord.Color.green()
+            color=discord.Color.from_rgb(119, 178, 85)
         )
 
         # NOTE: We have different ID prefixes for different item classes.
@@ -143,7 +146,7 @@ class FarmFieldSource(menus.ListPageSource):
                 delta_secs = (plant.ends - datetime.now()).total_seconds()
                 state = f"Growing: {time.seconds_to_time(delta_secs)}"
             elif plant.state == PlantState.COLLECTABLE and not plant.cat_boost:
-                delta_secs = (plant.dies - plant.ends).total_seconds()
+                delta_secs = (plant.dies - datetime.now()).total_seconds()
                 time_fmt = time.seconds_to_time(delta_secs)
 
                 if isinstance(plant.item, game_items.ReplantableItem):
@@ -166,8 +169,8 @@ class FarmFieldSource(menus.ListPageSource):
             elif isinstance(item, game_items.Tree):
                 fmt += (
                     f"{item.emoji} **{item.name.capitalize()} "
-                    f"(x{plant.amount} {item.emoji})** "
-                    f"- {state} (**{plant.iterations}.lvl**)"
+                    f"x{plant.amount}** - {state} "
+                    f"(**{plant.iterations}.lvl**)"
                 )
             else:
                 fmt += (
@@ -215,6 +218,7 @@ class Farm(commands.Cog):
 
             plant = PlantedFieldItem(
                 item=item,
+                id=row['id'],
                 amount=row['amount'],
                 iterations=row['iterations'],
                 fields_used=row['fields_used'],
@@ -227,6 +231,35 @@ class Farm(commands.Cog):
             parsed.append(plant)
 
         return parsed
+
+    async def get_item_mods(
+            self,
+            ctx,
+            item: game_items.GameItem,
+            conn=None
+            ) -> tuple:
+        grow_time = item.grow_time
+        collect_time = item.collect_time
+        base_volume = item.amount
+
+        mods = await ctx.user_data.get_item_modification(
+            ctx,
+            item.id,
+            conn=conn
+        )
+        if mods:
+            time1_mod = mods['time1']
+            time2_mod = mods['time2']
+            vol_mod = mods['volume']
+
+            if time1_mod:
+                grow_time = modifications.get_growing_time(item, time1_mod)
+            if time2_mod:
+                collect_time = modifications.get_harvest_time(item, time2_mod)
+            if vol_mod:
+                base_volume = modifications.get_volume(item, vol_mod)
+
+        return grow_time, collect_time, base_volume
 
     @commands.command(aliases=["field", "f"])
     @checks.has_account()
@@ -269,7 +302,7 @@ class Farm(commands.Cog):
 
         if not field_data:
             if not member:
-                error_title = "You have not planted anything on your field!"
+                error_title = "You haven't planted anything on your field!"
             else:
                 error_title = (
                     f"Nope, {member} has not planted anything on their field!"
@@ -310,6 +343,17 @@ class Farm(commands.Cog):
 
         await paginator.start(ctx)
 
+    def group_plants(self, plants: list) -> dict:
+        grouped = {}
+
+        for plant in plants:
+            try:
+                grouped[plant.item] += plant.amount
+            except KeyError:
+                grouped[plant.item] = plant.amount
+
+        return grouped
+
     @commands.command(aliases=["harv", "h"])
     @checks.has_account()
     @checks.avoid_maintenance()
@@ -324,26 +368,207 @@ class Farm(commands.Cog):
         To check what you are currenly growing and if you can
         harvest anything, check out "{prefix}`farm`" command.
         """
-        raise NotImplementedError()
+        conn = await ctx.acquire()
+        field_data = await ctx.user_data.get_farm_field(ctx, conn=conn)
+
+        if not field_data:
+            await ctx.release()
+
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="You haven't planted anything on your field!",
+                    text=(
+                        "Hmmm... There is literally nothing to harvest, "
+                        "because you did not even plant anything. \ud83e\udd14"
+                        "\nPlant items on the field with the "
+                        f"**{ctx.prefix}plant** command \ud83c\udf31"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        field_parsed = self.parse_db_rows_to_plant_data_classes(field_data)
+
+        to_harvest, to_update, to_discard = [], [], []
+
+        for plant in field_parsed:
+            if plant.iterations and plant.iterations > 1:
+                if plant.is_harvestable or self.bot.field_guard \
+                        and plant.state == PlantState.ROTTEN:
+                    to_update.append(plant)
+                elif plant.state == PlantState.ROTTEN:
+                    to_discard.append(plant)
+            else:
+                if plant.is_harvestable or self.bot.field_guard \
+                        and plant.state == PlantState.ROTTEN:
+                    to_harvest.append(plant)
+                elif plant.state == PlantState.ROTTEN:
+                    to_discard.append(plant)
+
+        if not (to_harvest or to_update or to_discard):
+            await ctx.release()
+
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="Your items are still growing! \ud83c\udf31",
+                    text=(
+                        "Be patient! Your items are growing! Soon we will "
+                        "get that huge harvest! \ud83d\udc68\u200d\ud83c\udf3e"
+                        "\nCheck out your remaining item growing times with "
+                        f"the **{ctx.prefix}farm** command. \n"
+                        "But don't get too relaxed, because you will have a "
+                        "limited time to harvest your items. \u23f0"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        to_reward, xp_gain = [], 0
+
+        async with conn.transaction():
+            if to_update:
+                update_rows = []
+
+                for plant in to_update:
+                    item_mods = await self.get_item_mods(
+                        ctx,
+                        plant.item,
+                        conn=conn
+                    )
+                    grow_time = item_mods[0]
+                    collect_time = item_mods[1]
+                    base_volume = item_mods[2]
+
+                    ends = datetime.now() + timedelta(seconds=grow_time)
+                    dies = ends + timedelta(seconds=collect_time)
+                    amount = base_volume * plant.fields_used
+
+                    update_rows.append((ends, dies, amount, plant.id))
+                    to_reward.append((plant.item.id, plant.amount))
+                    xp_gain += plant.item.xp * plant.amount
+
+                query = """
+                        UPDATE farm
+                        SET ends = $1, dies = $2,
+                        amount = $3, iterations = iterations - 1,
+                        robbed_fields = 0
+                        WHERE id = $4;
+                        """
+
+                await conn.executemany(query, update_rows)
+
+            delete_rows = []
+
+            for plant in to_harvest:
+                delete_rows.append((plant.id, ))
+                to_reward.append((plant.item.id, plant.amount))
+                xp_gain += plant.item.xp * plant.amount
+            for plant in to_discard:
+                delete_rows.append((plant.id, ))
+
+            if delete_rows:
+                query = """
+                        DELETE from farm
+                        WHERE id = $1;
+                        """
+                await conn.executemany(query, delete_rows)
+
+            if to_reward:
+                await ctx.user_data.give_items(ctx, to_reward, conn=conn)
+
+            await ctx.user_data.give_xp_and_level_up(ctx, xp_gain)
+            await ctx.users.update_user(ctx.user_data, conn=conn)
+
+        await ctx.release()
+
+        to_harvest.extend(to_update)
+        harvested = self.group_plants(to_harvest)
+        updated = self.group_plants(to_update)
+        discarded = self.group_plants(to_discard)
+
+        if discarded and not(harvested or updated):
+            fmt = ""
+            for item, amount in discarded.items():
+                fmt += f"{amount}x {item.emoji} {item.name.capitalize()}, "
+
+            await ctx.reply(
+                embed=embeds.error_embed(
+                    title="Oh no! Your items are gone!",
+                    text=(
+                        "You missed your chance to harvest your items "
+                        f"on time, so your items: **{fmt[:-2]}** got rotten! "
+                        "\ud83d\ude22\nPlease be more careful next time and "
+                        f"follow the timers with **{ctx.prefix}farm** command."
+                    ),
+                    footer=(
+                        "All rotten items have been removed from your "
+                        "farm \u267b\ufe0f"
+                    ),
+                    ctx=ctx
+                )
+            )
+        else:
+            fmt = (
+                "\ud83e\udd20 **You successfully harvested your farm field!**"
+                "\n\ud83d\ude9c You harvested: **"
+            )
+
+            for item, amount in harvested.items():
+                fmt += f"{item.emoji} {item.name.capitalize()} x{amount}, "
+
+            fmt = fmt[:-2] + "**"
+
+            if updated:
+                fmt += (
+                    "\n\ud83d\udd01 Some items are now "
+                    "growing their next cycle: "
+                )
+
+                for item, amount in updated.items():
+                    fmt += f"{item.emoji}, "
+
+                fmt = fmt[:-2]
+
+            if discarded:
+                fmt += (
+                    "\n\n\u267b\ufe0f But some items got rotten and "
+                    "had to be discarded: **"
+                )
+
+                for item, amount in discarded.items():
+                    fmt += f"{item.emoji} {item.name.capitalize()} x{amount}, "
+
+                fmt = fmt[:-2] + "** \ud83d\ude10"
+
+            fmt += f"\n\nAnd you received: **+{xp_gain}** {self.bot.xp_emoji}"
+
+            embed = embeds.success_embed(
+                title="You harvested your farm! Awesome!",
+                text=fmt,
+                footer="Harvested items are now moved to your inventory",
+                ctx=ctx
+            )
+
+            await ctx.reply(embed=embed)
 
     @commands.command(aliases=["p", "grow", "g"])
     @checks.has_account()
     @checks.avoid_maintenance()
-    async def plant(self, ctx, *, item: ItemAndAmount, amount: int = 1):
+    async def plant(self, ctx, *, item: ItemAndAmount, tiles: int = 1):
         """
         \ud83c\udf31 Plants crops and trees, grows animals on your farm field
 
         __Arguments__:
         `item` - item to lookup for planting/growing (item's name or ID)
         __Optional arguments__:
-        `amount` - specify how many items to plant/grow
+        `tiles` - specify how many farm tiles to use for planting/growing
 
         __Usage examples__:
-        {prefix} `plant lettuce 2` - plant 2 lettuce items
-        {prefix} `plant 1 2` - plant 2 lettuce items (by using item's ID)
-        {prefix} `plant 1` - plant 1 lettuce item (no amount)
+        {prefix} `plant lettuce 2` - plant 2 tiles of lettuce items
+        {prefix} `plant 1 2` - plant 2 tiles of lettuce items (by using ID)
+        {prefix} `plant 1` - plant lettuce (single tile)
         """
-        item, amount = item
+        item, tiles = item
         item_name_capitalized = item.name.capitalize()
 
         if not isinstance(item, game_items.PlantableItem):
@@ -354,8 +579,8 @@ class Farm(commands.Cog):
                         "Hey! HEY! YOU! STOP it right there! \ud83d\ude40 "
                         f"You can't just plant {item.emoji} **"
                         f"{item_name_capitalized}** on your farm field! "
-                        "\ud83d\ude33 That's illegal! \ud83e\udd26 "
-                        "Would be cool tho. \ud83e\udd14"
+                        "That's illegal! \ud83d\ude33 "
+                        "It would be cool tho. \ud83e\udd14"
                     ),
                     footer="Check out shop to discover plantable items",
                     ctx=ctx
@@ -379,30 +604,18 @@ class Farm(commands.Cog):
                 )
             )
 
-        grow_time = item.grow_time
-        collect_time = item.collect_time
-        base_volume = item.amount
+        item_mods = await self.get_item_mods(ctx, item)
+        grow_time = item_mods[0]
+        collect_time = item_mods[1]
+        base_volume = item_mods[2]
 
-        mods = await ctx.user_data.get_item_modification(ctx, item.id)
-        if mods:
-            time1_mod = mods['time1']
-            time2_mod = mods['time2']
-            vol_mod = mods['volume']
-
-            if time1_mod:
-                grow_time = modifications.get_growing_time(item, time1_mod)
-            if time2_mod:
-                collect_time = modifications.get_harvest_time(item, time2_mod)
-            if vol_mod:
-                base_volume = modifications.get_volume(item, vol_mod)
-
-        total_cost = amount * item.gold_price
-        total_items = amount * base_volume
+        total_cost = tiles * item.gold_price
+        total_items = tiles * base_volume
 
         embed = embeds.prompt_embed(
             title=(
-                f"Are you really going to grow {amount}x "
-                f"{item.emoji} {item_name_capitalized}?"
+                f"Are you really going to grow {tiles}x "
+                f"tiles of {item.emoji} {item_name_capitalized}?"
             ),
             text=(
                 "Check out these details and let me know if you approve"
@@ -415,7 +628,7 @@ class Farm(commands.Cog):
         )
         embed.add_field(
             name="\u2696\ufe0f Quantity",
-            value=amount
+            value=tiles
         )
         embed.add_field(
             name="\ud83d\udcb0 Total costs",
@@ -492,7 +705,7 @@ class Farm(commands.Cog):
             total_slots += 2
         available_slots = total_slots - used_fields
 
-        if available_slots < amount:
+        if available_slots < tiles:
             await ctx.release()
 
             return await msg.edit(
@@ -502,7 +715,7 @@ class Farm(commands.Cog):
                         f"**Currently you are already using {used_fields} of "
                         f"your {total_slots} farm space tiles**!\n"
                         "I'm sorry to say, but there is no more space for "
-                        f"**{amount}x {item.emoji} {item_name_capitalized}**."
+                        f"**{tiles}x {item.emoji} {item_name_capitalized}**."
                         "\n\nWhat you can do about this:\na) Wait for "
                         "your currently planted items to grow and harvest them"
                         " \nb) Upgrade your farm size if you have gems "
@@ -527,15 +740,16 @@ class Farm(commands.Cog):
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
                     """
 
+            ends = datetime.now() + timedelta(seconds=grow_time)
             await conn.execute(
                 query,
                 ctx.author.id,
                 item.id,
                 total_items,
                 iterations,
-                amount,
-                datetime.now() + timedelta(seconds=grow_time),
-                datetime.now() + timedelta(seconds=collect_time),
+                tiles,
+                ends,
+                ends + timedelta(seconds=collect_time),
                 cat_boost
             )
 
