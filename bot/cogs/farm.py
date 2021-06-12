@@ -1,5 +1,7 @@
 import discord
+import random
 from datetime import datetime, timedelta
+from contextlib import suppress
 from enum import Enum
 from discord.ext import commands, menus
 
@@ -71,11 +73,6 @@ class PlantedFieldItem:
 
         return state == PlantState.COLLECTABLE or \
             state == PlantState.ROTTEN and self.cat_boost
-
-    @property
-    def is_robbable(self) -> bool:
-        return self.state == PlantState.COLLECTABLE and \
-            self.robbed_fields < self.fields_used
 
 
 class FarmFieldSource(menus.ListPageSource):
@@ -540,7 +537,7 @@ class Farm(commands.Cog):
 
                 fmt = fmt[:-2] + "** \ud83d\ude10"
 
-            fmt += f"\n\nAnd you received: **+{xp_gain}** {self.bot.xp_emoji}"
+            fmt += f"\n\nAnd you received: **+{xp_gain} XP** {self.bot.xp_emoji}"
 
             embed = embeds.success_embed(
                 title="You harvested your farm! Awesome!",
@@ -895,7 +892,7 @@ class Farm(commands.Cog):
     @commands.command(aliases=["rob", "loot"])
     @checks.has_account()
     @checks.avoid_maintenance()
-    async def steal(self, ctx, user: discord.Member):
+    async def steal(self, ctx, target: discord.Member):
         """
         \ud83d\udd75\ufe0f Try to steal someone's farm field's items
 
@@ -912,12 +909,212 @@ class Farm(commands.Cog):
         Already robbed items can't be robbed again.
 
         __Arguments__:
-        `member` - some user in your server (tagged user or user's ID)
+        `target` - some user in your server (tagged user or user's ID)
 
         __Usage examples__:
         {prefix} `steal @user` - steal user's farm's items
         """
-        raise NotImplementedError()  # TODO: inner cooldown
+        if target == ctx.author:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="You can't steal from yourself!",
+                    text="Silly you! Why would you ever do this? \ud83e\udd78",
+                    ctx=ctx
+                )
+            )
+
+        target_user = await checks.get_other_member(ctx, target)
+
+        cooldown = await checks.get_user_cooldown(ctx, "recent_steal")
+        if cooldown:
+            cd_timer = time.seconds_to_time(cooldown)
+
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="You are way too suspicious! \ud83e\udd2b",
+                    text=(
+                        "You recently already attempted something like this, "
+                        f"so we have to wait for **{cd_timer}**, or they will "
+                        "call the police just because of "
+                        "seeing you there! \ud83d\ude94"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        await checks.set_user_cooldown(ctx, 900, "recent_steal")
+
+        async with ctx.acquire() as conn:
+            target_data = await checks.get_other_member(ctx, target, conn=conn)
+
+            query = """
+                    SELECT * FROM farm
+                    WHERE ends < $1 AND dies > $1
+                    AND robbed_fields < fields_used
+                    AND user_id = $2;
+                    """
+            target_field = await conn.fetch(query, datetime.now(), target.id)
+
+        if not target_field:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title=(
+                        f"{target.nick or target.name} currently has "
+                        "nothing to steal from!"
+                    ),
+                    text=(
+                        "Oh no! They don't have any collectable harvest! "
+                        "They most likely saw us walking in their farm, "
+                        "so must hide behind this tree for a few minutes "
+                        "\ud83d\udc49\ud83c\udf33. If they will ask "
+                        "something - I don't know you. \ud83e\udd2b"
+                    ),
+                    footer=(
+                        "The target user must have items ready to harvest "
+                        "and they must not be already robbed from by "
+                        "you or anyone else"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        cought_chance, cought = 0, False
+        target_boosts = await target_data.get_all_boosts(ctx)
+        if target_boosts:
+            boost_ids = [x.id for x in target_boosts]
+
+            if "dog_3" in boost_ids:
+                return await ctx.reply(
+                    embed=embeds.error_embed(
+                        title="Harvest stealing attempt failed!",
+                        text=(
+                            "I went in there and I ran away as fast, as "
+                            "I could, because they have a **HUGE** dog out "
+                            "there! \ud83d\udc15 Better to be safe, than "
+                            "sorry. \ud83d\ude13"
+                        ),
+                        ctx=ctx
+                    )
+                )
+            elif "dog_2" in boost_ids:
+                cought_chance = 4
+            elif "dog_1" in boost_ids:
+                cought_chance = 8
+
+        field, rewards = [], {}
+
+        for data in target_field:
+            for _ in range(data['fields_used'] - data['robbed_fields']):
+                field.append(data)
+
+        while len(field) > 0:
+            current = random.choice(field)
+            field.remove(current)
+
+            if cought_chance and random.randint(1, cought_chance) == 1:
+                cought = True
+                break
+
+            try:
+                rewards[current] += 1
+            except KeyError:
+                rewards[current] = 1
+
+        won_items_and_amounts = {}
+        if len(rewards) > 0:
+            to_update, to_reward = [], []
+
+            for data, field_count in rewards.items():
+                item = ctx.items.find_item_by_id(data['item_id'])
+                win_amount = int((item.amount * field_count) * 0.2) or 1
+
+                # For response to user
+                try:
+                    won_items_and_amounts[item] += win_amount
+                except KeyError:
+                    won_items_and_amounts[item] = win_amount
+
+                to_update.append((win_amount, field_count, data['id']))
+                to_reward.append((data['item_id'], win_amount))
+
+            async with ctx.acquire() as conn:
+                async with conn.transaction():
+                    query = """
+                            UPDATE farm
+                            SET amount = amount - $1,
+                            robbed_fields = robbed_fields + $2
+                            WHERE id = $3;
+                            """
+
+                    await conn.executemany(query, to_update)
+                    await ctx.user_data.give_items(ctx, to_reward, conn=conn)
+
+            fmt = ""
+            for item, amount in won_items_and_amounts.items():
+                fmt += f"{item.emoji} {item.name.capitalize()} x{amount}, "
+
+            fmt = fmt[:-2]
+            if target_user.notifications:
+                with suppress(discord.HTTPException):
+                    await target.send(
+                        embed=embeds.error_embed(
+                            title=(
+                                f"{ctx.author} managed to steal items from "
+                                "your farm! \ud83d\udd75\ufe0f"
+                            ),
+                            text=(
+                                "Hey boss! \ud83d\udc4b\nI am sorry to say, "
+                                f"but someone named \"{ctx.author}\" managed "
+                                f"to grab some items from your farm: **{fmt}**"
+                                "!\n\ud83d\udca1Next time be a bit faster to "
+                                "harvest your farm or buy a dog booster for "
+                                "some protection!"
+                            ),
+                            private=True,
+                            ctx=ctx
+                        )
+                    )
+
+            if cought:
+                return await ctx.reply(
+                    embed=embeds.success_embed(
+                        title="Nice attempt, but...",
+                        text=(
+                            f"Okey, so I went in and grabbed these: **{fmt}**!"
+                            " But the dog saw me and I had to run, so I did "
+                            "not get all the items! I'm glad that we got away "
+                            "with atleast something. \ud83c\udfc3\ud83d\udc29"
+                        ),
+                        ctx=ctx
+                    )
+                )
+            else:
+                return await ctx.reply(
+                    embed=embeds.congratulations_embed(
+                        title="We did it! Jackpot!",
+                        text=(
+                            f"We managed to get a bit from all the harvest "
+                            f"{target.nick or target.name} had: **{fmt}** "
+                            "\ud83d\udd75\ufe0f\nNow you should better "
+                            "watch out from them, because they won't be "
+                            "happy about this! \ud83d\ude2c"
+                        ),
+                        ctx=ctx
+                    )
+                )
+
+        await ctx.reply(
+            embed=embeds.error_embed(
+                title="We got cought! \ud83d\ude1e",
+                text=(
+                    f"Oh no! Oh no no no! {target.nick or target.name} had "
+                    "a dog and I got cought! \ud83d\ude2b\n"
+                    "Now my ass hurts real bad! But we can try again "
+                    "some other time. It was fun! \ud83d\ude05"
+                ),
+                ctx=ctx
+            )
+        )
 
 
 def setup(bot):

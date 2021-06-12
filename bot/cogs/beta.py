@@ -25,7 +25,7 @@ class Beta(commands.Cog, command_attrs={"hidden": True}):
         await ctx.user_data.give_boost(ctx, b)
         b = game_items.ObtainedBoost("cat", datetime.now() + timedelta(seconds=10))
         await ctx.user_data.give_boost(ctx, b)
-        b = game_items.ObtainedBoost("dog_1", datetime.now() + timedelta(seconds=101))
+        b = game_items.ObtainedBoost("dog_3", datetime.now() + timedelta(seconds=30))
         await ctx.user_data.give_boost(ctx, b)
 
     @commands.command()
