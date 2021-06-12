@@ -885,9 +885,74 @@ class Farm(commands.Cog):
         \ud83c\udfa3 [Unlocks from level 17] Go fishing!
 
         You can catch random amount of fish once per hour.
-        Sometimes your luck can be bad, and you might not get any fish.
+        Sometimes your luck can be bad, and you might not get any fish at all.
         """
-        raise NotImplementedError()  # TODO: inner cooldown - 3600
+        if ctx.user_data.level < 17:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title=(
+                        "\ud83d\udd12Fishing unlocks from experience "
+                        "level 17!"
+                    ),
+                    text=(
+                        "Sorry buddy, you don't have the "
+                        "license for fishing yet! \ud83c\udfa3"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        cooldown = await checks.get_user_cooldown(ctx, "recent_fishing")
+        if cooldown:
+            cd_timer = time.seconds_to_time(cooldown)
+
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="Searching for lures! \ud83e\udeb1",
+                    text=(
+                        "Emmm... I am digging for some worms for new lures. "
+                        f"Could you please come again in: **{cd_timer}**? "
+                        "\ud83e\ude9d"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        await checks.set_user_cooldown(ctx, 3600, "recent_fishing")
+
+        limits = [5, 10, 20, 30, 40]
+        weights = [12, 10, 5, 2, 1]
+
+        limit = random.choices(population=limits, weights=weights, k=1)
+        win_amount = random.randint(0, limit[0])
+
+        if win_amount == 0:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="Unlucky! \ud83e\ude9d",
+                    text=(
+                        f"You went to a {limit[0]} hour long fishing session "
+                        "and could not catch a single fish... \ud83d\ude14 "
+                        "No worries! Hopefully you will have a "
+                        "better luck next time! \ud83d\ude09"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        # ID 600 - Fish item
+        await ctx.user_data.give_item(ctx, 600, win_amount)
+
+        await ctx.reply(
+            embed=embeds.congratulations_embed(
+                title="You successfully cought some fish! \ud83c\udfa3",
+                text=(
+                    "That's some nice catch! \ud83e\udd29 "
+                    f"You cought: **{win_amount}x** \ud83d\udc1f"
+                ),
+                ctx=ctx
+            )
+        )
 
     @commands.command(aliases=["rob", "loot"])
     @checks.has_account()
