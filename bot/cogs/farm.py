@@ -83,8 +83,7 @@ class FarmFieldSource(menus.ListPageSource):
         used_slots: int,
         total_slots: int,
         has_slots_boost: bool,
-        farm_guard: int,
-        tile_emoji: str
+        farm_guard: int
     ):
         super().__init__(entries, per_page=12)
         self.target = target_user
@@ -92,7 +91,6 @@ class FarmFieldSource(menus.ListPageSource):
         self.total_slots = total_slots
         self.has_slots_boost = has_slots_boost
         self.farm_guard = farm_guard
-        self.tile_emoji = tile_emoji
 
     async def format_page(self, menu, page):
         target = self.target
@@ -116,7 +114,7 @@ class FarmFieldSource(menus.ListPageSource):
             total_slots = f"**{self.total_slots + 2}** \ud83d\udc39"
 
         header = (
-            f"{self.tile_emoji} Farm's used space tiles: "
+            f"{menu.bot.tile_emoji} Farm's used space tiles: "
             f"{self.used_slots}/{total_slots}\n"
         )
 
@@ -229,35 +227,6 @@ class Farm(commands.Cog):
 
         return parsed
 
-    async def get_item_mods(
-            self,
-            ctx,
-            item: game_items.GameItem,
-            conn=None
-            ) -> tuple:
-        grow_time = item.grow_time
-        collect_time = item.collect_time
-        base_volume = item.amount
-
-        mods = await ctx.user_data.get_item_modification(
-            ctx,
-            item.id,
-            conn=conn
-        )
-        if mods:
-            time1_mod = mods['time1']
-            time2_mod = mods['time2']
-            vol_mod = mods['volume']
-
-            if time1_mod:
-                grow_time = modifications.get_growing_time(item, time1_mod)
-            if time2_mod:
-                collect_time = modifications.get_harvest_time(item, time2_mod)
-            if vol_mod:
-                base_volume = modifications.get_volume(item, vol_mod)
-
-        return grow_time, collect_time, base_volume
-
     @commands.command(aliases=["field", "f"])
     @checks.has_account()
     @checks.avoid_maintenance()
@@ -333,8 +302,7 @@ class Farm(commands.Cog):
                 used_fields,
                 user.farm_slots,
                 has_slots_boost,
-                field_guard,
-                self.bot.tile_emoji
+                field_guard
             )
         )
 
@@ -427,7 +395,7 @@ class Farm(commands.Cog):
                 update_rows = []
 
                 for plant in to_update:
-                    item_mods = await self.get_item_mods(
+                    item_mods = await modifications.get_item_mods(
                         ctx,
                         plant.item,
                         conn=conn
@@ -601,7 +569,7 @@ class Farm(commands.Cog):
                 )
             )
 
-        item_mods = await self.get_item_mods(ctx, item)
+        item_mods = await modifications.get_item_mods(ctx, item)
         grow_time = item_mods[0]
         collect_time = item_mods[1]
         base_volume = item_mods[2]
@@ -778,7 +746,7 @@ class Farm(commands.Cog):
             )
         )
 
-    @commands.command()
+    @commands.command(aliases=["clean"])
     @checks.has_account()
     @checks.avoid_maintenance()
     async def clear(self, ctx):

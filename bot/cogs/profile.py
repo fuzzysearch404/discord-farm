@@ -15,16 +15,18 @@ from .utils import converters
 
 
 class InventorySource(menus.ListPageSource):
-    def __init__(self, entries, inv_emoji: str, target_user: discord.Member):
+    def __init__(self, entries, target_user: discord.Member):
         super().__init__(entries, per_page=30)
-        self.emoji = inv_emoji
         self.target = target_user
 
     async def format_page(self, menu, page):
         target = self.target
 
         embed = discord.Embed(
-            title=f"{self.emoji} {target.nick or target.name}'s warehouse",
+            title=(
+                f"{menu.bot.warehouse_emoji} "
+                f"{target.nick or target.name}'s warehouse"
+            ),
             color=discord.Color.from_rgb(234, 231, 231)
         )
 
@@ -341,11 +343,7 @@ class Profile(commands.Cog):
             items_and_amounts.append(item_and_amt)
 
         paginator = pages.MenuPages(
-            source=InventorySource(
-                items_and_amounts,
-                self.bot.warehouse_emoji,
-                target_user
-            )
+            source=InventorySource(items_and_amounts, target_user)
         )
 
         await paginator.start(ctx)

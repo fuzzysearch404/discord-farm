@@ -386,7 +386,12 @@ class ItemPool:
         "all_chests",
         "items_per_id",
         "items_per_name",
-        "all_item_names"
+        "all_item_names",
+        "all_crops",
+        "all_trees",
+        "all_animals",
+        "all_products",
+        "all_specials"
     )
 
     def __init__(
@@ -401,6 +406,11 @@ class ItemPool:
         self.items_per_id = self._group_items_per_id()
         self.items_per_name = self._group_items_per_name()
         self.all_item_names = list(self.items_per_name.keys())
+        self.all_crops = self._list_items_per_class(Crop)
+        self.all_trees = self._list_items_per_class(Tree)
+        self.all_animals = self._list_items_per_class(Animal)
+        self.all_products = self._list_items_per_class(Product)
+        self.all_specials = self._list_items_per_class(Special)
 
     def find_item_by_id(self, item_id: int) -> GameItem:
         try:
@@ -496,6 +506,9 @@ class ItemPool:
             items_per_name[item.name] = item
 
         return items_per_name
+
+    def _list_items_per_class(self, item_class) -> list:
+        return [x for x in self.all_items if isinstance(x, item_class)]
 
     def get_random_rewards(
         self,
