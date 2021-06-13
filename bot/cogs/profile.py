@@ -581,7 +581,8 @@ class Profile(commands.Cog):
         """
         \u2b06 Lists your or someone else's boosters
 
-        Boosters speed up your overall game progression in various ways.
+        Boosters speed up your overall game progression in various ways
+        or alters your gameplay.
 
         __Optional arguments__:
         `member` - some user in your server. (tagged user or user's ID)
@@ -612,7 +613,7 @@ class Profile(commands.Cog):
                     title=error_title,
                     text=(
                         "\u2b06\ufe0f Purchase boosters with the "
-                        f"**{ctx.prefix}boost** command"
+                        f"**{ctx.prefix}shop boosters** command"
                     ),
                     ctx=ctx
                 )
@@ -623,7 +624,7 @@ class Profile(commands.Cog):
             color=discord.Color.from_rgb(39, 128, 184),
             description=(
                 "\ud83d\udecd\ufe0f Purchase boosters with the "
-                f"**{ctx.prefix}boost** command"
+                f"**{ctx.prefix}shop boosters** command"
             )
         )
 

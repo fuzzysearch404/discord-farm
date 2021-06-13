@@ -108,3 +108,18 @@ def prompt_embed(
         footer=footer,
         private=private
     )
+
+
+def no_money_embed(ctx, user_data, cost: int) -> Embed:
+    return error_embed(
+        title="Insufficient gold coins!",
+        text=(
+            f"**You are missing {cost - user_data.gold} "
+            f"{ctx.bot.gold_emoji} for this purchase!** "
+            "I just smashed the piggy and there were no coins "
+            "left too! No, not the pig! \ud83d\udc37 "
+            "The piggy bank!\n "
+        ),
+        footer=f"You have a total of {user_data.gold} gold coins",
+        ctx=ctx
+    )

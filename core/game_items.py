@@ -318,6 +318,7 @@ class Boost:
     __slots__ = (
         "id",
         "name",
+        "info",
         "emoji",
         "base_price",
         "price_increase_per_farm_slots",
@@ -329,6 +330,7 @@ class Boost:
         self,
         id: str,
         name: str,
+        info: str,
         emoji: str,
         base_price: int,
         price_increase_per_farm_slots: int,
@@ -337,6 +339,7 @@ class Boost:
     ) -> None:
         self.id = id
         self.name = name
+        self.info = info
         self.emoji = emoji
         self.base_price = base_price
         self.price_increase_per_farm_slots = price_increase_per_farm_slots
@@ -446,7 +449,8 @@ class ItemPool:
 
         matches = get_close_matches(
             boost_name,
-            list(boosts_per_name.keys())
+            list(boosts_per_name.keys()),
+            cutoff=0.5
         )
 
         if not matches:
@@ -734,6 +738,7 @@ def _load_boosts() -> list:
             boost = Boost(
                 id=boost_data['id'],
                 name=boost_data['name'],
+                info=boost_data['info'],
                 emoji=boost_data['emoji'],
                 base_price=boost_data['base_price'],
                 price_increase_per_farm_slots=increase_farm_slots,

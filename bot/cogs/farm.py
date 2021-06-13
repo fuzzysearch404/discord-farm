@@ -646,18 +646,7 @@ class Farm(commands.Cog):
             await ctx.release()
 
             return await msg.edit(
-                embed=embeds.error_embed(
-                    title="Insufficient gold coins!",
-                    text=(
-                        f"**You are missing {total_cost - user_data.gold} "
-                        f"{self.bot.gold_emoji} for this purchase!** "
-                        "I just smashed the piggy and there were no coins "
-                        "left too! No, not the pig! \ud83d\udc37 "
-                        "The piggy bank!\n "
-                    ),
-                    footer=f"You have a total of {user_data.gold} gold coins",
-                    ctx=ctx
-                )
+                embed=embeds.no_money_embed(ctx, user_data, total_cost)
             )
 
         query = """
@@ -810,19 +799,7 @@ class Farm(commands.Cog):
 
             if total_cost > user_data.gold:
                 return await msg.edit(
-                    embed=embeds.error_embed(
-                        title="Insufficient gold coins!",
-                        text=(
-                            f"**You are missing {total_cost - user_data.gold} "
-                            f"{self.bot.gold_emoji} for this action!**\n "
-                            "It looks like you will just need to harvest "
-                            "those items, if you like it or not. \ud83d\ude44"
-                        ),
-                        footer=(
-                            f"You have a total of {user_data.gold} gold coins"
-                        ),
-                        ctx=ctx
-                    )
+                    embed=embeds.no_money_embed(ctx, user_data, total_cost)
                 )
 
             query = """

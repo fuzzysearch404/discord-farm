@@ -249,6 +249,14 @@ class Shop(commands.Cog):
             name="\ud83d\udc3d Animals",
             value=f"**{ctx.prefix}shop animal**"
         )
+        embed.add_field(
+            name="\u2b06 Boosters",
+            value=f"**{ctx.prefix}shop boosters**"
+        )
+        embed.add_field(
+            name="\u2b50 Upgrades",
+            value=f"**{ctx.prefix}shop upgrades**"
+        )
         embed.set_footer(text="The shop is split into some subcategories")
 
         await ctx.reply(embed=embed)
@@ -285,7 +293,7 @@ class Shop(commands.Cog):
     @checks.has_account()
     @checks.avoid_maintenance()
     async def shop_animal(self, ctx):
-        """\ud83d\udc3d View current prices for growing animals"""
+        """\ud83d\udc3d View current costs for growing animals"""
         paginator = pages.MenuPages(
             source=ShopSource(
                 entries=ctx.items.all_animals,
@@ -294,6 +302,126 @@ class Shop(commands.Cog):
         )
 
         await paginator.start(ctx)
+
+    @shop.command(name="boosters", aliases=["boosts", "boost"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def shop_boosters(self, ctx):
+        """\u2b06 View booster shop"""
+        embed = discord.Embed(
+            title="\u2b06 Booster shop",
+            description=(
+                "Purchase boosters to speed up your overall game "
+                "progression in various ways \ud83e\uddb8"
+            ),
+            color=discord.Color.from_rgb(39, 128, 184)
+        )
+
+        for boost in ctx.items.all_boosts:
+            embed.add_field(
+                name=f"{boost.emoji} {boost.name}",
+                value=(
+                    f"{boost.info}\n\ud83d\uded2 "
+                    f"**{ctx.prefix}boost {boost.name.lower()}**"
+                )
+            )
+
+        await ctx.reply(embed=embed)
+
+    @commands.command()
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def boost(self, ctx, *, booster: converters.Boost):
+        """
+        \u2b06 Purchase and activate a booster
+
+        For booster types and descriptions,
+        check out command **{prefix}shop boosters**.
+        If you already have a booster active of the same type,
+        buying again is going to extend your previous duration.
+
+        __Arguments__:
+        `booster` - booster to lookup for purchase
+
+        __Usage examples__:
+        {prefix} `boost Leo` - activate "Leo" booster
+        """
+        embed = embeds.prompt_embed(
+            title="Activate booster?",
+            text=(
+                f"\ud83d\uded2 Are you sure that you want to purchase booster "
+                f"**{booster.emoji} {booster.name}**? Confirm, by "
+                "pressing a button with your desired boost duration.\n"
+                "\ud83d\udd59 If you already have this boost active, buying "
+                "again is going to extend your previous duration. "
+            ),
+            ctx=ctx
+        )
+
+        price_one = booster.get_boost_price(
+            game_items.BoostDuration.ONE_DAY, ctx.user_data
+        )
+        embed.add_field(
+            name="1\ufe0f\u20e3 1 day price",
+            value=f"**{price_one}** {self.bot.gold_emoji}"
+        )
+        price_three = booster.get_boost_price(
+            game_items.BoostDuration.THREE_DAYS, ctx.user_data
+        )
+        embed.add_field(
+            name="3\ufe0f\u20e3 3 days price",
+            value=f"**{price_three}** {self.bot.gold_emoji}"
+        )
+        price_seven = booster.get_boost_price(
+            game_items.BoostDuration.SEVEN_DAYS, ctx.user_data
+        )
+        embed.add_field(
+            name="7\ufe0f\u20e3 7 days price",
+            value=f"**{price_seven}** {self.bot.gold_emoji}"
+        )
+
+        duration, msg = await pages.BoostPurchasePrompt(
+            embed=embed).prompt(ctx)
+
+        if not duration:
+            return
+
+        actual_price = booster.get_boost_price(duration, ctx.user_data)
+
+        async with ctx.acquire() as conn:
+            # Refetch user data, because user could have no money after prompt
+            user_data = await ctx.users.get_user(ctx.author.id, conn=conn)
+
+            if actual_price > ctx.user_data.gold:
+                return await msg.edit(
+                    embed=embeds.no_money_embed(ctx, user_data, actual_price)
+                )
+
+            user_data.gold -= actual_price
+            await ctx.users.update_user(user_data, conn=conn)
+
+        obtained_boost = game_items.ObtainedBoost(
+            booster.id, datetime.now() + timedelta(seconds=duration.value)
+        )
+        await ctx.user_data.give_boost(ctx, obtained_boost)
+
+        await msg.edit(
+            embed=embeds.success_embed(
+                title="Booster activated!",
+                text=(
+                    f"You bought **{booster.emoji} {booster.name}** booster! "
+                    "The booster has been activated! Have fun! \ud83e\uddb8"
+                ),
+                ctx=ctx
+            )
+        )
+
+    @shop.command(name="upgrades", aliases=["u"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def shop_upgrades(self, ctx):
+        """\u2b50 View upgrades shop"""
+        pass
 
     @commands.command(aliases=["s"])
     @checks.has_account()

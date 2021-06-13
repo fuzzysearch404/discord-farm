@@ -1,6 +1,8 @@
 import discord
 from discord.ext import menus
 
+from core.game_items import BoostDuration
+
 
 class MenuPages(menus.Menu):
     """
@@ -178,3 +180,42 @@ class ConfirmPromptCoin(ConfirmPrompt):
     async def do_confirm(self, payload):
         self._result = True
         self.stop()
+
+
+class ConfirmPromptGem(ConfirmPrompt):
+
+    @menus.button("<a:gem:722191212706136095>")
+    async def do_confirm(self, payload):
+        self._result = True
+        self.stop()
+
+
+class BoostPurchasePrompt(menus.Menu):
+    def __init__(self, msg: str = None, embed=None):
+        super().__init__(timeout=30.0)
+        self.msg = msg
+        self.embed = embed
+        self._result = None
+
+    async def send_initial_message(self, ctx, channel):
+        return await ctx.reply(self.msg, embed=self.embed)
+
+    @menus.button("1\ufe0f\u20e3")
+    async def do_single_day(self, payload):
+        self._result = BoostDuration.ONE_DAY
+        self.stop()
+
+    @menus.button("3\ufe0f\u20e3")
+    async def do_three_days(self, payload):
+        self._result = BoostDuration.THREE_DAYS
+        self.stop()
+
+    @menus.button("7\ufe0f\u20e3")
+    async def do_seven_days(self, payload):
+        self._result = BoostDuration.SEVEN_DAYS
+        self.stop()
+
+    async def prompt(self, ctx):
+        await self.start(ctx, wait=True)
+
+        return self._result, self.message
