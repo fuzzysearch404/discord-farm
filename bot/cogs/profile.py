@@ -843,7 +843,7 @@ class Profile(commands.Cog):
         )
         embed.add_field(
             name=f"{ctx.bot.xp_emoji} Experience reward",
-            value=f"{item.xp} xp / per item"
+            value=f"{item.xp} xp / per unit"
         )
         if isinstance(item, game_items.PurchasableItem):
             embed.add_field(
@@ -856,14 +856,14 @@ class Profile(commands.Cog):
                 name="\ud83d\uded2 Market price range",
                 value=(
                     f"{item.min_market_price} - {item.max_market_price}"
-                    f" {ctx.bot.gold_emoji} / item"
+                    f" {ctx.bot.gold_emoji} / unit"
                 )
             )
 
         if isinstance(item, game_items.SellableItem):
             embed.add_field(
                 name="\ud83d\udcc8 Current market price",
-                value=f"{item.gold_reward} {ctx.bot.gold_emoji} / per item"
+                value=f"{item.gold_reward} {ctx.bot.gold_emoji} / per unit"
             )
 
         if isinstance(item, game_items.ReplantableItem):
@@ -905,7 +905,7 @@ class Profile(commands.Cog):
 
             embed.add_field(
                 name="\u2696 Harvest volume",
-                value=f"{volume} items"
+                value=f"{volume} units"
             )
             embed.add_field(
                 name="\ud83d\udd70 Growing time",

@@ -5,6 +5,9 @@ from discord.ext import commands, menus
 from .utils import pages
 from .utils import time
 from .utils import checks
+from .utils import embeds
+from .utils import converters
+from core import game_items
 
 
 class MarketSource(menus.ListPageSource):
@@ -32,7 +35,7 @@ class MarketSource(menus.ListPageSource):
             fmt += (
                 f"**{item.emoji} {item.name.capitalize()}** - "
                 f"Buying for: **{item.gold_reward} {menu.bot.gold_emoji} "
-                "/ item** \n\u2696\ufe0f Sell items to market: **"
+                "/ unit** \n\u2696\ufe0f Sell items to market: **"
                 f"{menu.ctx.prefix}sell {item.name}**\n\n"
             )
 
@@ -45,7 +48,7 @@ class MarketSource(menus.ListPageSource):
         embed.set_footer(
             text=(
                 f"Page {menu.current_page + 1}/{self.get_max_pages()} | "
-                "Sell multiple items at a time, by providing amount. For "
+                "Sell multiple units at a time, by providing amount. For "
                 "example: \"sell lettuce 40\"."
             )
         )
@@ -101,7 +104,8 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def market(self, ctx):
         """
-        \ud83d\udecd\ufe0f Access the market to sell items.
+        \ud83d\udecd\ufe0f Access the market to sell items
+
         Market is organized in some subcategories.
         """
         if ctx.invoked_subcommand:
@@ -216,7 +220,8 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def shop(self, ctx):
         """
-        \ud83c\udfea Access the shop to plant items, buy upgrades or boosters.
+        \ud83c\udfea Access the shop to plant items, buy upgrades or boosters
+
         Shop is organized in some subcategories.
         """
         if ctx.invoked_subcommand:
@@ -289,6 +294,136 @@ class Shop(commands.Cog):
         )
 
         await paginator.start(ctx)
+
+    @commands.command(aliases=["s"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def sell(self, ctx, *, item: converters.ItemAndAmount, amount=1):
+        """
+        \u2696\ufe0f Sell your goodies to game's market
+
+        You can only sell your harvest and factory production.
+
+        __Arguments__:
+        `item` - item to lookup for selling (item's name or ID)
+        __Optional arguments__:
+        `amount` - specify how many units to sell
+
+        __Usage examples__:
+        {prefix} `sell lettuce` - sell just a single lettuce item unit
+        {prefix} `sell lettuce 50` - sell fifty lettuce item units
+        {prefix} `sell 1 50` - sell fifty units of lettuce items (by using ID)
+        """
+        item, amount = item
+
+        # Should not happen, but just in case
+        if not isinstance(item, game_items.SellableItem):
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="This item can't be sold!",
+                    text=(
+                        f"Sorry, you can't sell **{item.emoji} "
+                        f"{item.name.capitalize()}** in our market!"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        item_data = await ctx.user_data.get_item(ctx, item.id)
+        if not item_data or item_data['amount'] < amount:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title=f"You don't have enough {item.name}!",
+                    text=(
+                        "Either you don't own or you don't "
+                        f"have enough **({amount}x) {item.emoji} "
+                        f"{item.name.capitalize()} ** in your warehouse!"
+                    ),
+                    footer=(
+                        "Check your warehouse with the \"invenotory\" command"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        total_reward = item.gold_reward * amount
+
+        embed = embeds.prompt_embed(
+            title="Please confirm market deal details",
+            text="So are you selling these items? Let me know if you approve",
+            ctx=ctx
+        )
+        embed.add_field(
+            name="\u2696\ufe0f Item",
+            value=f"{amount}x {item.emoji} {item.name.capitalize()}"
+        )
+        embed.add_field(
+            name=f"{self.bot.gold_emoji} Price per unit",
+            value=item.gold_reward
+        )
+        embed.add_field(
+            name="\ud83d\udcb0 Total earnings",
+            value=f"**{total_reward}** {self.bot.gold_emoji}"
+        )
+        if amount == 1:
+            embed.set_footer(
+                text=(
+                    "\ud83d\udca1 Sell more than one unit at a time, by "
+                    "specifying the amount. For example: "
+                    f"\"sell {item.name} 50\""
+                )
+            )
+
+        confirm, msg = await pages.ConfirmPromptCoin(embed=embed).prompt(ctx)
+
+        if not confirm:
+            return
+
+        async with ctx.acquire() as conn:
+            async with conn.transaction():
+                # Must refetch or user can exploit the long prompts and dupe
+                item_data = await ctx.user_data.get_item(
+                    ctx, item.id, conn=conn
+                )
+                if not item_data or item_data['amount'] < amount:
+                    return await msg.edit(
+                        embed=embeds.error_embed(
+                            title=f"You don't have enough {item.name}!",
+                            text=(
+                                "Either you don't own or you don't "
+                                f"have enough **({amount}x) {item.emoji} "
+                                f"{item.name.capitalize()} ** in your "
+                                "warehouse!"
+                            ),
+                            footer=(
+                                "Check your warehouse with the \"inventory\" "
+                                "command"
+                            ),
+                            ctx=ctx
+                        )
+                    )
+
+                await ctx.user_data.remove_item(
+                    ctx, item.id, amount, conn=conn
+                )
+
+                ctx.user_data.gold += total_reward
+                await ctx.users.update_user(ctx.user_data, conn=conn)
+
+        await msg.edit(
+            embed=embeds.success_embed(
+                title="Your items have been sold to the market! \u2696\ufe0f",
+                text=(
+                    "Thank you for the selling these items to the market! "
+                    "\ud83d\ude0a We will be looking forward to working "
+                    f"with you again! You sold **{item.emoji} "
+                    f"{item.name.capitalize()} x{amount}** for **"
+                    f"{total_reward} {self.bot.gold_emoji}**"
+                ),
+                footer=f"You now have {ctx.user_data.gold} gold coins!",
+                ctx=ctx
+            )
+        )
 
 
 def setup(bot):

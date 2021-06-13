@@ -505,7 +505,9 @@ class Farm(commands.Cog):
 
                 fmt = fmt[:-2] + "** \ud83d\ude10"
 
-            fmt += f"\n\nAnd you received: **+{xp_gain} XP** {self.bot.xp_emoji}"
+            fmt += (
+                f"\n\nAnd you received: **+{xp_gain} XP** {self.bot.xp_emoji}"
+            )
 
             embed = embeds.success_embed(
                 title="You harvested your farm! Awesome!",
