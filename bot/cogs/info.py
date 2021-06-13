@@ -31,7 +31,13 @@ class HelpCommand(commands.MinimalHelpCommand):
         )
 
     def get_command_signature(self, command):
-        cmd = f"**{self.context.prefix}{command.name}**"
+        if command.full_parent_name:
+            cmd = (
+                f"**{self.context.prefix}{command.full_parent_name} "
+                f"{command.name}**"
+            )
+        else:
+            cmd = f"**{self.context.prefix}{command.name}**"
 
         if command.signature:
             cmd += f" `{command.signature}`"
