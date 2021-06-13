@@ -355,10 +355,10 @@ class Boost:
             self.price_increase_per_factory_slots * user.factory_slots
         price_per_day += self.price_increase_per_user_level * user.level
 
-        if duration.ONE_DAY:
+        if duration == BoostDuration.ONE_DAY:
             # No discount
             return price_per_day
-        elif duration.THREE_DAYS:
+        elif duration == BoostDuration.THREE_DAYS:
             total = price_per_day * 3
 
             return int(total - total * BOOST_THREE_DAYS_DISCOUNT)

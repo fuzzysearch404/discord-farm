@@ -848,7 +848,7 @@ class Profile(commands.Cog):
         )
         if isinstance(item, game_items.PurchasableItem):
             embed.add_field(
-                name="\ud83d\udcb0 Shop price (buying cost)",
+                name="\ud83d\udcb0 Shop price (growing costs)",
                 value=f"{item.gold_price} {ctx.bot.gold_emoji}"
             )
 

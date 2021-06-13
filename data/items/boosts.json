@@ -6,9 +6,9 @@
             "info":"Protects your farm's field. Or does it?",
             "emoji":"\ud83d\udc29",
             "base_price":50,
-            "price_increase_per_farm_slots":0,
+            "price_increase_per_farm_slots":70,
             "price_increase_per_factory_slots":0,
-            "price_increase_per_user_level":0
+            "price_increase_per_user_level":150
         },
         {
             "id":"dog_2",
@@ -16,9 +16,9 @@
             "info":"Protects your farm, but sometimes likes to play around",
             "emoji":"\ud83d\udc36",
             "base_price":125,
-            "price_increase_per_farm_slots":0,
+            "price_increase_per_farm_slots":200,
             "price_increase_per_factory_slots":0,
-            "price_increase_per_user_level":0
+            "price_increase_per_user_level":280
         },
         {
             "id":"dog_3",
@@ -26,9 +26,9 @@
             "info":"Protects your farm and your conscience",
             "emoji":"\ud83d\udc15",
             "base_price":250,
-            "price_increase_per_farm_slots":0,
+            "price_increase_per_farm_slots":290,
             "price_increase_per_factory_slots":0,
-            "price_increase_per_user_level":0
+            "price_increase_per_user_level":470
         },
         {
             "id":"cat",
@@ -36,29 +36,29 @@
             "info":"Keeps your harvest fresh and collectable forever. Don't ask me how...",
             "emoji":"\ud83d\udc31",
             "base_price":320,
-            "price_increase_per_farm_slots":0,
+            "price_increase_per_farm_slots":1000,
             "price_increase_per_factory_slots":0,
-            "price_increase_per_user_level":0
+            "price_increase_per_user_level":250
         },
         {
             "id":"farm_slots",
             "name":"Susan",
             "info":"Temporarily adds 2 more farm slots",
             "emoji":"\ud83d\udc39",
-            "base_price":280,
-            "price_increase_per_farm_slots":0,
+            "base_price":215,
+            "price_increase_per_farm_slots":680,
             "price_increase_per_factory_slots":0,
-            "price_increase_per_user_level":0
+            "price_increase_per_user_level":350
         },
         {
             "id":"factory_slots",
             "name":"Alice",
             "info":"Temporarily adds 2 more factory slots",
             "emoji":"\ud83e\udd89",
-            "base_price":200,
+            "base_price":50,
             "price_increase_per_farm_slots":0,
-            "price_increase_per_factory_slots":0,
-            "price_increase_per_user_level":0
+            "price_increase_per_factory_slots":150,
+            "price_increase_per_user_level":250
         }
     ]
 }
