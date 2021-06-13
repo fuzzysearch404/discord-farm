@@ -53,6 +53,38 @@ class MarketSource(menus.ListPageSource):
         return embed
 
 
+class ShopSource(menus.ListPageSource):
+    def __init__(self, entries, section: str):
+        super().__init__(entries, per_page=6)
+        self.section = section
+
+    async def format_page(self, menu, page):
+        fmt = ""
+        for item in page:
+            fmt += (
+                f"**{item.emoji} {item.name.capitalize()}** - "
+                f"**{item.gold_price} {menu.bot.gold_emoji} "
+                "/ farm tile** \n\ud83d\uded2 Start growing in your farm: **"
+                f"{menu.ctx.prefix}plant {item.name}**\n\n"
+            )
+
+        embed = discord.Embed(
+            title=f"\ud83c\udfea Shop: {self.section}",
+            color=discord.Color.from_rgb(52, 125, 235),
+            description=fmt
+        )
+
+        embed.set_footer(
+            text=(
+                f"Page {menu.current_page + 1}/{self.get_max_pages()} | "
+                "Plant in multiple farm tiles at a time, by providing amount. "
+                "For example: \"plant lettuce 2\"."
+            )
+        )
+
+        return embed
+
+
 class Shop(commands.Cog):
     """
     Welcome to the shop! Here you can view the prices of plants,
@@ -90,7 +122,7 @@ class Shop(commands.Cog):
             value=f"**{ctx.prefix}market crop**"
         )
         embed.add_field(
-            name="\ud83c\udf52 Trees Harvest",
+            name="\ud83c\udf52 Trees and Bushes Harvest",
             value=f"**{ctx.prefix}market tree**"
         )
         embed.add_field(
@@ -123,17 +155,15 @@ class Shop(commands.Cog):
 
         await paginator.start(ctx)
 
-    @market.command(name="tree", aliases=["trees", "t"])
+    @market.command(name="tree", aliases=["trees", "t", "bush", "bushes", "b"])
     @checks.has_account()
     @checks.avoid_maintenance()
     async def market_tree(self, ctx):
-        """
-        \ud83c\udf52 View current prices for trees harvest
-        """
+        """\ud83c\udf52 View current prices for trees and bushes harvest"""
         paginator = pages.MenuPages(
             source=MarketSource(
                 entries=ctx.items.all_trees,
-                section="\ud83c\udf52 Trees Harvest"
+                section="\ud83c\udf52 Trees and Bushes Harvest"
             )
         )
 
@@ -143,9 +173,7 @@ class Shop(commands.Cog):
     @checks.has_account()
     @checks.avoid_maintenance()
     async def market_animal(self, ctx):
-        """
-        \ud83d\udc3d View current prices for animal harvest
-        """
+        """\ud83d\udc3d View current prices for animal harvest"""
         paginator = pages.MenuPages(
             source=MarketSource(
                 entries=ctx.items.all_animals,
@@ -159,9 +187,7 @@ class Shop(commands.Cog):
     @checks.has_account()
     @checks.avoid_maintenance()
     async def market_factory(self, ctx):
-        """
-        \ud83c\udf66 View current prices for factory products
-        """
+        """\ud83c\udf66 View current prices for factory products"""
         paginator = pages.MenuPages(
             source=MarketSource(
                 entries=ctx.items.all_products,
@@ -175,13 +201,90 @@ class Shop(commands.Cog):
     @checks.has_account()
     @checks.avoid_maintenance()
     async def market_other(self, ctx):
-        """
-        \ud83d\udce6 View current prices for other items
-        """
+        """\ud83d\udce6 View current prices for other items"""
         paginator = pages.MenuPages(
             source=MarketSource(
                 entries=ctx.items.all_specials,
                 section="\ud83d\udce6 Other items"
+            )
+        )
+
+        await paginator.start(ctx)
+
+    @commands.group(case_insensitive=True)
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def shop(self, ctx):
+        """
+        \ud83c\udfea Access the shop to plant items, buy upgrades or boosters.
+        Shop is organized in some subcategories.
+        """
+        if ctx.invoked_subcommand:
+            return
+
+        embed = discord.Embed(
+            title="\ud83c\udfea Please choose a shop category",
+            description=(
+                "\ud83d\udc4b Hey there fellow farmer! "
+                "Welcome to our shop! Here you can buy something to plant "
+                "in your farm, various upgrades and boosters. \ud83d\uded2 "
+                "What would you like to buy?"
+            ),
+            colour=discord.Color.from_rgb(52, 125, 235)
+        )
+        embed.add_field(
+            name="\ud83c\udf3d Crops",
+            value=f"**{ctx.prefix}shop crop**"
+        )
+        embed.add_field(
+            name="\ud83c\udf52 Trees and Bushes",
+            value=f"**{ctx.prefix}shop tree**"
+        )
+        embed.add_field(
+            name="\ud83d\udc3d Animals",
+            value=f"**{ctx.prefix}shop animal**"
+        )
+        embed.set_footer(text="The shop is split into some subcategories")
+
+        await ctx.reply(embed=embed)
+
+    @shop.command(name="crop", aliases=["crops", "c"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def shop_crops(self, ctx):
+        """\ud83c\udf3d View current costs for planting crops"""
+        paginator = pages.MenuPages(
+            source=ShopSource(
+                entries=ctx.items.all_crops,
+                section="\ud83c\udf3d Crops"
+            )
+        )
+
+        await paginator.start(ctx)
+
+    @shop.command(name="tree", aliases=["trees", "t", "bush", "bushes", "b"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def shop_tree(self, ctx):
+        """\ud83c\udf52 View current costs for planting trees and bushes"""
+        paginator = pages.MenuPages(
+            source=ShopSource(
+                entries=ctx.items.all_trees,
+                section="\ud83c\udf52 Trees and Bushes"
+            )
+        )
+
+        await paginator.start(ctx)
+
+    @shop.command(name="animal", aliases=["animals", "a"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def shop_animal(self, ctx):
+        """\ud83d\udc3d View current prices for growing animals"""
+        paginator = pages.MenuPages(
+            source=ShopSource(
+                entries=ctx.items.all_animals,
+                section="\ud83d\udc3d Animal"
             )
         )
 
