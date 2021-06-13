@@ -158,12 +158,23 @@ class ConfirmPrompt(menus.Menu):
     async def send_initial_message(self, ctx, channel):
         return await ctx.reply(self.msg, embed=self.embed)
 
+    async def prompt(self, ctx):
+        await self.start(ctx, wait=True)
+
+        return self._result, self.message
+
+
+class ConfirmPromptCheck(ConfirmPrompt):
+
     @menus.button("\u2705")
     async def do_confirm(self, payload):
         self._result = True
         self.stop()
 
-    async def prompt(self, ctx):
-        await self.start(ctx, wait=True)
 
-        return self._result, self.message
+class ConfirmPromptCoin(ConfirmPrompt):
+
+    @menus.button("<:gold:840961597148102717>")
+    async def do_confirm(self, payload):
+        self._result = True
+        self.stop()

@@ -627,7 +627,7 @@ class Farm(commands.Cog):
             value=coll_time_str
         )
 
-        confirm, msg = await pages.ConfirmPrompt(embed=embed).prompt(ctx)
+        confirm, msg = await pages.ConfirmPromptCoin(embed=embed).prompt(ctx)
 
         if not confirm:
             return
@@ -797,7 +797,7 @@ class Farm(commands.Cog):
             ctx=ctx
         )
 
-        confirm, msg = await pages.ConfirmPrompt(embed=embed).prompt(ctx)
+        confirm, msg = await pages.ConfirmPromptCoin(embed=embed).prompt(ctx)
 
         if not confirm:
             return
