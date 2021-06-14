@@ -73,7 +73,7 @@ class ShopSource(menus.ListPageSource):
 
         embed = discord.Embed(
             title=f"\ud83c\udfea Shop: {self.section}",
-            color=discord.Color.from_rgb(52, 125, 235),
+            color=discord.Color.from_rgb(70, 145, 4),
             description=fmt
         )
 
@@ -235,7 +235,7 @@ class Shop(commands.Cog):
                 "in your farm, various upgrades and boosters. \ud83d\uded2 "
                 "What would you like to buy?"
             ),
-            colour=discord.Color.from_rgb(52, 125, 235)
+            colour=discord.Color.from_rgb(70, 145, 4)
         )
         embed.add_field(
             name="\ud83c\udf3d Crops",
