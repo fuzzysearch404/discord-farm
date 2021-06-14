@@ -43,7 +43,7 @@
         {
             "id":"farm_slots",
             "name":"Susan",
-            "info":"Temporarily adds 2 more farm slots",
+            "info":"Temporarily adds 2 more farm tiles",
             "emoji":"\ud83d\udc39",
             "base_price":215,
             "price_increase_per_farm_slots":680,

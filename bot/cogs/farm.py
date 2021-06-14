@@ -1008,6 +1008,8 @@ class Farm(commands.Cog):
                         ctx=ctx
                     )
                 )
+            elif "dog_2" in boost_ids and "dog_1" in boost_ids:
+                cought_chance = 2
             elif "dog_2" in boost_ids:
                 cought_chance = 4
             elif "dog_1" in boost_ids:

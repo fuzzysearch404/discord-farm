@@ -256,7 +256,7 @@ class BotClient(commands.AutoShardedBot):
         elif isinstance(error, commands.errors.BotMissingPermissions):
             return await ctx.reply(
                 f"\u274c {str(error)} "
-                "Please ask a server admin to enable them. "
+                "Please ask a server admin to enable those. "
                 "Otherwise, I can't function normally \ud83d\ude2b"
             )
         elif isinstance(error, exceptions.GameIsInMaintenance):
@@ -283,8 +283,9 @@ class BotClient(commands.AutoShardedBot):
 
     async def on_guild_join(self, guild) -> None:
         message = (
-            "Hello! \ud83d\udc4b\nThanks for adding me here! "
-            f"Access the command list with: `{self.def_prefix}help`.\n"
+            "Hello! \ud83d\udc4b Thanks for adding me here!\n"
+            f"Access the command list with: **{self.def_prefix}help**\n"
+            f"Start the game with **{self.def_prefix}start**\n"
             "Happy farming! \ud83d\udc68\u200d\ud83c\udf3e"
         )
 
