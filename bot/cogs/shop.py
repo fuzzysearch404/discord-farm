@@ -417,7 +417,7 @@ class Shop(commands.Cog):
         )
 
     def get_next_trades_slot_cost(self, current_count: int):
-        return current_count * 7500
+        return current_count * 6000
 
     @shop.command(name="upgrades", aliases=["upgrade", "u"])
     @checks.has_account()
@@ -431,12 +431,12 @@ class Shop(commands.Cog):
             title="\u2b50 Upgrades shop",
             description=(
                 "\u2699\ufe0f Purchase upgrades to make your game "
-                "progresion increase faster! "
+                "progress faster! "
             ),
             color=discord.Color.from_rgb(255, 162, 0)
         )
         embed.add_field(
-            name=f"{self.bot.tile_emoji} Farm - expand size",
+            name=f"{self.bot.tile_emoji} Farm: Expand size",
             value=(
                 f"Plant more items in your farm!\n"
                 f"**\ud83c\udd95 {user_data.farm_slots} \u2192 "
@@ -446,7 +446,7 @@ class Shop(commands.Cog):
             )
         )
         embed.add_field(
-            name="\ud83c\udfed Factory upgrade - capacity",
+            name="\ud83c\udfed Factory: Capacity",
             value=(
                 f"Queue more products to produce in factory!\n"
                 f"**\ud83c\udd95 {user_data.factory_slots} \u2192 "
@@ -457,7 +457,9 @@ class Shop(commands.Cog):
         )
         if user_data.factory_level < 10:
             embed.add_field(
-                name="\ud83c\udfed Factory upgrade - workers",
+                name=(
+                    "\ud83d\udc68\u200d\ud83c\udf73 Factory: Workers"
+                ),
                 value=(
                     f"Make products in factory faster!\n"
                     f"**\ud83c\udd95 {user_data.factory_level * 5} \u2192 "
@@ -467,7 +469,7 @@ class Shop(commands.Cog):
                 )
             )
         embed.add_field(
-            name="\ud83e\udd1d Trading - more deals",
+            name="\ud83e\udd1d Trading: More deals",
             value=(
                 f"Post more trade offers!\n"
                 f"**\ud83c\udd95 {user_data.store_slots} \u2192 "
@@ -607,6 +609,199 @@ class Shop(commands.Cog):
                 footer=f"You now have {ctx.user_data.gold} gold coins!",
                 ctx=ctx
             )
+        )
+
+    @commands.group(case_insensitive=True)
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def upgrade(self, ctx):
+        """
+        \u2b50 Upgrade something!
+
+        For available upgrades please see **{prefix}shop upgrades**
+        """
+        if ctx.invoked_subcommand:
+            return
+
+        await self.shop_upgrades.invoke(ctx)
+
+    async def perform_upgrade(
+        self,
+        ctx,
+        attr: str,
+        title: str,
+        description: str,
+        item_str: str,
+        price: int,
+        with_gem: bool = True
+    ):
+        embed = embeds.prompt_embed(
+            title=f"Purchase upgrade: {title}?",
+            text=(
+                "Are you sure that you want to purchase this upgrade? "
+                "This is an expensive investment, so think ahead! "
+                "\ud83d\udc68\u200d\ud83d\udcbc"
+            ),
+            ctx=ctx
+        )
+        embed.add_field(name="\u2b50 Upgrade", value=item_str)
+        embed.add_field(name="\ud83d\udcda Description", value=description)
+        emoji = self.bot.gem_emoji if with_gem else self.bot.gold_emoji
+        embed.add_field(
+            name="\ud83d\udcb0 Price",
+            value=f"**{price}** {emoji}"
+        )
+
+        if with_gem:
+            prompt = pages.ConfirmPromptGem(embed=embed).prompt(ctx)
+        else:
+            prompt = pages.ConfirmPromptCoin(embed=embed).prompt(ctx)
+
+        confirm, msg = await prompt
+
+        if not confirm:
+            return
+
+        async with ctx.acquire() as conn:
+            async with conn.transaction():
+                # Refetch user data, because user could have no money
+                user_data = await ctx.users.get_user(ctx.author.id, conn=conn)
+
+                if with_gem:
+                    if user_data.gems < price:
+                        return await msg.edit(
+                            embed=embeds.no_gems_embed(ctx, user_data, price)
+                        )
+
+                    user_data.gems -= price
+                else:
+                    if user_data.gold < price:
+                        return await msg.edit(
+                            embed=embeds.no_money_embed(ctx, user_data, price)
+                        )
+
+                    user_data.gold -= price
+
+                old_value = getattr(user_data, attr)
+                setattr(user_data, attr, old_value + 1)
+
+                await ctx.users.update_user(user_data, conn=conn)
+
+        return await msg.edit(
+            embed=embeds.congratulations_embed(
+                title=f"Upgrade complete - {title}",
+                text=(
+                    "Congratulations on your **HUUGE** investment! "
+                    "\ud83e\udd29\n This upgrade is going to "
+                    "change a lot for you in a long term! Nice! \ud83d\udc4f"
+                ),
+                ctx=ctx
+            )
+        )
+
+    @upgrade.command(aliases=["field"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def farm(self, ctx):
+        """
+        \ud83d\uded2 Expand farm, by adding more tiles
+
+        If you currently can plant only 2 items per time in your farm,
+        then after this upgrade you will be able to plant 3 items simultanesly.
+        """
+        await self.perform_upgrade(
+            ctx=ctx,
+            attr="farm_slots",
+            title=f"{self.bot.tile_emoji} Farm: Expand size",
+            description="Plant more items in your farm!",
+            item_str=(
+                f"**\ud83c\udd95 {ctx.user_data.farm_slots} \u2192 "
+                f"{ctx.user_data.farm_slots + 1} farm tiles**"
+            ),
+            price=1
+        )
+
+    @upgrade.command()
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def capacity(self, ctx):
+        """
+        \ud83c\udd95 Add more capacity for factory
+
+        If you currently can queue 2 items for production in factory,
+        then after this upgrade you will be able to queue 3 items simultanesly.
+        """
+        await self.perform_upgrade(
+            ctx=ctx,
+            attr="factory_slots",
+            title="\ud83c\udfed Factory: Capacity",
+            description="Queue more products to produce in factory!",
+            item_str=(
+                f"**\ud83c\udd95 {ctx.user_data.factory_slots} \u2192 "
+                f"{ctx.user_data.factory_slots + 1} factory capacity**"
+            ),
+            price=1
+        )
+
+    @upgrade.command(aliases=["worker"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def workers(self, ctx):
+        """
+        \ud83d\udc68\u200d\ud83c\udf73 Increase production speed for factory
+
+        If your current factory item production speed bonus is 5%,
+        then after this upgrade your production speed bonus is going to be 10%.
+        """
+        if ctx.user_data.factory_level >= 10:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title=(
+                        "Maximum factory workers amount reached! "
+                        "\ud83d\udc68\u200d\ud83c\udf73"
+                    ),
+                    text=(
+                        "You already have reached the maximum factory worker "
+                        "amount! Enjoy the **__super speed__**! \ud83d\udca5"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        await self.perform_upgrade(
+            ctx=ctx,
+            attr="factory_level",
+            title="\ud83d\udc68\u200d\ud83c\udf73 Factory: Workers",
+            description="Make products in factory faster!",
+            item_str=(
+                f"**\ud83c\udd95 {ctx.user_data.factory_level * 5} \u2192 "
+                f"{(ctx.user_data.factory_level + 1) * 5}% faster production**"
+            ),
+            price=1
+        )
+
+    @upgrade.command(aliases=["trades", "trade"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def trading(self, ctx):
+        """
+        \ud83e\udd1d Increase the limit of your trading deals
+
+        If you currently can post 2 trading deals per time,
+        then after this upgrade you will be able to post 3 trading deals
+        simultanesly.
+        """
+        await self.perform_upgrade(
+            ctx=ctx,
+            attr="store_slots",
+            title="\ud83e\udd1d Trading: More deals",
+            description="Post more trade offers!",
+            item_str=(
+                f"**\ud83c\udd95 {ctx.user_data.store_slots} \u2192 "
+                f"{ctx.user_data.store_slots + 1} maximum trades**"
+            ),
+            price=self.get_next_trades_slot_cost(ctx.user_data.store_slots),
+            with_gem=False
         )
 
 

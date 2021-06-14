@@ -257,7 +257,7 @@ class Profile(commands.Cog):
                 name='\ud83c\udfed Factory',
                 value=(
                     f"\ud83d\udce6 Max. capacity: {factory_slots_formatted}"
-                    "\n\ud83d\udc68\u200d\ud83c\udfed Workers: "
+                    "\n\ud83d\udc68\u200d\ud83c\udf73 Workers: "
                     f"{user.factory_level}/10"
                     f"\n\u23f0 Next production: {nearest_factory}"
                     f"\n\ud83d\udd0e **{prefix}factory** {target_user.mention}"

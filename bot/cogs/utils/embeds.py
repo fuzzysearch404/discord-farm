@@ -123,3 +123,16 @@ def no_money_embed(ctx, user_data, cost: int) -> Embed:
         footer=f"You have a total of {user_data.gold} gold coins",
         ctx=ctx
     )
+
+
+def no_gems_embed(ctx, user_data, cost: int) -> Embed:
+    return error_embed(
+        title="Insufficient gems!",
+        text=(
+            f"**You are missing {cost - user_data.gems} "
+            f"{ctx.bot.gem_emoji} for this purchase!** "
+            "Oh no! We need more of those shiny rocks! \ud83d\ude2f"
+        ),
+        footer=f"You have a total of {user_data.gems} gems",
+        ctx=ctx
+    )
