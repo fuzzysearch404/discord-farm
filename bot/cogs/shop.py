@@ -416,12 +416,68 @@ class Shop(commands.Cog):
             )
         )
 
-    @shop.command(name="upgrades", aliases=["u"])
+    def get_next_trades_slot_cost(self, current_count: int):
+        return current_count * 7500
+
+    @shop.command(name="upgrades", aliases=["upgrade", "u"])
     @checks.has_account()
     @checks.avoid_maintenance()
     async def shop_upgrades(self, ctx):
         """\u2b50 View upgrades shop"""
-        pass
+        user_data = ctx.user_data
+        trades_cost = self.get_next_trades_slot_cost(user_data.store_slots)
+
+        embed = discord.Embed(
+            title="\u2b50 Upgrades shop",
+            description=(
+                "\u2699\ufe0f Purchase upgrades to make your game "
+                "progresion increase faster! "
+            ),
+            color=discord.Color.from_rgb(255, 162, 0)
+        )
+        embed.add_field(
+            name=f"{self.bot.tile_emoji} Farm - expand size",
+            value=(
+                f"Plant more items in your farm!\n"
+                f"**\ud83c\udd95 {user_data.farm_slots} \u2192 "
+                f"{user_data.farm_slots + 1} farm tiles**\n"
+                f"\ud83d\udcb0 Price: **1** {self.bot.gem_emoji}\n\n"
+                f"\ud83d\uded2 **{ctx.prefix}upgrade farm**"
+            )
+        )
+        embed.add_field(
+            name="\ud83c\udfed Factory upgrade - capacity",
+            value=(
+                f"Queue more products to produce in factory!\n"
+                f"**\ud83c\udd95 {user_data.factory_slots} \u2192 "
+                f"{user_data.factory_slots + 1} factory capacity**\n"
+                f"\ud83d\udcb0 Price: **1** {self.bot.gem_emoji}\n\n"
+                f"\ud83d\uded2 **{ctx.prefix}upgrade capacity**"
+            )
+        )
+        if user_data.factory_level < 10:
+            embed.add_field(
+                name="\ud83c\udfed Factory upgrade - workers",
+                value=(
+                    f"Make products in factory faster!\n"
+                    f"**\ud83c\udd95 {user_data.factory_level * 5} \u2192 "
+                    f"{(user_data.factory_level + 1) * 5}% faster production "
+                    f"speed**\n\ud83d\udcb0 Price: **1** {self.bot.gem_emoji}"
+                    f"\n\n\ud83d\uded2 **{ctx.prefix}upgrade workers**"
+                )
+            )
+        embed.add_field(
+            name="\ud83e\udd1d Trading - more deals",
+            value=(
+                f"Post more trade offers!\n"
+                f"**\ud83c\udd95 {user_data.store_slots} \u2192 "
+                f"{user_data.store_slots + 1} maximum trades**\n"
+                f"\ud83d\udcb0 Price: **{trades_cost}** {self.bot.gold_emoji}"
+                f"\n\n\ud83d\uded2 **{ctx.prefix}upgrade trading**"
+            )
+        )
+
+        await ctx.reply(embed=embed)
 
     @commands.command(aliases=["s"])
     @checks.has_account()
