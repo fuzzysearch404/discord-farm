@@ -291,6 +291,52 @@ class Missions(commands.Cog):
 
         await self.missions.invoke(ctx)
 
+    @commands.command(aliases=["off"])
+    @checks.user_cooldown(3600)
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def offer(self, ctx):
+        """
+        \ud83d\udd8b\ufe0f Hourly mission
+
+        Similar as **{prefix}missions**, only this mission has very short
+        availability period and better rewards. Complete it or it is gone.
+        """
+        mission = game_missions.BusinessMission.generate(
+            ctx,
+            reward_multiplier=1.175
+        )
+        mission = self.parse_mission_data(ctx, mission)
+
+        embed = discord.Embed(
+            title="\ud83d\udd8b\ufe0f Urgent order offer!",
+            description=(
+                "\ud83d\udc69\u200d\ud83d\udcbb Boss, quick! This business "
+                "partner is urgently looking for these items and is "
+                "going to pay extra rewards:\n**\u23f0 "
+                "You only have a few seconds to decide if you approve!**"
+            ),
+            color=discord.Color.from_rgb(198, 20, 9)
+        )
+
+        embed.add_field(
+            name="\u2757 Urgent offer:",
+            value=self.format_mission(mission)
+        )
+
+        menu = pages.ConfirmPrompt(pages.CONFIRM_CHECK_BUTTON, embed=embed)
+        confirm, msg = await menu.prompt(ctx)
+
+        if not confirm:
+            return
+
+        await self.complete_business_mission(
+            ctx=ctx,
+            mission=mission,
+            mission_msg=msg,
+            mission_id=-1
+        )
+
 
 def setup(bot):
     bot.add_cog(Missions(bot))

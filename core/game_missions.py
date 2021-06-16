@@ -47,6 +47,7 @@ class BusinessMission(Mission):
         cls,
         ctx,
         growables_multiplier: int = 1,
+        reward_multiplier: int = 1,
         add_chest: bool = True
     ):
         user_level = ctx.user_data.level
@@ -105,6 +106,7 @@ class BusinessMission(Mission):
             requests.append(MissionRequest(item.id, amount))
             total_worth += int(item.max_market_price * amount * 1.08)
 
+        total_worth = int(total_worth * reward_multiplier)
         xp_reward = random.randint(
             int(total_worth / 20), int(total_worth / 18)
         )

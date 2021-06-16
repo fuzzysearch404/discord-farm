@@ -152,7 +152,7 @@ class MenuPages(menus.Menu):
 
 class ConfirmPrompt(menus.Menu):
     def __init__(self, button: menus.Button, msg: str = None, embed=None):
-        super().__init__(timeout=30.0, clear_reactions_after=True)
+        super().__init__(timeout=60.0, clear_reactions_after=True)
         self.msg = msg
         self.embed = embed
         self._result = False
@@ -184,7 +184,7 @@ CONFIRM_GEM_BUTTON = menus.Button(
 
 class BoostPurchasePrompt(menus.Menu):
     def __init__(self, embed=None):
-        super().__init__(timeout=30.0, clear_reactions_after=True)
+        super().__init__(timeout=60.0, clear_reactions_after=True)
         self.embed = embed
         self._result = None
 
@@ -214,7 +214,7 @@ class BoostPurchasePrompt(menus.Menu):
 
 class MissionSelection(menus.Menu):
     def __init__(self, embed=None, count: int = 1):
-        super().__init__(timeout=30.0, clear_reactions_after=True)
+        super().__init__(timeout=60.0, clear_reactions_after=True)
         self.embed = embed
         self._result = None
 
