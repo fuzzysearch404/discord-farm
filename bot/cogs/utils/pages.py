@@ -151,11 +151,12 @@ class MenuPages(menus.Menu):
 
 
 class ConfirmPrompt(menus.Menu):
-    def __init__(self, msg: str = None, embed=None):
+    def __init__(self, button: menus.Button, msg: str = None, embed=None):
         super().__init__(timeout=30.0, clear_reactions_after=True)
         self.msg = msg
         self.embed = embed
         self._result = False
+        self.add_button(button)
 
     async def send_initial_message(self, ctx, channel):
         return await ctx.reply(self.msg, embed=self.embed)
@@ -166,39 +167,29 @@ class ConfirmPrompt(menus.Menu):
         return self._result, self.message
 
 
-class ConfirmPromptCheck(ConfirmPrompt):
+async def confirm_action(menu, payload):
+    menu._result = True
+    menu.stop()
 
-    @menus.button("\u2705")
-    async def do_confirm(self, payload):
-        self._result = True
-        self.stop()
-
-
-class ConfirmPromptCoin(ConfirmPrompt):
-
-    @menus.button("<:gold:840961597148102717>")
-    async def do_confirm(self, payload):
-        self._result = True
-        self.stop()
-
-
-class ConfirmPromptGem(ConfirmPrompt):
-
-    @menus.button("<a:gem:722191212706136095>")
-    async def do_confirm(self, payload):
-        self._result = True
-        self.stop()
+CONFIRM_CHECK_BUTTON = menus.Button(
+    "\u2705", confirm_action
+)
+CONFIRM_COIN_BUTTTON = menus.Button(
+    "<:gold:840961597148102717>", confirm_action
+)
+CONFIRM_GEM_BUTTON = menus.Button(
+    "<a:gem:722191212706136095>", confirm_action
+)
 
 
 class BoostPurchasePrompt(menus.Menu):
-    def __init__(self, msg: str = None, embed=None):
-        super().__init__(timeout=30.0)
-        self.msg = msg
+    def __init__(self, embed=None):
+        super().__init__(timeout=30.0, clear_reactions_after=True)
         self.embed = embed
         self._result = None
 
     async def send_initial_message(self, ctx, channel):
-        return await ctx.reply(self.msg, embed=self.embed)
+        return await ctx.reply(embed=self.embed)
 
     @menus.button("1\ufe0f\u20e3")
     async def do_single_day(self, payload):
@@ -213,6 +204,32 @@ class BoostPurchasePrompt(menus.Menu):
     @menus.button("7\ufe0f\u20e3")
     async def do_seven_days(self, payload):
         self._result = BoostDuration.SEVEN_DAYS
+        self.stop()
+
+    async def prompt(self, ctx):
+        await self.start(ctx, wait=True)
+
+        return self._result, self.message
+
+
+class MissionSelection(menus.Menu):
+    def __init__(self, embed=None, count: int = 1):
+        super().__init__(timeout=30.0, clear_reactions_after=True)
+        self.embed = embed
+        self._result = None
+
+        for num in range(count):
+            self.add_button(
+                menus.Button(
+                    str(num + 1) + "\ufe0f\u20e3", self.choose_mission
+                )
+            )
+
+    async def send_initial_message(self, ctx, channel):
+        return await ctx.reply(embed=self.embed)
+
+    async def choose_mission(self, payload):
+        self._result = int(payload.emoji.name[0])
         self.stop()
 
     async def prompt(self, ctx):

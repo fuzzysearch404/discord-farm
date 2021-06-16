@@ -629,7 +629,8 @@ class Farm(commands.Cog):
             value=coll_time_str
         )
 
-        confirm, msg = await pages.ConfirmPromptCoin(embed=embed).prompt(ctx)
+        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
+        confirm, msg = await menu.prompt(ctx)
 
         if not confirm:
             return
@@ -788,7 +789,8 @@ class Farm(commands.Cog):
             ctx=ctx
         )
 
-        confirm, msg = await pages.ConfirmPromptCoin(embed=embed).prompt(ctx)
+        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
+        confirm, msg = await menu.prompt(ctx)
 
         if not confirm:
             return
@@ -812,7 +814,7 @@ class Farm(commands.Cog):
             user_data.gold -= total_cost
             await ctx.users.update_user(user_data, conn=conn)
 
-        await ctx.reply(
+        await msg.edit(
             embed=embeds.success_embed(
                 title="Farm field cleared!",
                 text=(

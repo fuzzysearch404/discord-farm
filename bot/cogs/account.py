@@ -2,7 +2,7 @@ from discord.ext import commands
 
 from .utils import checks
 from .utils import embeds
-from .utils.pages import ConfirmPromptCheck
+from .utils import pages
 
 
 class Account(commands.Cog):
@@ -83,7 +83,8 @@ class Account(commands.Cog):
             ctx=ctx
         )
 
-        confirm, msg = await ConfirmPromptCheck(embed=embed).prompt(ctx)
+        menu = pages.ConfirmPrompt(pages.CONFIRM_CHECK_BUTTON, embed=embed)
+        confirm, msg = await menu.prompt(ctx)
 
         if not confirm:
             return

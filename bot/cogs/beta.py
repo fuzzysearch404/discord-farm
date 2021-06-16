@@ -1,5 +1,6 @@
 from discord.ext import commands
 
+from .utils import converters
 from .utils import checks
 
 
@@ -43,6 +44,12 @@ class Beta(commands.Cog, command_attrs={"hidden": True}):
     async def setfact(self, ctx, x: int = 0):
         ctx.user_data.factory_slots = x
         await ctx.users.update_user(ctx.user_data)
+
+    @commands.command()
+    @checks.has_account()
+    async def getitem(self, ctx, *, item: converters.ItemAndAmount, amount=1):
+        item, amount = item
+        await ctx.user_data.give_item(ctx, item.id, amount)
 
 
 def setup(bot):

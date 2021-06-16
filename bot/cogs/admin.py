@@ -1,4 +1,5 @@
 import io
+import copy
 import time
 import traceback
 import discord
@@ -84,6 +85,16 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
             )
         else:
             await ctx.reply(result_str)
+
+    @commands.command()
+    async def sudo(self, ctx, user: discord.User, *, command: str):
+        """Run a command as another user."""
+        message = copy.copy(ctx.message)
+        message.author = user
+        message.content = ctx.prefix + command
+        new_ctx = await self.bot.get_context(message, cls=type(ctx))
+
+        await self.bot.invoke(new_ctx)
 
     @commands.command()
     async def uptime(self, ctx):

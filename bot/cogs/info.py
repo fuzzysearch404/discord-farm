@@ -134,7 +134,7 @@ class Info(commands.Cog, name="Information"):
 
         await ctx.reply(
             "Support server invite: https://discord.gg/MwpxKjF"
-            f"\nBot invite: <{oauth_link}>"
+            f"\nInvite bot to your server: <{oauth_link}>"
         )
 
     @commands.command()
@@ -154,7 +154,7 @@ class Info(commands.Cog, name="Information"):
             "\nhttps://ko-fi.com/fuzzysearch\n"
             "\nYou can also help out, without spending any money, "
             "if you upvote the bot on the \"top.gg\" website every 12 hours "
-            f"(This command also unlocks the {ctx.prefix}`hourly` "
+            f"(This command also unlocks the **{ctx.prefix}hourly** "
             "bonus command):\n<https://top.gg/bot/526436949481881610>"
         )
 

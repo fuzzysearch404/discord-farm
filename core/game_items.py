@@ -514,7 +514,7 @@ class ItemPool:
     def _list_items_per_class(self, item_class) -> list:
         return [x for x in self.all_items if isinstance(x, item_class)]
 
-    def get_random_rewards(
+    def get_random_items(
         self,
         user_level: int,
         extra_luck: float = 0,  # 0 - 1.0
@@ -578,7 +578,13 @@ class ItemPool:
                 max *= products_multiplier
 
             amount = random.randint(min, max)
-            rewards.append((item, amount))
+
+            try:  # Try to just change the existing amount if same item
+                existing = next(x for x in rewards if item == x[0])
+                rewards.remove(existing)
+                rewards.append((item, existing[1] + amount))
+            except StopIteration:
+                rewards.append((item, amount))
 
         return rewards
 

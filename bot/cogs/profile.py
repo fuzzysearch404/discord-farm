@@ -451,7 +451,7 @@ class Profile(commands.Cog):
             if bool(random.getrandbits(1)):
                 multiplier = int(base_growables_multiplier / 2) or 1
 
-                items_won = ctx.items.get_random_rewards(
+                items_won = ctx.items.get_random_items(
                     user_level,
                     growables_multiplier=multiplier,
                     products=False,
@@ -464,7 +464,7 @@ class Profile(commands.Cog):
                 gold_reward = random.randint(min_gold, max_gold)
         # Uncommon
         elif chest.id == 1002:
-            items_won = ctx.items.get_random_rewards(
+            items_won = ctx.items.get_random_items(
                 user_level,
                 extra_luck=0.05,
                 growables_multiplier=base_growables_multiplier,
@@ -479,7 +479,7 @@ class Profile(commands.Cog):
                 gold_reward = random.randint(min_gold, max_gold)
         # Rare
         elif chest.id == 1003:
-            items_won = ctx.items.get_random_rewards(
+            items_won = ctx.items.get_random_items(
                 user_level,
                 extra_luck=0.25,
                 growables_multiplier=base_growables_multiplier + 1,
@@ -496,7 +496,7 @@ class Profile(commands.Cog):
             if not random.randint(0, 9):
                 base_growables_multiplier += random.randint(1, 3)
 
-            items_won = ctx.items.get_random_rewards(
+            items_won = ctx.items.get_random_items(
                 user_level,
                 extra_luck=0.455,
                 growables_multiplier=base_growables_multiplier + 5,
@@ -514,7 +514,7 @@ class Profile(commands.Cog):
             if not random.randint(0, 4):
                 base_growables_multiplier += random.randint(1, 5)
 
-            items_won = ctx.items.get_random_rewards(
+            items_won = ctx.items.get_random_items(
                 user_level,
                 extra_luck=0.777,
                 growables_multiplier=base_growables_multiplier + 8,

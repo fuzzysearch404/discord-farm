@@ -65,7 +65,8 @@ class ShopSource(menus.ListPageSource):
         fmt = ""
         for item in page:
             fmt += (
-                f"**{item.emoji} {item.name.capitalize()}** - "
+                f"**[\ud83d\udd31 {item.level}] "
+                f"{item.emoji} {item.name.capitalize()}** - "
                 f"**{item.gold_price} {menu.bot.gold_emoji} "
                 "/ farm tile** \n\ud83d\uded2 Start growing in your farm: **"
                 f"{menu.ctx.prefix}plant {item.name}**\n\n"
@@ -349,11 +350,12 @@ class Shop(commands.Cog):
         embed = embeds.prompt_embed(
             title="Activate booster?",
             text=(
-                f"\ud83d\uded2 Are you sure that you want to purchase booster "
-                f"**{booster.emoji} {booster.name}**? Confirm, by "
-                "pressing a button with your desired boost duration.\n"
+                f"\ud83d\uded2 **Are you sure that you want to purchase "
+                f"booster {booster.emoji} {booster.name}? Confirm, by "
+                "pressing a button with your desired boost duration.**\n"
                 "\ud83d\udd59 If you already have this boost active, buying "
-                "again is going to extend your previous duration. "
+                "again is going to extend your previous duration.\n"
+                f"\ud83d\udcd6 Booster description: *{booster.info}*"
             ),
             ctx=ctx
         )
@@ -560,7 +562,8 @@ class Shop(commands.Cog):
                 )
             )
 
-        confirm, msg = await pages.ConfirmPromptCoin(embed=embed).prompt(ctx)
+        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
+        confirm, msg = await menu.prompt(ctx)
 
         if not confirm:
             return
@@ -653,11 +656,11 @@ class Shop(commands.Cog):
         )
 
         if with_gem:
-            prompt = pages.ConfirmPromptGem(embed=embed).prompt(ctx)
+            menu = pages.ConfirmPrompt(pages.CONFIRM_GEM_BUTTON, embed=embed)
         else:
-            prompt = pages.ConfirmPromptCoin(embed=embed).prompt(ctx)
+            menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
 
-        confirm, msg = await prompt
+        confirm, msg = await menu.prompt(ctx)
 
         if not confirm:
             return
