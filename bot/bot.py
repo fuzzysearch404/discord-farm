@@ -245,13 +245,13 @@ class BotClient(commands.AutoShardedBot):
             return await ctx.reply(
                 "\u274c This command requires additional argument: "
                 f"`{error.param.name}`. For this command's usage information "
-                f"please see `{ctx.prefix}help {ctx.invoked_with}`."
+                f"please see **{ctx.prefix}help {ctx.invoked_with}**."
             )
         elif isinstance(error, commands.errors.BadArgument):
             return await ctx.reply(
                 "\u274c Invalid command argument provided. "
                 "For this command's usage information please see "
-                f"`{ctx.prefix}help {ctx.invoked_with}`."
+                f"**{ctx.prefix}help {ctx.invoked_with}**."
             )
         elif isinstance(error, commands.errors.BotMissingPermissions):
             return await ctx.reply(

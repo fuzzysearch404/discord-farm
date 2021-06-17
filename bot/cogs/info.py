@@ -13,7 +13,7 @@ class HelpMessageSource(menus.ListPageSource):
 
     async def format_page(self, menu, page):
         embed = discord.Embed(
-            color=discord.Color.blurple(),
+            color=discord.Color.from_rgb(88, 101, 242),
             description=page
         )
 
@@ -155,7 +155,7 @@ class Info(commands.Cog, name="Information"):
             "\nYou can also help out, without spending any money, "
             "if you upvote the bot on the \"top.gg\" website every 12 hours "
             f"(This command also unlocks the **{ctx.prefix}hourly** "
-            "bonus command):\n<https://top.gg/bot/526436949481881610>"
+            f"bonus command):\n<https://top.gg/bot/{ctx.bot.user.id}>"
         )
 
         embed = discord.Embed(

@@ -42,20 +42,90 @@ class Account(commands.Cog):
 
             await ctx.users.create_user(ctx.author.id, conn=conn)
 
-        await ctx.reply(
-            embed=embeds.congratulations_embed(
-                # TODO: Better starting tutorial
-                title="Your new account is successfully created! \ud83e\udd73",
-                text=(
-                    f"Check out all commands with **{ctx.prefix}help**\n"
-                    "For now, you should be interested in planting commands. "
-                    "Firstly you need to plant and grow your first lettuce. "
-                    "When it's ready, harvest it and sell it or complete some "
-                    "delivery missions. \ud83d\udcdd"
-                ),
-                ctx=ctx
+        embed = embeds.congratulations_embed(
+            title="Welcome to your new farm! \ud83e\udd73",
+            text=(
+                "\"Who's this? Are you the new owner? Hey Bob, "
+                "look at this - another owner - again! Anyways, welcome "
+                "stranger! I have very limited time, but I will try to "
+                "explain only the very basics to get you started. The rest "
+                "of the stuff you will have to learn on your own...\""
+                "\u261d\ufe0f"
+            ),
+            ctx=ctx
+        )
+
+        embed.add_field(
+            name="\ud83c\udfe1 Profile",
+            value=(
+                "The most important profile commands for beginners are:\n"
+                f"**{ctx.prefix}profile** - Your profile\n"
+                f"**{ctx.prefix}allitems** - Items you have unlocked\n"
+                f"**{ctx.prefix}inventory** - Your inventory\n"
+                f"**{ctx.prefix}item** - To view some item's properties"
             )
         )
+        embed.add_field(
+            name="\ud83c\udf31 Farm: Planting",
+            value=(
+                "Your farm has a limited space to plant items in.\n"
+                "Right now it is 2 space tiles, but you will be able "
+                "to increase it later.\nThis means, that you can plant "
+                "2 items at a time.\nYou have unlocked: \ud83e\udd6c Lettuce. "
+                f"\nPlant 2 lettuce items with the command: **{ctx.prefix}"
+                "plant lettuce 2**.\nTo view your farm, check out command "
+                f"**{ctx.prefix}farm**"
+            )
+        )
+        embed.add_field(
+            name="\ud83d\udd5d Farm: Waiting for harvest",
+            value=(
+                "Different items have different growing durations "
+                "and durations while items can be harvested.\n"
+                "For example, \ud83e\udd6c Lettuce grows for 2 "
+                "minutes, and is harvestable for 3 minutes after those "
+                "2 minutes of growing.\nIf you don't harvest your items in "
+                "time - they get rotten (lost forever).\nTo monitor your "
+                f"farm, check out command: **{ctx.prefix}farm** frequently. "
+            )
+        )
+        embed.add_field(
+            name="\ud83d\ude9c Farm: Harvesting items",
+            value=(
+                "When it is finally time to harvest, just use the "
+                f"**{ctx.prefix}harvest** command. All items will be "
+                f"automatically collected to your **{ctx.prefix}invenotory**\n"
+                "If some of your items get rotten - they are going to be "
+                "discarded with this command, to free up your farm field space"
+            )
+        )
+        embed.add_field(
+            name=f"{ctx.bot.gold_emoji} Earning gold coins",
+            value=(
+                "You got the harvest? Nice!\nNow it is time to earn some coins"
+                ".\nThere are multiple ways for doing this, but for now I "
+                "will tell you about two of those:\n1) Selling items to "
+                "market - quick way to turn your items into coins BUT the "
+                "market is changing every hour, so you might not get any "
+                "profit at all.\nExample for selling 20x lettuce: **"
+                f"{ctx.prefix}sell lettuce 20**\n2) Doing missions - these "
+                "always get you some nice rewards, but they might be harder "
+                f"to complete.\nCheck them out: **{ctx.prefix}missions**."
+            )
+        )
+        embed.add_field(
+            name="\u2753 More features and getting help",
+            value=(
+                "These are just the very, very basics to get you started!\n"
+                "There is so much more to do and explore!\n"
+                "**Check out all of the bot's features with: "
+                f"{ctx.prefix}help**\nFor command usage examples and more "
+                f"help, do **{ctx.prefix}help** `command_name`, where "
+                "`command_name` is the name of the command you need help with."
+            )
+        )
+
+        await ctx.reply(embed=embed)
 
     @commands.command(aliases=["resetaccount"])
     @checks.user_cooldown(10)

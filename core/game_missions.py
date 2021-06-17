@@ -46,8 +46,8 @@ class BusinessMission(Mission):
     def generate(
         cls,
         ctx,
-        growables_multiplier: int = 1,
-        reward_multiplier: int = 1,
+        growables_multiplier: float = 1.0,
+        reward_multiplier: float = 1.0,
         add_chest: bool = True
     ):
         user_level = ctx.user_data.level
@@ -80,7 +80,7 @@ class BusinessMission(Mission):
 
             products = ctx.items.get_random_items(
                 user_level=user_level,
-                extra_luck=0.70,
+                extra_luck=0.7,
                 total_draws=product_req_amount,
                 growables=False,
                 products=True,
@@ -116,12 +116,12 @@ class BusinessMission(Mission):
         chest_id = 0
         if add_chest and random.randint(1, 8) == 1:
             chests_and_rarities = {
-                1000: 350,  # Gold
-                1001: 1250,  # Common
-                1002: 750,  # Uncommon
-                1003: 250,  # Rare
-                1004: 65,  # Epic
-                1005: 1.5  # Legendary
+                1000: 450.0,  # Gold
+                1001: 1700.0,  # Common
+                1002: 950.0,  # Uncommon
+                1003: 350.0,  # Rare
+                1004: 100.0,  # Epic
+                1005: 1.8  # Legendary
             }
 
             chest_id = random.choices(

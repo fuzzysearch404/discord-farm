@@ -425,8 +425,9 @@ class Profile(commands.Cog):
                     text=(
                         "I just contacted our warehouse manager, and with a "
                         "deep regret, I have to say that *inhales*, you don't "
-                        f"have any **{chest.emoji} {chest.name} chests** "
-                        "in your inventory. Obtain one or try another chest."
+                        f"have any **{chest.emoji} {chest.name.capitalize()} "
+                        "chests** in your inventory. "
+                        "Obtain one or try another chest."
                     ),
                     ctx=ctx
                 )
@@ -676,11 +677,11 @@ class Profile(commands.Cog):
         """
         # Yes, there is no common chest in here.
         chests_and_rarities = {
-            1000: 75,  # Gold
-            1002: 100,  # Uncommon
-            1003: 65,  # Rare
-            1004: 25,  # Epic
-            1005: 3  # Legendary
+            1000: 75.0,  # Gold
+            1002: 100.0,  # Uncommon
+            1003: 65.0,  # Rare
+            1004: 20.0,  # Epic
+            1005: 2.0  # Legendary
         }
 
         chest = random.choices(
@@ -775,10 +776,10 @@ class Profile(commands.Cog):
             )
         else:
             chests_and_rarities = {
-                1000: 2,  # Gold
-                1001: 100,  # Common
-                1002: 50,  # Uncommon
-                1003: 5  # Rare
+                1000: 2.0,  # Gold
+                1001: 100.0,  # Common
+                1002: 50.0,  # Uncommon
+                1003: 5.0  # Rare
             }
 
             chest = random.choices(

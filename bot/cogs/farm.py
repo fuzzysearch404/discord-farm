@@ -870,7 +870,7 @@ class Farm(commands.Cog):
         await checks.set_user_cooldown(ctx, 3600, "recent_fishing")
 
         limits = [5, 10, 20, 30, 40]
-        weights = [12, 10, 5, 2, 1]
+        weights = [12.0, 10.0, 5.0, 2.0, 1.0]
 
         limit = random.choices(population=limits, weights=weights, k=1)
         win_amount = random.randint(0, limit[0])

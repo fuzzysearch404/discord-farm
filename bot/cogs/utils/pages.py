@@ -172,7 +172,7 @@ async def confirm_action(menu, payload):
     menu.stop()
 
 CONFIRM_CHECK_BUTTON = menus.Button(
-    "\u2705", confirm_action
+    "<:check:854787279168339988>", confirm_action
 )
 CONFIRM_COIN_BUTTTON = menus.Button(
     "<:gold:840961597148102717>", confirm_action

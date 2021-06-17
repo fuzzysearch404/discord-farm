@@ -164,7 +164,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
                 )
 
                 await asyncio.sleep(retry_in)
-                retry_in += 10
+                retry_in += 3
 
                 await self._request_all_required_data()
 
