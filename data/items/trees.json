@@ -90,6 +90,17 @@
        },
        {
           "id":209,
+          "level":25,
+          "emoji":"\ud83e\uded0",
+          "name":"blueberries",
+          "grow_time":4500,
+          "gold_price":4500,
+          "amount":26,
+          "iterations":3,
+          "image_url":"https://failiem.lv/thumb_show.php?i=2x4wqhzrz"
+       },
+       {
+          "id":210,
           "level":26,
           "emoji":"\ud83c\udf4a",
           "name":"tangerines",
@@ -100,7 +111,7 @@
           "image_url":"https://failiem.lv/thumb_show.php?i=87hd8vtyy"
        },
        {
-          "id":210,
+          "id":211,
           "level":29,
           "emoji":"\ud83c\udf51",
           "name":"peaches",
@@ -111,7 +122,7 @@
           "image_url":"https://failiem.lv/thumb_show.php?i=c29mmeg7q"
        },
        {
-          "id":211,
+          "id":212,
           "level":30,
           "emoji":"\ud83e\udd6d",
           "name":"mangos",

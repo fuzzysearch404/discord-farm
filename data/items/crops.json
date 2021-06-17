@@ -152,16 +152,6 @@
        },
        {
           "id":16,
-          "level":25,
-          "emoji":"\ud83e\uded0",
-          "name":"blueberries",
-          "grow_time":32400,
-          "gold_price":4500,
-          "amount":48,
-          "image_url":"https://failiem.lv/thumb_show.php?i=2x4wqhzrz"
-       },
-       {
-          "id":17,
           "level":27,
           "emoji":"\ud83e\uded1",
           "name":"bell peppers",
