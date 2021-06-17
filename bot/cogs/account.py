@@ -14,34 +14,11 @@ class Account(commands.Cog):
         super().__init__()
         self.bot = bot
 
-    @commands.command(aliases=["start"])
-    @checks.avoid_maintenance()
-    async def register(self, ctx):
+    @commands.command()
+    async def tutorial(self, ctx):
         """
-        \ud83c\udd95 Creates a new game account
-
-        You can only use this command if you don't already have an account.
+        \ud83d\udcd6 Some quickstart tips for new players.
         """
-        async with ctx.db.acquire() as conn:
-            if await ctx.users.get_user(ctx.author.id, conn=conn):
-                return await ctx.reply(
-                    embed=embeds.error_embed(
-                        title="You already own a farm!",
-                        text=(
-                            "What do you mean? You already own a cool farm! "
-                            "It's time to get back working on the field. "
-                            "There's always lots of work to do! "
-                            "\ud83d\udc68\u200d\ud83c\udf3e"
-                        ),
-                        footer=(
-                            "Maybe plant some lettuce? Carrots? \ud83e\udd14"
-                        ),
-                        ctx=ctx
-                    )
-                )
-
-            await ctx.users.create_user(ctx.author.id, conn=conn)
-
         embed = embeds.congratulations_embed(
             title="Welcome to your new farm! \ud83e\udd73",
             text=(
@@ -50,7 +27,8 @@ class Account(commands.Cog):
                 "stranger! I have very limited time, but I will try to "
                 "explain only the very basics to get you started. The rest "
                 "of the stuff you will have to learn on your own...\""
-                "\u261d\ufe0f"
+                "\u261d\ufe0f\n\n\u231bWant to read this again later? "
+                f"Sure, just type **{ctx.prefix}tutorial**"
             ),
             ctx=ctx
         )
@@ -126,6 +104,36 @@ class Account(commands.Cog):
         )
 
         await ctx.reply(embed=embed)
+
+    @commands.command(aliases=["start"])
+    @checks.avoid_maintenance()
+    async def register(self, ctx):
+        """
+        \ud83c\udd95 Creates a new game account
+
+        You can only use this command if you don't already have an account.
+        """
+        async with ctx.db.acquire() as conn:
+            if await ctx.users.get_user(ctx.author.id, conn=conn):
+                return await ctx.reply(
+                    embed=embeds.error_embed(
+                        title="You already own a farm!",
+                        text=(
+                            "What do you mean? You already own a cool farm! "
+                            "It's time to get back working on the field. "
+                            "There's always lots of work to do! "
+                            "\ud83d\udc68\u200d\ud83c\udf3e"
+                        ),
+                        footer=(
+                            "Maybe plant some lettuce? Carrots? \ud83e\udd14"
+                        ),
+                        ctx=ctx
+                    )
+                )
+
+            await ctx.users.create_user(ctx.author.id, conn=conn)
+
+        await self.tutorial.invoke(ctx)
 
     @commands.command(aliases=["resetaccount"])
     @checks.user_cooldown(10)
