@@ -160,7 +160,7 @@ class Shop(commands.Cog):
 
         await paginator.start(ctx)
 
-    @market.command(name="tree", aliases=["trees", "t", "bush", "bushes", "b"])
+    @market.command(name="tree", aliases=["trees", "t", "bush", "bushes"])
     @checks.has_account()
     @checks.avoid_maintenance()
     async def market_tree(self, ctx):
@@ -276,7 +276,7 @@ class Shop(commands.Cog):
 
         await paginator.start(ctx)
 
-    @shop.command(name="tree", aliases=["trees", "t", "bush", "bushes", "b"])
+    @shop.command(name="tree", aliases=["trees", "t", "bush", "bushes"])
     @checks.has_account()
     @checks.avoid_maintenance()
     async def shop_tree(self, ctx):
@@ -304,7 +304,7 @@ class Shop(commands.Cog):
 
         await paginator.start(ctx)
 
-    @shop.command(name="boosters", aliases=["boosts", "boost"])
+    @shop.command(name="boosters", aliases=["boosts", "boost", "b"])
     @checks.has_account()
     @checks.avoid_maintenance()
     async def shop_boosters(self, ctx):

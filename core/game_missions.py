@@ -51,37 +51,43 @@ class BusinessMission(Mission):
         add_chest: bool = True
     ):
         user_level = ctx.user_data.level
-
         if user_level < 3:
-            max_requests, multiplier = 1, 1
+            max_requests = 1
         elif user_level < 5:
-            max_requests, multiplier, max_products = 2, 4, 1
+            max_requests, max_products_req = 2, 1
         elif user_level < 10:
-            max_requests, multiplier, max_products = 2, 7, 1
+            max_requests, max_products_req = 2, 1
         elif user_level < 15:
-            max_requests, multiplier, max_products = 3, 10, 1
+            max_requests, max_products_req = 3, 1
         elif user_level < 20:
-            max_requests, multiplier, max_products = 3, 14, 2
+            max_requests, max_products_req = 3, 2
         elif user_level < 25:
-            max_requests, multiplier, max_products = 3, 16, 2
+            max_requests, max_products_req = 3, 2
         else:
-            max_requests, multiplier, max_products = 4, 20, 2
+            max_requests, max_products_req = 4, 2
 
-        # If we want extra complexity
-        multiplier = int(growables_multiplier * multiplier)
+        # Increase growables_multiplier for extra complexity
+        multiplier = int(growables_multiplier * user_level)
 
         request_items = []
         request_amount = random.randint(1, max_requests)
 
         # 1/3 chance to require products
         if user_level >= 3 and random.randint(1, 3) == 1:
-            product_req_amount = random.randint(1, max_products)
+            # Default max product request amount is 1.
+            # If multiplier, lower the chance to get more requests
+            population = []
+            for i in range(max_products_req):
+                population.extend([i + 1] * (max_products_req - i) * 3)
+
+            product_req_amount = random.choice(population)
             request_amount = request_amount - product_req_amount
 
             products = ctx.items.get_random_items(
                 user_level=user_level,
-                extra_luck=0.7,
+                extra_luck=0.82,
                 total_draws=product_req_amount,
+                products_multiplier=int(user_level / 10) or 1,
                 growables=False,
                 products=True,
                 specials=False
@@ -92,7 +98,7 @@ class BusinessMission(Mission):
         if request_amount > 0:
             growables = ctx.items.get_random_items(
                 user_level=user_level,
-                extra_luck=0.75,
+                extra_luck=0.82,
                 total_draws=request_amount,
                 growables_multiplier=multiplier,
                 growables=True,

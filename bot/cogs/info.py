@@ -173,7 +173,10 @@ class Info(commands.Cog, name="Information"):
         """
         embed = discord.Embed(
             title="Discord Farm",
-            description="The original, most advanced farming bot on Discord.",
+            description=(
+                "The original, most advanced farming strategy game bot on "
+                "Discord."
+            ),
             color=discord.Color.random()
         )
 

@@ -572,12 +572,16 @@ class ItemPool:
 
                 min *= growables_multiplier
                 max *= growables_multiplier
+
+                amount = random.randint(min, max)
             else:
-                min, max = 1, 1
+                # Default product amount is 1.
+                # If multiplier, lower the chance to get more items
+                population = []
+                for i in range(products_multiplier):
+                    population.extend([i + 1] * (products_multiplier - i) * 2)
 
-                max *= products_multiplier
-
-            amount = random.randint(min, max)
+                amount = random.choice(population)
 
             try:  # Try to just change the existing amount if same item
                 existing = next(x for x in rewards if item == x[0])

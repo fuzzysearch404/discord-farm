@@ -178,7 +178,7 @@ class Account(commands.Cog):
                     "Your account has been deleted! "
                     "If you ever consider playing again, then just type "
                     f"**{ctx.prefix}register** again and you are ready to go! "
-                    "Take care for now! :)"
+                    "Take care! Bye for now! :)"
                 ),
                 footer="We are going to miss you!",
                 ctx=ctx
