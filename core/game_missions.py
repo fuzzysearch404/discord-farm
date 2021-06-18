@@ -21,26 +21,23 @@ class MissionRequest:
     amount: int
 
 
-class Mission:
+class BusinessMission:
+
+    __slots__ = ("requests", "gold_reward", "xp_reward", "name", "chest")
 
     def __init__(
         self,
         requests: list,
-        gold_reward: int = 0,
-        xp_reward: int = 0,
+        gold_reward: int,
+        xp_reward: int,
+        name: str,
         chest: int = 0
     ) -> None:
         self.requests = requests
         self.gold_reward = gold_reward
         self.xp_reward = xp_reward
-        self.chest = chest
-
-
-class BusinessMission(Mission):
-
-    def __init__(self, name: str, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
         self.name = name
+        self.chest = chest
 
     @classmethod
     def generate(
