@@ -88,10 +88,17 @@ class AllItemsSource(menus.ListPageSource):
             "command |\n\n"
         )
 
+        fmt = []
+        for item in page:
+            fmt.append(
+                f"{item.emoji} {item.name.capitalize()} - "
+                f"**{menu.ctx.prefix}item {item.id}**"
+            )
+
         embed = discord.Embed(
             title="\ud83d\udd13 Items unlocked for your level:",
             color=discord.Color.from_rgb(255, 172, 51),
-            description=head + "\n".join(page)
+            description=head + "\n".join(fmt)
         )
 
         embed.set_footer(
@@ -656,14 +663,7 @@ class Profile(commands.Cog):
             ctx.user_data.level
         )
 
-        fmt = []
-        for item in all_items:
-            fmt.append(
-                f"{item.emoji} {item.name.capitalize()} - "
-                f"**{ctx.prefix}item {item.id}**"
-            )
-
-        paginator = pages.MenuPages(source=AllItemsSource(fmt))
+        paginator = pages.MenuPages(source=AllItemsSource(all_items))
 
         await paginator.start(ctx)
 
