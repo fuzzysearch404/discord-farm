@@ -2,6 +2,7 @@ import discord
 import jsonpickle
 from discord.ext import commands
 
+from .utils import time
 from .utils import embeds
 from .utils import checks
 from .utils import pages
@@ -258,7 +259,7 @@ class Missions(commands.Cog):
                 value=self.format_mission(mission)
             )
 
-        menu = pages.MissionSelection(embed=embed, count=mission_count)
+        menu = pages.NumberSelection(embed=embed, count=mission_count)
         result, msg = await menu.prompt(ctx)
 
         if not result:
@@ -335,6 +336,320 @@ class Missions(commands.Cog):
             mission=mission,
             mission_msg=msg,
             mission_id=-1
+        )
+
+    async def fetch_exports_data(self, ctx):
+        return await self.bot.redis.execute_command(
+            "GET", f"export:{ctx.author.id}"
+        )
+
+    def format_export_reward(
+        self,
+        ctx,
+        export: game_missions.ExportMission,
+        level: int
+    ) -> str:
+        rewards = export.rewards_for_shipment(level)
+
+        fmt = (
+            f"{rewards[0]} {ctx.bot.gold_emoji} "
+            f"{rewards[1]} {ctx.bot.xp_emoji}"
+        )
+
+        chest = rewards[2]
+        if chest:
+            chest = ctx.items.find_chest_by_id(chest)
+            fmt += f" 1x {chest.emoji}"
+
+        return fmt
+
+    def format_export(
+        self,
+        ctx,
+        export: game_missions.ExportMission
+    ) -> str:
+        item = export.item
+
+        text = (
+            f"{export.port_name}\n{item.emoji} "
+            f"{item.name.capitalize()}\n\ud83d\udce6 Package size: "
+            f"{export.amount}x {item.emoji}\n\n"
+        )
+
+        if export.shipments < 10:
+            next_fmt = self.format_export_reward(
+                ctx, export, export.shipments + 1
+            )
+            if export.shipments:
+                text += f"\ud83d\udcb0 __**Next reward:**__\n{next_fmt}\n"
+            else:
+                text += f"\ud83d\udcb0 **First reward:**\n{next_fmt}\n"
+
+            if export.shipments != 9:
+                last_fmt = self.format_export_reward(ctx, export, 10)
+                text += f"\ud83d\udcb0 **Final reward:**\n{last_fmt}\n"
+        else:
+            text += (
+                "**The cargo ship is already fully loaded! "
+                "It's waiting for departing to the high seas!** \ud83d\udc4c"
+            )
+
+        return text
+
+    @commands.group(case_insensitive=True, aliases=["exports", "ex"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def export(self, ctx):
+        """
+        \ud83d\udea2 Export contract missions
+
+        Sign a contract and load a cargo ship with as much resources as
+        you can, before it leaves your port.
+        Each item package you load into the ship gives you increasing XP and
+        gold rewards.
+
+        Each cargo ship is loadable for 6 hours.
+        You can load a package every 30 minutes.
+        You can sign contracts every 1 hour, however, you can only have
+        only one active contract at a time.
+        """
+        if ctx.invoked_subcommand:
+            return
+
+        embed = discord.Embed(color=discord.Color.from_rgb(34, 102, 153))
+
+        current_export = await self.fetch_exports_data(ctx)
+        if not current_export:
+            embed.title = "\u2693 No currently active export \ud83d\ude34"
+            embed.description = (
+                "\ud83d\udd8b\ufe0f Sign an export contract with **"
+                f"{ctx.prefix}export start**\n\ud83d\udea2 Exports are time "
+                "limited missions with increasing rewards, however you only "
+                "need to gather a single type of items, but in large "
+                "quantities, and as much as you can, before the cargo ship "
+                "leaves your local port.\n\ud83d\udd16 You can only have one "
+                "export contract active per a time and you can choose "
+                "a contract once per hour."
+            )
+        else:
+            ttl = await self.bot.redis.execute_command(
+                "TTL", f"export:{ctx.author.id}"
+            )
+            leave_time = time.seconds_to_time(ttl)
+
+            export = jsonpickle.decode(current_export)
+
+            embed.title = "\ud83d\udea2 Load the cargo ship"
+            embed.description = (
+                "\ud83d\udce6 Load items into the cargo ship "
+                f"with the **{ctx.prefix}export load** command!\n"
+                "\u2934\ufe0f You will get higher rewards for each package "
+                "you load into the cargo ship.\n"
+                "\u23f2\ufe0f You can load a package every 30 minutes."
+            )
+            embed.add_field(
+                name="\u2693 Current contract",
+                value=self.format_export(ctx, export)
+            )
+            embed.add_field(
+                name="\ud83d\udce6 Loaded packages",
+                value=f"{export.shipments} of 10"
+            )
+            embed.add_field(
+                name="\ud83d\udd50 Cargo ship leaves in",
+                value=leave_time
+            )
+
+        await ctx.reply(embed=embed)
+
+    @export.command()
+    @checks.user_cooldown(3600)
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def start(self, ctx):
+        """
+        \ud83d\udd8b\ufe0f Starts a new export mission
+
+        This command has a cooldown, so if you don't choose
+        an export mission, you will have to wait a hour.
+        """
+        existing_data = await self.fetch_exports_data(ctx)
+
+        if existing_data:
+            return await self.export.invoke(ctx)
+
+        embed = discord.Embed(
+            title="\u270f\ufe0f Please choose an export contract",
+            description=(
+                "\u26f4\ufe0f Welcome to the port! \ud83d\udc77 We have these "
+                "three cargo ships leaving to high seas today and "
+                "they have the following offers:\n"
+                "\ud83d\udd50 You can only choose one and if you don't "
+                "choose any, you will have to wait an hour for new contracts."
+            ),
+            color=discord.Color.from_rgb(217, 158, 130)
+        )
+        embed.set_footer(text=(
+                "\u23f1\ufe0f Choose a contract quickly, "
+                "because you have limited time to do so"
+            ))
+
+        emoji_assigned_to_exports = {}
+
+        for num in range(3):
+            num += 1
+
+            export = game_missions.ExportMission.generate(ctx)
+            emoji_assigned_to_exports[num] = export
+
+            embed.add_field(
+                name=f"\ud83d\udcdd Contract: {num}\ufe0f\u20e3",
+                value=self.format_export(ctx, export)
+            )
+
+        menu = pages.NumberSelection(embed=embed, count=3)
+        result, msg = await menu.prompt(ctx)
+
+        if not result:
+            return
+
+        result = emoji_assigned_to_exports[result]
+
+        await self.bot.redis.execute_command(
+            "SET", f"export:{ctx.author.id}",
+            jsonpickle.encode(result), "EX", 21600
+        )
+
+        await self.export.invoke(ctx)
+
+    @export.command()
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def load(self, ctx):
+        """
+        \ud83d\udce6 Loads a package into the cargo ship
+
+        You must have an active export contract to load items to the ship.
+        """
+        export = await self.fetch_exports_data(ctx)
+
+        if not export:
+            return await self.export.invoke(ctx)
+
+        export = jsonpickle.decode(export)
+
+        if export.shipments >= 10:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="The cargo ship is already full! \ud83d\udce6",
+                    text=(
+                        "We can't load another package, because the cargo "
+                        "ship has reached it's maximum cargo capacity! "
+                        "\ud83d\udc77\nAnyways, well done! We now have to "
+                        "wait until it leaves the port! You don't have to do "
+                        "anything tho, you can just watch as it enters the "
+                        "sea, if you wish. \ud83c\udf05"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        cooldown = await checks.get_user_cooldown(ctx, "export_load")
+        if cooldown:
+            cd = time.seconds_to_time(cooldown)
+
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title=(
+                        "Package loading onto cargo ship in progress! "
+                        "\ud83d\udea2\ud83d\udce6"
+                    ),
+                    text=(
+                        "We have to wait for your last package to "
+                        "get loaded onto the cargo ship! Please check "
+                        f"back again after **{cd}**, it should be done "
+                        "by that time. \ud83d\udc77"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        item, amount = export.item, export.amount
+
+        async with ctx.acquire() as conn:
+            item_data = await ctx.user_data.get_item(ctx, item.id, conn=conn)
+
+            if not item_data or item_data['amount'] < amount:
+                if item_data:
+                    missing_amount = amount - item_data['amount']
+                else:
+                    missing_amount = amount
+
+                return await ctx.reply(
+                    embed=embeds.error_embed(
+                        title="Not enough items for this package!",
+                        text=(
+                            "We can't load this package onto the cargo ship! "
+                            "\ud83d\udc77 The cargo ship's capacity should be "
+                            "used effectively, so the package must be full to "
+                            f"the top.\n**You are missing: {missing_amount}x "
+                            f"{item.emoji} {item.name.capitalize()}**"
+                        ),
+                        ctx=ctx
+                    )
+                )
+
+            rewards = export.rewards_for_shipment()
+            ctx.user_data.gold += rewards[0]
+
+            await ctx.user_data.give_xp_and_level_up(
+                ctx, rewards[1]
+            )
+
+            async with conn.transaction():
+                await ctx.user_data.remove_item(
+                    ctx, item.id, amount, conn=conn
+                )
+
+                await ctx.users.update_user(ctx.user_data, conn=conn)
+
+                # Award chest
+                if rewards[2]:
+                    await ctx.user_data.give_item(
+                        ctx, rewards[2], 1, conn=conn
+                    )
+
+        ttl = await self.bot.redis.execute_command(
+            "TTL", f"export:{ctx.author.id}"
+        )
+        # Just in case if it somehow already ended
+        ttl = ttl or 0
+
+        export.shipments += 1
+        await self.bot.redis.execute_command(
+            "SET", f"export:{ctx.author.id}",
+            jsonpickle.encode(export), "EX", ttl
+        )
+
+        await checks.set_user_cooldown(ctx, 1800, "export_load")
+
+        chest = rewards[2]
+        if chest:
+            chest = ctx.items.find_chest_by_id(chest)
+            chest = f"1x {chest.emoji} {chest.name.capitalize()} chest"
+
+        await ctx.reply(
+            embed=embeds.success_embed(
+                title="Package is being loaded onto the cargo ship!",
+                text=(
+                    "Well done! \ud83d\udc4d We started loading your package: "
+                    f"**{amount}x {item.emoji} {item.name.capitalize()}** "
+                    "onto the cargo ship!\n**You received: "
+                    f"{rewards[0]} {ctx.bot.gold_emoji} {rewards[1]} "
+                    f"{ctx.bot.xp_emoji} {chest or ''}**"
+                ),
+                ctx=ctx
+            )
         )
 
 

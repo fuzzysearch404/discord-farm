@@ -212,7 +212,7 @@ class BoostPurchasePrompt(menus.Menu):
         return self._result, self.message
 
 
-class MissionSelection(menus.Menu):
+class NumberSelection(menus.Menu):
     def __init__(self, embed=None, count: int = 1):
         super().__init__(timeout=60.0, clear_reactions_after=True)
         self.embed = embed
@@ -221,14 +221,14 @@ class MissionSelection(menus.Menu):
         for num in range(count):
             self.add_button(
                 menus.Button(
-                    str(num + 1) + "\ufe0f\u20e3", self.choose_mission
+                    str(num + 1) + "\ufe0f\u20e3", self.choose_number
                 )
             )
 
     async def send_initial_message(self, ctx, channel):
         return await ctx.reply(embed=self.embed)
 
-    async def choose_mission(self, payload):
+    async def choose_number(self, payload):
         self._result = int(payload.emoji.name[0])
         self.stop()
 

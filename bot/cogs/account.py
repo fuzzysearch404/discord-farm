@@ -167,7 +167,7 @@ class Account(commands.Cog):
         if not confirm:
             return
 
-        await ctx.users.delete_user(self.bot, ctx.author.id)
+        await ctx.users.delete_user(ctx.author.id)
 
         await msg.edit(
             embed=embeds.success_embed(

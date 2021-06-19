@@ -441,7 +441,7 @@ class UserManager:
             "EX", 600
         )
 
-    async def delete_user(self, bot, user_id: int, conn=None) -> None:
+    async def delete_user(self, user_id: int, conn=None) -> None:
         if not conn:
             release_required = True
             conn = await self.db_pool.acquire()
@@ -456,5 +456,6 @@ class UserManager:
 
         await self.redis.execute_command("DEL", f"user_profile:{user_id}")
 
-        # Leave cooldowns etc. in Redis, just delete boosts
+        # Delete boosts and export mission
         await self.redis.execute_command("DEL", f"user_boosts:{user_id}")
+        await self.redis.execute_command("DEL", f"export:{user_id}")

@@ -2,6 +2,8 @@ import json
 import random
 from dataclasses import dataclass
 
+from . import game_items
+
 
 with open("data/mission_names.json", "r") as file:
     MISSION_NAMES = json.load(file)
@@ -107,7 +109,8 @@ class BusinessMission:
         total_worth, requests = 0, []
         for item, amount in request_items:
             requests.append(MissionRequest(item.id, amount))
-            total_worth += int(item.max_market_price * amount * 1.08)
+            extra_worth = random.randint(70, 120) / 100  # 0.7 - 1.2
+            total_worth += int(item.max_market_price * amount * extra_worth)
 
         total_worth = int(total_worth * reward_multiplier)
         xp_reward = random.randint(
@@ -140,3 +143,74 @@ class BusinessMission:
             name=random.choice(MISSION_NAMES['businesses']),
             chest=chest_id
         )
+
+
+class ExportMission:
+
+    __slots__ = (
+        "item",
+        "amount",
+        "base_gold",
+        "base_xp",
+        "shipments",
+        "port_name"
+    )
+
+    def __init__(
+        self,
+        item: game_items.MarketItem,
+        amount: int,
+        base_gold: int,
+        base_xp: int,
+        shipments: int,
+        port_name: str
+    ) -> None:
+        self.item = item
+        self.amount = amount
+        self.base_gold = base_gold
+        self.base_xp = base_xp
+        self.shipments = shipments
+        self.port_name = port_name
+
+    @classmethod
+    def generate(cls, ctx):
+        # Small chance to randomize with products
+        # Because we have more products than other items
+        randomize_products = random.randint(1, 3) == 1
+
+        item, amount = ctx.items.get_random_items(
+            user_level=ctx.user_data.level,
+            extra_luck=0.75,
+            total_draws=1,
+            growables_multiplier=ctx.user_data.level * 2,
+            products_multiplier=int(ctx.user_data.level / 10) or 1,
+            growables=True,
+            products=randomize_products,
+            specials=False
+        )[0]
+
+        return cls(
+            item=item,
+            amount=amount,
+            base_gold=int(item.max_market_price / 6.2 * amount) or 1,
+            base_xp=int(item.xp * amount / 12) or 1,
+            shipments=0,
+            port_name=random.choice(MISSION_NAMES['ports'])
+        )
+
+    def rewards_for_shipment(self, shipment: int = 0) -> tuple:
+        shipment = shipment or self.shipments + 1
+
+        chests_per_shipments = {
+            3: 1001, 7: 1003, 10: 1004
+        }
+
+        try:
+            chest_id = chests_per_shipments[shipment]
+        except KeyError:
+            chest_id = None
+
+        gold = self.base_gold * shipment
+        xp = self.base_xp + self.base_xp * (shipment * 0.28)
+
+        return (int(gold), int(xp), chest_id)
