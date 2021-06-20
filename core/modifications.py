@@ -21,15 +21,8 @@ async def get_item_mods(ctx, item: game_items.GameItem, conn=None) -> tuple:
     mods = await ctx.user_data.get_item_modification(ctx, item.id, conn=conn)
 
     if mods:
-        time1_mod = mods['time1']
-        time2_mod = mods['time2']
-        vol_mod = mods['volume']
-
-        if time1_mod:
-            grow_time = get_growing_time(item, time1_mod)
-        if time2_mod:
-            collect_time = get_harvest_time(item, time2_mod)
-        if vol_mod:
-            base_volume = get_volume(item, vol_mod)
+        grow_time = get_growing_time(item, mods['time1'])
+        collect_time = get_harvest_time(item, mods['time2'])
+        base_volume = get_volume(item, mods['volume'])
 
     return grow_time, collect_time, base_volume

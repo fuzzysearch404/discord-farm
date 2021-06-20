@@ -2,6 +2,7 @@ import jsonpickle
 import asyncpg
 from datetime import datetime
 
+from . import exceptions
 from core.game_items import GameItem
 from bot.cogs.utils import embeds
 
@@ -95,7 +96,7 @@ class User:
         unlocked_items = ctx.bot.item_pool.find_items_by_level(self.level)
 
         if unlocked_items:
-            fmt = [f"{x.emoji} {x.name.capitalize()}" for x in unlocked_items]
+            fmt = [x.full_name for x in unlocked_items]
             embed.description += \
                 "\n\nAnd also you have unlocked the following items: "
             embed.description += ", ".join(fmt)
@@ -360,7 +361,10 @@ class UserManager:
             await self.db_pool.release(conn)
 
         if not user_data:
-            return None
+            # If someone deletes their account during a command
+            raise exceptions.UserNotFoundException(
+                "You don't have a game account"
+            )
 
         user = User(
             user_id=user_data['user_id'],

@@ -58,6 +58,10 @@ class GameItem:
     def __hash__(self) -> int:
         return self.id
 
+    @property
+    def full_name(self) -> str:
+        return f"{self.emoji} {self.name.capitalize()}"
+
 
 @dataclass
 class PurchasableItem:
@@ -473,8 +477,7 @@ class ItemPool:
             chests_per_name[chest.name] = chest
 
         matches = get_close_matches(
-            chest_name,
-            list(chests_per_name.keys())
+            chest_name, list(chests_per_name.keys())
         )
 
         if not matches:
@@ -583,7 +586,8 @@ class ItemPool:
 
                 amount = random.choice(population)
 
-            try:  # Try to just change the existing amount if same item
+            try:
+                # Try to just change the existing amount if same item
                 existing = next(x for x in rewards if item == x[0])
                 rewards.remove(existing)
                 rewards.append((item, existing[1] + amount))

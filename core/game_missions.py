@@ -109,6 +109,7 @@ class BusinessMission:
         total_worth, requests = 0, []
         for item, amount in request_items:
             requests.append(MissionRequest(item.id, amount))
+
             extra_worth = random.randint(70, 120) / 100  # 0.7 - 1.2
             total_worth += int(item.max_market_price * amount * extra_worth)
 

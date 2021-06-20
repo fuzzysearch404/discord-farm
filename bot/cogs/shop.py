@@ -33,8 +33,8 @@ class MarketSource(menus.ListPageSource):
         fmt = ""
         for item in page:
             fmt += (
-                f"**{item.emoji} {item.name.capitalize()}** - "
-                f"Buying for: **{item.gold_reward} {menu.bot.gold_emoji} "
+                f"**{item.full_name}** - Buying for: **"
+                f"{item.gold_reward} {menu.bot.gold_emoji} "
                 "/ unit** \n\u2696\ufe0f Sell items to market: **"
                 f"{menu.ctx.prefix}sell {item.name}**\n\n"
             )
@@ -66,9 +66,9 @@ class ShopSource(menus.ListPageSource):
         for item in page:
             fmt += (
                 f"**[\ud83d\udd31 {item.level}] "
-                f"{item.emoji} {item.name.capitalize()}** - "
-                f"**{item.gold_price} {menu.bot.gold_emoji} "
-                "/ farm tile** \n\ud83d\uded2 Start growing in your farm: **"
+                f"{item.full_name}** - **{item.gold_price} "
+                f"{menu.bot.gold_emoji} / farm tile** \n\ud83d\uded2 "
+                "Start growing in your farm: **"
                 f"{menu.ctx.prefix}plant {item.name}**\n\n"
             )
 
@@ -510,8 +510,8 @@ class Shop(commands.Cog):
                 embed=embeds.error_embed(
                     title="This item can't be sold!",
                     text=(
-                        f"Sorry, you can't sell **{item.emoji} "
-                        f"{item.name.capitalize()}** in our market!"
+                        f"Sorry, you can't sell **{item.full_name}** "
+                        "in our market!"
                     ),
                     ctx=ctx
                 )
@@ -524,8 +524,8 @@ class Shop(commands.Cog):
                     title=f"You don't have enough {item.name}!",
                     text=(
                         "Either you don't own or you don't "
-                        f"have enough **({amount}x) {item.emoji} "
-                        f"{item.name.capitalize()} ** in your warehouse!"
+                        f"have enough **({amount}x) {item.full_name}**"
+                        "in your warehouse!"
                     ),
                     footer=(
                         "Check your warehouse with the \"invenotory\" command"
@@ -543,7 +543,7 @@ class Shop(commands.Cog):
         )
         embed.add_field(
             name="\u2696\ufe0f Item",
-            value=f"{amount}x {item.emoji} {item.name.capitalize()}"
+            value=f"{amount}x {item.full_name}"
         )
         embed.add_field(
             name=f"{self.bot.gold_emoji} Price per unit",
@@ -580,9 +580,8 @@ class Shop(commands.Cog):
                             title=f"You don't have enough {item.name}!",
                             text=(
                                 "Either you don't own or you don't "
-                                f"have enough **({amount}x) {item.emoji} "
-                                f"{item.name.capitalize()} ** in your "
-                                "warehouse!"
+                                f"have enough **({amount}x) {item.full_name}**"
+                                " in your warehouse!"
                             ),
                             footer=(
                                 "Check your warehouse with the \"inventory\" "
@@ -605,9 +604,8 @@ class Shop(commands.Cog):
                 text=(
                     "Thank you for the selling these items to the market! "
                     "\ud83d\ude0a We will be looking forward to working "
-                    f"with you again! You sold **{item.emoji} "
-                    f"{item.name.capitalize()} x{amount}** for **"
-                    f"{total_reward} {self.bot.gold_emoji}**"
+                    f"with you again! You sold **{item.full_name} "
+                    f"x{amount}** for **{total_reward} {self.bot.gold_emoji}**"
                 ),
                 footer=f"You now have {ctx.user_data.gold} gold coins!",
                 ctx=ctx

@@ -58,11 +58,9 @@ class InventorySource(menus.ListPageSource):
 
                 # 3 items per line
                 if iteration <= 3:
-                    fmt += f"{item.emoji} {item.name.capitalize()} x{amount} "
+                    fmt += f"{item.full_name} x{amount} "
                 else:
-                    fmt += (
-                        f"\n{item.emoji} {item.name.capitalize()} x{amount} "
-                    )
+                    fmt += f"\n{item.full_name} x{amount} "
                     iteration = 1
 
             embed.set_footer(
@@ -91,8 +89,7 @@ class AllItemsSource(menus.ListPageSource):
         fmt = []
         for item in page:
             fmt.append(
-                f"{item.emoji} {item.name.capitalize()} - "
-                f"**{menu.ctx.prefix}item {item.id}**"
+                f"{item.full_name} - **{menu.ctx.prefix}item {item.id}**"
             )
 
         embed = discord.Embed(
@@ -136,12 +133,13 @@ class Profile(commands.Cog):
         """
         if not member:
             user = ctx.user_data
+            target_user = ctx.author
         else:
             user = await checks.get_other_member(ctx, member)
+            target_user = member
 
         bot = self.bot
         prefix = ctx.prefix
-        target_user = member or ctx.author
 
         all_boosts = await user.get_all_boosts(ctx)
         boost_ids = [x.id for x in all_boosts]
@@ -330,10 +328,10 @@ class Profile(commands.Cog):
         """
         if not member:
             user = ctx.user_data
+            target_user = ctx.author
         else:
             user = await checks.get_other_member(ctx, member)
-
-        target_user = member or ctx.author
+            target_user = member
 
         async with ctx.db.acquire() as conn:
             all_items_data = await user.get_all_items(ctx, conn=conn)
@@ -561,9 +559,7 @@ class Profile(commands.Cog):
 
         if items_won:
             for item, amount in items_won:
-                rewards += (
-                    f"**{item.emoji} {item.name.capitalize()}**: {amount} "
-                )
+                rewards += f"**{item.full_name}**: {amount} "
         if gold_reward:
             rewards += f"**{self.bot.gold_emoji} {gold_reward} gold** "
         if gems_reward:
@@ -601,10 +597,10 @@ class Profile(commands.Cog):
         """
         if not member:
             user = ctx.user_data
+            target_user = ctx.author
         else:
             user = await checks.get_other_member(ctx, member)
-
-        target_user = member or ctx.author
+            target_user = member
 
         all_boosts = await user.get_all_boosts(ctx)
 
@@ -834,7 +830,7 @@ class Profile(commands.Cog):
         {prefix} `item 1` - view lettuce stats
         """
         embed = discord.Embed(
-            title=f"{item.emoji} {item.name.capitalize()}",
+            title=f"{item.full_name}",
             description=f"\ud83d\udd0e **Item ID: {item.id}**",
             color=discord.Color.from_rgb(38, 202, 49)
         )
@@ -910,7 +906,7 @@ class Profile(commands.Cog):
                 value=f"{volume} units"
             )
             embed.add_field(
-                name="\ud83d\udd70 Growing time",
+                name="\ud83d\udd70 Growing duration",
                 value=f"{grow_time}"
             )
             embed.add_field(
@@ -926,7 +922,7 @@ class Profile(commands.Cog):
             made_from = ""
             for iaa in item.made_from:
                 i = iaa.item
-                made_from += f"{i.emoji} {i.name.capitalize()} x{iaa.amount}\n"
+                made_from += f"{i.full_name} x{iaa.amount}\n"
 
             embed.add_field(
                 name="\ud83d\udcdc Required raw materials",

@@ -3,6 +3,7 @@ from discord.ext import commands
 from .utils import checks
 from .utils import embeds
 from .utils import pages
+from core import exceptions
 
 
 class Account(commands.Cog):
@@ -114,7 +115,11 @@ class Account(commands.Cog):
         You can only use this command if you don't already have an account.
         """
         async with ctx.db.acquire() as conn:
-            if await ctx.users.get_user(ctx.author.id, conn=conn):
+            try:
+                await ctx.users.get_user(ctx.author.id, conn=conn)
+            except exceptions.UserNotFoundException:
+                pass
+            else:
                 return await ctx.reply(
                     embed=embeds.error_embed(
                         title="You already own a farm!",

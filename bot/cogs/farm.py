@@ -157,20 +157,15 @@ class FarmFieldSource(menus.ListPageSource):
                 state = "Rotten (not collected in time)"
 
             if isinstance(item, game_items.Crop):
-                fmt += (
-                    f"{item.emoji} **{item.name.capitalize()} "
-                    f"x{plant.amount}** - {state}"
-                )
+                fmt += f"**{item.full_name} x{plant.amount}** - {state}"
             elif isinstance(item, game_items.Tree):
                 fmt += (
-                    f"{item.emoji} **{item.name.capitalize()} "
-                    f"x{plant.amount}** - {state} "
+                    f"**{item.full_name} x{plant.amount}** - {state} "
                     f"(**{plant.iterations}.lvl**)"
                 )
             else:
                 fmt += (
-                    f"{item.emoji_animal} **{item.name.capitalize()} "
-                    f"(x{plant.amount} {item.emoji})** "
+                    f"**{item.full_name} (x{plant.amount} {item.emoji})** "
                     f"- {state} (**{plant.iterations}.lvl**)"
                 )
 
@@ -260,9 +255,10 @@ class Farm(commands.Cog):
         """
         if not member:
             user = ctx.user_data
+            target_user = ctx.author
         else:
             user = await checks.get_other_member(ctx, member)
-        target_user = member or ctx.author
+            target_user = member
 
         field_data = await user.get_farm_field(ctx)
 
@@ -454,7 +450,7 @@ class Farm(commands.Cog):
         if discarded and not(harvested or updated):
             fmt = ""
             for item, amount in discarded.items():
-                fmt += f"{amount}x {item.emoji} {item.name.capitalize()}, "
+                fmt += f"{amount}x {item.full_name}, "
 
             await ctx.reply(
                 embed=embeds.error_embed(
@@ -479,7 +475,7 @@ class Farm(commands.Cog):
             )
 
             for item, amount in harvested.items():
-                fmt += f"{item.emoji} {item.name.capitalize()} x{amount}, "
+                fmt += f"{item.full_name} x{amount}, "
 
             fmt = fmt[:-2] + "**"
 
@@ -501,7 +497,7 @@ class Farm(commands.Cog):
                 )
 
                 for item, amount in discarded.items():
-                    fmt += f"{item.emoji} {item.name.capitalize()} x{amount}, "
+                    fmt += f"{item.full_name} x{amount}, "
 
                 fmt = fmt[:-2] + "** \ud83d\ude10"
 
@@ -557,7 +553,7 @@ class Farm(commands.Cog):
         if item.level > ctx.user_data.level:
             return await ctx.reply(
                 embed=embeds.error_embed(
-                    title="Insufficient experience level!",
+                    title="\ud83d\udd12 Insufficient experience level!",
                     text=(
                         f"**Sorry, you can't grow {item.emoji} "
                         f"{item_name_capitalized} just yet!** "
@@ -731,7 +727,8 @@ class Farm(commands.Cog):
                     f"{item_name_capitalized}!** \ud83e\udd20\n"
                     f"You will be able to collect it in: **{grow_time_str}**. "
                     "Just remember to harvest in time, because you will only "
-                    f"have limited time to do so... (**{coll_time_str}**)"
+                    f"have limited time to do so... (**{coll_time_str}**) "
+                    "\u23f0"
                 ),
                 footer="Check out your farm field with the \"farm\" command",
                 ctx=ctx
@@ -840,7 +837,7 @@ class Farm(commands.Cog):
             return await ctx.reply(
                 embed=embeds.error_embed(
                     title=(
-                        "\ud83d\udd12Fishing unlocks from experience "
+                        "\ud83d\udd12 Fishing unlocks from experience "
                         "level 17!"
                     ),
                     text=(
@@ -869,8 +866,8 @@ class Farm(commands.Cog):
 
         await checks.set_user_cooldown(ctx, 3600, "recent_fishing")
 
-        limits = [5, 10, 20, 30, 40]
-        weights = [12.0, 10.0, 5.0, 2.0, 1.0]
+        limits = [1, 5, 10, 20, 30, 40]
+        weights = [8.0, 12.0, 10.0, 5.0, 2.0, 1.0]
 
         limit = random.choices(population=limits, weights=weights, k=1)
         win_amount = random.randint(0, limit[0])
@@ -878,10 +875,10 @@ class Farm(commands.Cog):
         if win_amount == 0:
             return await ctx.reply(
                 embed=embeds.error_embed(
-                    title="Unlucky! \ud83e\ude9d",
+                    title="\ud83e\ude9d Unlucky! No fish at all!",
                     text=(
                         f"You went to a {limit[0]} hour long fishing session "
-                        "and could not catch a single fish... \ud83d\ude14 "
+                        "and could not catch a single fish... \ud83d\ude14\n"
                         "No worries! Hopefully you will have a "
                         "better luck next time! \ud83d\ude09"
                     ),
@@ -1067,7 +1064,7 @@ class Farm(commands.Cog):
 
             fmt = ""
             for item, amount in won_items_and_amounts.items():
-                fmt += f"{item.emoji} {item.name.capitalize()} x{amount}, "
+                fmt += f"{item.full_name} x{amount}, "
 
             fmt = fmt[:-2]
             if target_user.notifications:

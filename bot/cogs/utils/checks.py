@@ -50,30 +50,28 @@ async def set_user_cooldown(ctx, cooldown: int, identifier: str) -> None:
 
 def has_account() -> commands.check:
     async def pred(ctx) -> bool:
-        ctx.user_data = await ctx.users.get_user(ctx.author.id)
+        try:
+            ctx.user_data = await ctx.users.get_user(ctx.author.id)
 
-        if ctx.user_data:
             return True
-
-        raise exceptions.UserNotFoundException(
-            "Hey there! It looks like you don't have a game account yet! "
-            f"Type `{ctx.prefix}register` and let's get started!"
-            "\ud83d\udc68\u200d\ud83c\udf3e"
-        )
+        except exceptions.UserNotFoundException:
+            raise exceptions.UserNotFoundException(
+                "Hey there! It looks like you don't have a game account yet! "
+                f"Type `{ctx.prefix}register` and let's get started!"
+                "\ud83d\udc68\u200d\ud83c\udf3e"
+            )
 
     return commands.check(pred)
 
 
 async def get_other_member(ctx, member: Member, conn=None):
-    user_data = await ctx.users.get_user(member.id, conn=conn)
-
-    if not user_data:
+    try:
+        return await ctx.users.get_user(member.id, conn=conn)
+    except exceptions.UserNotFoundException:
         raise exceptions.UserNotFoundException(
             f"Whoops. `{member.nick or member.name}` does not have a "
             "game account. Maybe tell them to check this bot out? \ud83e\udd14"
         )
-
-    return user_data
 
 
 def avoid_maintenance() -> commands.check:

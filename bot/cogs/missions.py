@@ -47,7 +47,7 @@ class Missions(commands.Cog):
 
         for req in mission.requests:
             item, amount = req[0], req[1]
-            fmt += f"**{item.emoji} {item.name.capitalize()} x{amount}**\n"
+            fmt += f"**{item.full_name} x{amount}**\n"
 
         fmt += "\n\ud83d\udcb0 Rewards:\n**"
 
@@ -111,7 +111,7 @@ class Missions(commands.Cog):
         if missing_items:
             fmt = ""
             for item, amount in missing_items:
-                fmt += f"{item.emoji} {item.name.capitalize()} x{amount}, "
+                fmt += f"{item.full_name} x{amount}, "
 
             return await mission_msg.edit(
                 embed=embeds.error_embed(
@@ -371,8 +371,8 @@ class Missions(commands.Cog):
         item = export.item
 
         text = (
-            f"{export.port_name}\n{item.emoji} "
-            f"{item.name.capitalize()}\n\ud83d\udce6 Package size: "
+            f"{export.port_name}\n{item.full_name}\n"
+            f"\ud83d\udce6 Package size: "
             f"{export.amount}x {item.emoji}\n\n"
         )
 
@@ -593,7 +593,7 @@ class Missions(commands.Cog):
                             "\ud83d\udc77 The cargo ship's capacity should be "
                             "used effectively, so the package must be full to "
                             f"the top.\n**You are missing: {missing_amount}x "
-                            f"{item.emoji} {item.name.capitalize()}**"
+                            f"{item.full_name}**"
                         ),
                         ctx=ctx
                     )
@@ -643,7 +643,7 @@ class Missions(commands.Cog):
                 title="Package is being loaded onto the cargo ship!",
                 text=(
                     "Well done! \ud83d\udc4d We started loading your package: "
-                    f"**{amount}x {item.emoji} {item.name.capitalize()}** "
+                    f"**{amount}x {item.full_name}** "
                     "onto the cargo ship!\n**You received: "
                     f"{rewards[0]} {ctx.bot.gold_emoji} {rewards[1]} "
                     f"{ctx.bot.xp_emoji} {chest or ''}**"
