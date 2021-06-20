@@ -237,7 +237,7 @@ class Lab(commands.Cog):
                 embed=embeds.error_embed(
                     title="This item can't be genetically modified",
                     text=(
-                        "With a with deep regret, I have to tell you that "
+                        "With a deep regret, I have to tell you that "
                         f"**{item.full_name}** can't be "
                         f"upgraded!\nThe science has not developed so "
                         "far yet... \ud83d\udc68\u200d\ud83d\udd2c\n"

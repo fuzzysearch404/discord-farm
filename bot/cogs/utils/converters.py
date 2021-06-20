@@ -30,12 +30,13 @@ def _amount_conversion(argument) -> int:
         amount = int(argument)
     except ValueError:
         raise exceptions.InvalidAmountException(
-            "Hey buddy, please provide amount with numbers. For example: 123"
+            "Hey buddy, please provide the amount with numbers. For example: "
+            "123"
         )
 
     if amount < 1 or amount > 1_000_000:
         raise exceptions.InvalidAmountException(
-            "Please provide amount in range 1 - 1,000,000 (one million)"
+            "Please provide the amount in range 1 - 1,000,000 (one million)"
         )
 
     return amount
