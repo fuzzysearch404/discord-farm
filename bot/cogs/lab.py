@@ -87,7 +87,7 @@ class Lab(commands.Cog):
         return int(round(item.gold_price * (level ** 1.55), -1))
 
     def calculate_mod_cooldown(self, level: int) -> int:
-        return 60 + round((level ** 5), -1)
+        return 60 + int(round((level ** 4.9362), -1))  # Max (10): 1 day
 
     @commands.command(aliases=["lab"])
     @checks.has_account()
@@ -163,7 +163,7 @@ class Lab(commands.Cog):
             if current_level >= 10:
                 return await msg.edit(
                     embed=embeds.error_embed(
-                        title="Already upgraded to maximum level!",
+                        title="Already upgraded to the maximum level!",
                         text=(
                             "You have reached the last possible "
                             "modification level for this property "

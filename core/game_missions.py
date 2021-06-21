@@ -183,7 +183,7 @@ class ExportMission:
             user_level=ctx.user_data.level,
             extra_luck=0.75,
             total_draws=1,
-            growables_multiplier=ctx.user_data.level * 2,
+            growables_multiplier=ctx.user_data.level,
             products_multiplier=int(ctx.user_data.level / 10) or 1,
             growables=True,
             products=randomize_products,

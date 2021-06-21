@@ -8,7 +8,6 @@ class GlobalCooldownException(commands.CommandOnCooldown):
 
 class GameIsInMaintenance(commands.CheckFailure):
     """Exception raised when game is in maintenance."""
-
     pass
 
 

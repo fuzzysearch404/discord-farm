@@ -2,7 +2,7 @@ import json
 import random
 from enum import Enum
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from difflib import get_close_matches
 
 from core.exceptions import ItemNotFoundException
@@ -223,6 +223,7 @@ class Chest(GameItem):
 
 @dataclass
 class ItemAndAmount:
+    """A helper class to store item and amount info in product objects"""
 
     __slots__ = ("item", "amount")
 
@@ -373,16 +374,13 @@ class Boost:
 
 
 class ObtainedBoost:
+    """Boost instance to store in Redis"""
 
     __slots__ = ("id", "duration")
 
     def __init__(self, id: str, duration: datetime) -> None:
         self.id = id
         self.duration = duration
-
-    @classmethod
-    def from_seconds(cls, id: str, duration: int):
-        return cls(id, datetime.now() + timedelta(seconds=duration))
 
 
 class ItemPool:
