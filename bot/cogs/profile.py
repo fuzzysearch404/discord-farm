@@ -217,6 +217,8 @@ class Profile(commands.Cog):
                 nearest_factory = nearest_factory - datetime_now
                 nearest_factory = \
                     time.seconds_to_time(nearest_factory.total_seconds())
+            else:
+                nearest_factory = "\u2705"
 
         lab_cooldown = await checks.get_user_cooldown(
             ctx, "recent_research", other_user_id=user.user_id
@@ -645,7 +647,7 @@ class Profile(commands.Cog):
 
         await ctx.reply(embed=embed)
 
-    @commands.command(aliases=["all", "unlocked"])
+    @commands.command(aliases=["items", "all", "unlocked"])
     @checks.has_account()
     @checks.avoid_maintenance()
     async def allitems(self, ctx):

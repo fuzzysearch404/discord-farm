@@ -311,6 +311,9 @@ class Product(GameItem, SellableItem, MarketItem):
     def _calculate_xp(self) -> int:
         return int((self.craft_time / 3600) * CRAFTABLE_XP_GAIN_PER_HOUR)
 
+    def craft_time_by_factory_level(self, level: int) -> int:
+        return self.craft_time - int((self.craft_time / 100) * (level * 5))
+
 
 class BoostDuration(Enum):
     ONE_DAY = 86400

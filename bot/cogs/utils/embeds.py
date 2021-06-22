@@ -29,7 +29,7 @@ def _create_embed(
     else:
         if not footer:
             embed.set_footer(
-                text=f"Farming notification from \"{ctx.guild}\" server",
+                text=f"Discord Farm notification from \"{ctx.guild}\" server",
                 icon_url=ctx.guild.icon_url
             )
         else:

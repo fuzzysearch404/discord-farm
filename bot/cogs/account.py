@@ -150,8 +150,8 @@ class Account(commands.Cog):
 
         There is no way to get your farm back after using this command,
         so be careful with your decision.
-        However, you can start a new game any any time with the `register`
-        command.
+        However, you can start a new game any time with the
+        **{prefix}register** command.
         """
         embed = embeds.prompt_embed(
             title="Woah. Are you really, really sure about that?",

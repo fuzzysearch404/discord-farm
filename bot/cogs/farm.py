@@ -200,15 +200,15 @@ class Farm(commands.Cog):
         super().__init__()
         self.bot = bot
 
-    def parse_db_rows_to_plant_data_classes(self, rows: dict) -> list:
+    def parse_db_rows_to_plant_data_objects(self, rows: dict) -> list:
         parsed = []
 
         for row in rows:
             item = self.bot.item_pool.find_item_by_id(row['item_id'])
 
             plant = PlantedFieldItem(
-                item=item,
                 id=row['id'],
+                item=item,
                 amount=row['amount'],
                 iterations=row['iterations'],
                 fields_used=row['fields_used'],
@@ -237,13 +237,13 @@ class Farm(commands.Cog):
         specified time until you can harvest the item.
 
         if the item is **"Harvestable" or "Collectable"** - that means that you
-        can use the "{prefix}`harvest`" command, to collect these items.
+        can use the **{prefix}harvest** command, to collect these items.
         Be quick, because you can only collect those for the specified
         period of time, before they get rotten.
 
         If the item is **"Rotten"** - that means that you have missed the
         chance to collect this item and you won't be able to obtain these
-        items. You have to use the "{prefix}`harvest`" command, to free up
+        items. You have to use the **{prefix}harvest** command, to free up
         your farm space.
 
         __Optional arguments__:
@@ -281,7 +281,7 @@ class Farm(commands.Cog):
                 )
             )
 
-        field_parsed = self.parse_db_rows_to_plant_data_classes(field_data)
+        field_parsed = self.parse_db_rows_to_plant_data_objects(field_data)
         used_fields = sum(x.fields_used for x in field_parsed)
 
         field_guard = 0
@@ -327,7 +327,7 @@ class Farm(commands.Cog):
         If you collect tree, bush or animal items, then
         their next growing cycle begins.
         To check what you are currenly growing and if you can
-        harvest anything, check out "{prefix}`farm`" command.
+        harvest anything, check out the **{prefix}farm** command.
         """
         conn = await ctx.acquire()
         field_data = await ctx.user_data.get_farm_field(ctx, conn=conn)
@@ -348,7 +348,7 @@ class Farm(commands.Cog):
                 )
             )
 
-        field_parsed = self.parse_db_rows_to_plant_data_classes(field_data)
+        field_parsed = self.parse_db_rows_to_plant_data_objects(field_data)
 
         to_harvest, to_update, to_discard = [], [], []
 
@@ -532,17 +532,15 @@ class Farm(commands.Cog):
         {prefix} `plant 1` - plant lettuce (single tile)
         """
         item, tiles = item
-        item_name_capitalized = item.name.capitalize()
 
         if not isinstance(item, game_items.PlantableItem):
             return await ctx.reply(
                 embed=embeds.error_embed(
-                    title=f"{item_name_capitalized} is not a growable item!",
+                    title=f"{item.name.capitalize()} is not a growable item!",
                     text=(
                         "Hey! HEY! YOU! STOP it right there! \ud83d\ude40 "
-                        f"You can't just plant {item.emoji} **"
-                        f"{item_name_capitalized}** on your farm field! "
-                        "That's illegal! \ud83d\ude33 "
+                        f"You can't just plant **{item.full_name}** "
+                        "on your farm field! That's illegal! \ud83d\ude33 "
                         "It would be cool tho. \ud83e\udd14"
                     ),
                     footer="Check out shop to discover plantable items",
@@ -555,9 +553,8 @@ class Farm(commands.Cog):
                 embed=embeds.error_embed(
                     title="\ud83d\udd12 Insufficient experience level!",
                     text=(
-                        f"**Sorry, you can't grow {item.emoji} "
-                        f"{item_name_capitalized} just yet!** "
-                        "I was told by shop cashier that they can't "
+                        f"**Sorry, you can't grow {item.full_name} just yet!**"
+                        " I was told by shop cashier that they can't "
                         "let you purchase these, because you are not "
                         "experienced enough to handle these, you know? "
                         "Anyways, this item unlocks from level "
@@ -578,7 +575,7 @@ class Farm(commands.Cog):
         embed = embeds.prompt_embed(
             title=(
                 f"Are you really going to grow {tiles}x "
-                f"tiles of {item.emoji} {item_name_capitalized}?"
+                f"tiles of {item.full_name}?"
             ),
             text=(
                 "Check out these details and let me know if you approve"
@@ -587,7 +584,7 @@ class Farm(commands.Cog):
         )
         embed.add_field(
             name="\ud83e\uddfe Item",
-            value=f"{item.emoji} {item_name_capitalized}"
+            value=item.full_name
         )
         embed.add_field(
             name="\u2696\ufe0f Quantity",
@@ -600,11 +597,10 @@ class Farm(commands.Cog):
 
         if isinstance(item, game_items.ReplantableItem):
             grow_info = (
-                f"{total_items}x {item.emoji} "
-                f"{item_name_capitalized} ({item.iterations} times)"
+                f"{total_items}x {item.full_name} ({item.iterations} times)"
             )
         else:
-            grow_info = f"{total_items}x {item.emoji} {item_name_capitalized}"
+            grow_info = f"{total_items}x {item.full_name}"
 
         grow_time_str = time.seconds_to_time(grow_time)
         coll_time_str = time.seconds_to_time(collect_time)
@@ -665,14 +661,14 @@ class Farm(commands.Cog):
                 embed=embeds.error_embed(
                     title="Not enough farm space!",
                     text=(
-                        f"**Currently you are already using {used_fields} of "
+                        f"**You are already currently using {used_fields} of "
                         f"your {total_slots} farm space tiles**!\n"
                         "I'm sorry to say, but there is no more space for "
-                        f"**{tiles}x {item.emoji} {item_name_capitalized}**."
-                        "\n\nWhat you can do about this:\na) Wait for "
-                        "your currently planted items to grow and harvest them"
-                        " \nb) Upgrade your farm size if you have gems "
-                        f"with **{ctx.prefix}upgrade farm**"
+                        f"**{tiles} tiles of {item.full_name}**.\n\n"
+                        "What you can do about this:\na) Wait for your "
+                        "currently planted items to grow and harvest them."
+                        "\nb) Upgrade your farm size if you have gems "
+                        f"with: **{ctx.prefix}upgrade farm**."
                     ),
                     ctx=ctx
                 )
@@ -719,16 +715,14 @@ class Farm(commands.Cog):
         await msg.edit(
             embed=embeds.success_embed(
                 title=(
-                    f"Successfully started growing {item.emoji} "
-                    f"{item_name_capitalized}!"
+                    f"Successfully started growing {item.full_name}!"
                 ),
                 text=(
-                    f"Nicely done! **You are now growing {item.emoji} "
-                    f"{item_name_capitalized}!** \ud83e\udd20\n"
-                    f"You will be able to collect it in: **{grow_time_str}**. "
-                    "Just remember to harvest in time, because you will only "
-                    f"have limited time to do so... (**{coll_time_str}**) "
-                    "\u23f0"
+                    f"Nicely done! **You are now growing {item.full_name}!** "
+                    "\ud83e\udd20\nYou will be able to collect it in: "
+                    f"**{grow_time_str}**. Just remember to harvest in time, "
+                    "because you will only have limited time to do so... "
+                    f"(**{coll_time_str}**) \u23f0"
                 ),
                 footer="Check out your farm field with the \"farm\" command",
                 ctx=ctx
