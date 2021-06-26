@@ -3,6 +3,8 @@ import pkg_resources
 import discord
 from discord.ext import commands, tasks, menus
 
+from .utils import checks
+from .utils import embeds
 from .utils import time as time_util
 from .utils import pages
 
@@ -245,6 +247,70 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
             )
 
         await ctx.reply(embed=embed)
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    @checks.avoid_maintenance()
+    async def prefix(self, ctx, prefix: str):
+        """Customize bot's prefix
+
+        This command let's you choose by what prefix the commands will be
+        invoked with. Prefix is the symbol combination before any
+        command name. Right now you are using prefix: **{prefix}**
+
+        __Arguments__:
+        `prefix` - the new prefix to switch to. If you want a space
+        between prefix and the command, put the prefix with a whitespace
+        in double quotes. (See the second example below)
+
+        __Usage examples__:
+        {prefix} `prefix !!` - the commands are going to start
+        with a "!!" prefix: Example command: !!profile
+        {prefix} `prefix "farm "` - the commands are going to start
+        with a "farm " prefix: Example command: farm profile
+        """
+        if len(prefix) > 6:
+            return await ctx.reply(
+                "\u274c The prefix lenght must be 6 symbols or less!"
+            )
+
+        async with ctx.acquire() as conn:
+            if prefix == self.bot.def_prefix:
+                query = "DELETE FROM guilds WHERE guild_id = $1;"
+
+                await conn.execute(query, ctx.guild.id)
+
+                try:
+                    del self.bot.custom_prefixes[ctx.guild.id]
+                except KeyError:
+                    pass
+            else:
+                query = """
+                        INSERT INTO guilds (guild_id, prefix)
+                        VALUES ($1, $2)
+                        ON CONFLICT (guild_id) DO UPDATE
+                        SET prefix = $2;
+                        """
+
+                await conn.execute(query, ctx.guild.id, prefix)
+
+                self.bot.custom_prefixes[ctx.guild.id] = prefix
+
+        await ctx.reply(
+            embed=embeds.success_embed(
+                title="My prefix got changed! \ud83d\udc4c",
+                text=(
+                    "From now on my prefix in this server is: "
+                    f"\"**{prefix}**\"\nNow, to execute commands, you "
+                    f"will have to type: **{prefix}**`command_name`.\n"
+                    f"For example: **{prefix}profile**\n\nIf you somehow "
+                    "forget your prefix, don't worry, you can still just "
+                    "@mention me to use commands too. :)"
+                ),
+                footer="Don't forget to notify your friends here about this",
+                ctx=ctx
+            )
+        )
 
     @tasks.loop(seconds=1800)
     async def update_status_task(self):

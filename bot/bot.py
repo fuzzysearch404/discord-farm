@@ -62,6 +62,8 @@ class BotClient(commands.AutoShardedBot):
 
         self._connect_redis()
 
+        self.custom_prefixes = {}
+
         self.user_cache = UserManager(self.redis, self.db_pool)
 
         intents = discord.Intents.none()
@@ -74,9 +76,7 @@ class BotClient(commands.AutoShardedBot):
             chunk_guilds_at_startup=False,
             guild_subscriptions=False,
             max_messages=7500,
-            command_prefix=commands.when_mentioned_or(
-                self.def_prefix
-            ),
+            command_prefix=self.get_custom_prefix,
             case_insensitive=True,
             strip_after_prefix=True,
             **kwargs,
@@ -107,6 +107,32 @@ class BotClient(commands.AutoShardedBot):
                 self.log.exception(f"Failed to load extension: {extension}")
 
         self.run()
+
+    async def fetch_custom_prefixes(self):
+        all_guild_ids = [x.id for x in self.guilds]
+
+        query = "SELECT * FROM guilds;"
+
+        guild_data = await self.db_pool.fetch(query)
+        for row in guild_data:
+            try:
+                if row['guild_id'] in all_guild_ids:
+                    self.custom_prefixes[row['guild_id']] = row['prefix']
+            except KeyError:
+                pass
+
+    async def get_custom_prefix(self, bot, message):
+        if message.guild:
+            try:
+                return commands.when_mentioned_or(
+                    self.custom_prefixes[message.guild.id]
+                )(self, message)
+            except KeyError:
+                return commands.when_mentioned_or(
+                    self.def_prefix
+                )(self, message)
+        else:
+            return self.def_prefix
 
     @property
     def uptime(self) -> datetime.datetime:
@@ -215,10 +241,12 @@ class BotClient(commands.AutoShardedBot):
 
         # Check if Postgres is connected
         try:
-            async with self.db_pool.acquire() as con:
-                await con.fetchrow("SELECT NOW();")
+            async with self.db_pool.acquire() as conn:
+                await conn.fetchrow("SELECT NOW();")
         except Exception:
             await self.log_to_discord("\u274c Postgres not connected!")
+
+        await self.fetch_custom_prefixes()
 
         await self.log_to_discord(
             f'\ud83d\udfe2 Ready! Maintenance mode: `{self.maintenance_mode}` '
@@ -260,6 +288,8 @@ class BotClient(commands.AutoShardedBot):
                 "Please ask a server admin to enable those. "
                 "Otherwise, I can't function normally \ud83d\ude2b"
             )
+        elif isinstance(error, commands.errors.MissingPermissions):
+            return await ctx.reply(f"\u274c {str(error)} ")
         elif isinstance(error, exceptions.GameIsInMaintenance):
             await ctx.reply(str(error))
         elif isinstance(error, commands.errors.DisabledCommand):
@@ -305,18 +335,29 @@ class BotClient(commands.AutoShardedBot):
             f"(`{guild.id}`) Large:`{guild.large}` "
             f"Total guilds: `{len(self.guilds)}`"
         )
+        self.log.info(f"Joined guild: {guild.id}")
 
     async def on_guild_remove(self, guild) -> None:
-        async with self.db_pool.acquire() as con:
-            query = """DELETE FROM store WHERE guild_id = $1;"""
+        async with self.db_pool.acquire() as conn:
+            query = "DELETE FROM store WHERE guild_id = $1;"
 
-            await con.execute(query, guild.id)
+            await conn.execute(query, guild.id)
+
+            query = "DELETE FROM guilds WHERE guild_id = $1;"
+
+            await conn.execute(query, guild.id)
+
+        try:
+            del self.custom_prefixes[guild.id]
+        except KeyError:
+            pass
 
         await self.log_to_discord(
             f"\ud83d\udce4 Left guild: {guild.name} "
             f"(`{guild.id}`) Large:`{guild.large}`"
             f"Total guilds: `{len(self.guilds)}`"
         )
+        self.log.info(f"Left guild: {guild.id}")
 
     async def on_message(self, message) -> None:
         author = message.author
@@ -385,6 +426,7 @@ class BotClient(commands.AutoShardedBot):
                 del self._auto_spam_count[author_id]
 
                 await self.log_spammer(message, banned=True)
+                self.log.info("Banned user:", author_id)
             else:
                 await self.log_spammer(message)
 
