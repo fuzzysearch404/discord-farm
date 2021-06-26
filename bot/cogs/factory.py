@@ -184,13 +184,7 @@ class Factory(commands.Cog):
             target_user = member
 
         async with ctx.acquire() as conn:
-            query = """
-                    SELECT * from factory
-                    WHERE user_id = $1
-                    ORDER by starts;
-                    """
-
-            factory_data = await conn.fetch(query, target_user.id)
+            factory_data = await user.get_factory(ctx, conn=conn)
 
         if not factory_data:
             if not member:
@@ -432,7 +426,93 @@ class Factory(commands.Cog):
         Use command **{prefix}factory** to check which of your products
         are currently ready to be collected.
         """
-        raise NotImplementedError("Not implemented yet")
+        conn = await ctx.acquire()
+        factory_data = await ctx.user_data.get_factory(ctx, conn=conn)
+
+        if not factory_data:
+            await ctx.release()
+
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title=(
+                        "You are not manufacturing anything in "
+                        "your factory!"
+                    ),
+                    text=(
+                        "There is nothing to collect from the factory, "
+                        "because you are not even manufacturing anything. "
+                        "\ud83e\udd14\nProduce product items with the "
+                        f"**{ctx.prefix}make** command \ud83d\udce6"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        parsed_data = self.parse_db_rows_to_factory_data_objects(factory_data)
+
+        to_collect, to_award, xp_gain = [], {}, 0
+
+        for product in parsed_data:
+            if product.state == ProductState.READY:
+                to_collect.append((product.id, ))
+
+                try:
+                    to_award[product.item] += 1
+                except KeyError:
+                    to_award[product.item] = 1
+
+                xp_gain += product.item.xp
+
+        if not to_collect:
+            await ctx.release()
+
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title=(
+                        "Your items are still being manufactured! \ud83d\udce6"
+                    ),
+                    text=(
+                        "Please be patient! Your products are being "
+                        "manufactured by the hard working factory workers! "
+                        "\ud83d\udc68\u200d\ud83c\udf73\n"
+                        "Check out your remaining item production durations "
+                        f"with the **{ctx.prefix}factory** command. \n"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        to_award = list(to_award.items())
+
+        async with conn.transaction():
+            query = """
+                    DELETE FROM factory
+                    WHERE id = $1;
+                    """
+
+            await conn.executemany(query, to_collect)
+
+            await ctx.user_data.give_items(ctx, to_award, conn=conn)
+
+            ctx.user_data.xp += xp_gain
+            await ctx.users.update_user(ctx.user_data, conn=conn)
+
+        await ctx.release()
+
+        fmt = ", ".join(f"{y}x {x.full_name}" for x, y in to_award)
+
+        await ctx.reply(
+            embed=embeds.success_embed(
+                title="You collected products from the factory! \ud83d\ude9a",
+                text=(
+                    "Well done! I just arrived from the factory with freshly "
+                    f"fragrant: **{fmt}**.\nYou also received "
+                    f"**+{xp_gain} XP {self.bot.xp_emoji}**"
+                ),
+                footer="These products are now moved to your inventory",
+                ctx=ctx
+            )
+        )
 
 
 def setup(bot):

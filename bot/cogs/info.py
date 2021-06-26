@@ -263,6 +263,8 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
         `prefix` - the new prefix to switch to. If you want a space
         between prefix and the command, put the prefix with a whitespace
         in double quotes. (See the second example below)
+        You can even remove the prefix completely, by just specifying
+        the prefix as blank double quotes.
 
         __Usage examples__:
         {prefix} `prefix !!` - the commands are going to start

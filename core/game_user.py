@@ -330,6 +330,26 @@ class User:
 
         return data
 
+    async def get_factory(self, ctx, conn=None) -> list:
+        if not conn:
+            release_required = True
+            conn = await ctx.acquire()
+        else:
+            release_required = False
+
+        query = """
+                SELECT * from factory
+                WHERE user_id = $1
+                ORDER by starts;
+                """
+
+        data = await conn.fetch(query, self.user_id)
+
+        if release_required:
+            await ctx.release()
+
+        return data
+
 
 class UserManager:
 

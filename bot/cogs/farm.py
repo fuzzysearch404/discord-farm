@@ -373,9 +373,10 @@ class Farm(commands.Cog):
                 embed=embeds.error_embed(
                     title="Your items are still growing! \ud83c\udf31",
                     text=(
-                        "Be patient! Your items are growing! Soon we will "
-                        "get that huge harvest! \ud83d\udc68\u200d\ud83c\udf3e"
-                        "\nCheck out your remaining item growing times with "
+                        "Please be patient! Your items are growing! Soon we "
+                        "will get that huge harvest! "
+                        "\ud83d\udc68\u200d\ud83c\udf3e\nCheck out your "
+                        "remaining item growing durations with "
                         f"the **{ctx.prefix}farm** command. \n"
                         "But don't get too relaxed, because you will have a "
                         "limited time to harvest your items. \u23f0"
@@ -727,7 +728,10 @@ class Farm(commands.Cog):
                     "because you will only have limited time to do so... "
                     f"(**{coll_time_str}**) \u23f0"
                 ),
-                footer="Check out your farm field with the \"farm\" command",
+                footer=(
+                    "Track your item growing progress with the "
+                    "\"farm\" command"
+                ),
                 ctx=ctx
             )
         )
