@@ -426,7 +426,7 @@ class BotClient(commands.AutoShardedBot):
                 del self._auto_spam_count[author_id]
 
                 await self.log_spammer(message, banned=True)
-                self.log.info("Banned user:", author_id)
+                self.log.info(f"Banned user: {author_id}")
             else:
                 await self.log_spammer(message)
 
