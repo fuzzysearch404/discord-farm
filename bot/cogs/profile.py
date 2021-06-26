@@ -134,9 +134,11 @@ class Profile(commands.Cog):
         if not member:
             user = ctx.user_data
             target_user = ctx.author
+            mention = ""
         else:
             user = await checks.get_other_member(ctx, member)
             target_user = member
+            mention = target_user.mention
 
         bot = self.bot
         prefix = ctx.prefix
@@ -225,7 +227,7 @@ class Profile(commands.Cog):
         lab_cooldown = await checks.get_user_cooldown(
             ctx, "recent_research", other_user_id=user.user_id
         )
-        lab_info = f"\ud83d\udd0e **{prefix}lab** {target_user.mention}"
+        lab_info = f"\ud83d\udd0e **{prefix}lab** {mention}"
 
         if lab_cooldown:
             lab_info = (
@@ -250,7 +252,7 @@ class Profile(commands.Cog):
             name=f"{bot.warehouse_emoji} Warehouse",
             value=(
                 f"\ud83c\udff7\ufe0f {inventory_size} inventory items"
-                f"\n\ud83d\udd0e **{prefix}inventory** {target_user.mention}"
+                f"\n\ud83d\udd0e **{prefix}inventory** {mention}"
             )
         )
         embed.add_field(
@@ -258,7 +260,7 @@ class Profile(commands.Cog):
             value=(
                 f"{bot.tile_emoji} {free_farm_slots}/{farm_slots_formatted} "
                 f"free tiles\n\u23f0 Next harvest: {nearest_harvest}"
-                f"\n\ud83d\udd0e **{prefix}farm** {target_user.mention}"
+                f"\n\ud83d\udd0e **{prefix}farm** {mention}"
             )
         )
         if user.level > 2:
@@ -269,7 +271,7 @@ class Profile(commands.Cog):
                     "\n\ud83d\udc68\u200d\ud83c\udf73 Workers: "
                     f"{user.factory_level}/10"
                     f"\n\u23f0 Next production: {nearest_factory}"
-                    f"\n\ud83d\udd0e **{prefix}factory** {target_user.mention}"
+                    f"\n\ud83d\udd0e **{prefix}factory** {mention}"
                 )
             )
         else:
@@ -282,7 +284,7 @@ class Profile(commands.Cog):
             value=(
                 "\ud83d\udcb0 Active trades: "
                 f"{used_store_slots}/{user.store_slots}\n"
-                f"\ud83d\udd0e **{prefix}trades** {target_user.mention}"
+                f"\ud83d\udd0e **{prefix}trades** {mention}"
             )
         )
         embed.add_field(
@@ -293,7 +295,7 @@ class Profile(commands.Cog):
             name="\u2b06 Boosters",
             value=(
                 f"\ud83d\udcc8 {len(all_boosts)} boosters active"
-                f"\n\ud83d\udd0e **{prefix}boosts** {target_user.mention}"
+                f"\n\ud83d\udd0e **{prefix}boosts** {mention}"
             )
         )
 
