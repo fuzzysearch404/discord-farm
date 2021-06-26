@@ -87,3 +87,15 @@ def avoid_maintenance() -> commands.check:
         )
 
     return commands.check(pred)
+
+
+def guild_only() -> commands.check:
+    async def pred(ctx) -> bool:
+        if ctx.guild:
+            return True
+
+        raise exceptions.FarmException(
+            "This command can't be used in Direct Messages"
+        )
+
+    return commands.check(pred)
