@@ -19,7 +19,6 @@ class User:
         "factory_level",
         "store_slots",
         "notifications",
-        "registration_date",
         "level",
         "next_level_xp"
     )
@@ -65,7 +64,7 @@ class User:
             else:
                 return level, points
 
-        # We reached high levels with constant XP growth
+        # We reached high levels with a constant XP growth
         remaining = self.xp - points
         lev = int(remaining / 2_000_000)
 

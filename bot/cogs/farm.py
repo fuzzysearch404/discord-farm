@@ -620,6 +620,9 @@ class Farm(commands.Cog):
             ),
             value=coll_time_str
         )
+        embed.set_footer(
+            text=f"You have a total of {ctx.user_data.gold} gold coins"
+        )
 
         menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
         confirm, msg = await menu.prompt(ctx)

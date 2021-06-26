@@ -381,6 +381,9 @@ class Shop(commands.Cog):
             name="7\ufe0f\u20e3 7 days price",
             value=f"**{price_seven}** {self.bot.gold_emoji}"
         )
+        embed.set_footer(
+            text=f"You have a total of {ctx.user_data.gold} gold coins"
+        )
 
         duration, msg = await pages.BoostPurchasePrompt(
             embed=embed).prompt(ctx)

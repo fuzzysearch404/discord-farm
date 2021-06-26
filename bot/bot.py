@@ -84,7 +84,7 @@ class BotClient(commands.AutoShardedBot):
         )
 
         self.global_cooldown = commands.CooldownMapping.from_cooldown(
-            3, 9, commands.BucketType.user
+            4, 9, commands.BucketType.user
         )
         self.spam_control = commands.CooldownMapping.from_cooldown(
             10, 12.0, commands.BucketType.user
@@ -232,13 +232,14 @@ class BotClient(commands.AutoShardedBot):
             await ctx.reply(f"\u274c {str(error)}")
         elif isinstance(error, exceptions.GlobalCooldownException):
             return await ctx.reply(
-                f"\u23f2\ufe0f You are typing commands way too fast! "
-                f"Slow down for: **{seconds_to_time(error.retry_after)}**. "
-                f"Otherwise, you might get temporarily banned."
+                "\u23f2\ufe0f You are typing those commands way too fast! "
+                f"Try again in: **{int(error.retry_after)} seconds**. "
+                "Intensive command spamming might get you temporarily banned "
+                "from using the bot itself."
             )
         elif isinstance(error, commands.errors.CommandOnCooldown):
             return await ctx.reply(
-                f"\u23f0 This command is on cooldown for:  "
+                "\u23f0 This command is on cooldown for:  "
                 f"**{seconds_to_time(error.retry_after)}**"
             )
         elif isinstance(error, commands.errors.MissingRequiredArgument):

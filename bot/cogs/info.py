@@ -64,9 +64,9 @@ class HelpCommand(commands.MinimalHelpCommand):
         await paginator.start(self.context)
 
 
-class Info(commands.Cog, name="Information"):
+class Info(commands.Cog, name="\ud83e\udd16 Information"):
     """
-    Get information about the bot - news, events, some links, etc.
+    Get the latest information about the bot - news, events, some links, etc.
     """
 
     def __init__(self, bot) -> None:

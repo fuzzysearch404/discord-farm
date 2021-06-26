@@ -156,9 +156,11 @@ class Profile(commands.Cog):
                 f"**{user.factory_slots + 2}** \ud83e\udd89"
 
         async with ctx.db.acquire() as conn:
+            # Limit the results to item_id < 1000, to not count in the chests
             query = """
                     SELECT sum(amount) FROM inventory
-                    WHERE user_id = $1;
+                    WHERE user_id = $1
+                    AND item_id < 1000;
                     """
 
             inventory_size = await conn.fetchval(query, user.user_id)
