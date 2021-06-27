@@ -250,7 +250,6 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    @checks.guild_only()
     @checks.avoid_maintenance()
     async def prefix(self, ctx, prefix: str):
         """Customize bot's prefix

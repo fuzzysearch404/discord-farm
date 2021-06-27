@@ -42,23 +42,13 @@ class LabSource(menus.ListPageSource):
                 "\ud83e\uddeb **No items have been modified yet...**"
             )
         else:
-            fmt = (
+            header = (
                 "\ud83e\uddea __**Currently upgraded items:**__\n"
                 "| \ud83c\udff7\ufe0f Item | \ud83d\udd70 Growing time |"
                 " \ud83d\udd70 Harvesting time | \u2696\ufe0f Volume |\n\n"
             )
 
-            for data in page:
-                item = menu.ctx.items.find_item_by_id(data['item_id'])
-
-                fmt += (
-                    f"**{item.full_name}:** "
-                    f"\ud83d\udd70 {data['time1']}/10 "
-                    f"\ud83d\udd70 {data['time2']}/10 "
-                    f"\u2696\ufe0f {data['volume']}/10\n"
-                )
-
-            embed.description += fmt
+            embed.description += header + "\n".join(page)
 
             embed.set_footer(
                 text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
@@ -122,8 +112,20 @@ class Lab(commands.Cog):
         async with ctx.acquire() as conn:
             mod_data = await conn.fetch(query, target_user.id)
 
+        entries = []
+
+        for data in mod_data:
+            item = ctx.items.find_item_by_id(data['item_id'])
+
+            entries.append(
+                f"**{item.full_name}:** "
+                f"\ud83d\udd70 {data['time1']}/10 "
+                f"\ud83d\udd70 {data['time2']}/10 "
+                f"\u2696\ufe0f {data['volume']}/10"
+            )
+
         paginator = pages.MenuPages(
-            source=LabSource(mod_data, target_user)
+            source=LabSource(entries, target_user)
         )
 
         await paginator.start(ctx)

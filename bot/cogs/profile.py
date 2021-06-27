@@ -284,7 +284,7 @@ class Profile(commands.Cog):
             value=(
                 "\ud83d\udcb0 Active trades: "
                 f"{used_store_slots}/{user.store_slots}\n"
-                f"\ud83d\udd0e **{prefix}trades** {mention}"
+                f"\ud83d\udd0e **{prefix}trades**"
             )
         )
         embed.add_field(

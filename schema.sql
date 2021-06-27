@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS public.store(
     id SERIAL PRIMARY KEY,
     guild_id bigint NOT NULL,
     user_id bigint NOT NULL,
+    username VARCHAR (64) NOT NULL,
     item_id smallint NOT NULL,
     amount integer NOT NULL,
     price integer NOT NULL

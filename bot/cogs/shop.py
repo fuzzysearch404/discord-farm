@@ -89,6 +89,47 @@ class ShopSource(menus.ListPageSource):
         return embed
 
 
+class TradesSource(menus.ListPageSource):
+    def __init__(self, entries, server_name: str, own_trades: bool = False):
+        super().__init__(entries, per_page=8)
+        self.server_name = server_name
+        self.own_trades = own_trades
+
+    async def format_page(self, menu, page):
+        if self.own_trades:
+            title = f"\ud83e\udd1d Your trade offers in \"{self.server_name}\""
+        else:
+            title = f"\ud83e\udd1d All trade offers in \"{self.server_name}\""
+
+        embed = discord.Embed(
+            title=title,
+            color=discord.Color.from_rgb(229, 232, 21)
+        )
+
+        head = (
+            f"\ud83e\udd35 Welcome to the *\"{self.server_name}\"* trading "
+            "hall! Here you can trade items with your friends!\n\ud83c\udd95 "
+            "To create a new trade in this server, use the "
+            f"**{menu.ctx.prefix}trades create** command\n\n"
+        )
+
+        if not page:
+            fmt = (
+                "\u274c It's empty in here! There are only some "
+                "cricket noises... \ud83e\udd97"
+            )
+        else:
+            fmt = "\n\n".join(page)
+
+        embed.description = head + fmt
+
+        embed.set_footer(
+            text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
+        )
+
+        return embed
+
+
 class Shop(commands.Cog):
     """
     Welcome to the shop! Here you can view the prices of plants,
@@ -807,6 +848,148 @@ class Shop(commands.Cog):
             price=self.get_next_trades_slot_cost(ctx.user_data.store_slots),
             with_gem=False
         )
+
+    @commands.group(aliases=["trading", "t"], case_insensitive=True)
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def trades(self, ctx):
+        """
+        \ud83e\udd1d Sell items to friends in your server.
+
+        Trades are per server. If you post a trade in server "X",
+        then your trades are only going to be available in server "X".
+        You can only post limited amount of trade offers, but you
+        can upgrade your trading capacity in the shop.
+        """
+        if ctx.invoked_subcommand:
+            return
+
+        async with ctx.acquire() as conn:
+            query = """
+                    SELECT * FROM store
+                    WHERE guild_id = $1;
+                    """
+
+            trades_data = await conn.fetch(query, ctx.guild.id)
+
+        entries = []
+
+        for trade in trades_data:
+            item = ctx.items.find_item_by_id(trade['item_id'])
+
+            entries.append(
+                f"\ud83d\udc68\u200d\ud83c\udf3e Seller: {trade['username']}\n"
+                f"\ud83c\udff7\ufe0f Items: **{trade['amount']}x "
+                f"{item.full_name} for {self.bot.gold_emoji} {trade['price']}"
+                f"**\n\ud83d\uded2 Buy: **{ctx.prefix}trades accept "
+                f"{trade['id']}**"
+            )
+
+        paginator = pages.MenuPages(
+            source=TradesSource(
+                entries=entries,
+                server_name=ctx.guild.name
+            )
+        )
+
+        await paginator.start(ctx)
+
+    @trades.command(name="list")
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def trades_list(self, ctx):
+        """
+        \ud83d\udcc3 List your created trades
+        """
+        async with ctx.acquire() as conn:
+            query = """
+                    SELECT * FROM store
+                    WHERE guild_id = $1
+                    AND user_id = $2;
+                    """
+
+            trades_data = await conn.fetch(query, ctx.guild.id, ctx.author.id)
+
+        entries = []
+
+        for trade in trades_data:
+            item = ctx.items.find_item_by_id(trade['item_id'])
+
+            entries.append(
+                f"\ud83c\udff7\ufe0f Items: **{trade['amount']}x "
+                f"{item.full_name} for {self.bot.gold_emoji} {trade['price']}"
+                f"**\n\ud83d\uddd1\ufe0f Delete: **{ctx.prefix}trades delete "
+                f"{trade['id']}**"
+            )
+
+        paginator = pages.MenuPages(
+            source=TradesSource(
+                entries=entries,
+                server_name=ctx.guild.name,
+                own_trades=True
+            )
+        )
+
+        await paginator.start(ctx)
+
+    @trades.command()
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def accept(self, ctx, id: int):
+        """
+        \ud83e\udd1d Accept player's trade offer
+
+        __Arguments__:
+        `id` - ID of the trade you want to accept
+
+        __Usage examples__:
+        {prefix} `trade 123` - accept trade offer with ID 123.
+        """
+        pass
+
+    @trades.command(aliases=["new", "start"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def create(
+        self,
+        ctx,
+        *,
+        item: converters.ItemAndAmount,
+        amount: int = 1
+    ):
+        """
+        \ud83c\udd95 Create a new trade offer
+
+        __Arguments__:
+        `item` - item to lookup for trading (item's name or ID)
+        __Optional arguments__:
+        `amount` - specify how many items to sell
+
+        __Usage examples__:
+        {prefix} `trades create lettuce` - create a trade with 1 lettuce unit.
+        {prefix} `trades create lettuce 50` - create a trade with 50
+        lettuce units.
+        {prefix} `trades create 1 50` - create a trade with 50 lettuce units.
+        (by using ID)
+        """
+        item, amount = item
+
+    @trades.command(aliases=["remove"])
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def delete(self, ctx, trade_id: int):
+        """
+        \ud83d\uddd1\ufe0f Removes a trade offer
+
+        You can only remove your own trades.
+
+        __Arguments__:
+        `trade_id` - ID of the trade to remove
+
+        __Usage examples__:
+        {prefix} `trades remove 1234` - remove trade with ID "1234"
+        """
+        pass
 
 
 def setup(bot):
