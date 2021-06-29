@@ -1,0 +1,57 @@
+{
+    "redis" : {
+        "host" : "redis://localhost",
+        "db-index": 0,
+        "password" : null,
+        "global-channel-name" : "global",
+        "cluster-channel-prefix" : "cluster-"
+    },
+    "postgres" : {
+        "user" : "discordfarm",
+        "password" : "your_strong_password",
+        "database" : "discordfarmdata",
+        "host" : "127.0.0.1"
+    },
+    "bot" : {
+        "version" : "2.0.0",
+        "beta": true,
+        "discord-token" : "please_never_leak_this",
+        "start-in-maintenance" : false,
+        "startup-farm-guard-duration" : 600,
+        "logs-webhook" : "https://canary.discord.com/api/webhooks/1234/some_symbols",
+        "initial-cogs" : [
+            "bot.cogs.beta",
+            "bot.cogs.account",
+            "bot.cogs.admin",
+            "bot.cogs.clusters",
+            "bot.cogs.factory",
+            "bot.cogs.farm",
+            "bot.cogs.info",
+            "bot.cogs.lab",
+            "bot.cogs.missions",
+            "bot.cogs.profile",
+            "bot.cogs.shop"
+        ],
+        "prefix" : "%",
+        "activity-status" : "%help",
+        "ban-duration": 604800
+    },
+    "ipc" : {
+        "ipc-author" : "IPC",
+        "beta": true,
+        "cluster-inactive-timeout" : 300,
+        "cluster-check-delay" : 60,
+        "cluster-update-delay" : 120
+    },
+    "emoji" : {
+        "check" : "<:check:854787279168339988>",
+        "gold" : "<:gold:840961597148102717>",
+        "gem" : "<a:gem:722191212706136095>",
+        "xp" : "<:xp:843603213684178975>",
+        "farm_tile" : "<:farmtile:840961597488103434>",
+        "warehouse" : "<:warehouse:844274016192561232>"
+    },
+    "topgg" : {
+        "auth_token" : "another_secret_token_hehehe"
+    }
+}

@@ -1,5 +1,7 @@
+.vscode
 __pycache__
 botsettings.py
-.vscode
-images
+config.json
+news.txt
 *.log
+dump.rdb

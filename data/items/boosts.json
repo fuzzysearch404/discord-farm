@@ -1,0 +1,64 @@
+{
+    "boosts" : [
+        {
+            "id":"dog_1",
+            "name":"Squealer Mike",
+            "info":"Protects your farm's field. Or does it?",
+            "emoji":"\ud83d\udc29",
+            "base_price":30,
+            "price_increase_per_farm_slots":20,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":80
+        },
+        {
+            "id":"dog_2",
+            "name":"Saliva Toby",
+            "info":"Protects your farm, but sometimes likes to play around",
+            "emoji":"\ud83d\udc36",
+            "base_price":100,
+            "price_increase_per_farm_slots":150,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":210
+        },
+        {
+            "id":"dog_3",
+            "name":"Guard Rex",
+            "info":"Protects your farm and your conscience",
+            "emoji":"\ud83d\udc15",
+            "base_price":225,
+            "price_increase_per_farm_slots":240,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":400
+        },
+        {
+            "id":"cat",
+            "name":"Leo",
+            "info":"Keeps your harvest fresh and collectable forever. Don't ask me how...",
+            "emoji":"\ud83d\udc31",
+            "base_price":240,
+            "price_increase_per_farm_slots":750,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":245
+        },
+        {
+            "id":"farm_slots",
+            "name":"Susan",
+            "info":"Temporarily adds 2 more farm tiles",
+            "emoji":"\ud83d\udc39",
+            "base_price":195,
+            "price_increase_per_farm_slots":580,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":220
+        },
+        {
+            "id":"factory_slots",
+            "name":"Alice",
+            "info":"Temporarily adds 2 more factory slots",
+            "emoji":"\ud83e\udd89",
+            "base_price":45,
+            "price_increase_per_farm_slots":0,
+            "price_increase_per_factory_slots":100,
+            "price_increase_per_user_level":210
+        }
+    ]
+}

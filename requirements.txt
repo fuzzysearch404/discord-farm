@@ -1,0 +1,6 @@
+discord.py==1.7.3
+asyncpg==0.22.0
+aioredis==2.0.0a1
+psutil==5.7.2
+jsonpickle==2.0.0
+git+https://github.com/Rapptz/discord-ext-menus.git@master

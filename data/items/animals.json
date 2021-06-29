@@ -1,0 +1,52 @@
+{
+    "animals":[
+       {
+          "id":401,
+          "level":4,
+          "emoji":"\ud83e\udd5a",
+          "emoji_animal":"\ud83d\udc14",
+          "name":"chicken eggs",
+          "grow_time":300,
+          "gold_price":80,
+          "amount":10,
+          "iterations":3,
+          "image_url":"https://failiem.lv/thumb_show.php?i=wddbjvvn"
+       },
+       {
+          "id":402,
+          "level":5,
+          "emoji":"\ud83e\udd5b",
+          "emoji_animal":"\ud83d\udc04",
+          "name":"cow's milk",
+          "grow_time":600,
+          "gold_price":70,
+          "amount":12,
+          "iterations":2,
+          "image_url":"https://failiem.lv/thumb_show.php?i=qbufg3z8"
+       },
+       {
+          "id":403,
+          "level":21,
+          "emoji":"\ud83c\udf6f",
+          "emoji_animal":"\ud83d\udc1d",
+          "name":"bee's honey",
+          "grow_time":6300,
+          "gold_price":3000,
+          "amount":14,
+          "iterations":4,
+          "image_url":"https://failiem.lv/thumb_show.php?i=qfyqts88"
+       },
+       {
+          "id":404,
+          "level":28,
+          "emoji":"\ud83e\udd69",
+          "emoji_animal":"\ud83d\udc02",
+          "name":"beef",
+          "grow_time":12000,
+          "gold_price":6000,
+          "amount":22,
+          "iterations":3,
+          "image_url":"https://failiem.lv/thumb_show.php?i=jkxbkqtvz"
+       }
+    ]
+ }
