@@ -16,4 +16,4 @@ https://discord.gg/MwpxKjF
 * pip packages `python -m pip install -r requirements.txt`  
 * Redis server  
 * PostgreSQL server with database schema from `schema.sql`  
-* Lots of custom configuration, that is why there are no setup scripts or installation steps in this repo    
+* Doing lots of custom configuration  

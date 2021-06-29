@@ -1,0 +1,55 @@
+Since there are some steps that have to be done manually anyways and
+I am not planning to do automatic new instance deployments, I 
+will leave these notes for myself for the future and I am
+not going to try making an automated script for this in a near future.
+There might be stuff missing here or it might not be explained well.
+
+--------------------------------------------------------------------
+
+0) Clone repo in the home directory
+
+1) Installing the required software and dependencies:
+
+sudo timedatectl set-timezone UTC
+
+sudo apt-get update -y
+sudo apt-get upgrade -y
+
+sudo apt install -y python3.9-dev
+sudo apt install -y python3-pip
+
+sudo apt install -y redis-server
+ - sudo nano /etc/redis/redis.conf
+ - change "supervised no" to "supervised systemd"
+ - sudo systemctl restart redis.service
+
+sudo apt install -y postgresql postgresql-contrib
+ - sudo su - postgres
+ - psql
+ - CREATE USER discordfarm WITH PASSWORD 'password'
+ - CREATE DATABASE discordfarmdata;
+ - quit
+ - psql discordfarmdata < schema.sql
+    - or load a backup .sql file
+ - switch back to the regular user
+
+cd /home/fuzzysearch/discord-farm/
+touch ./data/news.txt
+
+3) Configure config.json as per config.example.json example
+
+4) Auto git deployment workflow:
+
+/////
+Optional, I have put those in the deployment workflow too.
+Sometimes git asks for these and that stops the whole deployment script
+/////
+git config --global user.email "MY_NAME@example.com"
+git config --global user.name "FIRST_NAME LAST_NAME"
+
+ssh-keygen -t rsa -b 4096
+chmod 700 .ssh/authorized_keys
+Copy .ssh/id_rsa.pub contents to authorized_keys
+Copy .ssh/id_rsa.pub contents to GitHub user settings SSH keys
+Copy .ssh/id_rsa contents to GitHub repo secrets SSH_KEY
+Set SSH_HOST (IP address) and SSH_USERNAME secrets on GitHub repo
