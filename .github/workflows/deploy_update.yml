@@ -1,0 +1,27 @@
+name: Deploy to production server
+on: 
+  push:
+    branches:
+      - master
+jobs:
+  deploy_code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy changes to production server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{secrets.SSH_HOST}}
+          key: ${{secrets.SSH_KEY}}
+          username: ${{secrets.SSH_USERNAME}}
+
+          script: |
+            cd /fuzzysearch/discord-farm
+            echo 'Setting up dummy git config'
+            git config --global user.email "MY_NAME@example.com"
+            git config --global user.name "FIRST_NAME LAST_NAME"
+            echo 'Pulling repo from GitHub'
+            git pull
+            echo 'Checking and updating pip packages'
+            python3.9 -m pip install --upgrade pip
+            python3.9 -m pip install -U -r requirements.txt
+            echo 'Deployed to server.'
