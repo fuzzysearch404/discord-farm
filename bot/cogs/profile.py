@@ -208,7 +208,7 @@ class Profile(commands.Cog):
                 nearest_harvest = \
                     time.seconds_to_time(nearest_harvest.total_seconds())
             else:
-                nearest_harvest = "\u2705"
+                nearest_harvest = self.bot.check_emoji
 
             free_farm_slots = farm_slots - field_data[1]
             if free_farm_slots < 0:  # Expired slots booster visual bug fix
@@ -222,7 +222,7 @@ class Profile(commands.Cog):
                 nearest_factory = \
                     time.seconds_to_time(nearest_factory.total_seconds())
             else:
-                nearest_factory = "\u2705"
+                nearest_factory = self.bot.check_emoji
 
         lab_cooldown = await checks.get_user_cooldown(
             ctx, "recent_research", other_user_id=user.user_id

@@ -220,7 +220,6 @@ class Lab(commands.Cog):
         )
 
     @commands.command(name="modifications", aliases=["mods"])
-    @checks.user_cooldown(5)
     @checks.has_account()
     @checks.avoid_maintenance()
     async def item_modifications(self, ctx, *, item: converters.Item):

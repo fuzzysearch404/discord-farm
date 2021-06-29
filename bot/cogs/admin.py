@@ -23,7 +23,7 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
 
         if not results:
             with suppress(discord.HTTPException):
-                return await ctx.message.add_reaction("\u2705")
+                return await ctx.message.add_reaction(self.bot.check_emoji)
 
         await ctx.reply(f"```py\n{results}\n```")
 
@@ -74,7 +74,7 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
 
         if not results:
             with suppress(discord.HTTPException):
-                return await ctx.message.add_reaction("\u2705")
+                return await ctx.message.add_reaction(self.bot.check_emoji)
 
         result_str = str(results)
 

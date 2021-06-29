@@ -483,7 +483,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
                 self.bot.load_extension(extension)
 
                 with suppress(discord.HTTPException):
-                    await ctx.message.add_reaction("\u2705")
+                    await ctx.message.add_reaction(self.bot.check_emoji)
             except Exception as e:
                 self.bot.log.exception(f"Failed to load: {extension}")
 
@@ -519,7 +519,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
                 self.bot.unload_extension(extension)
 
                 with suppress(discord.HTTPException):
-                    await ctx.message.add_reaction("\u2705")
+                    await ctx.message.add_reaction(self.bot.check_emoji)
             except Exception as e:
                 self.bot.log.exception(f"Failed to unload: {extension}")
 
@@ -554,7 +554,7 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
                 self.bot.reload_extension(extension)
 
                 with suppress(discord.HTTPException):
-                    await ctx.message.add_reaction("\u2705")
+                    await ctx.message.add_reaction(self.bot.check_emoji)
             except Exception as e:
                 self.bot.log.exception(f"Failed to reload: {extension}")
 

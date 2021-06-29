@@ -36,13 +36,13 @@ class BotClient(commands.AutoShardedBot):
         self.def_prefix = config['bot']['prefix']
         self._log_webhook = config['bot']['logs-webhook']
         self.maintenance_mode = config['bot']['start-in-maintenance']
-        self.enable_field_guard(config['bot']['startup-farm-guard-duration'])
         self.is_beta = config['bot']['beta']
 
         self.ipc_ping = 0
 
         # Common emojis
         emojis = config['emoji']
+        self.check_emoji = emojis['check']
         self.gold_emoji = emojis['gold']
         self.gem_emoji = emojis['gem']
         self.tile_emoji = emojis['farm_tile']
@@ -54,6 +54,8 @@ class BotClient(commands.AutoShardedBot):
             f"Shards: {kwargs['shard_ids']}"
             f", shard count: {kwargs['shard_count']}"
         )
+
+        self.enable_field_guard(config['bot']['startup-farm-guard-duration'])
 
         try:
             loop.run_until_complete(self._connect_db())
@@ -121,6 +123,8 @@ class BotClient(commands.AutoShardedBot):
             except KeyError:
                 pass
 
+        self.log.info(f"Fetched {len(self.custom_prefixes)} custom prefixes")
+
     async def get_custom_prefix(self, bot, message):
         if message.guild:
             try:
@@ -146,6 +150,8 @@ class BotClient(commands.AutoShardedBot):
         self.guard_mode = datetime.datetime.now() + datetime.timedelta(
             seconds=seconds
         )
+
+        self.log.info(f"Enabled field guard until: {self.guard_mode}")
 
         return self.guard_mode
 
@@ -289,7 +295,9 @@ class BotClient(commands.AutoShardedBot):
                 "Otherwise, I can't function normally \ud83d\ude2b"
             )
         elif isinstance(error, commands.errors.MissingPermissions):
-            return await ctx.reply(f"\u274c {str(error)} ")
+            return await ctx.reply(f"\u274c {str(error)}")
+        elif isinstance(error, commands.errors.MaxConcurrencyReached):
+            return await ctx.reply(f"\u274c {str(error)}")
         elif isinstance(error, exceptions.GameIsInMaintenance):
             await ctx.reply(str(error))
         elif isinstance(error, commands.errors.DisabledCommand):

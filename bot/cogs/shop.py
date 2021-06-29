@@ -1,4 +1,6 @@
 import discord
+import asyncio
+from contextlib import suppress
 from datetime import datetime, timedelta
 from discord.ext import commands, menus
 
@@ -91,7 +93,7 @@ class ShopSource(menus.ListPageSource):
 
 class TradesSource(menus.ListPageSource):
     def __init__(self, entries, server_name: str, own_trades: bool = False):
-        super().__init__(entries, per_page=8)
+        super().__init__(entries, per_page=6)
         self.server_name = server_name
         self.own_trades = own_trades
 
@@ -564,18 +566,7 @@ class Shop(commands.Cog):
         item_data = await ctx.user_data.get_item(ctx, item.id)
         if not item_data or item_data['amount'] < amount:
             return await ctx.reply(
-                embed=embeds.error_embed(
-                    title=f"You don't have enough {item.name}!",
-                    text=(
-                        "Either you don't own or you don't "
-                        f"have enough **({amount}x) {item.full_name}**"
-                        "in your warehouse!"
-                    ),
-                    footer=(
-                        "Check your warehouse with the \"invenotory\" command"
-                    ),
-                    ctx=ctx
-                )
+                embed=embeds.not_enough_items(ctx, item, amount)
             )
 
         total_reward = item.gold_reward * amount
@@ -600,7 +591,7 @@ class Shop(commands.Cog):
         if amount == 1:
             embed.set_footer(
                 text=(
-                    "\ud83d\udca1 Sell more than one unit at a time, by "
+                    "\ud83d\udca1 Sell more than one units at a time, by "
                     "specifying the amount. For example: "
                     f"\"sell {item.name} 50\""
                 )
@@ -620,19 +611,7 @@ class Shop(commands.Cog):
                 )
                 if not item_data or item_data['amount'] < amount:
                     return await msg.edit(
-                        embed=embeds.error_embed(
-                            title=f"You don't have enough {item.name}!",
-                            text=(
-                                "Either you don't own or you don't "
-                                f"have enough **({amount}x) {item.full_name}**"
-                                " in your warehouse!"
-                            ),
-                            footer=(
-                                "Check your warehouse with the \"inventory\" "
-                                "command"
-                            ),
-                            ctx=ctx
-                        )
+                        embed=embeds.not_enough_items(ctx, item, amount)
                     )
 
                 await ctx.user_data.remove_item(
@@ -849,7 +828,7 @@ class Shop(commands.Cog):
             with_gem=False
         )
 
-    @commands.group(aliases=["trading", "t"], case_insensitive=True)
+    @commands.group(aliases=["trade", "trading", "t"], case_insensitive=True)
     @checks.has_account()
     @checks.avoid_maintenance()
     async def trades(self, ctx):
@@ -935,19 +914,195 @@ class Shop(commands.Cog):
     @trades.command()
     @checks.has_account()
     @checks.avoid_maintenance()
-    async def accept(self, ctx, id: int):
+    async def accept(self, ctx, trade_id: int):
         """
         \ud83e\udd1d Accept player's trade offer
 
         __Arguments__:
-        `id` - ID of the trade you want to accept
+        `trade_id` - ID of the trade you want to accept
 
         __Usage examples__:
-        {prefix} `trade 123` - accept trade offer with ID 123.
+        {prefix} `trade accept 123` - accept trade offer with ID 123.
         """
-        pass
+        def trade_not_found_embed():
+            return embeds.error_embed(
+                title="Trade not found!",
+                text=(
+                    f"I could not find a trade **ID: {trade_id}**! "
+                    "\ud83d\ude15\nThis trade might already be accepted "
+                    "by someone else or deleted by the trader itself. "
+                    "View all the available trades with the "
+                    f"**{ctx.prefix}trades** command. \ud83d\udccb"
+                ),
+                ctx=ctx
+            )
+
+        if trade_id < 1 or trade_id > 2147483647:
+            return await ctx.reply("\u274c Invalid trade ID")
+
+        async with ctx.acquire() as conn:
+            query = """
+                    SELECT * FROM store
+                    WHERE id = $1
+                    AND guild_id = $2;
+                    """
+
+            trade_data = await conn.fetchrow(query, trade_id, ctx.guild.id)
+
+        if not trade_data:
+            return await ctx.reply(embed=trade_not_found_embed())
+
+        if trade_data['user_id'] == ctx.author.id:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="You can't trade with yourself!",
+                    text=(
+                        "\ud83d\uddd1\ufe0f If you want to cancel this trade, "
+                        f"then use: **{ctx.prefix}trades delete {trade_id}**"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        item = ctx.items.find_item_by_id(trade_data['item_id'])
+        amount = trade_data['amount']
+        price = trade_data['price']
+
+        if item.level > ctx.user_data.level:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="\ud83d\udd12 Insufficient experience level!",
+                    text=(
+                        f"**Sorry, you can't buy {item.full_name} just yet!** "
+                        "What are you planning to do with an item, that you "
+                        "can't even use yet? I'm just curious... \ud83e\udd14"
+                    ),
+                    footer=(
+                        "This item is going to be unlocked at "
+                        f"experience level {item.level}."
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        try:
+            seller_member = await ctx.guild.fetch_member(trade_data['user_id'])
+        except discord.HTTPException as e:
+            if e.status != 404:
+                raise e
+
+            async with ctx.acquire() as conn:
+                query = "DELETE FROM store WHERE id = $1;"
+
+                await conn.execute(query, trade_id)
+
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="Oops, the trader has vanished!",
+                    text=(
+                        "Looks like this trader has left this cool "
+                        "server, so their trade also isn't "
+                        "available anymore. Sorry! \ud83d\ude22"
+                    ),
+                    footer="Let's hope that they will join back later",
+                    ctx=ctx
+                )
+            )
+
+        embed = embeds.prompt_embed(
+            title="Do you accept this trade offer?",
+            text=(
+                "Are you sure that you want to buy these items "
+                "from this user?"
+            ),
+            ctx=ctx
+        )
+        embed.add_field(
+            name="\ud83d\udc68\u200d\ud83c\udf3e Seller",
+            value=seller_member.mention
+        )
+        embed.add_field(
+            name="\ud83c\udff7\ufe0f Item",
+            value=f"{amount}x {item.full_name}"
+        )
+        embed.add_field(
+            name="\ud83d\udcb0 Total price",
+            value=f"{price} {self.bot.gold_emoji}"
+        )
+
+        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
+        confirm, msg = await menu.prompt(ctx)
+
+        if not confirm:
+            return
+
+        async with ctx.acquire() as conn:
+            async with conn.transaction():
+                query = """
+                        SELECT * FROM store
+                        WHERE id = $1;
+                        """
+                # Might already be deleted by now
+                trade_data = await conn.fetchrow(query, trade_id)
+
+                if not trade_data:
+                    return await msg.edit(embed=trade_not_found_embed())
+
+                user_data = await ctx.users.get_user(ctx.author.id, conn=conn)
+                # If there is a trade, then the user must exist too (no check)
+                trade_user_data = await ctx.users.get_user(
+                    trade_data['user_id'], conn=conn
+                )
+
+                if user_data.gold < price:
+                    return await ctx.reply(
+                        embed=embeds.no_money_embed(ctx, user_data, price)
+                    )
+
+                query = "DELETE FROM store WHERE id = $1;"
+                await conn.execute(query, trade_id)
+
+                await user_data.give_item(ctx, item.id, amount, conn=conn)
+
+                user_data.gold -= price
+                trade_user_data.gold += price
+                await ctx.users.update_user(user_data, conn=conn)
+                await ctx.users.update_user(trade_user_data, conn=conn)
+
+        await msg.edit(
+            embed=embeds.success_embed(
+                title="Successfully bought items!",
+                text=(
+                    f"You bought **{amount}x {item.full_name}** "
+                    f"from {seller_member.mention} for **{price}** "
+                    f"{self.bot.gold_emoji}\nWhat a great trade you "
+                    "both just made! \ud83e\udd1d"
+                ),
+                ctx=ctx
+            )
+        )
+
+        if not trade_user_data.notifications:
+            return
+
+        with suppress(discord.HTTPException):
+            await seller_member.send(
+                embed=embeds.success_embed(
+                    title="Congratulations! You just made a sale!",
+                    text=(
+                        "Hey boss! I only came to say that "
+                        f"{ctx.author.mention} just accepted your trade "
+                        f"offer and bought your **{amount}x "
+                        f"{item.full_name}** for **{price}** "
+                        f"{self.bot.gold_emoji}"
+                    ),
+                    ctx=ctx,
+                    private=True
+                )
+            )
 
     @trades.command(aliases=["new", "start"])
+    @commands.max_concurrency(number=1, per=commands.BucketType.user)
     @checks.has_account()
     @checks.avoid_maintenance()
     async def create(
@@ -963,7 +1118,7 @@ class Shop(commands.Cog):
         __Arguments__:
         `item` - item to lookup for trading (item's name or ID)
         __Optional arguments__:
-        `amount` - specify how many items to sell
+        `amount` - specify how many units to trade
 
         __Usage examples__:
         {prefix} `trades create lettuce` - create a trade with 1 lettuce unit.
@@ -974,12 +1129,178 @@ class Shop(commands.Cog):
         """
         item, amount = item
 
+        if not isinstance(item, game_items.MarketItem):
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="This item can't be traded!",
+                    text=f"Sorry, you can't trade **{item.full_name}**!",
+                    ctx=ctx
+                )
+            )
+
+        item_data = await ctx.user_data.get_item(ctx, item.id)
+        if not item_data or item_data['amount'] < amount:
+            return await ctx.reply(
+                embed=embeds.not_enough_items(ctx, item, amount)
+            )
+
+        min_price = int((item.min_market_price * amount))
+        max_price = int((item.max_market_price * amount) * 1.35)
+
+        embed = embeds.prompt_embed(
+            title="What is going to be the price for this trade?",
+            text=(
+                "\u270f\ufe0f **Please input a desired price in the chat with "
+                "numbers**!\n\ud83d\udc49 No need to add extra symbols or "
+                "commands before the number. For example, if you want to "
+                f"trade it for: {self.bot.gold_emoji} {max_price}, then just "
+                f"type \"{max_price}\""
+            ),
+            ctx=ctx
+        )
+        embed.add_field(
+            name="\ud83c\udff7\ufe0f Item",
+            value=f"{amount}x {item.full_name}"
+        )
+        embed.add_field(
+            name="\ud83d\udcb0 Allowed price range",
+            value=f"{min_price} - {max_price} {self.bot.gold_emoji}"
+        )
+
+        if amount == 1:
+            embed.set_footer(
+                text=(
+                    "\ud83d\udca1 Trade more than one units at a time, by "
+                    "specifying the amount. For example: "
+                    f"\"trades create {item.name} 50\""
+                )
+            )
+
+        await ctx.reply(embed=embed)
+
+        def message_check(msg):
+            return msg.author.id == ctx.author.id and \
+                msg.channel == ctx.channel and \
+                msg.content.isdigit()
+
+        try:
+            msg = await self.bot.wait_for(
+                "message", check=message_check, timeout=45.0
+            )
+        except asyncio.TimeoutError:
+            return await ctx.reply(
+                "\u274c I've been waiting too long "
+                "for your message... Please try again"
+            )
+
+        user_price = int(msg.content)
+
+        if user_price < min_price or user_price > max_price:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="Nope, we can't sell those for this price!",
+                    text=(
+                        "We only allow fair trades here. \ud83d\ude0c Your "
+                        "price is too low or too high!\nPlease try creating a "
+                        f"new trade for {amount}x {item.full_name} that "
+                        "is in this price range: **"
+                        f"{min_price} - {max_price} {self.bot.gold_emoji}**"
+                    ),
+                    ctx=ctx
+                )
+            )
+
+        async with ctx.acquire() as conn:
+            query = """
+                    SELECT COUNT(*) FROM store
+                    WHERE user_id = $1
+                    AND guild_id = $2;
+                    """
+            used_slots = await conn.fetchval(
+                query, ctx.author.id, ctx.guild.id
+            )
+
+            if used_slots >= ctx.user_data.store_slots:
+                slots = ctx.user_data.store_slots
+
+                return await ctx.reply(
+                    embed=embeds.error_embed(
+                        title=(
+                            "You have reached maximum active trade offers "
+                            "in this server!"
+                        ),
+                        text=(
+                            "Oh no! We can't create this trade offer, because "
+                            f"you already have used **{used_slots} of your "
+                            f"{slots}** available deal slots! \ud83d\udcca\n\n"
+                            "What you can do about this:\na) Wait for someone "
+                            "to accept any of your current trades.\nb) "
+                            "Delete some trades.\nc) Upgrade your max. deal "
+                            f"capacity with the **{ctx.prefix}upgrade "
+                            "trading** command."
+                        ),
+                        ctx=ctx
+                    )
+                )
+
+            item_data = await ctx.user_data.get_item(
+                ctx, item.id, conn=conn
+            )
+            if not item_data or item_data['amount'] < amount:
+                return await ctx.reply(
+                    embed=embeds.not_enough_items(ctx, item, amount)
+                )
+
+            async with conn.transaction():
+                await ctx.user_data.remove_item(
+                    ctx, item.id, amount, conn=conn
+                )
+
+                # We store username, to avoid fetching the user from Discord's
+                # API just to get the username every time someone wants to view
+                # some trades. (we don't store members data in bot's cache)
+                query = """
+                        INSERT INTO store
+                        (guild_id, user_id, username,
+                        item_id, amount, price)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                        RETURNING id;
+                        """
+
+                trade_id = await conn.fetchval(
+                    query,
+                    ctx.guild.id,
+                    ctx.author.id,
+                    ctx.author.name,
+                    item.id,
+                    amount,
+                    user_price
+                )
+
+        await ctx.reply(
+            embed=embeds.success_embed(
+                title="Trade offer is successfully created!",
+                text=(
+                    "All set! The trade offer is up! \ud83d\udc4d\n"
+                    f"You have put for sale **{amount}x {item.full_name}** "
+                    f"at a price of **{user_price}** {self.bot.gold_emoji} "
+                    "for this server's members!\n\n"
+                    "\ud83d\udc65 If you know the person you are selling your "
+                    "items to, they can use this command to buy your items: "
+                    f"**{ctx.prefix}trades accept {trade_id}**\n"
+                    "\ud83d\uddd1\ufe0f If you want to cancel the trade "
+                    f"offer use: **{ctx.prefix}trades delete {trade_id}**"
+                ),
+                ctx=ctx
+            )
+        )
+
     @trades.command(aliases=["remove"])
     @checks.has_account()
     @checks.avoid_maintenance()
     async def delete(self, ctx, trade_id: int):
         """
-        \ud83d\uddd1\ufe0f Removes a trade offer
+        \ud83d\uddd1\ufe0f Remove a trade offer
 
         You can only remove your own trades.
 
@@ -989,7 +1310,61 @@ class Shop(commands.Cog):
         __Usage examples__:
         {prefix} `trades remove 1234` - remove trade with ID "1234"
         """
-        pass
+        if trade_id < 1 or trade_id > 2147483647:
+            return await ctx.reply("\u274c Invalid trade ID")
+
+        async with ctx.acquire() as conn:
+            # It is fine if they delete their own trades from other guilds
+            query = """
+                    SELECT * FROM store
+                    WHERE id = $1
+                    AND user_id = $2;
+                    """
+
+            trade_data = await conn.fetchrow(query, trade_id, ctx.author.id)
+
+            if not trade_data:
+                return await ctx.reply(
+                    embed=embeds.error_embed(
+                        title="Trade not found!",
+                        text=(
+                            "Hmm... I could not find your trade **ID: "
+                            f"{trade_id}**! You might have provided a wrong "
+                            "ID or trade that does not exist anymore. "
+                            "\ud83e\udd14\nCheck your created trades in this "
+                            f"server with the **{ctx.prefix}trades list** "
+                            "command."
+                        ),
+                        ctx=ctx
+                    )
+                )
+
+            async with conn.transaction():
+                query = """
+                        DELETE FROM store
+                        WHERE id = $1;
+                        """
+
+                await conn.execute(query, trade_id)
+
+                await ctx.user_data.give_item(
+                    ctx, trade_data['item_id'], trade_data['amount'], conn=conn
+                )
+
+        item = ctx.items.find_item_by_id(trade_data['item_id'])
+
+        await ctx.reply(
+            embed=embeds.success_embed(
+                title="Trade offer canceled!",
+                text=(
+                    "\ud83d\uddd1\ufe0f Okey, I removed your trade offer: "
+                    f"**{trade_data['amount']}x {item.full_name} for "
+                    f"{trade_data['price']} {self.bot.gold_emoji}**"
+                ),
+                footer="These items are now moved back to your inventory",
+                ctx=ctx
+            )
+        )
 
 
 def setup(bot):

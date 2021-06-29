@@ -141,7 +141,6 @@ class Account(commands.Cog):
         await self.tutorial.invoke(ctx)
 
     @commands.command(aliases=["resetaccount"])
-    @checks.user_cooldown(10)
     @checks.has_account()
     @checks.avoid_maintenance()
     async def deleteaccount(self, ctx):

@@ -64,8 +64,8 @@ def success_embed(
     private: bool = False
 ) -> Embed:
     return _create_embed(
-        color=Color.from_rgb(119, 178, 85),
-        emoji="\u2705",
+        color=Color.from_rgb(0, 128, 1),
+        emoji=ctx.bot.check_emoji,
         text=text,
         ctx=ctx,
         title=title,
@@ -134,5 +134,19 @@ def no_gems_embed(ctx, user_data, cost: int) -> Embed:
             "Oh no! We need more of those shiny rocks! \ud83d\ude2f"
         ),
         footer=f"You have a total of {user_data.gems} gems",
+        ctx=ctx
+    )
+
+
+def not_enough_items(ctx, item, req_amount: int):
+    return error_embed(
+        title=f"You don't have enough {item.name}!",
+        text=(
+            "Either you don't own or you don't have enough "
+            f"**({req_amount}x) {item.full_name}** in your warehouse!"
+        ),
+        footer=(
+            "Check your warehouse with the \"invenotory\" command"
+        ),
         ctx=ctx
     )
