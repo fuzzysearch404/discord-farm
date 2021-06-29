@@ -15,7 +15,7 @@ jobs:
           username: ${{secrets.SSH_USERNAME}}
 
           script: |
-            cd /fuzzysearch/discord-farm
+            cd /home/fuzzysearch/discord-farm
             echo 'Setting up dummy git config'
             git config --global user.email "MY_NAME@example.com"
             git config --global user.name "FIRST_NAME LAST_NAME"
