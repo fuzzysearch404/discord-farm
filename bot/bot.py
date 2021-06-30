@@ -314,6 +314,8 @@ class BotClient(commands.AutoShardedBot):
                 )
         elif isinstance(error, commands.errors.ArgumentParsingError):
             return await ctx.reply(error)
+        elif isinstance(error, commands.errors.CheckFailure):
+            pass
         else:
             exc_info = (type(error), error, error.__traceback__)
             self.log.error(
