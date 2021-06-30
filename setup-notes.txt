@@ -17,6 +17,7 @@ sudo apt-get upgrade -y
 
 sudo apt install -y python3.9-dev
 sudo apt install -y python3-pip
+python3.9 -m pip install -r requirements.txt
 
 sudo apt install -y redis-server
  - sudo nano /etc/redis/redis.conf
