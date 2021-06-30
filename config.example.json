@@ -17,10 +17,9 @@
         "beta": true,
         "discord-token" : "please_never_leak_this",
         "start-in-maintenance" : false,
-        "startup-farm-guard-duration" : 600,
+        "startup-farm-guard-duration" : 330,
         "logs-webhook" : "https://canary.discord.com/api/webhooks/1234/some_symbols",
         "initial-cogs" : [
-            "bot.cogs.beta",
             "bot.cogs.account",
             "bot.cogs.admin",
             "bot.cogs.clusters",

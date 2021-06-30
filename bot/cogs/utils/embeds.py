@@ -146,7 +146,7 @@ def not_enough_items(ctx, item, req_amount: int):
             f"**({req_amount}x) {item.full_name}** in your warehouse!"
         ),
         footer=(
-            "Check your warehouse with the \"invenotory\" command"
+            "Check your warehouse with the \"inventory\" command"
         ),
         ctx=ctx
     )

@@ -503,7 +503,7 @@ class ItemPool:
         items_per_id = {}
 
         for item in self.all_items:
-            items_per_id[item.id] = item
+            items_per_id[str(item.id)] = item
 
         return items_per_id
 
