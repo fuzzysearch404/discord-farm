@@ -1,6 +1,7 @@
 import json
 import logging
 import asyncio
+import aiohttp
 import aioredis
 import jsonpickle
 from logging.handlers import RotatingFileHandler
@@ -40,10 +41,12 @@ class IPC:
         self.game_news = self._load_game_news()
 
         ipc_config = self._config['ipc']
+        self.bot_id = ipc_config['bot-id']
         self.ipc_name = ipc_config['ipc-author']
         self.is_beta = ipc_config['beta']
         self.cluster_inactive_timeout = ipc_config['cluster-inactive-timeout']
         self.cluster_check_delay = ipc_config['cluster-check-delay']
+        self.post_stats_delay = ipc_config['post-bot-stats-delay']
 
         redis_config = self._config['redis']
         self.global_channel = redis_config['global-channel-name']
@@ -127,6 +130,9 @@ class IPC:
         self._loop.create_task(self._cluster_check_task())
         # Global message publish tasks
         self._loop.create_task(self._global_task_update_items())
+
+        if not self.is_beta:
+            self._loop.create_task(self._global_task_send_stats())
 
     def _resolve_reply_channel(self, message: IPCMessage) -> str:
         if message.reply_global:
@@ -289,6 +295,36 @@ class IPC:
             time_until = next_refresh - datetime.now()
 
             await asyncio.sleep(time_until.total_seconds())
+
+    async def _global_task_send_stats(self) -> None:
+        while not self._loop.is_closed():
+            await asyncio.sleep(self.post_stats_delay)
+
+            if not self.total_shard_count or not self.total_guild_count:
+                continue
+
+            url = f"https://top.gg/api/bots/{self.bot_id}/stats"
+            headers = {
+                "Authorization": self._config['topgg']['auth_token']
+            }
+            body = {
+                "server_count": self.total_guild_count,
+                "shard_count": self.total_shard_count
+            }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, headers=headers, data=body) as r:
+                    if r.status != 200:
+                        self.log.error(
+                            "Could not post stats to top.gg. "
+                            f"Response: {r.status}"
+                        )
+                    else:
+                        self.log.info(
+                            "Published stats to top.gg: "
+                            f"Guild count: {self.total_guild_count} "
+                            f"Shard count: {self.total_shard_count}"
+                        )
 
 
 if __name__ == "__main__":

@@ -36,11 +36,13 @@
         "ban-duration": 604800
     },
     "ipc" : {
+        "bot-id" : 526436949481881610,
         "ipc-author" : "IPC",
         "beta": true,
         "cluster-inactive-timeout" : 300,
         "cluster-check-delay" : 60,
-        "cluster-update-delay" : 120
+        "cluster-update-delay" : 120,
+        "post-bot-stats-delay" : 1800
     },
     "emoji" : {
         "check" : "<:check:854787279168339988>",
