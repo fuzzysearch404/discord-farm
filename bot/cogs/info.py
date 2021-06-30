@@ -220,7 +220,7 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
 
         await ctx.reply(embed=embed)
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def clusters(self, ctx):
         """\ud83d\udef0\ufe0f View bot's all cluster statuses"""
         embed = discord.Embed(
