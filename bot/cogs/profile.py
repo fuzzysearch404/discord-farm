@@ -806,8 +806,7 @@ class Profile(commands.Cog):
                 embed=embeds.congratulations_embed(
                     title="Hourly bonus chest received!",
                     text=(
-                        f"You won {chest_data.emoji} "
-                        f"**{amount}x {chest_data.name.capitalize()} "
+                        f"You won **{amount}x {chest_data.full_name} "
                         "chest** as your hourly bonus! \ud83e\udd20"
                     ),
                     footer=(
