@@ -778,10 +778,10 @@ class Profile(commands.Cog):
             )
         else:
             chests_and_rarities = {
-                1000: 2.0,  # Gold
-                1001: 100.0,  # Common
+                1000: 5.0,  # Gold
+                1001: 75.0,  # Common
                 1002: 50.0,  # Uncommon
-                1003: 5.0  # Rare
+                1003: 12.0  # Rare
             }
 
             chest = random.choices(
@@ -795,7 +795,7 @@ class Profile(commands.Cog):
             if chest == 1001:
                 min = int(ctx.user_data.level / 10) or 1
                 max = int(ctx.user_data.level / 5) or 1
-                amount = random.randint(min, max)
+                amount = random.randint(min, max + 1)
 
             await ctx.user_data.give_item(ctx, chest, amount)
             await checks.set_user_cooldown(ctx, 3600, "hourly_bonus")
