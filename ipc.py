@@ -1,3 +1,4 @@
+import sys
 import json
 import logging
 import asyncio
@@ -44,6 +45,7 @@ class IPC:
         self.bot_id = ipc_config['bot-id']
         self.ipc_name = ipc_config['ipc-author']
         self.is_beta = ipc_config['beta']
+        self.db_backup_delay = ipc_config['db-backups-delay']
         self.cluster_inactive_timeout = ipc_config['cluster-inactive-timeout']
         self.cluster_check_delay = ipc_config['cluster-check-delay']
         self.post_stats_delay = ipc_config['post-bot-stats-delay']
@@ -133,6 +135,7 @@ class IPC:
 
         if not self.is_beta:
             self._loop.create_task(self._global_task_send_stats())
+            self._loop.create_task(self._global_task_do_backups())
 
     def _resolve_reply_channel(self, message: IPCMessage) -> str:
         if message.reply_global:
@@ -325,6 +328,33 @@ class IPC:
                             f"Guild count: {self.total_guild_count} "
                             f"Shard count: {self.total_shard_count}"
                         )
+
+    async def _global_task_do_backups(self) -> None:
+        postgres_config = self._config['postgres']
+
+        while not self._loop.is_closed():
+            await asyncio.sleep(self.db_backup_delay)
+
+            self.log.info("Starting the database backup script")
+
+            cmd = (
+                "sh scripts/backup.sh "
+                f"{postgres_config['host']} "
+                f"{postgres_config['database']} "
+                f"{postgres_config['user']} "
+                f"{postgres_config['password']}"
+            )
+
+            process = await asyncio.create_subprocess_shell(
+                cmd, stdout=sys.stdout, stderr=sys.stderr
+            )
+
+            await process.wait()
+
+            self.log.info(
+                "Backup script exited with code: "
+                f"{process.returncode}"
+            )
 
 
 if __name__ == "__main__":

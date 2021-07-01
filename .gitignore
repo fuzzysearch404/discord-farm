@@ -1,5 +1,6 @@
 .vscode
 __pycache__
+backups
 botsettings.py
 config.json
 news.txt
