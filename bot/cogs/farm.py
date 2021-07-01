@@ -460,7 +460,8 @@ class Farm(commands.Cog):
                         "You missed your chance to harvest your items "
                         f"on time, so your items: **{fmt[:-2]}** got rotten! "
                         "\ud83d\ude22\nPlease be more careful next time and "
-                        f"follow the timers with **{ctx.prefix}farm** command."
+                        f"follow the timers with the **{ctx.prefix}farm** "
+                        "command."
                     ),
                     footer=(
                         "All rotten items have been removed from your "
