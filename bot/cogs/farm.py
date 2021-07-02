@@ -912,7 +912,7 @@ class Farm(commands.Cog):
         __Explanation__:
         You can try to get some items from other players farms.
         The target user's items must be harvestable at the moment of attempt.
-        You can use command "{prefix}`farm @user`", to check user's farm field.
+        You can use command **{prefix}farm @user**, to check user's farm field.
         You can't choose what items you will get, items are chosen randomly.
         Also, you only get partial volume of target's item volume.
         If the target user has dog boosters, your chances
