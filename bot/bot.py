@@ -104,9 +104,14 @@ class BotClient(commands.AutoShardedBot):
 
         for extension in self.config['bot']['initial-cogs']:
             try:
+                self.log.debug(f"Loading extension: {extension}")
                 self.load_extension(extension)
             except Exception:
                 self.log.exception(f"Failed to load extension: {extension}")
+
+        if self.is_beta:
+            self.log.info("Loading the beta debug extension")
+            self.load_extension("bot.cogs.beta")
 
         self.run()
 
