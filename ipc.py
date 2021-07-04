@@ -49,6 +49,9 @@ class IPC:
         self.cluster_inactive_timeout = ipc_config['cluster-inactive-timeout']
         self.cluster_check_delay = ipc_config['cluster-check-delay']
         self.post_stats_delay = ipc_config['post-bot-stats-delay']
+        self.incident_check_delay = ipc_config['incident-check-delay']
+        self.critical_incident_guard = ipc_config['critical-incident-guard']
+        self.major_incident_guard = ipc_config['major-incident-guard']
 
         redis_config = self._config['redis']
         self.global_channel = redis_config['global-channel-name']
@@ -137,6 +140,8 @@ class IPC:
             self._loop.create_task(self._global_task_send_stats())
             self._loop.create_task(self._global_task_do_backups())
 
+        self._loop.create_task(self._global_task_check_discord_incidents())
+
     def _resolve_reply_channel(self, message: IPCMessage) -> str:
         if message.reply_global:
             return self.global_channel
@@ -174,10 +179,6 @@ class IPC:
                 await self._handle_set_items()
             elif ipc_message.action == "set_game_news":
                 await self._handle_set_news(ipc_message)
-            elif ipc_message.action == "set_farm_guard":
-                await self._send_set_game_guard_message(
-                    reply_channel, ipc_message.data
-                )
             elif ipc_message.action in self.ignore_actions:
                 continue
             else:
@@ -263,7 +264,7 @@ class IPC:
     ) -> None:
         message = IPCMessage(
             author=self.ipc_name,
-            action="set_farm_guard",
+            action="enable_guard",
             reply_global=False,
             data=duration
         )
@@ -355,6 +356,49 @@ class IPC:
                 "Backup script exited with code: "
                 f"{process.returncode}"
             )
+
+    async def _global_task_check_discord_incidents(self) -> None:
+        while not self._loop.is_closed():
+            await asyncio.sleep(self.incident_check_delay)
+
+            url = "https://discordstatus.com/api/v2/incidents/unresolved.json"
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as r:
+                    if r.status != 200:
+                        self.log.error(
+                            "Could not get Discord status page. "
+                            f"Response: {r.status}"
+                        )
+
+                        continue
+                    else:
+                        js = await r.json()
+
+            try:
+                all_impacts = [x['impact'] for x in js['incidents']]
+            except KeyError as e:
+                self.log.error(
+                    "Error while parsing Discord status JSON:",
+                    exc_info=(type(e), e, e.__traceback__)
+                )
+
+            if "critical" in all_impacts:
+                self.log.info(
+                    "Activating farm guard because of "
+                    "critical Discord incident"
+                )
+                await self._send_set_game_guard_message(
+                    self.global_channel, self.critical_incident_guard
+                )
+            elif "major" in all_impacts:
+                self.log.info(
+                    "Activating farm guard because of "
+                    "major Discord incident"
+                )
+                await self._send_set_game_guard_message(
+                    self.global_channel, self.major_incident_guard
+                )
 
 
 if __name__ == "__main__":
