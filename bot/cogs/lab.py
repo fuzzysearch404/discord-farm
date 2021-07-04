@@ -14,10 +14,12 @@ class LabSource(menus.ListPageSource):
     def __init__(
         self,
         entries: list,
-        target_user: discord.Member
+        target_user: discord.Member,
+        lab_cooldown
     ):
         super().__init__(entries, per_page=12)
         self.target = target_user
+        self.lab_cooldown = lab_cooldown
 
     async def format_page(self, menu, page):
         target = self.target
@@ -36,6 +38,12 @@ class LabSource(menus.ListPageSource):
                 f"For example: \"{menu.ctx.prefix}modifications lettuce\"\n\n"
             )
         )
+
+        if self.lab_cooldown:
+            embed.description += (
+                "\ud83e\uddf9 This laboratory is closed for "
+                f"a maintenance: **{self.lab_cooldown}**\n\n"
+            )
 
         if not page:
             embed.description += (
@@ -97,11 +105,11 @@ class Lab(commands.Cog):
         {prefix} `laboratory` - view your lab
         {prefix} `laboratory @user` - view user's lab
         """
-        # Just to run the check if user has an account
         if member:
-            await checks.get_other_member(ctx, member)
+            user = await checks.get_other_member(ctx, member)
             target_user = member
         else:
+            user = ctx.user_data
             target_user = ctx.author
 
         query = """
@@ -124,8 +132,14 @@ class Lab(commands.Cog):
                 f"\u2696\ufe0f {data['volume']}/10"
             )
 
+        lab_cooldown = await checks.get_user_cooldown(
+            ctx, "recent_research", other_user_id=user.user_id
+        )
+        if lab_cooldown:
+            lab_cooldown = time.seconds_to_time(lab_cooldown)
+
         paginator = pages.MenuPages(
-            source=LabSource(entries, target_user)
+            source=LabSource(entries, target_user, lab_cooldown)
         )
 
         await paginator.start(ctx)
