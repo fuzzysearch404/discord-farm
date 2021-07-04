@@ -49,26 +49,35 @@ class User:
 
     def _calculate_user_level(self) -> tuple:
         """Calculates current player level and xp to the next level."""
-        limit = (
-            0, 20, 250, 750, 2000, 4500, 8000, 15000, 24000, 34000,  # 1 - 10
-            49000, 69420, 100000, 140000, 200000,  # 11 - 15
-            280000, 380000, 500000, 650000, 900000,  # 16 - 20
-            1_200_000, 1_600_000, 2_100_000, 2_850_000, 3_850_000,  # 21 - 25
-            5_000_000, 6_500_000, 8_000_000, 9_500_000, 11_000_000  # 26 - 30
-        )
-        level = 0
-
-        for points in limit:
-            if self.xp >= points:
-                level += 1
+        if self.xp < 11_500_000:
+            # Levels 1 - 15
+            if self.xp < 200000:
+                limits = (
+                    0, 20, 250, 750, 2000, 4500, 8000, 15000, 24000, 34000,
+                    49000, 69420, 100000, 140000, 200000
+                )
+                level = 0
+            # Levels 15 - 30
             else:
-                return level, points
+                limits = (
+                    280000, 380000, 500000, 650000, 900000,
+                    1_200_000, 1_600_000, 2_100_000, 2_850_000, 3_850_000,
+                    5_000_000, 6_500_000, 8_000_000, 9_500_000, 11_500_000
+                )
+                level = 15
 
-        # We reached high levels with a constant XP growth
-        remaining = self.xp - points
-        lev = int(remaining / 2_000_000)
+            for points in limits:
+                if self.xp >= points:
+                    level += 1
+                else:
+                    return level, points
 
-        return level + lev, points + ((lev + 1) * 2_000_000)
+        # User has reached high levels with a constant XP growth,
+        # that is 2.5 million XP per level.
+        remaining = self.xp - 11_500_000
+        lev = int(remaining / 2_500_000)
+
+        return 30 + lev, 11_500_000 + ((lev + 1) * 2_500_000)
 
     async def give_xp_and_level_up(self, ctx, xp: int) -> None:
         old_level = self.level
