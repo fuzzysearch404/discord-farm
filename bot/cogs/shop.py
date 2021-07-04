@@ -483,26 +483,28 @@ class Shop(commands.Cog):
             ),
             color=discord.Color.from_rgb(255, 162, 0)
         )
-        embed.add_field(
-            name=f"{self.bot.tile_emoji} Farm: Expand size",
-            value=(
-                f"Plant more items in your farm!\n"
-                f"**\ud83c\udd95 {user_data.farm_slots} \u2192 "
-                f"{user_data.farm_slots + 1} farm tiles**\n"
-                f"\ud83d\udcb0 Price: **1** {self.bot.gem_emoji}\n\n"
-                f"\ud83d\uded2 **{ctx.prefix}upgrade farm**"
+        if user_data.farm_slots < 30:
+            embed.add_field(
+                name=f"{self.bot.tile_emoji} Farm: Expand size",
+                value=(
+                    f"Plant more items in your farm!\n"
+                    f"**\ud83c\udd95 {user_data.farm_slots} \u2192 "
+                    f"{user_data.farm_slots + 1} farm tiles**\n"
+                    f"\ud83d\udcb0 Price: **1** {self.bot.gem_emoji}\n\n"
+                    f"\ud83d\uded2 **{ctx.prefix}upgrade farm**"
+                )
             )
-        )
-        embed.add_field(
-            name="\ud83c\udfed Factory: Capacity",
-            value=(
-                f"Queue more products to produce in factory!\n"
-                f"**\ud83c\udd95 {user_data.factory_slots} \u2192 "
-                f"{user_data.factory_slots + 1} factory capacity**\n"
-                f"\ud83d\udcb0 Price: **1** {self.bot.gem_emoji}\n\n"
-                f"\ud83d\uded2 **{ctx.prefix}upgrade capacity**"
+        if user_data.factory_slots < 15:
+            embed.add_field(
+                name="\ud83c\udfed Factory: Capacity",
+                value=(
+                    f"Queue more products to produce in factory!\n"
+                    f"**\ud83c\udd95 {user_data.factory_slots} \u2192 "
+                    f"{user_data.factory_slots + 1} factory capacity**\n"
+                    f"\ud83d\udcb0 Price: **1** {self.bot.gem_emoji}\n\n"
+                    f"\ud83d\uded2 **{ctx.prefix}upgrade capacity**"
+                )
             )
-        )
         if user_data.factory_level < 10:
             embed.add_field(
                 name=(
@@ -733,6 +735,18 @@ class Shop(commands.Cog):
         If you currently can plant only 2 items per time in your farm,
         then after this upgrade you will be able to plant 3 items simultanesly.
         """
+        if ctx.user_data.farm_slots >= 30:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="Maximum farm size reached! \ud83d\ude9c",
+                    text=(
+                        "You already have reached the maximum farm size! We "
+                        "have no more nearby land to expand to! \ud83d\ude31"
+                    ),
+                    ctx=ctx
+                )
+            )
+
         await self.perform_upgrade(
             ctx=ctx,
             attr="farm_slots",
@@ -755,6 +769,19 @@ class Shop(commands.Cog):
         If you currently can queue 2 items for production in factory,
         then after this upgrade you will be able to queue 3 items simultanesly.
         """
+        if ctx.user_data.factory_slots >= 15:
+            return await ctx.reply(
+                embed=embeds.error_embed(
+                    title="Maximum factory size reached! \ud83c\udfed",
+                    text=(
+                        "You already have reached the maximum factory size! "
+                        "There is no more space for storing "
+                        "more raw materials! \ud83d\ude33"
+                    ),
+                    ctx=ctx
+                )
+            )
+
         await self.perform_upgrade(
             ctx=ctx,
             attr="factory_slots",
