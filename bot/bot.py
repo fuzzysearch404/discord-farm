@@ -110,7 +110,7 @@ class BotClient(commands.AutoShardedBot):
                 self.log.exception(f"Failed to load extension: {extension}")
 
         if self.is_beta:
-            self.log.info("Loading the beta debug extension")
+            self.log.warning("Loading the beta debug extension")
             self.load_extension("bot.cogs.beta")
 
         self.run()

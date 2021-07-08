@@ -385,7 +385,7 @@ class IPC:
 
             if "critical" in all_impacts:
                 self.log.info(
-                    "Activating farm guard because of "
+                    "Activating farm guard because of a "
                     "critical Discord incident"
                 )
                 await self._send_set_game_guard_message(
@@ -394,7 +394,7 @@ class IPC:
             elif "major" in all_impacts:
                 self.log.info(
                     "Activating farm guard because of "
-                    "major Discord incident"
+                    "a major Discord incident"
                 )
                 await self._send_set_game_guard_message(
                     self.global_channel, self.major_incident_guard
