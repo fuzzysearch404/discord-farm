@@ -415,31 +415,43 @@ class Profile(commands.Cog):
     @chests.command()
     @checks.has_account()
     @checks.avoid_maintenance()
-    async def open(self, ctx, *, chest: converters.Chest):
+    async def open(
+        self,
+        ctx,
+        *,
+        chest: converters.ChestAndAmount,
+        amount: int = 1
+    ):
         """
         \ud83e\uddf0 Opens a chest (if you own one)
 
         __Arguments__:
         `chest` - chest to open. Can be chest name or chest ID
+        __Optional arguments__:
+        `amount` - specify how many chests of this type to open
 
         __Usage examples__:
-        {prefix} `chests open rare` - opens "rare" chest (by chest's name)
-        {prefix} `chests open 1002` - opens "rare" chest (by chest's ID)
+        {prefix} `chests open rare` - opens "rare" chest (by chest name)
+        {prefix} `chests open rare 2` - opens 2 "rare" chests (by chest name)
+        {prefix} `chests open 1002` - opens "rare" chest (by chest ID)
         """
+        chest, amount = chest
+
         async with ctx.db.acquire() as conn:
             chest_data = await ctx.user_data.get_item(ctx, chest.id, conn=conn)
 
-        if not chest_data:
+        if not chest_data or chest_data['amount'] < amount:
             return await ctx.reply(
                 embed=embeds.error_embed(
-                    title=f"You don't have any {chest.name} chests",
+                    title=f"You don't have {amount}x {chest.name} chests!",
                     text=(
                         "I just contacted our warehouse manager, and with a "
                         "deep regret, I have to say that *inhales*, you don't "
-                        f"have any **{chest.emoji} {chest.name.capitalize()} "
-                        "chests** in your inventory. "
-                        "Obtain one or try another chest."
+                        f"have **{amount}x {chest.emoji} "
+                        f"{chest.name.capitalize()} chests** "
+                        "in your inventory."
                     ),
+                    footer="Check your chests with the \"chests\" command",
                     ctx=ctx
                 )
             )
@@ -454,97 +466,107 @@ class Profile(commands.Cog):
         # This time we just hardcode this all in.
         # Gold chest
         if chest.id == 1000:
-            min_gold = 25 * user_level
-            max_gold = 100 * user_level
+            min_gold = 25 * user_level * amount
+            max_gold = 115 * user_level * amount
 
             gold_reward = random.randint(min_gold, max_gold)
         # Common
         elif chest.id == 1001:
-            if bool(random.getrandbits(1)):
-                multiplier = int(base_growables_multiplier / 2) or 1
+            for _ in range(amount):
+                if bool(random.getrandbits(1)):
+                    multiplier = int(base_growables_multiplier / 2) or 1
 
-                items_won = ctx.items.get_random_items(
-                    user_level,
-                    growables_multiplier=multiplier,
-                    products=False,
-                    total_draws=1
-                )
-            else:
-                min_gold = 5 * user_level
-                max_gold = 10 * user_level
+                    items = ctx.items.get_random_items(
+                        user_level,
+                        growables_multiplier=multiplier,
+                        products=False,
+                        total_draws=1
+                    )
+                    items_won.extend(items)
+                else:
+                    min_gold = 5 * user_level
+                    max_gold = 10 * user_level
 
-                gold_reward = random.randint(min_gold, max_gold)
+                    gold_reward += random.randint(min_gold, max_gold)
         # Uncommon
         elif chest.id == 1002:
-            items_won = ctx.items.get_random_items(
-                user_level,
-                extra_luck=0.05,
-                growables_multiplier=base_growables_multiplier,
-                products=False,
-                total_draws=random.randint(1, 2)
-            )
+            for _ in range(amount):
+                items = ctx.items.get_random_items(
+                    user_level,
+                    extra_luck=0.08,
+                    growables_multiplier=base_growables_multiplier,
+                    products=False,
+                    total_draws=random.randint(1, 2)
+                )
+                items_won.extend(items)
 
-            if not random.randint(0, 4):
-                min_gold = 3 * user_level
-                max_gold = 6 * user_level
+                if not random.randint(0, 4):
+                    min_gold = 3 * user_level
+                    max_gold = 6 * user_level
 
-                gold_reward = random.randint(min_gold, max_gold)
+                    gold_reward += random.randint(min_gold, max_gold)
         # Rare
         elif chest.id == 1003:
-            items_won = ctx.items.get_random_items(
-                user_level,
-                extra_luck=0.25,
-                growables_multiplier=base_growables_multiplier + 1,
-                total_draws=random.randint(1, 3)
-            )
+            for _ in range(amount):
+                items = ctx.items.get_random_items(
+                    user_level,
+                    extra_luck=0.333,
+                    growables_multiplier=base_growables_multiplier + 1,
+                    total_draws=random.randint(1, 3)
+                )
+                items_won.extend(items)
 
-            if not random.randint(0, 4):
-                min_gold = 4 * user_level
-                max_gold = 8 * user_level
+                if not random.randint(0, 4):
+                    min_gold = 4 * user_level
+                    max_gold = 8 * user_level
 
-                gold_reward = random.randint(min_gold, max_gold)
+                    gold_reward += random.randint(min_gold, max_gold)
         # Epic
         elif chest.id == 1004:
-            if not random.randint(0, 9):
-                base_growables_multiplier += random.randint(1, 3)
+            for _ in range(amount):
+                if not random.randint(0, 9):
+                    base_growables_multiplier += random.randint(1, 3)
 
-            items_won = ctx.items.get_random_items(
-                user_level,
-                extra_luck=0.455,
-                growables_multiplier=base_growables_multiplier + 5,
-                products_multiplier=2,
-                total_draws=random.randint(2, 4)
-            )
+                items = ctx.items.get_random_items(
+                    user_level,
+                    extra_luck=0.655,
+                    growables_multiplier=base_growables_multiplier + 5,
+                    products_multiplier=2,
+                    total_draws=random.randint(2, 4)
+                )
+                items_won.extend(items)
 
-            if bool(random.getrandbits(1)):
-                min_gold = 8 * user_level
-                max_gold = 15 * user_level
+                if bool(random.getrandbits(1)):
+                    min_gold = 8 * user_level
+                    max_gold = 15 * user_level
 
-                gold_reward = random.randint(min_gold, max_gold)
+                    gold_reward += random.randint(min_gold, max_gold)
         # Legendary
         elif chest.id == 1005:
-            if not random.randint(0, 4):
-                base_growables_multiplier += random.randint(1, 5)
+            for _ in range(amount):
+                if not random.randint(0, 4):
+                    base_growables_multiplier += random.randint(1, 5)
 
-            items_won = ctx.items.get_random_items(
-                user_level,
-                extra_luck=0.777,
-                growables_multiplier=base_growables_multiplier + 8,
-                products_multiplier=3,
-                total_draws=random.randint(3, 5)
-            )
+                items = ctx.items.get_random_items(
+                    user_level,
+                    extra_luck=1,
+                    growables_multiplier=base_growables_multiplier + 8,
+                    products_multiplier=3,
+                    total_draws=random.randint(3, 5)
+                )
+                items_won.extend(items)
 
-            min_gold = 10 * user_level
-            max_gold = 30 * user_level
+                min_gold = 10 * user_level
+                max_gold = 30 * user_level
 
-            if not random.randint(0, 4):
-                min_gold += 20 * user_level
-                max_gold += 50 * user_level
+                if not random.randint(0, 4):
+                    min_gold += 20 * user_level
+                    max_gold += 50 * user_level
 
-            gold_reward = random.randint(min_gold, max_gold)
+                gold_reward += random.randint(min_gold, max_gold)
 
-            if not random.randint(0, 14):
-                gems_reward = 1
+                if not random.randint(0, 14):
+                    gems_reward += 1
 
         if gold_reward:
             ctx.user_data.gold += gold_reward
@@ -553,7 +575,9 @@ class Profile(commands.Cog):
 
         async with ctx.db.acquire() as conn:
             async with conn.transaction():
-                await ctx.user_data.remove_item(ctx, chest.id, 1, conn=conn)
+                await ctx.user_data.remove_item(
+                    ctx, chest.id, amount, conn=conn
+                )
 
                 if gold_reward or gems_reward:
                     await ctx.users.update_user(ctx.user_data, conn=conn)
@@ -564,8 +588,16 @@ class Profile(commands.Cog):
         rewards = "\n\n"
 
         if items_won:
-            for item, amount in items_won:
-                rewards += f"**{item.full_name}**: {amount} "
+            grouped = {}
+
+            for item, amt in items_won:
+                try:
+                    grouped[item] += amt
+                except KeyError:
+                    grouped[item] = amt
+
+            for item, amt in grouped.items():
+                rewards += f"**{item.full_name}**: {amt} "
         if gold_reward:
             rewards += f"**{self.bot.gold_emoji} {gold_reward} gold** "
         if gems_reward:
@@ -576,8 +608,9 @@ class Profile(commands.Cog):
                 title=f"{chest.name.capitalize()} chest opened!",
                 text=(
                     f"{ctx.author.mention} tried their luck, by opening "
-                    f"their {chest.emoji} **{chest.name.capitalize()} "
-                    "chest**, and won these awesome rewards:" + rewards
+                    f"their **{amount}x {chest.emoji} "
+                    f"{chest.name.capitalize()} chests**, "
+                    "and won these awesome rewards:" + rewards
                 ),
                 footer="These items are now moved to your inventory",
                 ctx=ctx
@@ -778,10 +811,11 @@ class Profile(commands.Cog):
             )
         else:
             chests_and_rarities = {
-                1000: 5.0,  # Gold
-                1001: 75.0,  # Common
-                1002: 50.0,  # Uncommon
-                1003: 12.0  # Rare
+                1000: 15.0,  # Gold
+                1001: 100.0,  # Common
+                1002: 75.0,  # Uncommon
+                1003: 20.0,  # Rare
+                1004: 0.5  # Epic
             }
 
             chest = random.choices(
@@ -793,8 +827,8 @@ class Profile(commands.Cog):
             amount = 1
             # If common chest, give multiple
             if chest == 1001:
-                min = int(ctx.user_data.level / 10) or 1
-                max = int(ctx.user_data.level / 5) or 1
+                min = int(ctx.user_data.level / 12) or 1
+                max = int(ctx.user_data.level / 6) or 1
                 amount = random.randint(min, max + 1)
 
             await ctx.user_data.give_item(ctx, chest, amount)
