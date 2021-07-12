@@ -68,7 +68,7 @@ class InventorySource(menus.ListPageSource):
                     f"Page {menu.current_page + 1}/{self.get_max_pages()} | "
                     "These items can only be accessed by their owner"
                 ),
-                icon_url=target.avatar_url
+                icon_url=target.avatar.url
             )
 
         embed.description = fmt
@@ -758,7 +758,9 @@ class Profile(commands.Cog):
         user_cooldown = await checks.get_user_cooldown(ctx, "hourly_bonus")
 
         if user_cooldown:
-            raise commands.CommandOnCooldown(ctx, user_cooldown)
+            raise commands.CommandOnCooldown(
+                ctx, user_cooldown, commands.BucketType.user
+            )
 
         headers = {
             "Authorization": self.topgg_token

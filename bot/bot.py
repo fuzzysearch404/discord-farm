@@ -76,7 +76,6 @@ class BotClient(commands.AutoShardedBot):
         super().__init__(
             intents=intents,
             chunk_guilds_at_startup=False,
-            guild_subscriptions=False,
             max_messages=7500,
             command_prefix=self.get_custom_prefix,
             case_insensitive=True,
@@ -220,7 +219,7 @@ class BotClient(commands.AutoShardedBot):
         async with aiohttp.ClientSession() as session:
             webhook = discord.Webhook.from_url(
                 self._log_webhook,
-                adapter=discord.AsyncWebhookAdapter(session)
+                session=session
             )
 
             await webhook.send(

@@ -25,7 +25,7 @@ def _create_embed(
 
     if not private:
         if footer:
-            embed.set_footer(text=footer, icon_url=ctx.author.avatar_url)
+            embed.set_footer(text=footer, icon_url=ctx.author.avatar.url)
     else:
         if not footer:
             embed.set_footer(

@@ -105,7 +105,7 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
 
         embed.set_footer(
             text="For more information join bot's official support server",
-            icon_url=ctx.bot.user.avatar_url
+            icon_url=ctx.bot.user.avatar.url
         )
 
         await ctx.reply(embed=embed)
@@ -131,8 +131,9 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
         permissions.read_message_history = True
         permissions.attach_files = True
         permissions.add_reactions = True
+        permissions.use_threads = True
 
-        oauth_link = discord.utils.oauth_url(self.bot.user.id, permissions)
+        oauth_link = discord.utils.oauth_url(permissions)
 
         await ctx.reply(
             "Support server invite: https://discord.gg/MwpxKjF"
