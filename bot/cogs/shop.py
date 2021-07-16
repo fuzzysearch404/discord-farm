@@ -594,8 +594,12 @@ class Shop(commands.Cog):
                 )
             )
 
-        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
-        confirm, msg = await menu.prompt(ctx)
+        prompt = views.ConfirmPromptView(
+            initial_embed=embed,
+            emoji=self.bot.gold_emoji,
+            label="Sell to the market"
+        )
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
@@ -608,7 +612,8 @@ class Shop(commands.Cog):
                 )
                 if not item_data or item_data['amount'] < amount:
                     return await msg.edit(
-                        embed=embeds.not_enough_items(ctx, item, amount)
+                        embed=embeds.not_enough_items(ctx, item, amount),
+                        view=None
                     )
 
                 await ctx.user_data.remove_item(
@@ -629,7 +634,8 @@ class Shop(commands.Cog):
                 ),
                 footer=f"You now have {ctx.user_data.gold} gold coins!",
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @commands.group(case_insensitive=True)
@@ -674,11 +680,19 @@ class Shop(commands.Cog):
         )
 
         if with_gem:
-            menu = pages.ConfirmPrompt(pages.CONFIRM_GEM_BUTTON, embed=embed)
+            prompt = views.ConfirmPromptView(
+                initial_embed=embed,
+                emoji=self.bot.gem_emoji,
+                label="Purchase upgrade"
+            )
         else:
-            menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
+            prompt = views.ConfirmPromptView(
+                initial_embed=embed,
+                emoji=self.bot.gold_emoji,
+                label="Purchase upgrade"
+            )
 
-        confirm, msg = await menu.prompt(ctx)
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
@@ -691,14 +705,16 @@ class Shop(commands.Cog):
                 if with_gem:
                     if user_data.gems < price:
                         return await msg.edit(
-                            embed=embeds.no_gems_embed(ctx, user_data, price)
+                            embed=embeds.no_gems_embed(ctx, user_data, price),
+                            view=None
                         )
 
                     user_data.gems -= price
                 else:
                     if user_data.gold < price:
                         return await msg.edit(
-                            embed=embeds.no_money_embed(ctx, user_data, price)
+                            embed=embeds.no_money_embed(ctx, user_data, price),
+                            view=None
                         )
 
                     user_data.gold -= price
@@ -717,7 +733,8 @@ class Shop(commands.Cog):
                     "change a lot for you in a long term! Nice! \ud83d\udc4f"
                 ),
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @upgrade.command(aliases=["field"])
@@ -1052,8 +1069,13 @@ class Shop(commands.Cog):
             value=f"{price} {self.bot.gold_emoji}"
         )
 
-        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
-        confirm, msg = await menu.prompt(ctx)
+        prompt = views.ConfirmPromptView(
+            initial_embed=embed,
+            emoji=self.bot.gold_emoji,
+            label="Accept trade offer",
+            deny_label="Deny trade offer"
+        )
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
@@ -1068,7 +1090,10 @@ class Shop(commands.Cog):
                 trade_data = await conn.fetchrow(query, trade_id)
 
                 if not trade_data:
-                    return await msg.edit(embed=trade_not_found_embed())
+                    return await msg.edit(
+                        embed=trade_not_found_embed(),
+                        view=None
+                    )
 
                 user_data = await ctx.users.get_user(ctx.author.id, conn=conn)
                 # If there is a trade, then the user must exist too (no check)
@@ -1077,8 +1102,9 @@ class Shop(commands.Cog):
                 )
 
                 if user_data.gold < price:
-                    return await ctx.reply(
-                        embed=embeds.no_money_embed(ctx, user_data, price)
+                    return await msg.edit(
+                        embed=embeds.no_money_embed(ctx, user_data, price),
+                        view=None
                     )
 
                 query = "DELETE FROM store WHERE id = $1;"
@@ -1101,7 +1127,8 @@ class Shop(commands.Cog):
                     "both just made! \ud83e\udd1d"
                 ),
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
         if not trade_user_data.notifications:

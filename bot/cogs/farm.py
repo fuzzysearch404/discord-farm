@@ -5,7 +5,6 @@ from contextlib import suppress
 from enum import Enum
 from discord.ext import commands
 
-from .utils import pages
 from .utils import time
 from .utils import views
 from .utils import checks
@@ -625,8 +624,12 @@ class Farm(commands.Cog):
             text=f"You have a total of {ctx.user_data.gold} gold coins"
         )
 
-        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
-        confirm, msg = await menu.prompt(ctx)
+        prompt = views.ConfirmPromptView(
+            initial_embed=embed,
+            emoji=self.bot.gold_emoji,
+            label="Purchase and start growing"
+        )
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
@@ -643,7 +646,8 @@ class Farm(commands.Cog):
             await ctx.release()
 
             return await msg.edit(
-                embed=embeds.no_money_embed(ctx, user_data, total_cost)
+                embed=embeds.no_money_embed(ctx, user_data, total_cost),
+                view=None
             )
 
         query = """
@@ -675,7 +679,8 @@ class Farm(commands.Cog):
                         f"with: **{ctx.prefix}upgrade farm**."
                     ),
                     ctx=ctx
-                )
+                ),
+                view=None
             )
 
         iterations = None
@@ -733,7 +738,8 @@ class Farm(commands.Cog):
                     "\"farm\" command"
                 ),
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @commands.command(aliases=["clean"])
@@ -787,8 +793,13 @@ class Farm(commands.Cog):
             ctx=ctx
         )
 
-        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
-        confirm, msg = await menu.prompt(ctx)
+        prompt = views.ConfirmPromptView(
+            initial_embed=embed,
+            style=discord.ButtonStyle.primary,
+            emoji=self.bot.gold_emoji,
+            label="Clear farm"
+        )
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
@@ -799,7 +810,8 @@ class Farm(commands.Cog):
 
             if total_cost > user_data.gold:
                 return await msg.edit(
-                    embed=embeds.no_money_embed(ctx, user_data, total_cost)
+                    embed=embeds.no_money_embed(ctx, user_data, total_cost),
+                    view=None
                 )
 
             query = """
@@ -821,7 +833,8 @@ class Farm(commands.Cog):
                 ),
                 footer="Your farm field items have been discarded",
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @commands.command()

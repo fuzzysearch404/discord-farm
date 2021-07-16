@@ -66,7 +66,7 @@ class ButtonPaginatorView(discord.ui.View):
             return True
 
         await interaction.response.send_message(
-            f"This menu can only be used by {self.author.mention}, "
+            f"\u23f0 This menu can only be used by {self.author.mention}, "
             "because they used this command.",
             ephemeral=True
         )
@@ -183,3 +183,116 @@ class ButtonPaginatorView(discord.ui.View):
         self.msg = await ctx.reply(embed=embed, view=self)
 
         return self.msg
+
+
+class ConfirmPromptView(discord.ui.View):
+    def __init__(
+        self,
+        initial_msg: str = None,
+        initial_embed: discord.Embed = None,
+        style: discord.ButtonStyle = discord.ButtonStyle.green,
+        emoji: str = "\u2705",
+        label: str = None,
+        deny_button: bool = True,
+        deny_label: str = "Cancel",
+        timeout: int = 60
+    ) -> None:
+        super().__init__(timeout=timeout)
+        # Properties for the confirmation button
+        self.style = style
+        self.emoji = emoji
+        self.label = label
+        # Message or/and embed to send as an initial message
+        self.initial_msg = initial_msg
+        self.initial_embed = initial_embed
+        # Context from the original command invoke
+        self.ctx = None
+        # Message with the view itself
+        self._msg = None
+
+        self._result = None
+
+        self.create_approve_button()
+        if deny_button:
+            self.deny_label = deny_label
+            self.create_deny_button()
+
+    async def on_timeout(self) -> None:
+        await self.disable_buttons()
+
+    async def interaction_check(
+        self,
+        interaction: discord.Interaction
+    ) -> bool:
+        if self.ctx.author == interaction.user:
+            return True
+
+        await interaction.response.send_message(
+            f"\u23f0 This menu can only be used by {self.ctx.author.mention}, "
+            "because they used this command.",
+            ephemeral=True
+        )
+
+        return False
+
+    def create_approve_button(self) -> None:
+        approve_button = discord.ui.Button(
+            style=self.style,
+            emoji=self.emoji,
+            label=self.label
+        )
+
+        async def approve_callback(interaction) -> None:
+            self._result = True
+
+            # Here we don't disable the buttons, because we
+            # most likely will edit the _msg message
+            # and just pass None or this empty view
+            # to not make us doing an extra request to API
+            self.clear_items()
+            self.stop()
+
+        approve_button.callback = approve_callback
+
+        self.add_item(approve_button)
+
+    def create_deny_button(self) -> None:
+        deny_button = discord.ui.Button(
+            style=discord.ButtonStyle.danger,
+            emoji="\u2716\ufe0f",
+            label=self.deny_label
+        )
+
+        # This time we do an extra step and disable the buttons
+        # Because in most of the code the command execution
+        # just stops in this case anyways
+        async def deny_callback(interaction) -> None:
+            self._result = False
+
+            await self.disable_buttons()
+            self.stop()
+
+        deny_button.callback = deny_callback
+
+        self.add_item(deny_button)
+
+    async def disable_buttons(self) -> None:
+        for ui_item in self.children:
+            if isinstance(ui_item, discord.ui.Button):
+                ui_item.disabled = True
+
+        await self._msg.edit(view=self)
+
+    async def send_initial_message(self) -> None:
+        self._msg = await self.ctx.reply(
+            self.initial_msg, embed=self.initial_embed, view=self
+        )
+
+    async def prompt(self, ctx) -> tuple:
+        self.ctx = ctx
+        await self.send_initial_message()
+
+        # Wait until the view times out or user clicks a button
+        await self.wait()
+
+        return self._result, self._msg

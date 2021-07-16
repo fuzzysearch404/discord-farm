@@ -3,6 +3,7 @@ import jsonpickle
 from discord.ext import commands
 
 from .utils import time
+from .utils import views
 from .utils import embeds
 from .utils import checks
 from .utils import pages
@@ -86,7 +87,10 @@ class Missions(commands.Cog):
                 # If user tries to complete already completed mission, after
                 # a long prompt.
                 if not payload:
-                    return await mission_msg.edit(content="Already completed!")
+                    return await mission_msg.edit(
+                        content="Already completed!",
+                        view=None
+                    )
 
             user_items = await ctx.user_data.get_all_items(ctx, conn=conn)
 
@@ -124,7 +128,8 @@ class Missions(commands.Cog):
                         f"requested items: **{fmt[:-2]}**! "
                     ),
                     ctx=ctx
-                )
+                ),
+                view=None
             )
 
         async with ctx.acquire() as conn:
@@ -177,7 +182,8 @@ class Missions(commands.Cog):
                     f"reward: **{fmt}**"
                 ),
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @commands.group(aliases=["orders", "mission", "mi"], case_insensitive=True)
@@ -325,8 +331,12 @@ class Missions(commands.Cog):
             value=self.format_mission(mission)
         )
 
-        menu = pages.ConfirmPrompt(pages.CONFIRM_CHECK_BUTTON, embed=embed)
-        confirm, msg = await menu.prompt(ctx)
+        prompt = views.ConfirmPromptView(
+            initial_embed=embed,
+            emoji=self.bot.check_emoji,
+            label="Complete the offer"
+        )
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
