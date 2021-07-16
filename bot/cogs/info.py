@@ -103,12 +103,14 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
             description=self.bot.game_news
         )
 
-        embed.set_footer(
-            text="For more information join bot's official support server",
-            icon_url=ctx.bot.user.avatar.url
-        )
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            emoji="\ud83d\udc65",
+            label="Join the official support server for more information",
+            url="https://discord.gg/MwpxKjF"
+        ))
 
-        await ctx.reply(embed=embed)
+        await ctx.reply(embed=embed, view=view)
 
     @commands.command(hidden=True)
     async def ping(self, ctx):
@@ -137,9 +139,21 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
             self.bot.user.id, permissions=permissions
         )
 
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            emoji="\ud83e\udd16",
+            label="Invite bot to your server",
+            url=oauth_link
+        ))
+        view.add_item(discord.ui.Button(
+            emoji="\ud83d\udc65",
+            label="Join the official support server",
+            url="https://discord.gg/MwpxKjF"
+        ))
+
         await ctx.reply(
-            "Support server invite: https://discord.gg/MwpxKjF"
-            f"\nInvite bot to your server: <{oauth_link}>"
+            "Here you go! Also consider joining the official support "
+            "server \ud83d\ude09", view=view
         )
 
     @commands.command()
@@ -156,11 +170,6 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
             "and hosting it, costs lots of my time and also money.\n\n"
             "Any donations are appreciated, they are going to cover hosting "
             "expenses and help to make this bot even better. <3"
-            "\nhttps://ko-fi.com/fuzzysearch\n"
-            "\nYou can also help out, without spending any money, "
-            "if you upvote the bot on the \"top.gg\" website every 12 hours "
-            f"(This command also unlocks the **{ctx.prefix}hourly** "
-            f"bonus command):\n<https://top.gg/bot/{ctx.bot.user.id}>"
         )
 
         embed = discord.Embed(
@@ -169,7 +178,19 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
             description=message
         )
 
-        await ctx.reply(embed=embed)
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            emoji="\u2764\ufe0f",
+            label="Buy me a coffee",
+            url="https://ko-fi.com/fuzzysearch"
+        ))
+        view.add_item(discord.ui.Button(
+            emoji="\ud83d\udc99",
+            label="Support via PayPal",
+            url="https://paypal.me/fuzzysearch"
+        ))
+
+        await ctx.reply(embed=embed, view=view)
 
     @commands.command()
     async def about(self, ctx):
