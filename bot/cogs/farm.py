@@ -165,7 +165,8 @@ class FarmFieldSource(menus.ListPageSource):
                 )
             else:
                 fmt += (
-                    f"**{item.full_name} (x{plant.amount} {item.emoji})** "
+                    f"**{item.name.capitalize()} {item.emoji_animal} "
+                    f"(x{plant.amount} {item.emoji})** "
                     f"- {state} (**{plant.iterations}.lvl**)"
                 )
 
