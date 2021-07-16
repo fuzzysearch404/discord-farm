@@ -133,7 +133,9 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
         permissions.add_reactions = True
         permissions.use_threads = True
 
-        oauth_link = discord.utils.oauth_url(permissions)
+        oauth_link = discord.utils.oauth_url(
+            self.bot.user.id, permissions=permissions
+        )
 
         await ctx.reply(
             "Support server invite: https://discord.gg/MwpxKjF"
@@ -264,7 +266,7 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
         between prefix and the command, put the prefix with a whitespace
         in double quotes. (See the second example below)
         You can even remove the prefix completely, by just specifying
-        the prefix as blank double quotes. (not recommended)
+        the prefix as an empty double quotes: `""` (not recommended)
 
         __Usage examples__:
         {prefix} `prefix !!` - the commands are going to start
