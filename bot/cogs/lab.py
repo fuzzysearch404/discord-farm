@@ -1,7 +1,8 @@
 import discord
-from discord.ext import commands, menus
+from discord.ext import commands
 
 from .utils import time
+from .utils import views
 from .utils import embeds
 from .utils import pages
 from .utils import checks
@@ -10,7 +11,7 @@ from core import game_items
 from core import modifications
 
 
-class LabSource(menus.ListPageSource):
+class LabSource(views.PaginatorSource):
     def __init__(
         self,
         entries: list,
@@ -21,7 +22,7 @@ class LabSource(menus.ListPageSource):
         self.target = target_user
         self.lab_cooldown = lab_cooldown
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         target = self.target
 
         embed = discord.Embed(
@@ -33,9 +34,9 @@ class LabSource(menus.ListPageSource):
                 "modify your plants and animals (animals don't get hurt) "
                 "to grow faster, be collectable for longer and "
                 "produce a larger volume of items. \ud83e\udda0\n"
-                f"Use the **{menu.ctx.prefix}modifications** command to "
+                f"Use the **{view.ctx.prefix}modifications** command to "
                 "see the available upgrades for an item. \ud83d\udd0d\n"
-                f"For example: \"{menu.ctx.prefix}modifications lettuce\"\n\n"
+                f"For example: \"{view.ctx.prefix}modifications lettuce\"\n\n"
             )
         )
 
@@ -57,10 +58,6 @@ class LabSource(menus.ListPageSource):
             )
 
             embed.description += header + "\n".join(page)
-
-            embed.set_footer(
-                text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
-            )
 
         return embed
 
@@ -138,7 +135,7 @@ class Lab(commands.Cog):
         if lab_cooldown:
             lab_cooldown = time.seconds_to_time(lab_cooldown)
 
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=LabSource(entries, target_user, lab_cooldown)
         )
 

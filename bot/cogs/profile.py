@@ -1,30 +1,30 @@
 import aiohttp
 import discord
 import random
-from discord.ext import commands, menus
+from discord.ext import commands
 from datetime import datetime
 
 from core import game_items
 from core import modifications
 from core.exceptions import ItemNotFoundException
+from .utils import views
 from .utils import checks
 from .utils import time
 from .utils import embeds
-from .utils import pages
 from .utils import converters
 
 
-class InventorySource(menus.ListPageSource):
+class InventorySource(views.PaginatorSource):
     def __init__(self, entries, target_user: discord.Member):
         super().__init__(entries, per_page=30)
         self.target = target_user
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         target = self.target
 
         embed = discord.Embed(
             title=(
-                f"{menu.bot.warehouse_emoji} "
+                f"{view.bot.warehouse_emoji} "
                 f"{target.nick or target.name}'s warehouse"
             ),
             color=discord.Color.from_rgb(234, 231, 231)
@@ -64,10 +64,7 @@ class InventorySource(menus.ListPageSource):
                     iteration = 1
 
             embed.set_footer(
-                text=(
-                    f"Page {menu.current_page + 1}/{self.get_max_pages()} | "
-                    "These items can only be accessed by their owner"
-                ),
+                text="These items can only be accessed by their owner",
                 icon_url=target.avatar.url
             )
 
@@ -76,11 +73,11 @@ class InventorySource(menus.ListPageSource):
         return embed
 
 
-class AllItemsSource(menus.ListPageSource):
+class AllItemsSource(views.PaginatorSource):
     def __init__(self, entries):
         super().__init__(entries, per_page=15)
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         head = (
             "| \ud83c\udff7\ufe0f Item | \ud83d\udd0e View item "
             "command |\n\n"
@@ -89,17 +86,13 @@ class AllItemsSource(menus.ListPageSource):
         fmt = []
         for item in page:
             fmt.append(
-                f"{item.full_name} - **{menu.ctx.prefix}item {item.id}**"
+                f"{item.full_name} - **{view.ctx.prefix}item {item.id}**"
             )
 
         embed = discord.Embed(
             title="\ud83d\udd13 Items unlocked for your level:",
             color=discord.Color.from_rgb(255, 172, 51),
             description=head + "\n".join(fmt)
-        )
-
-        embed.set_footer(
-            text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
         )
 
         return embed
@@ -353,7 +346,7 @@ class Profile(commands.Cog):
             item_and_amt = game_items.ItemAndAmount(item, data['amount'])
             items_and_amounts.append(item_and_amt)
 
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=InventorySource(items_and_amounts, target_user)
         )
 
@@ -698,7 +691,7 @@ class Profile(commands.Cog):
             ctx.user_data.level
         )
 
-        paginator = pages.MenuPages(source=AllItemsSource(all_items))
+        paginator = views.ButtonPaginatorView(source=AllItemsSource(all_items))
 
         await paginator.start(ctx)
 
@@ -814,7 +807,7 @@ class Profile(commands.Cog):
         else:
             chests_and_rarities = {
                 1000: 15.0,  # Gold
-                1001: 100.0,  # Common
+                1001: 120.0,  # Common
                 1002: 75.0,  # Uncommon
                 1003: 20.0,  # Rare
                 1004: 0.5  # Epic

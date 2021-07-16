@@ -41,8 +41,13 @@ class ButtonPaginatorView(discord.ui.View):
         self.source = source
         self.current_page = 0
 
-        self.msg = None
+        # From the message that invoked the command
+        self.ctx = None
+        self.bot = None
         self.author = None
+
+        # The message where the paginator will be at
+        self.msg = None
 
         self.update_page_counter_label()
 
@@ -166,7 +171,10 @@ class ButtonPaginatorView(discord.ui.View):
         await self.update_page_view()
 
     async def start(self, ctx) -> discord.Message:
+        self.ctx = ctx
+        self.bot = ctx.bot
         self.author = ctx.author
+
         embed = await self.current_page_embed()
         # No need for a paginator? - Not adding it.
         if not self.source.should_paginate():

@@ -1,22 +1,22 @@
 import psutil
 import pkg_resources
 import discord
-from discord.ext import commands, tasks, menus
+from discord.ext import commands, tasks
 
+from .utils import views
 from .utils import checks
 from .utils import embeds
 from .utils import time as time_util
-from .utils import pages
 
 
-class HelpMessageSource(menus.ListPageSource):
+class HelpMessageSource(views.PaginatorSource):
     def __init__(self, entries):
         super().__init__(entries, per_page=1)
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         embed = discord.Embed(
             color=discord.Color.from_rgb(88, 101, 242),
-            description=page
+            description=page[0]
         )
 
         return embed
@@ -59,7 +59,7 @@ class HelpCommand(commands.MinimalHelpCommand):
         for page in self.paginator.pages:
             new_pages.append(page.replace("{prefix}", self.context.prefix))
 
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=HelpMessageSource(new_pages)
         )
 

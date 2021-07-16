@@ -2,8 +2,9 @@ import discord
 import asyncio
 from contextlib import suppress
 from datetime import datetime, timedelta
-from discord.ext import commands, menus
+from discord.ext import commands
 
+from .utils import views
 from .utils import pages
 from .utils import time
 from .utils import checks
@@ -12,12 +13,12 @@ from .utils import converters
 from core import game_items
 
 
-class MarketSource(menus.ListPageSource):
+class MarketSource(views.PaginatorSource):
     def __init__(self, entries, section: str):
         super().__init__(entries, per_page=6)
         self.section = section
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         next_refresh = datetime.now().replace(
                 microsecond=0,
                 second=0,
@@ -36,9 +37,9 @@ class MarketSource(menus.ListPageSource):
         for item in page:
             fmt += (
                 f"**{item.full_name}** - Buying for: **"
-                f"{item.gold_reward} {menu.bot.gold_emoji} "
+                f"{item.gold_reward} {view.bot.gold_emoji} "
                 "/ unit** \n\u2696\ufe0f Sell items to market: **"
-                f"{menu.ctx.prefix}sell {item.name}**\n\n"
+                f"{view.ctx.prefix}sell {item.name}**\n\n"
             )
 
         embed = discord.Embed(
@@ -49,7 +50,6 @@ class MarketSource(menus.ListPageSource):
 
         embed.set_footer(
             text=(
-                f"Page {menu.current_page + 1}/{self.get_max_pages()} | "
                 "Sell multiple units at a time, by providing amount. For "
                 "example: \"sell lettuce 40\"."
             )
@@ -58,20 +58,20 @@ class MarketSource(menus.ListPageSource):
         return embed
 
 
-class ShopSource(menus.ListPageSource):
+class ShopSource(views.PaginatorSource):
     def __init__(self, entries, section: str):
         super().__init__(entries, per_page=6)
         self.section = section
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         fmt = ""
         for item in page:
             fmt += (
                 f"**[\ud83d\udd31 {item.level}] "
                 f"{item.full_name}** - **{item.gold_price} "
-                f"{menu.bot.gold_emoji} / farm tile** \n\ud83d\uded2 "
+                f"{view.bot.gold_emoji} / farm tile** \n\ud83d\uded2 "
                 "Start growing in your farm: **"
-                f"{menu.ctx.prefix}plant {item.name}**\n\n"
+                f"{view.ctx.prefix}plant {item.name}**\n\n"
             )
 
         embed = discord.Embed(
@@ -82,7 +82,6 @@ class ShopSource(menus.ListPageSource):
 
         embed.set_footer(
             text=(
-                f"Page {menu.current_page + 1}/{self.get_max_pages()} | "
                 "Plant in multiple farm tiles at a time, by providing amount. "
                 "For example: \"plant lettuce 2\"."
             )
@@ -91,13 +90,13 @@ class ShopSource(menus.ListPageSource):
         return embed
 
 
-class TradesSource(menus.ListPageSource):
+class TradesSource(views.PaginatorSource):
     def __init__(self, entries, server_name: str, own_trades: bool = False):
         super().__init__(entries, per_page=6)
         self.server_name = server_name
         self.own_trades = own_trades
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         if self.own_trades:
             title = f"\ud83e\udd1d Your trade offers in \"{self.server_name}\""
         else:
@@ -112,7 +111,7 @@ class TradesSource(menus.ListPageSource):
             f"\ud83e\udd35 Welcome to the *\"{self.server_name}\"* trading "
             "hall! Here you can trade items with your friends!\n\ud83c\udd95 "
             "To create a new trade in this server, use the "
-            f"**{menu.ctx.prefix}trades create** command\n\n"
+            f"**{view.ctx.prefix}trades create** command\n\n"
         )
 
         if not page:
@@ -124,10 +123,6 @@ class TradesSource(menus.ListPageSource):
             fmt = "\n\n".join(page)
 
         embed.description = head + fmt
-
-        embed.set_footer(
-            text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
-        )
 
         return embed
 
@@ -194,7 +189,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def market_crops(self, ctx):
         """\ud83c\udf3d View current prices for crops harvest"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=MarketSource(
                 entries=ctx.items.all_crops,
                 section="\ud83c\udf3d Crops Harvest"
@@ -208,7 +203,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def market_tree(self, ctx):
         """\ud83c\udf52 View current prices for trees and bushes harvest"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=MarketSource(
                 entries=ctx.items.all_trees,
                 section="\ud83c\udf52 Trees and Bushes Harvest"
@@ -222,7 +217,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def market_animal(self, ctx):
         """\ud83d\udc3d View current prices for animal harvest"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=MarketSource(
                 entries=ctx.items.all_animals,
                 section="\ud83d\udc3d Animal Harvest"
@@ -236,7 +231,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def market_factory(self, ctx):
         """\ud83c\udf66 View current prices for factory products"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=MarketSource(
                 entries=ctx.items.all_products,
                 section="\ud83c\udf66 Factory Products"
@@ -250,7 +245,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def market_other(self, ctx):
         """\ud83d\udce6 View current prices for other items"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=MarketSource(
                 entries=ctx.items.all_specials,
                 section="\ud83d\udce6 Other items"
@@ -310,7 +305,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def shop_crops(self, ctx):
         """\ud83c\udf3d View current costs for planting crops"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=ShopSource(
                 entries=ctx.items.all_crops,
                 section="\ud83c\udf3d Crops"
@@ -324,7 +319,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def shop_tree(self, ctx):
         """\ud83c\udf52 View current costs for planting trees and bushes"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=ShopSource(
                 entries=ctx.items.all_trees,
                 section="\ud83c\udf52 Trees and Bushes"
@@ -338,7 +333,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def shop_animal(self, ctx):
         """\ud83d\udc3d View current costs for growing animals"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=ShopSource(
                 entries=ctx.items.all_animals,
                 section="\ud83d\udc3d Animal"
@@ -891,7 +886,7 @@ class Shop(commands.Cog):
                 f"{trade['id']}**"
             )
 
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=TradesSource(
                 entries=entries,
                 server_name=ctx.guild.name
@@ -928,7 +923,7 @@ class Shop(commands.Cog):
                 f"{trade['id']}**"
             )
 
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=TradesSource(
                 entries=entries,
                 server_name=ctx.guild.name,
