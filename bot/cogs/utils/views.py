@@ -66,7 +66,7 @@ class ButtonPaginatorView(discord.ui.View):
             return True
 
         await interaction.response.send_message(
-            f"\u23f0 This menu can only be used by {self.author.mention}, "
+            f"\u274c This menu can only be used by {self.author.mention}, "
             "because they used this command.",
             ephemeral=True
         )
@@ -185,23 +185,20 @@ class ButtonPaginatorView(discord.ui.View):
         return self.msg
 
 
-class ConfirmPromptView(discord.ui.View):
+class OptionPromptView(discord.ui.View):
+    """
+    Base class for option prompt views that can take multiple options.
+    This class should be inherited futher to implement the actual options.
+    """
     def __init__(
         self,
         initial_msg: str = None,
         initial_embed: discord.Embed = None,
-        style: discord.ButtonStyle = discord.ButtonStyle.green,
-        emoji: str = "\u2705",
-        label: str = None,
         deny_button: bool = True,
         deny_label: str = "Cancel",
         timeout: int = 60
     ) -> None:
         super().__init__(timeout=timeout)
-        # Properties for the confirmation button
-        self.style = style
-        self.emoji = emoji
-        self.label = label
         # Message or/and embed to send as an initial message
         self.initial_msg = initial_msg
         self.initial_embed = initial_embed
@@ -212,7 +209,9 @@ class ConfirmPromptView(discord.ui.View):
 
         self._result = None
 
-        self.create_approve_button()
+        self.create_option_buttons()
+
+        # We do this here to make the deny button appear last
         if deny_button:
             self.deny_label = deny_label
             self.create_deny_button()
@@ -228,33 +227,15 @@ class ConfirmPromptView(discord.ui.View):
             return True
 
         await interaction.response.send_message(
-            f"\u23f0 This menu can only be used by {self.ctx.author.mention}, "
+            f"\u274c This menu can only be used by {self.ctx.author.mention}, "
             "because they used this command.",
             ephemeral=True
         )
 
         return False
 
-    def create_approve_button(self) -> None:
-        approve_button = discord.ui.Button(
-            style=self.style,
-            emoji=self.emoji,
-            label=self.label
-        )
-
-        async def approve_callback(interaction) -> None:
-            self._result = True
-
-            # Here we don't disable the buttons, because we
-            # most likely will edit the _msg message
-            # and just pass None or this empty view
-            # to not make us doing an extra request to API
-            self.clear_items()
-            self.stop()
-
-        approve_button.callback = approve_callback
-
-        self.add_item(approve_button)
+    def create_option_buttons(self) -> None:
+        raise NotImplementedError("Option buttons not implemented")
 
     def create_deny_button(self) -> None:
         deny_button = discord.ui.Button(
@@ -296,3 +277,80 @@ class ConfirmPromptView(discord.ui.View):
         await self.wait()
 
         return self._result, self._msg
+
+
+class ConfirmPromptView(OptionPromptView):
+    """
+    Option prompt view that only has one "positive" option.
+    Can be used to prompt for boolean type of responses.
+    """
+    def __init__(
+        self,
+        style: discord.ButtonStyle = discord.ButtonStyle.green,
+        emoji: str = "\u2705",
+        label: str = None,
+        *args,
+        **kwargs
+    ) -> None:
+        self.style = style
+        self.emoji = emoji
+        self.label = label
+        super().__init__(*args, **kwargs)
+
+    def create_option_buttons(self) -> None:
+        approve_button = discord.ui.Button(
+            style=self.style,
+            emoji=self.emoji,
+            label=self.label
+        )
+
+        async def approve_callback(interaction) -> None:
+            self._result = True
+
+            # Here we don't disable or send request to remove the buttons,
+            # because most likely we will edit the "self._msg" message
+            # by just passing view as None or this empty view
+            # to not do an extra request to API just to remove these
+            self.clear_items()
+            self.stop()
+
+        approve_button.callback = approve_callback
+
+        self.add_item(approve_button)
+
+
+class OptionButton(discord.ui.Button):
+    """
+    A button instance that also holds a option.
+    These type of buttons are used for MultiOptionView.
+    On callback sets the option as a result onto the view.
+    """
+    def __init__(self, option, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.option = option
+
+    async def callback(self, interaction: discord.Interaction):
+        view: MultiOptionView = self.view
+
+        view._result = self.option
+        view.clear_items()
+
+        view.stop()
+
+
+class MultiOptionView(OptionPromptView):
+    """
+    Option prompt view that takes list of as option buttons for the prompt.
+    """
+    def __init__(
+        self,
+        options: list,
+        *args,
+        **kwargs
+    ) -> None:
+        self.options = options
+        super().__init__(*args, **kwargs)
+
+    def create_option_buttons(self) -> None:
+        for option in self.options:
+            self.add_item(option)
