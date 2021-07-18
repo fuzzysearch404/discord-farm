@@ -440,7 +440,7 @@ class Shop(commands.Cog):
             # Refetch user data, because user could have no money after prompt
             user_data = await ctx.users.get_user(ctx.author.id, conn=conn)
 
-            if actual_price > ctx.user_data.gold:
+            if actual_price > user_data.gold:
                 return await msg.edit(
                     embed=embeds.no_money_embed(ctx, user_data, actual_price)
                 )
