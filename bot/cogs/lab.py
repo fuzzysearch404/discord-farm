@@ -4,7 +4,6 @@ from discord.ext import commands
 from .utils import time
 from .utils import views
 from .utils import embeds
-from .utils import pages
 from .utils import checks
 from .utils import converters
 from core import game_items
@@ -163,7 +162,8 @@ class Lab(commands.Cog):
                         f"Please come again in: **{cooldown}** \u23f0"
                     ),
                     ctx=ctx
-                )
+                ),
+                view=None
             )
 
         async with ctx.acquire() as conn:
@@ -186,7 +186,8 @@ class Lab(commands.Cog):
                             "this... \ud83d\udc69\u200d\ud83d\udd2c"
                         ),
                         ctx=ctx
-                    )
+                    ),
+                    view=None
                 )
 
             gold_cost = self.calculate_mod_cost(item, current_level + 1)
@@ -194,7 +195,8 @@ class Lab(commands.Cog):
 
             if gold_cost > user_data.gold:
                 return await msg.edit(
-                    embed=embeds.no_money_embed(ctx, user_data, gold_cost)
+                    embed=embeds.no_money_embed(ctx, user_data, gold_cost),
+                    view=None
                 )
 
             async with conn.transaction():
@@ -227,7 +229,8 @@ class Lab(commands.Cog):
                     "ahead, grow some of those! \ud83e\udd20"
                 ),
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @commands.command(name="modifications", aliases=["mods"])
@@ -326,8 +329,7 @@ class Lab(commands.Cog):
                 f"\ud83c\udd95 Next level: **{next_grow_time}**\n\n"
                 f"\u23f2\ufe0f Research cooldown:\n**{cooldown}**\n"
                 "\ud83d\udcb0 Research costs:\n"
-                f"**{price} {self.bot.gold_emoji}**\n\n"
-                "\ud83d\uded2 Upgrade item: 1\ufe0f\u20e3"
+                f"**{price} {self.bot.gold_emoji}**"
             )
         else:
             fmt = "\ud83c\udf20 **Max. level**"
@@ -356,8 +358,7 @@ class Lab(commands.Cog):
                 f"\ud83c\udd95 Next level: **{next_collect_time}**\n\n"
                 f"\u23f2\ufe0f Research cooldown:\n**{cooldown}**\n"
                 "\ud83d\udcb0 Research costs:\n"
-                f"**{price} {self.bot.gold_emoji}**\n\n"
-                "\ud83d\uded2 Upgrade item: 2\ufe0f\u20e3"
+                f"**{price} {self.bot.gold_emoji}**"
             )
         else:
             fmt = "\ud83c\udf20 **Max. level**"
@@ -384,8 +385,7 @@ class Lab(commands.Cog):
                 f"\ud83c\udd95 Next level: **{next_base_volume} items**\n\n"
                 f"\u23f2\ufe0f Research cooldown:\n**{cooldown}**\n"
                 "\ud83d\udcb0 Research costs:\n"
-                f"**{price} {self.bot.gold_emoji}**\n\n"
-                "\ud83d\uded2 Upgrade item: 3\ufe0f\u20e3"
+                f"**{price} {self.bot.gold_emoji}**"
             )
         else:
             fmt = "\ud83c\udf20 **Max. level**"
@@ -405,23 +405,33 @@ class Lab(commands.Cog):
             )
         )
 
-        menu = pages.NumberSelection(embed=embed, count=3)
-        result, msg = await menu.prompt(ctx)
+        options = (
+            ("growing duration", "time1"),
+            ("harvest duration", "time2"),
+            ("volume", "volume")
+        )
+        buttons = []
+        for option in options:
+            buttons.append(views.OptionButton(
+                option=option[1],
+                style=discord.ButtonStyle.primary,
+                emoji=self.bot.gold_emoji,
+                label=f"Upgrade {option[0]}"
+            ))
+
+        prompt = views.MultiOptionView(
+            buttons, initial_embed=embed
+        )
+        result, msg = await prompt.prompt(ctx)
 
         if not result:
             return
-
-        mod_types_per_emoji_numbers = {
-            1: "time1",
-            2: "time2",
-            3: "volume"
-        }
 
         await self.perform_modification(
             ctx=ctx,
             msg=msg,
             item=item,
-            mod_type=mod_types_per_emoji_numbers[result]
+            mod_type=result
         )
 
 

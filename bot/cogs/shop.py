@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from discord.ext import commands
 
 from .utils import views
-from .utils import pages
 from .utils import time
 from .utils import checks
 from .utils import embeds
@@ -397,34 +396,47 @@ class Shop(commands.Cog):
             ),
             ctx=ctx
         )
-
-        price_one = booster.get_boost_price(
-            game_items.BoostDuration.ONE_DAY, ctx.user_data
-        )
-        embed.add_field(
-            name="1\ufe0f\u20e3 1 day price",
-            value=f"**{price_one}** {self.bot.gold_emoji}"
-        )
-        price_three = booster.get_boost_price(
-            game_items.BoostDuration.THREE_DAYS, ctx.user_data
-        )
-        embed.add_field(
-            name="3\ufe0f\u20e3 3 days price",
-            value=f"**{price_three}** {self.bot.gold_emoji}"
-        )
-        price_seven = booster.get_boost_price(
-            game_items.BoostDuration.SEVEN_DAYS, ctx.user_data
-        )
-        embed.add_field(
-            name="7\ufe0f\u20e3 7 days price",
-            value=f"**{price_seven}** {self.bot.gold_emoji}"
-        )
         embed.set_footer(
             text=f"You have a total of {ctx.user_data.gold} gold coins"
         )
 
-        duration, msg = await pages.BoostPurchasePrompt(
-            embed=embed).prompt(ctx)
+        options = (
+            (
+                "\ud83d\udcb0 1 day price",
+                "Activate for 1 day",
+                game_items.BoostDuration.ONE_DAY
+            ),
+            (
+                "\ud83d\udcb0 3 days price",
+                "Activate for 3 days",
+                game_items.BoostDuration.THREE_DAYS
+            ),
+            (
+                "\ud83d\udcb0 7 days price",
+                "Activate for 7 days",
+                game_items.BoostDuration.SEVEN_DAYS
+            )
+        )
+
+        buttons = []
+        for option in options:
+            price = booster.get_boost_price(option[2], ctx.user_data)
+
+            embed.add_field(
+                name=option[0],
+                value=f"**{price}** {self.bot.gold_emoji}"
+            )
+
+            buttons.append(views.OptionButton(
+                option=option[2],
+                style=discord.ButtonStyle.primary,
+                emoji=self.bot.gold_emoji,
+                label=option[1]
+            ))
+
+        duration, msg = await views.MultiOptionView(
+            buttons, initial_embed=embed
+        ).prompt(ctx)
 
         if not duration:
             return
@@ -435,9 +447,10 @@ class Shop(commands.Cog):
             # Refetch user data, because user could have no money after prompt
             user_data = await ctx.users.get_user(ctx.author.id, conn=conn)
 
-            if actual_price > ctx.user_data.gold:
+            if actual_price > user_data.gold:
                 return await msg.edit(
-                    embed=embeds.no_money_embed(ctx, user_data, actual_price)
+                    embed=embeds.no_money_embed(ctx, user_data, actual_price),
+                    view=None
                 )
 
             user_data.gold -= actual_price
@@ -456,7 +469,8 @@ class Shop(commands.Cog):
                     "The booster has been activated! Have fun! \ud83e\uddb8"
                 ),
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     def get_next_trades_slot_cost(self, current_count: int):

@@ -6,7 +6,6 @@ from .utils import time
 from .utils import views
 from .utils import embeds
 from .utils import checks
-from .utils import pages
 from core import game_missions
 
 
@@ -251,27 +250,30 @@ class Missions(commands.Cog):
             color=discord.Color.from_rgb(148, 148, 148)
         )
 
-        emoji_assigned_to_missions = {}
-
-        counter = 0
+        counter, buttons = 0, []
         for id, mission in missions:
             counter += 1
 
             mission = self.parse_mission_data(ctx, mission)
-            emoji_assigned_to_missions[counter] = (id, mission)
 
             embed.add_field(
-                name=f"\ud83d\udcdd Order: {counter}\ufe0f\u20e3",
+                name=f"\ud83d\udcdd Order: #{counter}",
                 value=self.format_mission(mission)
             )
 
-        menu = pages.NumberSelection(embed=embed, count=mission_count)
-        result, msg = await menu.prompt(ctx)
+            buttons.append(views.OptionButton(
+                option=(id, mission),
+                style=discord.ButtonStyle.secondary,
+                emoji="\ud83d\udcdd",
+                label=f"Complete order #{counter}"
+            ))
+
+        result, msg = await views.MultiOptionView(
+            buttons, initial_embed=embed
+        ).prompt(ctx)
 
         if not result:
             return
-
-        result = emoji_assigned_to_missions[result]
 
         await self.complete_business_mission(
             ctx=ctx,
@@ -504,32 +506,37 @@ class Missions(commands.Cog):
                 "because you have limited time to do so"
             ))
 
-        emoji_assigned_to_exports = {}
-
+        buttons = []
         for num in range(3):
             num += 1
 
             export = game_missions.ExportMission.generate(ctx)
-            emoji_assigned_to_exports[num] = export
 
             embed.add_field(
-                name=f"\ud83d\udcdd Contract: {num}\ufe0f\u20e3",
+                name=f"\ud83d\udcdd Contract: #{num}",
                 value=self.format_export(ctx, export)
             )
 
-        menu = pages.NumberSelection(embed=embed, count=3)
-        result, msg = await menu.prompt(ctx)
+            buttons.append(views.OptionButton(
+                option=export,
+                style=discord.ButtonStyle.secondary,
+                emoji="\u270f\ufe0f",
+                label=f"Choose contract #{num}"
+            ))
+
+        result, msg = await views.MultiOptionView(
+            buttons, initial_embed=embed
+        ).prompt(ctx)
 
         if not result:
             return
-
-        result = emoji_assigned_to_exports[result]
 
         await self.bot.redis.execute_command(
             "SET", f"export:{ctx.author.id}",
             jsonpickle.encode(result), "EX", 21600
         )
 
+        # TODO: The buttons don't get disabled when export is choosen
         await self.export.invoke(ctx)
 
     @export.command()
