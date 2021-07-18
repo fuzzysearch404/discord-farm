@@ -1,16 +1,16 @@
 import discord
-from discord.ext import commands, menus
+from discord.ext import commands
 
 from .utils import time
+from .utils import views
 from .utils import embeds
-from .utils import pages
 from .utils import checks
 from .utils import converters
 from core import game_items
 from core import modifications
 
 
-class LabSource(menus.ListPageSource):
+class LabSource(views.PaginatorSource):
     def __init__(
         self,
         entries: list,
@@ -21,7 +21,7 @@ class LabSource(menus.ListPageSource):
         self.target = target_user
         self.lab_cooldown = lab_cooldown
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         target = self.target
 
         embed = discord.Embed(
@@ -33,9 +33,9 @@ class LabSource(menus.ListPageSource):
                 "modify your plants and animals (animals don't get hurt) "
                 "to grow faster, be collectable for longer and "
                 "produce a larger volume of items. \ud83e\udda0\n"
-                f"Use the **{menu.ctx.prefix}modifications** command to "
+                f"Use the **{view.ctx.prefix}modifications** command to "
                 "see the available upgrades for an item. \ud83d\udd0d\n"
-                f"For example: \"{menu.ctx.prefix}modifications lettuce\"\n\n"
+                f"For example: \"{view.ctx.prefix}modifications lettuce\"\n\n"
             )
         )
 
@@ -57,10 +57,6 @@ class LabSource(menus.ListPageSource):
             )
 
             embed.description += header + "\n".join(page)
-
-            embed.set_footer(
-                text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
-            )
 
         return embed
 
@@ -138,7 +134,7 @@ class Lab(commands.Cog):
         if lab_cooldown:
             lab_cooldown = time.seconds_to_time(lab_cooldown)
 
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=LabSource(entries, target_user, lab_cooldown)
         )
 
@@ -166,7 +162,8 @@ class Lab(commands.Cog):
                         f"Please come again in: **{cooldown}** \u23f0"
                     ),
                     ctx=ctx
-                )
+                ),
+                view=None
             )
 
         async with ctx.acquire() as conn:
@@ -189,7 +186,8 @@ class Lab(commands.Cog):
                             "this... \ud83d\udc69\u200d\ud83d\udd2c"
                         ),
                         ctx=ctx
-                    )
+                    ),
+                    view=None
                 )
 
             gold_cost = self.calculate_mod_cost(item, current_level + 1)
@@ -197,7 +195,8 @@ class Lab(commands.Cog):
 
             if gold_cost > user_data.gold:
                 return await msg.edit(
-                    embed=embeds.no_money_embed(ctx, user_data, gold_cost)
+                    embed=embeds.no_money_embed(ctx, user_data, gold_cost),
+                    view=None
                 )
 
             async with conn.transaction():
@@ -230,7 +229,8 @@ class Lab(commands.Cog):
                     "ahead, grow some of those! \ud83e\udd20"
                 ),
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @commands.command(name="modifications", aliases=["mods"])
@@ -329,8 +329,7 @@ class Lab(commands.Cog):
                 f"\ud83c\udd95 Next level: **{next_grow_time}**\n\n"
                 f"\u23f2\ufe0f Research cooldown:\n**{cooldown}**\n"
                 "\ud83d\udcb0 Research costs:\n"
-                f"**{price} {self.bot.gold_emoji}**\n\n"
-                "\ud83d\uded2 Upgrade item: 1\ufe0f\u20e3"
+                f"**{price} {self.bot.gold_emoji}**"
             )
         else:
             fmt = "\ud83c\udf20 **Max. level**"
@@ -359,8 +358,7 @@ class Lab(commands.Cog):
                 f"\ud83c\udd95 Next level: **{next_collect_time}**\n\n"
                 f"\u23f2\ufe0f Research cooldown:\n**{cooldown}**\n"
                 "\ud83d\udcb0 Research costs:\n"
-                f"**{price} {self.bot.gold_emoji}**\n\n"
-                "\ud83d\uded2 Upgrade item: 2\ufe0f\u20e3"
+                f"**{price} {self.bot.gold_emoji}**"
             )
         else:
             fmt = "\ud83c\udf20 **Max. level**"
@@ -387,8 +385,7 @@ class Lab(commands.Cog):
                 f"\ud83c\udd95 Next level: **{next_base_volume} items**\n\n"
                 f"\u23f2\ufe0f Research cooldown:\n**{cooldown}**\n"
                 "\ud83d\udcb0 Research costs:\n"
-                f"**{price} {self.bot.gold_emoji}**\n\n"
-                "\ud83d\uded2 Upgrade item: 3\ufe0f\u20e3"
+                f"**{price} {self.bot.gold_emoji}**"
             )
         else:
             fmt = "\ud83c\udf20 **Max. level**"
@@ -408,23 +405,33 @@ class Lab(commands.Cog):
             )
         )
 
-        menu = pages.NumberSelection(embed=embed, count=3)
-        result, msg = await menu.prompt(ctx)
+        options = (
+            ("growing duration", "time1"),
+            ("harvest duration", "time2"),
+            ("volume", "volume")
+        )
+        buttons = []
+        for option in options:
+            buttons.append(views.OptionButton(
+                option=option[1],
+                style=discord.ButtonStyle.primary,
+                emoji=self.bot.gold_emoji,
+                label=f"Upgrade {option[0]}"
+            ))
+
+        prompt = views.MultiOptionView(
+            buttons, initial_embed=embed
+        )
+        result, msg = await prompt.prompt(ctx)
 
         if not result:
             return
-
-        mod_types_per_emoji_numbers = {
-            1: "time1",
-            2: "time2",
-            3: "volume"
-        }
 
         await self.perform_modification(
             ctx=ctx,
             msg=msg,
             item=item,
-            mod_type=mod_types_per_emoji_numbers[result]
+            mod_type=result
         )
 
 

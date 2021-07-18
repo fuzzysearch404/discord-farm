@@ -1,8 +1,9 @@
+import discord
 from discord.ext import commands
 
+from .utils import views
 from .utils import checks
 from .utils import embeds
-from .utils import pages
 from core import exceptions
 
 
@@ -165,8 +166,14 @@ class Account(commands.Cog):
             ctx=ctx
         )
 
-        menu = pages.ConfirmPrompt(pages.CONFIRM_CHECK_BUTTON, embed=embed)
-        confirm, msg = await menu.prompt(ctx)
+        prompt = views.ConfirmPromptView(
+            initial_embed=embed,
+            style=discord.ButtonStyle.primary,
+            emoji="\u267b\ufe0f",
+            label="Delete account forever",
+            deny_label="Nevermind, I will take a break"
+        )
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
@@ -186,7 +193,8 @@ class Account(commands.Cog):
                 ),
                 footer="We are going to miss you!",
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @commands.command(aliases=["dms"])

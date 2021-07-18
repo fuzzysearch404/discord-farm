@@ -25,15 +25,15 @@ def _create_embed(
 
     if not private:
         if footer:
-            embed.set_footer(text=footer, icon_url=ctx.author.avatar_url)
+            embed.set_footer(text=footer, icon_url=ctx.author.avatar.url)
     else:
         if not footer:
             embed.set_footer(
                 text=f"Discord Farm notification from \"{ctx.guild}\" server",
-                icon_url=ctx.guild.icon_url
+                icon_url=ctx.guild.icon.url
             )
         else:
-            embed.set_footer(text=footer, icon_url=ctx.guild.icon_url)
+            embed.set_footer(text=footer, icon_url=ctx.guild.icon.url)
 
     return embed
 

@@ -2,9 +2,9 @@ import discord
 import asyncio
 from contextlib import suppress
 from datetime import datetime, timedelta
-from discord.ext import commands, menus
+from discord.ext import commands
 
-from .utils import pages
+from .utils import views
 from .utils import time
 from .utils import checks
 from .utils import embeds
@@ -12,12 +12,12 @@ from .utils import converters
 from core import game_items
 
 
-class MarketSource(menus.ListPageSource):
+class MarketSource(views.PaginatorSource):
     def __init__(self, entries, section: str):
         super().__init__(entries, per_page=6)
         self.section = section
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         next_refresh = datetime.now().replace(
                 microsecond=0,
                 second=0,
@@ -36,9 +36,9 @@ class MarketSource(menus.ListPageSource):
         for item in page:
             fmt += (
                 f"**{item.full_name}** - Buying for: **"
-                f"{item.gold_reward} {menu.bot.gold_emoji} "
+                f"{item.gold_reward} {view.bot.gold_emoji} "
                 "/ unit** \n\u2696\ufe0f Sell items to market: **"
-                f"{menu.ctx.prefix}sell {item.name}**\n\n"
+                f"{view.ctx.prefix}sell {item.name}**\n\n"
             )
 
         embed = discord.Embed(
@@ -49,7 +49,6 @@ class MarketSource(menus.ListPageSource):
 
         embed.set_footer(
             text=(
-                f"Page {menu.current_page + 1}/{self.get_max_pages()} | "
                 "Sell multiple units at a time, by providing amount. For "
                 "example: \"sell lettuce 40\"."
             )
@@ -58,20 +57,20 @@ class MarketSource(menus.ListPageSource):
         return embed
 
 
-class ShopSource(menus.ListPageSource):
+class ShopSource(views.PaginatorSource):
     def __init__(self, entries, section: str):
         super().__init__(entries, per_page=6)
         self.section = section
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         fmt = ""
         for item in page:
             fmt += (
                 f"**[\ud83d\udd31 {item.level}] "
                 f"{item.full_name}** - **{item.gold_price} "
-                f"{menu.bot.gold_emoji} / farm tile** \n\ud83d\uded2 "
+                f"{view.bot.gold_emoji} / farm tile** \n\ud83d\uded2 "
                 "Start growing in your farm: **"
-                f"{menu.ctx.prefix}plant {item.name}**\n\n"
+                f"{view.ctx.prefix}plant {item.name}**\n\n"
             )
 
         embed = discord.Embed(
@@ -82,7 +81,6 @@ class ShopSource(menus.ListPageSource):
 
         embed.set_footer(
             text=(
-                f"Page {menu.current_page + 1}/{self.get_max_pages()} | "
                 "Plant in multiple farm tiles at a time, by providing amount. "
                 "For example: \"plant lettuce 2\"."
             )
@@ -91,13 +89,13 @@ class ShopSource(menus.ListPageSource):
         return embed
 
 
-class TradesSource(menus.ListPageSource):
+class TradesSource(views.PaginatorSource):
     def __init__(self, entries, server_name: str, own_trades: bool = False):
         super().__init__(entries, per_page=6)
         self.server_name = server_name
         self.own_trades = own_trades
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         if self.own_trades:
             title = f"\ud83e\udd1d Your trade offers in \"{self.server_name}\""
         else:
@@ -112,7 +110,7 @@ class TradesSource(menus.ListPageSource):
             f"\ud83e\udd35 Welcome to the *\"{self.server_name}\"* trading "
             "hall! Here you can trade items with your friends!\n\ud83c\udd95 "
             "To create a new trade in this server, use the "
-            f"**{menu.ctx.prefix}trades create** command\n\n"
+            f"**{view.ctx.prefix}trades create** command\n\n"
         )
 
         if not page:
@@ -124,10 +122,6 @@ class TradesSource(menus.ListPageSource):
             fmt = "\n\n".join(page)
 
         embed.description = head + fmt
-
-        embed.set_footer(
-            text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
-        )
 
         return embed
 
@@ -194,7 +188,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def market_crops(self, ctx):
         """\ud83c\udf3d View current prices for crops harvest"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=MarketSource(
                 entries=ctx.items.all_crops,
                 section="\ud83c\udf3d Crops Harvest"
@@ -208,7 +202,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def market_tree(self, ctx):
         """\ud83c\udf52 View current prices for trees and bushes harvest"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=MarketSource(
                 entries=ctx.items.all_trees,
                 section="\ud83c\udf52 Trees and Bushes Harvest"
@@ -222,7 +216,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def market_animal(self, ctx):
         """\ud83d\udc3d View current prices for animal harvest"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=MarketSource(
                 entries=ctx.items.all_animals,
                 section="\ud83d\udc3d Animal Harvest"
@@ -236,7 +230,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def market_factory(self, ctx):
         """\ud83c\udf66 View current prices for factory products"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=MarketSource(
                 entries=ctx.items.all_products,
                 section="\ud83c\udf66 Factory Products"
@@ -250,7 +244,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def market_other(self, ctx):
         """\ud83d\udce6 View current prices for other items"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=MarketSource(
                 entries=ctx.items.all_specials,
                 section="\ud83d\udce6 Other items"
@@ -310,7 +304,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def shop_crops(self, ctx):
         """\ud83c\udf3d View current costs for planting crops"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=ShopSource(
                 entries=ctx.items.all_crops,
                 section="\ud83c\udf3d Crops"
@@ -324,7 +318,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def shop_tree(self, ctx):
         """\ud83c\udf52 View current costs for planting trees and bushes"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=ShopSource(
                 entries=ctx.items.all_trees,
                 section="\ud83c\udf52 Trees and Bushes"
@@ -338,7 +332,7 @@ class Shop(commands.Cog):
     @checks.avoid_maintenance()
     async def shop_animal(self, ctx):
         """\ud83d\udc3d View current costs for growing animals"""
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=ShopSource(
                 entries=ctx.items.all_animals,
                 section="\ud83d\udc3d Animal"
@@ -402,34 +396,47 @@ class Shop(commands.Cog):
             ),
             ctx=ctx
         )
-
-        price_one = booster.get_boost_price(
-            game_items.BoostDuration.ONE_DAY, ctx.user_data
-        )
-        embed.add_field(
-            name="1\ufe0f\u20e3 1 day price",
-            value=f"**{price_one}** {self.bot.gold_emoji}"
-        )
-        price_three = booster.get_boost_price(
-            game_items.BoostDuration.THREE_DAYS, ctx.user_data
-        )
-        embed.add_field(
-            name="3\ufe0f\u20e3 3 days price",
-            value=f"**{price_three}** {self.bot.gold_emoji}"
-        )
-        price_seven = booster.get_boost_price(
-            game_items.BoostDuration.SEVEN_DAYS, ctx.user_data
-        )
-        embed.add_field(
-            name="7\ufe0f\u20e3 7 days price",
-            value=f"**{price_seven}** {self.bot.gold_emoji}"
-        )
         embed.set_footer(
             text=f"You have a total of {ctx.user_data.gold} gold coins"
         )
 
-        duration, msg = await pages.BoostPurchasePrompt(
-            embed=embed).prompt(ctx)
+        options = (
+            (
+                "\ud83d\udcb0 1 day price",
+                "Activate for 1 day",
+                game_items.BoostDuration.ONE_DAY
+            ),
+            (
+                "\ud83d\udcb0 3 days price",
+                "Activate for 3 days",
+                game_items.BoostDuration.THREE_DAYS
+            ),
+            (
+                "\ud83d\udcb0 7 days price",
+                "Activate for 7 days",
+                game_items.BoostDuration.SEVEN_DAYS
+            )
+        )
+
+        buttons = []
+        for option in options:
+            price = booster.get_boost_price(option[2], ctx.user_data)
+
+            embed.add_field(
+                name=option[0],
+                value=f"**{price}** {self.bot.gold_emoji}"
+            )
+
+            buttons.append(views.OptionButton(
+                option=option[2],
+                style=discord.ButtonStyle.primary,
+                emoji=self.bot.gold_emoji,
+                label=option[1]
+            ))
+
+        duration, msg = await views.MultiOptionView(
+            buttons, initial_embed=embed
+        ).prompt(ctx)
 
         if not duration:
             return
@@ -442,7 +449,8 @@ class Shop(commands.Cog):
 
             if actual_price > user_data.gold:
                 return await msg.edit(
-                    embed=embeds.no_money_embed(ctx, user_data, actual_price)
+                    embed=embeds.no_money_embed(ctx, user_data, actual_price),
+                    view=None
                 )
 
             user_data.gold -= actual_price
@@ -461,7 +469,8 @@ class Shop(commands.Cog):
                     "The booster has been activated! Have fun! \ud83e\uddb8"
                 ),
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     def get_next_trades_slot_cost(self, current_count: int):
@@ -599,8 +608,12 @@ class Shop(commands.Cog):
                 )
             )
 
-        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
-        confirm, msg = await menu.prompt(ctx)
+        prompt = views.ConfirmPromptView(
+            initial_embed=embed,
+            emoji=self.bot.gold_emoji,
+            label="Sell to the market"
+        )
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
@@ -613,7 +626,8 @@ class Shop(commands.Cog):
                 )
                 if not item_data or item_data['amount'] < amount:
                     return await msg.edit(
-                        embed=embeds.not_enough_items(ctx, item, amount)
+                        embed=embeds.not_enough_items(ctx, item, amount),
+                        view=None
                     )
 
                 await ctx.user_data.remove_item(
@@ -634,7 +648,8 @@ class Shop(commands.Cog):
                 ),
                 footer=f"You now have {ctx.user_data.gold} gold coins!",
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @commands.group(case_insensitive=True)
@@ -679,11 +694,19 @@ class Shop(commands.Cog):
         )
 
         if with_gem:
-            menu = pages.ConfirmPrompt(pages.CONFIRM_GEM_BUTTON, embed=embed)
+            prompt = views.ConfirmPromptView(
+                initial_embed=embed,
+                emoji=self.bot.gem_emoji,
+                label="Purchase upgrade"
+            )
         else:
-            menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
+            prompt = views.ConfirmPromptView(
+                initial_embed=embed,
+                emoji=self.bot.gold_emoji,
+                label="Purchase upgrade"
+            )
 
-        confirm, msg = await menu.prompt(ctx)
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
@@ -696,14 +719,16 @@ class Shop(commands.Cog):
                 if with_gem:
                     if user_data.gems < price:
                         return await msg.edit(
-                            embed=embeds.no_gems_embed(ctx, user_data, price)
+                            embed=embeds.no_gems_embed(ctx, user_data, price),
+                            view=None
                         )
 
                     user_data.gems -= price
                 else:
                     if user_data.gold < price:
                         return await msg.edit(
-                            embed=embeds.no_money_embed(ctx, user_data, price)
+                            embed=embeds.no_money_embed(ctx, user_data, price),
+                            view=None
                         )
 
                     user_data.gold -= price
@@ -722,7 +747,8 @@ class Shop(commands.Cog):
                     "change a lot for you in a long term! Nice! \ud83d\udc4f"
                 ),
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @upgrade.command(aliases=["field"])
@@ -891,7 +917,7 @@ class Shop(commands.Cog):
                 f"{trade['id']}**"
             )
 
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=TradesSource(
                 entries=entries,
                 server_name=ctx.guild.name
@@ -928,7 +954,7 @@ class Shop(commands.Cog):
                 f"{trade['id']}**"
             )
 
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=TradesSource(
                 entries=entries,
                 server_name=ctx.guild.name,
@@ -1057,8 +1083,13 @@ class Shop(commands.Cog):
             value=f"{price} {self.bot.gold_emoji}"
         )
 
-        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
-        confirm, msg = await menu.prompt(ctx)
+        prompt = views.ConfirmPromptView(
+            initial_embed=embed,
+            emoji=self.bot.gold_emoji,
+            label="Accept trade offer",
+            deny_label="Deny trade offer"
+        )
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
@@ -1073,7 +1104,10 @@ class Shop(commands.Cog):
                 trade_data = await conn.fetchrow(query, trade_id)
 
                 if not trade_data:
-                    return await msg.edit(embed=trade_not_found_embed())
+                    return await msg.edit(
+                        embed=trade_not_found_embed(),
+                        view=None
+                    )
 
                 user_data = await ctx.users.get_user(ctx.author.id, conn=conn)
                 # If there is a trade, then the user must exist too (no check)
@@ -1082,8 +1116,9 @@ class Shop(commands.Cog):
                 )
 
                 if user_data.gold < price:
-                    return await ctx.reply(
-                        embed=embeds.no_money_embed(ctx, user_data, price)
+                    return await msg.edit(
+                        embed=embeds.no_money_embed(ctx, user_data, price),
+                        view=None
                     )
 
                 query = "DELETE FROM store WHERE id = $1;"
@@ -1106,7 +1141,8 @@ class Shop(commands.Cog):
                     "both just made! \ud83e\udd1d"
                 ),
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
         if not trade_user_data.notifications:

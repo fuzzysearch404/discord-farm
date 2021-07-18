@@ -1,10 +1,10 @@
 import discord
 from enum import Enum
 from datetime import datetime, timedelta
-from discord.ext import commands, menus
+from discord.ext import commands
 
 from .utils import time
-from .utils import pages
+from .utils import views
 from .utils import embeds
 from .utils import checks
 from .utils.converters import ItemAndAmount
@@ -53,7 +53,7 @@ class FactoryItem:
             return ProductState.READY
 
 
-class FactorySource(menus.ListPageSource):
+class FactorySource(views.PaginatorSource):
     def __init__(
         self,
         entries: list,
@@ -70,7 +70,7 @@ class FactorySource(menus.ListPageSource):
         self.used_slots = used_slots
         self.has_slots_boost = has_slots_boost
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         target = self.target_user
 
         embed = discord.Embed(
@@ -106,9 +106,6 @@ class FactorySource(menus.ListPageSource):
             fmt += f"**{item.full_name}** - {state}\n"
 
         embed.description = header + fmt
-        embed.set_footer(
-            text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
-        )
 
         return embed
 
@@ -212,7 +209,7 @@ class Factory(commands.Cog):
             factory_data
         )
 
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=FactorySource(
                 factory_parsed,
                 target_user,

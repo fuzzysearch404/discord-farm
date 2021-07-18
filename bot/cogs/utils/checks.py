@@ -23,7 +23,9 @@ def user_cooldown(cooldown: int, identifier: str = None) -> commands.check:
 
             return True
         else:
-            raise commands.CommandOnCooldown(ctx, command_ttl)
+            raise commands.CommandOnCooldown(
+                ctx, command_ttl, commands.BucketType.user
+            )
 
     return commands.check(predicate)
 

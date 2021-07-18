@@ -1,22 +1,22 @@
 import psutil
 import pkg_resources
 import discord
-from discord.ext import commands, tasks, menus
+from discord.ext import commands, tasks
 
+from .utils import views
 from .utils import checks
 from .utils import embeds
 from .utils import time as time_util
-from .utils import pages
 
 
-class HelpMessageSource(menus.ListPageSource):
+class HelpMessageSource(views.PaginatorSource):
     def __init__(self, entries):
         super().__init__(entries, per_page=1)
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         embed = discord.Embed(
             color=discord.Color.from_rgb(88, 101, 242),
-            description=page
+            description=page[0]
         )
 
         return embed
@@ -59,7 +59,7 @@ class HelpCommand(commands.MinimalHelpCommand):
         for page in self.paginator.pages:
             new_pages.append(page.replace("{prefix}", self.context.prefix))
 
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=HelpMessageSource(new_pages)
         )
 
@@ -103,12 +103,14 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
             description=self.bot.game_news
         )
 
-        embed.set_footer(
-            text="For more information join bot's official support server",
-            icon_url=ctx.bot.user.avatar_url
-        )
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            emoji="\ud83d\udc65",
+            label="Join the official support server for more information",
+            url="https://discord.gg/MwpxKjF"
+        ))
 
-        await ctx.reply(embed=embed)
+        await ctx.reply(embed=embed, view=view)
 
     @commands.command(hidden=True)
     async def ping(self, ctx):
@@ -131,12 +133,27 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
         permissions.read_message_history = True
         permissions.attach_files = True
         permissions.add_reactions = True
+        permissions.use_threads = True
 
-        oauth_link = discord.utils.oauth_url(self.bot.user.id, permissions)
+        oauth_link = discord.utils.oauth_url(
+            self.bot.user.id, permissions=permissions
+        )
+
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            emoji="\ud83e\udd16",
+            label="Invite bot to your server",
+            url=oauth_link
+        ))
+        view.add_item(discord.ui.Button(
+            emoji="\ud83d\udc65",
+            label="Join the official support server",
+            url="https://discord.gg/MwpxKjF"
+        ))
 
         await ctx.reply(
-            "Support server invite: https://discord.gg/MwpxKjF"
-            f"\nInvite bot to your server: <{oauth_link}>"
+            "Here you go! Also consider joining the official support "
+            "server \ud83d\ude09", view=view
         )
 
     @commands.command()
@@ -153,11 +170,6 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
             "and hosting it, costs lots of my time and also money.\n\n"
             "Any donations are appreciated, they are going to cover hosting "
             "expenses and help to make this bot even better. <3"
-            "\nhttps://ko-fi.com/fuzzysearch\n"
-            "\nYou can also help out, without spending any money, "
-            "if you upvote the bot on the \"top.gg\" website every 12 hours "
-            f"(This command also unlocks the **{ctx.prefix}hourly** "
-            f"bonus command):\n<https://top.gg/bot/{ctx.bot.user.id}>"
         )
 
         embed = discord.Embed(
@@ -166,7 +178,19 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
             description=message
         )
 
-        await ctx.reply(embed=embed)
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            emoji="\u2764\ufe0f",
+            label="Buy me a coffee",
+            url="https://ko-fi.com/fuzzysearch"
+        ))
+        view.add_item(discord.ui.Button(
+            emoji="\ud83d\udc99",
+            label="Support via PayPal",
+            url="https://paypal.me/fuzzysearch"
+        ))
+
+        await ctx.reply(embed=embed, view=view)
 
     @commands.command()
     async def about(self, ctx):
@@ -263,7 +287,7 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
         between prefix and the command, put the prefix with a whitespace
         in double quotes. (See the second example below)
         You can even remove the prefix completely, by just specifying
-        the prefix as blank double quotes. (not recommended)
+        the prefix as an empty double quotes: `""` (not recommended)
 
         __Usage examples__:
         {prefix} `prefix !!` - the commands are going to start

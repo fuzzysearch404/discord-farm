@@ -3,10 +3,10 @@ import random
 from datetime import datetime, timedelta
 from contextlib import suppress
 from enum import Enum
-from discord.ext import commands, menus
+from discord.ext import commands
 
-from .utils import pages
 from .utils import time
+from .utils import views
 from .utils import checks
 from .utils import embeds
 from .utils.converters import ItemAndAmount
@@ -75,7 +75,7 @@ class PlantedFieldItem:
             state == PlantState.ROTTEN and self.cat_boost
 
 
-class FarmFieldSource(menus.ListPageSource):
+class FarmFieldSource(views.PaginatorSource):
     def __init__(
         self,
         entries: list,
@@ -92,7 +92,7 @@ class FarmFieldSource(menus.ListPageSource):
         self.has_slots_boost = has_slots_boost
         self.farm_guard = farm_guard
 
-    async def format_page(self, menu, page):
+    async def format_page(self, page, view):
         target = self.target
 
         embed = discord.Embed(
@@ -114,7 +114,7 @@ class FarmFieldSource(menus.ListPageSource):
             total_slots = f"**{self.total_slots + 2}** \ud83d\udc39"
 
         header = (
-            f"{menu.bot.tile_emoji} Farm's used space tiles: "
+            f"{view.bot.tile_emoji} Farm's used space tiles: "
             f"{self.used_slots}/{total_slots}\n"
         )
 
@@ -165,7 +165,8 @@ class FarmFieldSource(menus.ListPageSource):
                 )
             else:
                 fmt += (
-                    f"**{item.full_name} (x{plant.amount} {item.emoji})** "
+                    f"**{item.name.capitalize()} {item.emoji_animal} "
+                    f"(x{plant.amount} {item.emoji})** "
                     f"- {state} (**{plant.iterations}.lvl**)"
                 )
 
@@ -175,9 +176,6 @@ class FarmFieldSource(menus.ListPageSource):
             fmt += "\n"
 
         embed.description = header + fmt
-        embed.set_footer(
-            text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
-        )
 
         return embed
 
@@ -291,7 +289,7 @@ class Farm(commands.Cog):
 
         has_slots_boost = await user.is_boost_active(ctx, "farm_slots")
 
-        paginator = pages.MenuPages(
+        paginator = views.ButtonPaginatorView(
             source=FarmFieldSource(
                 field_parsed,
                 target_user,
@@ -626,8 +624,12 @@ class Farm(commands.Cog):
             text=f"You have a total of {ctx.user_data.gold} gold coins"
         )
 
-        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
-        confirm, msg = await menu.prompt(ctx)
+        prompt = views.ConfirmPromptView(
+            initial_embed=embed,
+            emoji=self.bot.gold_emoji,
+            label="Purchase and start growing"
+        )
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
@@ -644,7 +646,8 @@ class Farm(commands.Cog):
             await ctx.release()
 
             return await msg.edit(
-                embed=embeds.no_money_embed(ctx, user_data, total_cost)
+                embed=embeds.no_money_embed(ctx, user_data, total_cost),
+                view=None
             )
 
         query = """
@@ -676,7 +679,8 @@ class Farm(commands.Cog):
                         f"with: **{ctx.prefix}upgrade farm**."
                     ),
                     ctx=ctx
-                )
+                ),
+                view=None
             )
 
         iterations = None
@@ -734,7 +738,8 @@ class Farm(commands.Cog):
                     "\"farm\" command"
                 ),
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @commands.command(aliases=["clean"])
@@ -788,8 +793,13 @@ class Farm(commands.Cog):
             ctx=ctx
         )
 
-        menu = pages.ConfirmPrompt(pages.CONFIRM_COIN_BUTTTON, embed=embed)
-        confirm, msg = await menu.prompt(ctx)
+        prompt = views.ConfirmPromptView(
+            initial_embed=embed,
+            style=discord.ButtonStyle.primary,
+            emoji=self.bot.gold_emoji,
+            label="Clear farm"
+        )
+        confirm, msg = await prompt.prompt(ctx)
 
         if not confirm:
             return
@@ -800,7 +810,8 @@ class Farm(commands.Cog):
 
             if total_cost > user_data.gold:
                 return await msg.edit(
-                    embed=embeds.no_money_embed(ctx, user_data, total_cost)
+                    embed=embeds.no_money_embed(ctx, user_data, total_cost),
+                    view=None
                 )
 
             query = """
@@ -822,7 +833,8 @@ class Farm(commands.Cog):
                 ),
                 footer="Your farm field items have been discarded",
                 ctx=ctx
-            )
+            ),
+            view=None
         )
 
     @commands.command()
