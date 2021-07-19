@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from discord.ext import commands
 
 from .utils import views
-from .utils import time
 from .utils import checks
 from .utils import embeds
 from .utils import converters
@@ -23,10 +22,11 @@ class MarketSource(views.PaginatorSource):
                 second=0,
                 minute=0
             ) + timedelta(hours=1)
+        refresh_fmt = discord.utils.format_dt(next_refresh, style="t")
 
         head = (
-            "\u23f0 Market prices are going to change: "
-            f"**{time.maybe_timestamp(next_refresh)}**\n\n"
+            "\u23f0 Market prices are going to change at: "
+            f"**{refresh_fmt}**\n\n"
         )
 
         fmt = ""
