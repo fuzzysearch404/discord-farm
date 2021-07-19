@@ -1,5 +1,6 @@
 import discord
 import jsonpickle
+from datetime import datetime, timedelta
 from discord.ext import commands
 
 from .utils import time
@@ -447,7 +448,7 @@ class Missions(commands.Cog):
             ttl = await self.bot.redis.execute_command(
                 "TTL", f"export:{ctx.author.id}"
             )
-            leave_time = time.seconds_to_time(ttl)
+            leave_time = datetime.now() + timedelta(seconds=ttl)
 
             export = jsonpickle.decode(current_export)
 
@@ -468,8 +469,8 @@ class Missions(commands.Cog):
                 value=f"{export.shipments} of 10"
             )
             embed.add_field(
-                name="\ud83d\udd50 Cargo ship leaves in",
-                value=leave_time
+                name="\ud83d\udd50 Cargo ship leaves",
+                value=time.maybe_timestamp(leave_time)
             )
 
         await ctx.reply(embed=embed)

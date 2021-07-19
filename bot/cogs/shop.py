@@ -24,12 +24,9 @@ class MarketSource(views.PaginatorSource):
                 minute=0
             ) + timedelta(hours=1)
 
-        time_until = next_refresh - datetime.now()
-        timer = time.seconds_to_time(time_until.total_seconds())
-
         head = (
-            "\u23f0 Market prices are going to change in: "
-            f"**{timer}**\n\n"
+            "\u23f0 Market prices are going to change: "
+            f"**{time.maybe_timestamp(next_refresh)}**\n\n"
         )
 
         fmt = ""

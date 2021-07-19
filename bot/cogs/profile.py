@@ -2,7 +2,7 @@ import aiohttp
 import discord
 import random
 from discord.ext import commands
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from core import game_items
 from core import modifications
@@ -197,9 +197,9 @@ class Profile(commands.Cog):
             nearest_harvest = field_data[0]
 
             if nearest_harvest > datetime_now:
-                nearest_harvest = nearest_harvest - datetime_now
-                nearest_harvest = \
-                    time.seconds_to_time(nearest_harvest.total_seconds())
+                nearest_harvest = time.maybe_timestamp(
+                    nearest_harvest, since=datetime_now
+                )
             else:
                 nearest_harvest = self.bot.check_emoji
 
@@ -211,9 +211,9 @@ class Profile(commands.Cog):
             nearest_factory = "-"
         else:
             if nearest_factory > datetime_now:
-                nearest_factory = nearest_factory - datetime_now
-                nearest_factory = \
-                    time.seconds_to_time(nearest_factory.total_seconds())
+                nearest_factory = time.maybe_timestamp(
+                    nearest_factory, since=datetime_now
+                )
             else:
                 nearest_factory = self.bot.check_emoji
 
@@ -223,9 +223,10 @@ class Profile(commands.Cog):
         lab_info = f"\ud83d\udd0e **{prefix}lab** {mention}"
 
         if lab_cooldown:
+            lab_cd_ends = datetime_now + timedelta(seconds=lab_cooldown)
             lab_info = (
-                "\ud83e\uddf9 Busy for "
-                f"{time.seconds_to_time(lab_cooldown)}\n"
+                "\ud83e\uddf9 Available again: "
+                f"{time.maybe_timestamp(lab_cd_ends)}\n"
             ) + lab_info
 
         embed = discord.Embed(
@@ -666,13 +667,11 @@ class Profile(commands.Cog):
 
         for boost in all_boosts:
             boost_info = ctx.items.find_boost_by_id(boost.id)
-
-            remaining_duration = boost.duration - datetime.now()
-            time_str = time.seconds_to_time(remaining_duration.total_seconds())
+            time_str = discord.utils.format_dt(boost.duration, style="f")
 
             embed.add_field(
                 name=f"{boost_info.emoji} {boost_info.name}",
-                value=f"{time_str} remaining"
+                value=f"Active until: {time_str}"
             )
 
         await ctx.reply(embed=embed)

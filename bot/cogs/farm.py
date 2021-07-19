@@ -687,6 +687,10 @@ class Farm(commands.Cog):
         if isinstance(item, game_items.ReplantableItem):
             iterations = item.iterations
 
+        now = datetime.now()
+        ends = now + timedelta(seconds=grow_time)
+        dies = ends + timedelta(seconds=collect_time)
+
         transaction = conn.transaction()
         await transaction.start()
 
@@ -698,7 +702,6 @@ class Farm(commands.Cog):
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
                     """
 
-            ends = datetime.now() + timedelta(seconds=grow_time)
             await conn.execute(
                 query,
                 ctx.author.id,
@@ -707,7 +710,7 @@ class Farm(commands.Cog):
                 iterations,
                 tiles,
                 ends,
-                ends + timedelta(seconds=collect_time),
+                dies,
                 cat_boost
             )
 
@@ -721,17 +724,20 @@ class Farm(commands.Cog):
 
         await ctx.release()
 
+        end_fmt = time.maybe_timestamp(ends, since=now)
+        dies_fmt = discord.utils.format_dt(dies, style="f")
+
         await msg.edit(
             embed=embeds.success_embed(
                 title=(
                     f"Successfully started growing {item.full_name}!"
                 ),
                 text=(
-                    f"Nicely done! **You are now growing {item.full_name}!** "
-                    "\ud83e\udd20\nYou will be able to collect it in: "
-                    f"**{grow_time_str}**. Just remember to harvest in time, "
-                    "because you will only have limited time to do so... "
-                    f"(**{coll_time_str}**) \u23f0"
+                    f"Nicely done! You are now growing {item.full_name}! "
+                    "\ud83e\udd20\nYou will be able to collect it: "
+                    f"**{end_fmt}**. Just remember to harvest in time, "
+                    "because you will only have limited time to do so - "
+                    f"**items are going to be rotten at {dies_fmt}** \u23f0"
                 ),
                 footer=(
                     "Track your item growing progress with the "

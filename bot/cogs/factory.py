@@ -61,7 +61,8 @@ class FactorySource(views.PaginatorSource):
         total_workers: int,
         total_slots: int,
         used_slots: int,
-        has_slots_boost: bool
+        has_slots_boost: bool,
+        last_item_timestamp: str
     ):
         super().__init__(entries, per_page=12)
         self.target_user = target_user
@@ -69,6 +70,7 @@ class FactorySource(views.PaginatorSource):
         self.total_slots = total_slots
         self.used_slots = used_slots
         self.has_slots_boost = has_slots_boost
+        self.last_item_timestamp = last_item_timestamp
 
     async def format_page(self, page, view):
         target = self.target_user
@@ -88,10 +90,16 @@ class FactorySource(views.PaginatorSource):
             f"{self.used_slots}/{capacity}\n"
             "\ud83d\udc68\u200d\ud83c\udf73 Factory workers: "
             f"{self.total_workers} ({self.total_workers *5}% "
-            "faster manufacturing)\n\n"
+            "faster manufacturing)"
         )
 
-        fmt = ""
+        if self.last_item_timestamp:
+            header += (
+                "\n\u23f3 All products are going to be finished: "
+                f"{self.last_item_timestamp}"
+            )
+
+        fmt = "\n\n"
         for product in page:
             item = product.item
 
@@ -209,6 +217,12 @@ class Factory(commands.Cog):
             factory_data
         )
 
+        last_product = factory_parsed[-1]
+        if last_product.state != ProductState.READY:
+            factory_fully_ready = time.maybe_timestamp(last_product.ends)
+        else:
+            factory_fully_ready = None
+
         paginator = views.ButtonPaginatorView(
             source=FactorySource(
                 factory_parsed,
@@ -216,7 +230,8 @@ class Factory(commands.Cog):
                 user.factory_level,
                 user.factory_slots,
                 len(factory_parsed),
-                await user.is_boost_active(ctx, "factory_slots")
+                await user.is_boost_active(ctx, "factory_slots"),
+                factory_fully_ready
             )
         )
 

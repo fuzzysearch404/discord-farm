@@ -407,7 +407,7 @@ class Lab(commands.Cog):
 
         options = (
             ("growing duration", "time1"),
-            ("harvest duration", "time2"),
+            ("harvesting duration", "time2"),
             ("volume", "volume")
         )
         buttons = []
