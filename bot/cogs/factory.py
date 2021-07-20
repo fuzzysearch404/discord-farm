@@ -506,7 +506,7 @@ class Factory(commands.Cog):
 
             await ctx.user_data.give_items(ctx, to_award, conn=conn)
 
-            ctx.user_data.xp += xp_gain
+            await ctx.user_data.give_xp_and_level_up(ctx, xp_gain)
             await ctx.users.update_user(ctx.user_data, conn=conn)
 
         await ctx.release()
