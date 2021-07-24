@@ -392,7 +392,9 @@ class BotClient(commands.AutoShardedBot):
         retry_after = bucket.update_rate_limit(current)
 
         if retry_after and not await self.is_owner(ctx.author):
-            raise exceptions.GlobalCooldownException(ctx, retry_after)
+            raise exceptions.GlobalCooldownException(
+                ctx, retry_after, commands.BucketType.user
+            )
 
         return True
 
