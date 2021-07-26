@@ -784,14 +784,19 @@ class Profile(commands.Cog):
         voted = js['voted']
 
         if not voted:
-            upvote_url = f"<https://top.gg/bot/{ctx.bot.user.id}>"
+            view = discord.ui.View()
+            view.add_item(discord.ui.Button(
+                emoji="\u2b06\ufe0f",
+                label="Okey, let's upvote the bot!",
+                url=f"https://top.gg/bot/{ctx.bot.user.id}/vote"
+            ))
 
             await ctx.reply(
                 embed=embeds.error_embed(
                     title="Please upvote this bot, to unlock!",
                     text=(
                         "\ud83d\udd10 To unlock hourly bonuses, you have to "
-                        f"upvote the bot here: {upvote_url}\n"
+                        "upvote the bot on the bot list site \"top.gg\".\n"
                         "\ud83d\udcb8 After upvoting, you will unlock this "
                         "command for 12 hours, and you will be able to collect"
                         " your hourly bonuses, by using this same command. "
@@ -801,7 +806,8 @@ class Profile(commands.Cog):
                         " ads, sorry about that"
                     ),
                     ctx=ctx
-                )
+                ),
+                view=view
             )
         else:
             chests_and_rarities = {
