@@ -165,7 +165,7 @@ class FarmFieldSource(views.PaginatorSource):
                 )
             else:
                 fmt += (
-                    f"**{item.name.capitalize()} {item.emoji_animal} "
+                    f"**{item.emoji_animal} {item.name.capitalize()} "
                     f"(x{plant.amount} {item.emoji})** "
                     f"- {state} (**{plant.iterations}.lvl**)"
                 )
