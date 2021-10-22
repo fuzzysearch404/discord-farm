@@ -65,7 +65,7 @@ class InventorySource(views.PaginatorSource):
 
             embed.set_footer(
                 text="These items can only be accessed by their owner",
-                icon_url=target.avatar.url
+                icon_url=target.display_avatar.url
             )
 
         embed.description = fmt
