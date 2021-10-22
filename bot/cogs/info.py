@@ -1,12 +1,41 @@
+import itertools
 import psutil
 import pkg_resources
 import discord
+from dataclasses import dataclass
 from discord.ext import commands, tasks
 
 from .utils import views
 from .utils import checks
 from .utils import embeds
 from .utils import time as time_util
+
+
+HELP_CATEGORIES_METADATA = {
+    "Account": ("\ud83d\udc64", "Manage your game account"),
+    "Factory": ("\ud83c\udfed", "Manufacture products in your factory"),
+    "Farm": ("\ud83c\udf31", "Plant, grow and harvest"),
+    "Information": ("\u2139\ufe0f", "Get offical bot news, updates etc."),
+    "Lab": ("\ud83e\uddeb", "Upgrade your items to progress faster"),
+    "Missions": (
+        "\ud83d\udce6",
+        "Challenge yourself by completing various missions"
+    ),
+    "Profile": (
+        "\ud83c\udfe1",
+        "Various game profile and item information commands"
+    ),
+    "Shop": (
+        "\ud83d\udecd\ufe0f",
+        "Purchase items and upgrades. Sell your items to the market or friends"
+    )
+}
+
+
+@dataclass
+class CommandInfo:
+    name: str
+    description: str
 
 
 class HelpMessageSource(views.PaginatorSource):
@@ -22,6 +51,27 @@ class HelpMessageSource(views.PaginatorSource):
         return embed
 
 
+class HelpCommandsMessageSource(views.PaginatorSource):
+    def __init__(self, description: str, entries):
+        super().__init__(entries, per_page=8)
+        self.description = description
+
+    async def format_page(self, page, view):
+        embed = discord.Embed(
+            color=discord.Color.from_rgb(88, 101, 242),
+            description=self.description
+        )
+
+        for entry in page:
+            embed.add_field(
+                name=entry.name,
+                value=entry.description,
+                inline=False
+            )
+
+        return embed
+
+
 class HelpCommand(commands.MinimalHelpCommand):
     def __init__(self):
         super().__init__(
@@ -31,6 +81,8 @@ class HelpCommand(commands.MinimalHelpCommand):
                 "aliases": ["commands", "comands", "cmd", "helpme"]
             }
         )
+        self.description = ""
+        self.all_command_infos_by_category = {}
 
     def get_command_signature(self, command):
         if command.full_parent_name:
@@ -46,12 +98,77 @@ class HelpCommand(commands.MinimalHelpCommand):
 
         return cmd
 
-    def add_bot_commands_formatting(self, commands, heading):
-        if commands:
-            joined = "\u2002".join(f"`{c.name}`" for c in commands)
-            self.paginator.add_line(f"**{heading}**")
-            self.paginator.add_line(joined)
+    def get_category(self, command):
+        cog = command.cog if hasattr(command, "cog") else None
 
+        if cog is not None:
+            return cog.qualified_name
+        else:
+            return f"\u200b{self.no_category}"
+
+    async def send_bot_help(self, mapping):
+        ctx = self.context
+        bot = ctx.bot
+
+        note = self.get_opening_note()
+        if note:
+            self.description = note
+
+        filtered = await self.filter_commands(
+            bot.commands, sort=True, key=self.get_category
+        )
+        to_iterate = itertools.groupby(filtered, key=self.get_category)
+
+        for category, cmds in to_iterate:
+            if self.sort_commands:
+                sorted_commands = sorted(cmds, key=lambda c: c.name)
+            else:
+                sorted_commands = list(cmds)
+
+            if len(sorted_commands) > 0:
+                cog = sorted_commands[0].cog
+
+                self.all_command_infos_by_category[cog] = [
+                    CommandInfo(f"{command.name}", command.short_doc)
+                    for command in sorted_commands
+                ]
+
+        await self.send_command_pages()
+
+    # For general help message, we create custom help message
+    async def send_command_pages(self):
+        opts_and_sources = {}
+        for cog, infos in self.all_command_infos_by_category.items():
+            name = cog.qualified_name if cog else f"\u200b{self.no_category}"
+
+            try:
+                emoji, short_desc = HELP_CATEGORIES_METADATA[name]
+            except KeyError:
+                emoji, short_desc = None, None
+
+            opt = discord.SelectOption(
+                label=name,
+                emoji=emoji,
+                description=short_desc
+            )
+
+            if cog and cog.description:
+                description = self.description + "\n\n" + cog.description
+            else:
+                description = self.description
+
+            opts_and_sources[opt] = HelpCommandsMessageSource(
+                description, infos
+            )
+
+        paginator = views.SelectButtonPaginatorView(
+            opts_and_sources,
+            select_placeholder="\ud83d\udcda Select a category for commands"
+        )
+
+        await paginator.start(self.context)
+
+    # For command, groups, and cog help, rely on the default help command impl.
     async def send_pages(self):
         # Replace prefix with invoked prefix
         new_pages = []
@@ -66,7 +183,7 @@ class HelpCommand(commands.MinimalHelpCommand):
         await paginator.start(self.context)
 
 
-class Info(commands.Cog, name="\ud83e\udd16 Information"):
+class Info(commands.Cog, name="Information"):
     """
     Get the latest information about the bot - news, events, some links, etc.
     """
@@ -277,7 +394,7 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
     @commands.has_permissions(administrator=True)
     @checks.avoid_maintenance()
     async def prefix(self, ctx, prefix: str):
-        """Customize bot's prefix
+        """\ud83d\udd23 Customize bot's prefix
 
         This command let's you choose by what prefix the commands will be
         invoked with. Prefix is the symbol combination before any
