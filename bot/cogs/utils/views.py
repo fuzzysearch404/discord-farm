@@ -50,10 +50,11 @@ class ButtonPaginatorView(discord.ui.View):
         self.msg = None
 
         self.update_page_counter_label()
+        self.update_button_states()
 
     async def on_timeout(self) -> None:
         for ui_item in self.children:
-            if isinstance(ui_item, discord.ui.Button):
+            if hasattr(ui_item, "disabled"):
                 ui_item.disabled = True
 
         await self.msg.edit(view=self)
@@ -185,6 +186,55 @@ class ButtonPaginatorView(discord.ui.View):
         return self.msg
 
 
+class SelectButtonPaginatorView(ButtonPaginatorView):
+    """
+    A paginator type that can display multiple paginator sources,
+    by selecting them with a select component.
+    """
+    def __init__(
+        self,
+        options_and_sources: dict,
+        select_placeholder: str = None
+    ) -> None:
+        """
+        options_and_sources: A dictionary of select options
+        and their corresponding paginator sources.
+        """
+        self.keys_and_sources = {}
+
+        for option, source in options_and_sources.items():
+            self.keys_and_sources[option.value] = source
+
+        first_option = next(iter(options_and_sources))
+        first_source = options_and_sources[first_option]
+        super().__init__(first_source)
+
+        self.select_source.options = list(options_and_sources.keys())
+        self.select_source.placeholder = select_placeholder
+
+    @discord.ui.select(min_values=1, max_values=1, row=4)
+    async def select_source(
+        self,
+        select: discord.ui.Select,
+        interaction: discord.Interaction
+    ) -> None:
+        self.source = self.keys_and_sources[select.values[0]]
+        self.current_page = 0
+
+        self.update_button_states()
+        await self.update_page_view()
+
+    async def start(self, ctx) -> discord.Message:
+        self.ctx = ctx
+        self.bot = ctx.bot
+        self.author = ctx.author
+
+        embed = await self.current_page_embed()
+        self.msg = await ctx.reply(embed=embed, view=self)
+
+        return self.msg
+
+
 class OptionPromptView(discord.ui.View):
     """
     Base class for option prompt views that can take multiple options.
@@ -217,7 +267,7 @@ class OptionPromptView(discord.ui.View):
             self.create_deny_button()
 
     async def on_timeout(self) -> None:
-        await self.disable_buttons()
+        await self.disable_all_items()
 
     async def interaction_check(
         self,
@@ -250,16 +300,16 @@ class OptionPromptView(discord.ui.View):
         async def deny_callback(interaction) -> None:
             self._result = False
 
-            await self.disable_buttons()
+            await self.disable_all_items()
             self.stop()
 
         deny_button.callback = deny_callback
 
         self.add_item(deny_button)
 
-    async def disable_buttons(self) -> None:
+    async def disable_all_items(self) -> None:
         for ui_item in self.children:
-            if isinstance(ui_item, discord.ui.Button):
+            if hasattr(ui_item, "disabled"):
                 ui_item.disabled = True
 
         await self._msg.edit(view=self)
