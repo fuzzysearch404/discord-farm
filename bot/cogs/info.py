@@ -133,10 +133,11 @@ class Info(commands.Cog, name="\ud83e\udd16 Information"):
         permissions.read_message_history = True
         permissions.attach_files = True
         permissions.add_reactions = True
-        permissions.use_threads = True
+        permissions.send_messages_in_threads = True
 
         oauth_link = discord.utils.oauth_url(
-            self.bot.user.id, permissions=permissions
+            self.bot.user.id, permissions=permissions,
+            scopes=("bot", "applications.commands")
         )
 
         view = discord.ui.View()
