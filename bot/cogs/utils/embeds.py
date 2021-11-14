@@ -30,13 +30,15 @@ def _create_embed(
                 icon_url=ctx.author.display_avatar.url
             )
     else:
+        guild_icon = ctx.guild.icon.url if ctx.guild.icon else None
+
         if not footer:
             embed.set_footer(
                 text=f"Discord Farm notification from \"{ctx.guild}\" server",
-                icon_url=ctx.guild.icon.url
+                icon_url=guild_icon
             )
         else:
-            embed.set_footer(text=footer, icon_url=ctx.guild.icon.url)
+            embed.set_footer(text=footer, icon_url=guild_icon)
 
     return embed
 
