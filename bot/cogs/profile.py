@@ -738,7 +738,6 @@ class Profile(commands.Cog):
 
     @commands.command(aliases=["hourlybonus"])
     @commands.max_concurrency(number=1, per=commands.BucketType.user)
-    @checks.user_cooldown(5)
     @checks.has_account()
     @checks.avoid_maintenance()
     async def hourly(self, ctx):
