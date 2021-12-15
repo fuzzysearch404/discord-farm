@@ -444,33 +444,44 @@ class Missions(commands.Cog):
                 "export contract active per a time and you can choose "
                 "a contract once per hour."
             )
-        else:
-            ttl = await self.bot.redis.execute_command(
-                "TTL", f"export:{ctx.author.id}"
-            )
-            leave_time = datetime.now() + timedelta(seconds=ttl)
 
-            export = jsonpickle.decode(current_export)
+            return await ctx.reply(embed=embed)
 
-            embed.title = "\ud83d\udea2 Load the cargo ship"
-            embed.description = (
-                "\ud83d\udce6 Load items into the cargo ship "
-                f"with the **{ctx.prefix}export load** command!\n"
-                "\u2934\ufe0f You will get higher rewards for each package "
-                "you load into the cargo ship.\n"
-                "\u23f2\ufe0f You can load a package every 30 minutes."
-            )
-            embed.add_field(
-                name="\u2693 Current contract",
-                value=self.format_export(ctx, export)
-            )
-            embed.add_field(
-                name="\ud83d\udce6 Loaded packages",
-                value=f"{export.shipments} of 10"
-            )
-            embed.add_field(
-                name="\ud83d\udd50 Cargo ship leaves",
-                value=time.maybe_timestamp(leave_time)
+        ttl = await self.bot.redis.execute_command(
+            "TTL", f"export:{ctx.author.id}"
+        )
+        leave_time = datetime.now() + timedelta(seconds=ttl)
+
+        export = jsonpickle.decode(current_export)
+
+        embed.title = "\ud83d\udea2 Load the cargo ship"
+        embed.description = (
+            "\ud83d\udce6 Load items into the cargo ship "
+            f"with the **{ctx.prefix}export load** command!\n"
+            "\u2934\ufe0f You will get higher rewards for each package "
+            "you load into the cargo ship.\n"
+            "\u23f2\ufe0f You can load a package every 30 minutes."
+        )
+        embed.add_field(
+            name="\u2693 Current contract",
+            value=self.format_export(ctx, export)
+        )
+        embed.add_field(
+            name="\ud83d\udce6 Loaded packages",
+            value=f"{export.shipments} of 10"
+        )
+        embed.add_field(
+            name="\ud83d\udd50 Cargo ship leaves",
+            value=time.maybe_timestamp(leave_time)
+        )
+
+        cooldown = await checks.get_user_cooldown(ctx, "export_load")
+        if cooldown:
+            cd = datetime.now() + timedelta(seconds=cooldown)
+
+            embed.description += (
+                "\n\ud83d\udc77 The cargo ship is going to be idle again: "
+                f"{time.maybe_timestamp(cd)}."
             )
 
         await ctx.reply(embed=embed)
