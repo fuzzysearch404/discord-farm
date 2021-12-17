@@ -108,6 +108,10 @@ class Profile(commands.Cog):
         self.bot = bot
         self.topgg_token = bot.config['topgg']['auth_token']
 
+    @property
+    def help_meta(self) -> tuple:
+        return ("\ud83c\udfe1", "Various game profile and item information commands")
+
     @commands.command(aliases=["prof", "account", "acc"])
     @checks.has_account()
     @checks.avoid_maintenance()

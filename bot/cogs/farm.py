@@ -198,6 +198,10 @@ class Farm(commands.Cog):
         super().__init__()
         self.bot = bot
 
+    @property
+    def help_meta(self) -> tuple:
+        return ("\ud83c\udf31", "Plant, grow and harvest")
+
     def parse_db_rows_to_plant_data_objects(self, rows: dict) -> list:
         parsed = []
 

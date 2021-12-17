@@ -24,6 +24,10 @@ class Missions(commands.Cog):
         super().__init__()
         self.bot = bot
 
+    @property
+    def help_meta(self) -> tuple:
+        return ("\ud83d\udce6", "Challenge yourself, by completing various missions")
+
     def parse_mission_data(
         self,
         ctx,

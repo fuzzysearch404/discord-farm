@@ -73,6 +73,10 @@ class Lab(commands.Cog):
         super().__init__()
         self.bot = bot
 
+    @property
+    def help_meta(self) -> tuple:
+        return ("\ud83e\uddeb", "Upgrade your items to progress faster")
+
     def calculate_mod_cost(
         self,
         item: game_items.PurchasableItem,
