@@ -12,6 +12,7 @@ from .utils import embeds
 from .utils.converters import ItemAndAmount
 from core import game_items
 from core import modifications
+from core import ipc_classes
 
 
 class PlantState(Enum):
@@ -224,6 +225,28 @@ class Farm(commands.Cog):
 
         return parsed
 
+    async def send_reminder_to_ipc(
+        self,
+        reminder: ipc_classes.Reminder
+    ) -> None:
+        cluster_cog = self.bot.get_cog("Clusters")
+        if not cluster_cog:
+            self.bot.log.critical("Reminder failed: Cluster cog not loaded!")
+            return
+
+        await cluster_cog.send_set_reminder_message(reminder)
+
+    async def send_delete_reminders_to_ipc(
+        self,
+        user_id: int
+    ) -> None:
+        cluster_cog = self.bot.get_cog("Clusters")
+        if not cluster_cog:
+            self.bot.log.critical("Reminder failed: Cluster cog not loaded!")
+            return
+
+        await cluster_cog.send_delete_reminders_message(user_id)
+
     @commands.command(aliases=["field", "f"])
     @checks.has_account()
     @checks.avoid_maintenance()
@@ -388,6 +411,7 @@ class Farm(commands.Cog):
             )
 
         to_reward, xp_gain = [], 0
+        to_remind = []
 
         async with conn.transaction():
             if to_update:
@@ -409,6 +433,7 @@ class Farm(commands.Cog):
 
                     update_rows.append((ends, dies, amount, plant.id))
                     to_reward.append((plant.item.id, plant.amount))
+                    to_remind.append((plant.item.id, amount, ends))
                     xp_gain += plant.item.xp * plant.amount
 
                 query = """
@@ -517,6 +542,18 @@ class Farm(commands.Cog):
             )
 
             await ctx.reply(embed=embed)
+
+        for rem in to_remind:
+            reminder = ipc_classes.Reminder(
+                user_id=ctx.author.id,
+                guild_id=ctx.guild.id,
+                channel_id=ctx.channel.id,
+                message_id=ctx.message.id,
+                item_id=rem[0],
+                amount=rem[1],
+                time=rem[2]
+            )
+            await self.send_reminder_to_ipc(reminder)
 
     @commands.command(aliases=["p", "grow", "g"])
     @checks.has_account()
@@ -752,6 +789,18 @@ class Farm(commands.Cog):
             view=None
         )
 
+        reminder = ipc_classes.Reminder(
+            user_id=ctx.author.id,
+            guild_id=ctx.guild.id,
+            channel_id=ctx.channel.id,
+            message_id=ctx.message.id,
+            item_id=item.id,
+            amount=total_items,
+            time=ends
+        )
+
+        await self.send_reminder_to_ipc(reminder)
+
     @commands.command(aliases=["clean"])
     @checks.has_account()
     @checks.avoid_maintenance()
@@ -833,6 +882,8 @@ class Farm(commands.Cog):
 
             user_data.gold -= total_cost
             await ctx.users.update_user(user_data, conn=conn)
+
+        await self.send_delete_reminders_to_ipc(ctx.author.id)
 
         await msg.edit(
             embed=embeds.success_embed(

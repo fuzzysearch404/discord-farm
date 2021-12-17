@@ -15,10 +15,43 @@ class Account(commands.Cog):
     def __init__(self, bot) -> None:
         super().__init__()
         self.bot = bot
-
+        
     @property
     def help_meta(self) -> tuple:
         return ("\ud83d\udc64", "Manage your game account")
+
+    async def send_disable_reminders_to_ipc(
+        self,
+        user_id: int
+    ) -> None:
+        cluster_cog = self.bot.get_cog("Clusters")
+        if not cluster_cog:
+            self.bot.log.critical("Reminder failed: Cluster cog not loaded!")
+            return
+
+        await cluster_cog.send_disable_reminders_message(user_id)
+
+    async def send_enable_reminders_to_ipc(
+        self,
+        user_id: int
+    ) -> None:
+        cluster_cog = self.bot.get_cog("Clusters")
+        if not cluster_cog:
+            self.bot.log.critical("Reminder failed: Cluster cog not loaded!")
+            return
+
+        await cluster_cog.send_enable_reminders_message(user_id)
+
+    async def send_delete_reminders_to_ipc(
+        self,
+        user_id: int
+    ) -> None:
+        cluster_cog = self.bot.get_cog("Clusters")
+        if not cluster_cog:
+            self.bot.log.critical("Reminder failed: Cluster cog not loaded!")
+            return
+
+        await cluster_cog.send_delete_reminders_message(user_id)
 
     @commands.command()
     async def tutorial(self, ctx):
@@ -183,6 +216,7 @@ class Account(commands.Cog):
             return
 
         await ctx.users.delete_user(ctx.author.id)
+        await self.send_delete_reminders_to_ipc(ctx.author.id)
 
         await msg.edit(
             embed=embeds.success_embed(
@@ -206,10 +240,13 @@ class Account(commands.Cog):
     @checks.avoid_maintenance()
     async def notifications(self, ctx):
         """
-        \ud83d\udce7 Disables or enables Direct Message notifications.
+        \ud83d\udce7 Disables or reenables notifications.
 
         Allows to disable or reenable various notifications e.g.,
-        notifications when someone accepts trade with you.
+        notifications when someone accepts trade with you or
+        your harvest is ready to be collected.
+        Please note that the some notifications might not
+        get delivered, so don't fully rely on them.
         """
         user = ctx.user_data
         user.notifications = not user.notifications
@@ -218,8 +255,10 @@ class Account(commands.Cog):
 
         if not user.notifications:
             embed = embeds.success_embed(
-                title="Direct message notifications disabled",
+                title="Game notifications disabled",
                 text=(
+                    "\u26a0\ufe0f **It might take a few minutes for your new "
+                    "notifcation settings to take effect**.\n"
                     "Okay, so: I told the *mail man* **not to "
                     "bother you** with all those private messages \ud83d\udced"
                 ),
@@ -228,10 +267,13 @@ class Account(commands.Cog):
                 ),
                 ctx=ctx
             )
+            await self.send_disable_reminders_to_ipc(ctx.author.id)
         else:
             embed = embeds.success_embed(
-                title="Direct message notifications enabled",
+                title="Game notifications enabled",
                 text=(
+                    "\u26a0\ufe0f **It might take a few minutes for your new "
+                    "notifcation settings to take effect**.\n"
                     "Okay, so: I told the *mail man* **to "
                     "send you** private messages about the game \ud83d\udcec"
                 ),
@@ -240,6 +282,7 @@ class Account(commands.Cog):
                 ),
                 ctx=ctx
             )
+            await self.send_enable_reminders_to_ipc(ctx.author.id)
 
         await ctx.reply(embed=embed)
 
