@@ -35,7 +35,7 @@ class IPC:
             "ipc.log",
             encoding="utf-8",
             mode="a",
-            maxBytes=2 * 1024 * 1024
+            maxBytes=2 * 1024
         )
         file_handler.setFormatter(log_formatter)
         stream_handler = logging.StreamHandler()
