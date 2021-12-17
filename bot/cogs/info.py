@@ -11,27 +11,6 @@ from .utils import embeds
 from .utils import time as time_util
 
 
-HELP_CATEGORIES_METADATA = {
-    "Account": ("\ud83d\udc64", "Manage your game account"),
-    "Factory": ("\ud83c\udfed", "Manufacture products in your factory"),
-    "Farm": ("\ud83c\udf31", "Plant, grow and harvest"),
-    "Information": ("\u2139\ufe0f", "Get offical bot news, updates etc."),
-    "Lab": ("\ud83e\uddeb", "Upgrade your items to progress faster"),
-    "Missions": (
-        "\ud83d\udce6",
-        "Challenge yourself by completing various missions"
-    ),
-    "Profile": (
-        "\ud83c\udfe1",
-        "Various game profile and item information commands"
-    ),
-    "Shop": (
-        "\ud83d\udecd\ufe0f",
-        "Purchase items and upgrades. Sell your items to the market or friends"
-    )
-}
-
-
 @dataclass
 class CommandInfo:
     name: str
@@ -142,8 +121,8 @@ class HelpCommand(commands.MinimalHelpCommand):
             name = cog.qualified_name if cog else f"\u200b{self.no_category}"
 
             try:
-                emoji, short_desc = HELP_CATEGORIES_METADATA[name]
-            except KeyError:
+                emoji, short_desc = cog.help_meta
+            except AttributeError:
                 emoji, short_desc = None, None
 
             opt = discord.SelectOption(
@@ -201,6 +180,10 @@ class Info(commands.Cog, name="Information"):
         self.bot.help_command = HelpCommand()
 
         self._status_task = self.update_status_task.start()
+
+    @property
+    def help_meta(self) -> tuple:
+        return ("\u2139\ufe0f", "Get offical bot news, update information etc.")
 
     def cog_unload(self):
         self.bot.help_command = self.old_help_command

@@ -134,6 +134,10 @@ class Factory(commands.Cog):
         super().__init__()
         self.bot = bot
 
+    @property
+    def help_meta(self) -> tuple:
+        return ("\ud83c\udfed", "Manufacture products in your factory")
+
     def parse_db_rows_to_factory_data_objects(self, rows: dict) -> list:
         parsed = []
 

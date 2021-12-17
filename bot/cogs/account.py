@@ -15,6 +15,10 @@ class Account(commands.Cog):
     def __init__(self, bot) -> None:
         super().__init__()
         self.bot = bot
+        
+    @property
+    def help_meta(self) -> tuple:
+        return ("\ud83d\udc64", "Manage your game account")
 
     async def send_disable_reminders_to_ipc(
         self,

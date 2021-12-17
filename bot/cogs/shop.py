@@ -134,6 +134,13 @@ class Shop(commands.Cog):
         super().__init__()
         self.bot = bot
 
+    @property
+    def help_meta(self) -> tuple:
+        return (
+            "\ud83d\udecd\ufe0f",
+            "Purchase upgrades and items. Sell items to the market or your friends"
+        )
+
     @commands.group(case_insensitive=True)
     @checks.has_account()
     @checks.avoid_maintenance()

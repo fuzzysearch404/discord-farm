@@ -108,6 +108,10 @@ class Profile(commands.Cog):
         self.bot = bot
         self.topgg_token = bot.config['topgg']['auth_token']
 
+    @property
+    def help_meta(self) -> tuple:
+        return ("\ud83c\udfe1", "Various game profile and item information commands")
+
     @commands.command(aliases=["prof", "account", "acc"])
     @checks.has_account()
     @checks.avoid_maintenance()
@@ -986,6 +990,53 @@ class Profile(commands.Cog):
             embed.set_thumbnail(url=item.image_url)
 
         await ctx.reply(embed=embed)
+
+    @commands.command()
+    @checks.has_account()
+    @checks.avoid_maintenance()
+    async def gift(self, ctx):
+        """
+        \ud83c\udf85 Get one-time free winter holidays gift.
+
+        Offer available until: 01.01.2022 00:00:00 (12 PM) GMT
+        """
+        # 1640995200 - GMT 1-01-2022 00:00:00
+        if datetime.now() > datetime.fromtimestamp(1640995200):
+            return await ctx.reply("\u274c Sorry, this offer has expired and is going to be removed soon.")
+
+        cooldown = await checks.get_user_cooldown(ctx, "xmas2021")
+        if cooldown:
+            return await ctx.reply("\ud83e\udd73 You already got your gift. Happy new year! :)")
+
+        # 15 days cooldown
+        await checks.set_user_cooldown(ctx, 1_296_000, "xmas2021")
+
+        # 1005 - Legendary chest
+        await ctx.user_data.give_item(ctx, 1005, 1)
+        leg_chest_data = ctx.items.find_chest_by_id(1005)
+        # 1004 - Epic chest
+        await ctx.user_data.give_item(ctx, 1004, 3)
+        epic_chest_data = ctx.items.find_chest_by_id(1004)
+
+        ctx.user_data.gold += 2022
+        bonus = ctx.user_data.level * 1000
+        ctx.user_data.gold += bonus
+        await ctx.users.update_user(ctx.user_data)
+
+        await ctx.reply(
+            embed=embeds.congratulations_embed(
+                title="Happy winter holidays!",
+                text=(
+                    "**Thanks for playing Discord Farm! Happy winter holidays!** \ud83c\udf84 \u2744\ufe0f"
+                    f"\n\n\ud83c\udf81 Here is your gift: ** "
+                    f"1x {leg_chest_data.emoji} {leg_chest_data.name.capitalize()} chest, "
+                    f"3x {epic_chest_data.emoji} {epic_chest_data.name.capitalize()} chests, "
+                    f"{bonus} + 2022 {self.bot.gold_emoji}!**\n\n"
+                    "See you in 2022! Happy new year! \ud83c\udf86"
+                ),
+                ctx=ctx
+            )
+        )
 
 
 def setup(bot):
