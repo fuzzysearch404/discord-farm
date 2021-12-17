@@ -6,7 +6,7 @@ import datetime
 from contextlib import suppress
 from discord.ext import commands
 
-from core.ipc_classes import Cluster, IPCMessage
+from core.ipc_classes import Cluster, IPCMessage, Reminder
 
 
 class Clusters(commands.Cog, command_attrs={"hidden": True}):
@@ -164,7 +164,8 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
                 )
 
                 await asyncio.sleep(retry_in)
-                retry_in += 3
+                if retry_in < 60:
+                    retry_in += 3
 
                 await self._request_all_required_data()
 
@@ -259,6 +260,66 @@ class Clusters(commands.Cog, command_attrs={"hidden": True}):
             action="ping",
             reply_global=False,
             data=jsonpickle.encode(cluster)
+        )
+
+        await self.bot.redis.publish(
+            self.self_name, jsonpickle.encode(message)
+        )
+
+    async def send_set_reminder_message(
+        self,
+        reminder: Reminder
+    ) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="add_reminder",
+            reply_global=False,
+            data=reminder
+        )
+
+        await self.bot.redis.publish(
+            self.self_name, jsonpickle.encode(message)
+        )
+
+    async def send_disable_reminders_message(
+        self,
+        user_id: int
+    ) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="stop_reminders",
+            reply_global=False,
+            data=user_id
+        )
+
+        await self.bot.redis.publish(
+            self.self_name, jsonpickle.encode(message)
+        )
+
+    async def send_enable_reminders_message(
+        self,
+        user_id: int
+    ) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="start_reminders",
+            reply_global=False,
+            data=user_id
+        )
+
+        await self.bot.redis.publish(
+            self.self_name, jsonpickle.encode(message)
+        )
+
+    async def send_delete_reminders_message(
+        self,
+        user_id: int
+    ) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action="del_reminders",
+            reply_global=False,
+            data=user_id
         )
 
         await self.bot.redis.publish(
