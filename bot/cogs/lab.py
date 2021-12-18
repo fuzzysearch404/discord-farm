@@ -53,7 +53,7 @@ class LabSource(views.PaginatorSource):
             header = (
                 "\ud83e\uddea __**Currently upgraded items:**__\n"
                 "| \ud83c\udff7\ufe0f Item | \ud83d\udd70 Growing time |"
-                " \ud83d\udd70 Harvesting time | \u2696\ufe0f Volume |\n\n"
+                " \ud83d\udd70 Harvesting time | \u2696\ufe0f Max. Volume |\n\n"
             )
 
             embed.description += header + "\n".join(page)
@@ -96,7 +96,7 @@ class Lab(commands.Cog):
 
         You can upgrade items to reduce their growing durations,
         increase their collection durations and increase their
-        harvest volume.
+        maximum harvest volume.
 
         __Optional arguments__:
         `member` - some user in your server. (tagged user or user's ID)
@@ -226,10 +226,10 @@ class Lab(commands.Cog):
             embed=embeds.congratulations_embed(
                 title="Modification successful!",
                 text=(
-                    "Our experiments went smoothly and we are so happy "
-                    "to tell you that your modification has been applied "
+                    "Our experiments went smoothly and we are happy "
+                    "to tell you that the modification has been applied "
                     f"to your **{item.full_name}**! "
-                    "\ud83c\udf8a\n If you are ready to test it out, go "
+                    "\ud83c\udf8a\n If you are ready to try it out, go "
                     "ahead, grow some of those! \ud83e\udd20"
                 ),
                 ctx=ctx
@@ -293,9 +293,7 @@ class Lab(commands.Cog):
             vol_mod = mods['volume']
 
         embed = discord.Embed(
-            title=(
-                f"\ud83d\udd2c Genetic modifications: {item.full_name}"
-            ),
+            title=f"\ud83d\udd2c Genetic modifications: {item.full_name}",
             description=(
                 "\ud83d\udc69\u200d\ud83d\udd2c These are all the "
                 f"possible upgrades for your: **{item.full_name}**\n"
@@ -309,20 +307,12 @@ class Lab(commands.Cog):
             color=discord.Color.from_rgb(146, 102, 204)
         )
 
-        grow_time = time.seconds_to_time(
-            modifications.get_growing_time(item, time1_mod)
-        )
-        collect_time = time.seconds_to_time(
-            modifications.get_harvest_time(item, time2_mod)
-        )
-        base_volume = modifications.get_volume(item, vol_mod)
+        grow_time = time.seconds_to_time(modifications.get_growing_time(item, time1_mod))
+        collect_time = time.seconds_to_time(modifications.get_harvest_time(item, time2_mod))
+        max_volume = modifications.get_volume(item, vol_mod)
 
         if time1_mod < 10:
-            next_grow_time = time.seconds_to_time(
-                modifications.get_growing_time(
-                    item, time1_mod + 1
-                )
-            )
+            next_grow_time = time.seconds_to_time(modifications.get_growing_time(item, time1_mod + 1))
             price = self.calculate_mod_cost(item, time1_mod + 1)
 
             cooldown = time.seconds_to_time(
@@ -348,15 +338,11 @@ class Lab(commands.Cog):
 
         if time2_mod < 10:
             next_collect_time = time.seconds_to_time(
-                modifications.get_harvest_time(
-                    item, time2_mod + 1
-                )
+                modifications.get_harvest_time(item, time2_mod + 1)
             )
             price = self.calculate_mod_cost(item, time2_mod + 1)
 
-            cooldown = time.seconds_to_time(
-                self.calculate_mod_cooldown(time2_mod + 1)
-            )
+            cooldown = time.seconds_to_time(self.calculate_mod_cooldown(time2_mod + 1))
 
             fmt = (
                 f"\ud83c\udd95 Next level: **{next_collect_time}**\n\n"
@@ -376,17 +362,13 @@ class Lab(commands.Cog):
         )
 
         if vol_mod < 10:
-            next_base_volume = modifications.get_volume(
-                item, vol_mod + 1
-            )
+            next_base_volume = modifications.get_volume(item, vol_mod + 1)
             price = self.calculate_mod_cost(item, vol_mod + 1)
 
-            cooldown = time.seconds_to_time(
-                self.calculate_mod_cooldown(vol_mod + 1)
-            )
+            cooldown = time.seconds_to_time(self.calculate_mod_cooldown(vol_mod + 1))
 
             fmt = (
-                f"\ud83c\udd95 Next level: **{next_base_volume} items**\n\n"
+                f"\ud83c\udd95 Next level: **{item.amount} - {next_base_volume} items**\n\n"
                 f"\u23f2\ufe0f Research cooldown:\n**{cooldown}**\n"
                 "\ud83d\udcb0 Research costs:\n"
                 f"**{price} {self.bot.gold_emoji}**"
@@ -394,11 +376,13 @@ class Lab(commands.Cog):
         else:
             fmt = "\ud83c\udf20 **Max. level**"
 
+        vol_amount_fmt = f"{item.amount} - {max_volume}" if vol_mod else str(max_volume)
+
         embed.add_field(
-            name="\u2696\ufe0f Harvest volume",
+            name="\u2696\ufe0f Max. harvest volume",
             value=(
                 f"\ud83e\uddea Modifications: {vol_mod}/10\n"
-                f"\ud83e\uddec Current: **{base_volume} items**\n{fmt}"
+                f"\ud83e\uddec Current: **{vol_amount_fmt} items**\n{fmt}"
             )
         )
 
@@ -412,7 +396,7 @@ class Lab(commands.Cog):
         options = (
             ("growing duration", "time1"),
             ("harvesting duration", "time2"),
-            ("volume", "volume")
+            ("maximum volume", "volume")
         )
         buttons = []
         for option in options:
@@ -423,9 +407,7 @@ class Lab(commands.Cog):
                 label=f"Upgrade {option[0]}"
             ))
 
-        prompt = views.MultiOptionView(
-            buttons, initial_embed=embed
-        )
+        prompt = views.MultiOptionView(buttons, initial_embed=embed)
         result, msg = await prompt.prompt(ctx)
 
         if not result:

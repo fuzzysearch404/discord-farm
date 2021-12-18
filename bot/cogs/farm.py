@@ -379,14 +379,12 @@ class Farm(commands.Cog):
 
         for plant in field_parsed:
             if plant.iterations and plant.iterations > 1:
-                if plant.is_harvestable or self.bot.field_guard \
-                        and plant.state == PlantState.ROTTEN:
+                if plant.is_harvestable or self.bot.field_guard and plant.state == PlantState.ROTTEN:
                     to_update.append(plant)
                 elif plant.state == PlantState.ROTTEN:
                     to_discard.append(plant)
             else:
-                if plant.is_harvestable or self.bot.field_guard \
-                        and plant.state == PlantState.ROTTEN:
+                if plant.is_harvestable or self.bot.field_guard and plant.state == PlantState.ROTTEN:
                     to_harvest.append(plant)
                 elif plant.state == PlantState.ROTTEN:
                     to_discard.append(plant)
@@ -425,11 +423,13 @@ class Farm(commands.Cog):
                     )
                     grow_time = item_mods[0]
                     collect_time = item_mods[1]
-                    base_volume = item_mods[2]
+                    max_volume = item_mods[2]
 
                     ends = datetime.now() + timedelta(seconds=grow_time)
                     dies = ends + timedelta(seconds=collect_time)
-                    amount = base_volume * plant.fields_used
+                    amount = random.randint(
+                        plant.item.amount * plant.fields_used, max_volume * plant.fields_used
+                    )
 
                     update_rows.append((ends, dies, amount, plant.id))
                     to_reward.append((plant.item.id, plant.amount))
@@ -530,9 +530,7 @@ class Farm(commands.Cog):
 
                 fmt = fmt[:-2] + "** \ud83d\ude10"
 
-            fmt += (
-                f"\n\nAnd you received: **+{xp_gain} XP** {self.bot.xp_emoji}"
-            )
+            fmt += f"\n\nAnd you received: **+{xp_gain} XP** {self.bot.xp_emoji}"
 
             embed = embeds.success_embed(
                 title="You harvested your farm! Awesome!",
@@ -608,10 +606,19 @@ class Farm(commands.Cog):
         item_mods = await modifications.get_item_mods(ctx, item)
         grow_time = item_mods[0]
         collect_time = item_mods[1]
-        base_volume = item_mods[2]
+        max_volume = item_mods[2]
 
         total_cost = tiles * item.gold_price
-        total_items = tiles * base_volume
+        total_items_min = tiles * item.amount
+        total_items_max = tiles * max_volume
+        total_items = random.randint(total_items_min, total_items_max)
+
+        # Don't show the actual amount of items that will be planted
+        # if modifications are applied
+        if total_items_min != total_items_max:
+            total_items_fmt = f"{total_items_min} - {total_items_max}"
+        else:
+            total_items_fmt = total_items_min
 
         embed = embeds.prompt_embed(
             title=(
@@ -638,10 +645,10 @@ class Farm(commands.Cog):
 
         if isinstance(item, game_items.ReplantableItem):
             grow_info = (
-                f"{total_items}x {item.full_name} ({item.iterations} times)"
+                f"{total_items_fmt}x {item.full_name} ({item.iterations} times)"
             )
         else:
-            grow_info = f"{total_items}x {item.full_name}"
+            grow_info = f"{total_items_fmt}x {item.full_name}"
 
         grow_time_str = time.seconds_to_time(grow_time)
         coll_time_str = time.seconds_to_time(collect_time)

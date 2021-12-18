@@ -940,7 +940,7 @@ class Profile(commands.Cog):
                     harv_time = f"\ud83e\uddec {fmt}"
                 if vol_mod:
                     new_vol = modifications.get_volume(item, vol_mod)
-                    volume = f"\ud83e\uddec {new_vol}"
+                    volume = f"\ud83e\uddec {volume} - {new_vol}"
 
                 embed.set_footer(
                     text=(
