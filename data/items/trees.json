@@ -60,7 +60,7 @@
           "level":20,
           "emoji":"\ud83c\udf4b",
           "name":"lemons",
-          "grow_time":8640,
+          "grow_time":8400,
           "gold_price":3000,
           "amount":34,
           "iterations":3,

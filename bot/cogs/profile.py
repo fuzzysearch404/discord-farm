@@ -464,7 +464,7 @@ class Profile(commands.Cog):
         gold_reward, gems_reward = 0, 0
         items_won = []
 
-        base_growables_multiplier = int(user_level / 5) + 1
+        base_growables_multiplier = int(user_level / 4) + 1
 
         # This time we just hardcode this all in.
         # Gold chest
@@ -496,7 +496,7 @@ class Profile(commands.Cog):
             for _ in range(amount):
                 items = ctx.items.get_random_items(
                     user_level,
-                    extra_luck=0.08,
+                    extra_luck=0.188,
                     growables_multiplier=base_growables_multiplier,
                     products=False,
                     total_draws=random.randint(1, 2)
@@ -514,14 +514,14 @@ class Profile(commands.Cog):
                 items = ctx.items.get_random_items(
                     user_level,
                     extra_luck=0.333,
-                    growables_multiplier=base_growables_multiplier + 1,
+                    growables_multiplier=base_growables_multiplier + 4,
                     total_draws=random.randint(1, 3)
                 )
                 items_won.extend(items)
 
                 if not random.randint(0, 4):
-                    min_gold = 4 * user_level
-                    max_gold = 8 * user_level
+                    min_gold = 5 * user_level
+                    max_gold = 12 * user_level
 
                     gold_reward += random.randint(min_gold, max_gold)
         # Epic
@@ -532,16 +532,16 @@ class Profile(commands.Cog):
 
                 items = ctx.items.get_random_items(
                     user_level,
-                    extra_luck=0.655,
-                    growables_multiplier=base_growables_multiplier + 5,
-                    products_multiplier=2,
-                    total_draws=random.randint(2, 4)
+                    extra_luck=0.722,
+                    growables_multiplier=base_growables_multiplier + 10,
+                    products_multiplier=3,
+                    total_draws=random.randint(3, 5)
                 )
                 items_won.extend(items)
 
                 if bool(random.getrandbits(1)):
-                    min_gold = 8 * user_level
-                    max_gold = 15 * user_level
+                    min_gold = 10 * user_level
+                    max_gold = 17 * user_level
 
                     gold_reward += random.randint(min_gold, max_gold)
         # Legendary
@@ -553,14 +553,14 @@ class Profile(commands.Cog):
                 items = ctx.items.get_random_items(
                     user_level,
                     extra_luck=1,
-                    growables_multiplier=base_growables_multiplier + 8,
-                    products_multiplier=3,
-                    total_draws=random.randint(3, 5)
+                    growables_multiplier=base_growables_multiplier + 18,
+                    products_multiplier=5,
+                    total_draws=random.randint(4, 7)
                 )
                 items_won.extend(items)
 
-                min_gold = 10 * user_level
-                max_gold = 30 * user_level
+                min_gold = 15 * user_level
+                max_gold = 35 * user_level
 
                 if not random.randint(0, 4):
                     min_gold += 20 * user_level
@@ -717,7 +717,7 @@ class Profile(commands.Cog):
             1002: 100.0,  # Uncommon
             1003: 65.0,  # Rare
             1004: 20.0,  # Epic
-            1005: 2.0  # Legendary
+            1005: 4.0  # Legendary
         }
 
         chest = random.choices(
@@ -820,11 +820,12 @@ class Profile(commands.Cog):
             )
         else:
             chests_and_rarities = {
-                1000: 15.0,  # Gold
+                1000: 25.0,  # Gold
                 1001: 120.0,  # Common
                 1002: 75.0,  # Uncommon
-                1003: 20.0,  # Rare
-                1004: 0.5  # Epic
+                1003: 35.0,  # Rare
+                1004: 3.5,  # Epic
+                1005: 0.25  # Legendary
             }
 
             chest = random.choices(

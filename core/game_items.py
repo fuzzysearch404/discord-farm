@@ -32,14 +32,14 @@ REPLANTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 265
 REPLANTABLE_GOLD_GAIN_PER_HOUR_LONG = 185
 REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 130
 
-CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT = 275
-CRAFTABLE_GOLD_GAIN_PER_HOUR_SHORT = 225
-CRAFTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 160
-CRAFTABLE_GOLD_GAIN_PER_HOUR_LONG = 110
-CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 60
+CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT = 1500
+CRAFTABLE_GOLD_GAIN_PER_HOUR_SHORT = 950
+CRAFTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 465
+CRAFTABLE_GOLD_GAIN_PER_HOUR_LONG = 270
+CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 155
 
 GROWABLE_XP_GAIN_PER_HOUR = 200
-CRAFTABLE_XP_GAIN_PER_HOUR = 350
+CRAFTABLE_XP_GAIN_PER_HOUR = 1000
 
 # 10% discount
 BOOST_THREE_DAYS_DISCOUNT = 0.10
@@ -275,7 +275,8 @@ class Product(GameItem, SellableItem, MarketItem):
 
         for item_and_amount in self.made_from:
             if isinstance(item_and_amount.item, Product):
-                value += item_and_amount.item._calculate_total_value()
+                value += item_and_amount.item._calculate_total_value() \
+                    * item_and_amount.amount
             else:
                 value += \
                     item_and_amount.item.max_market_price \
@@ -568,11 +569,13 @@ class ItemPool:
             if isinstance(item, PlantableItem):
                 gold_reward = item.gold_reward
                 if gold_reward <= 10:
-                    min, max = 5, 16
+                    min, max = 5, 14
+                elif gold_reward <= 30:
+                    min, max = 3, 8
                 elif gold_reward <= 50:
-                    min, max = 3, 10
+                    min, max = 2, 6
                 else:
-                    min, max = 2, 5
+                    min, max = 1, 3
 
                 min *= growables_multiplier
                 max *= growables_multiplier

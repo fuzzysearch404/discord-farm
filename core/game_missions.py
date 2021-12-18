@@ -59,7 +59,7 @@ class BusinessMission:
         elif user_level < 15:
             max_requests, max_products_req = 3, 1
         elif user_level < 20:
-            max_requests, max_products_req = 3, 2
+            max_requests, max_products_req = 3, 1
         elif user_level < 25:
             max_requests, max_products_req = 3, 2
         else:
@@ -86,7 +86,7 @@ class BusinessMission:
                 user_level=user_level,
                 extra_luck=0.82,
                 total_draws=product_req_amount,
-                products_multiplier=int(user_level / 10) or 1,
+                products_multiplier=int(user_level / 12) or 1,
                 growables=False,
                 products=True,
                 specials=False
@@ -97,7 +97,7 @@ class BusinessMission:
         if request_amount > 0:
             growables = ctx.items.get_random_items(
                 user_level=user_level,
-                extra_luck=0.82,
+                extra_luck=0.62,
                 total_draws=request_amount,
                 growables_multiplier=multiplier,
                 growables=True,
@@ -126,9 +126,9 @@ class BusinessMission:
                 1000: 450.0,  # Gold
                 1001: 1700.0,  # Common
                 1002: 950.0,  # Uncommon
-                1003: 350.0,  # Rare
-                1004: 100.0,  # Epic
-                1005: 1.8  # Legendary
+                1003: 400.0,  # Rare
+                1004: 125.0,  # Epic
+                1005: 15.0  # Legendary
             }
 
             chest_id = random.choices(
