@@ -128,7 +128,7 @@ class Shop(commands.Cog):
     Welcome to the shop! Here you can view the prices of plants,
     upgrade your farm, buy boosters and sell your items to the
     market. Market prices are changing every hour, so be
-    responsible about your selling things here.
+    responsible about selling your things here.
     """
     def __init__(self, bot) -> None:
         super().__init__()
@@ -159,7 +159,7 @@ class Shop(commands.Cog):
                 "\ud83d\udc4b Hey there fellow farmer! "
                 "\ud83d\udc68\u200d\ud83d\udcbb We are looking forward "
                 "to do business with you. Please note that our deals are "
-                "changing every hour. So what would you like to sell?"
+                "changing every hour. So - what would you like to sell?"
             ),
             colour=discord.Color.from_rgb(255, 149, 0)
         )
@@ -492,7 +492,7 @@ class Shop(commands.Cog):
             title="\u2b50 Upgrades shop",
             description=(
                 "\u2699\ufe0f Purchase upgrades to make your game "
-                "progress faster! "
+                "progression faster! "
             ),
             color=discord.Color.from_rgb(255, 162, 0)
         )
