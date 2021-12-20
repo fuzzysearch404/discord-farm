@@ -114,7 +114,8 @@ class Lab(commands.Cog):
 
         query = """
                 SELECT * FROM modifications
-                WHERE user_id = $1;
+                WHERE user_id = $1
+                ORDER BY item_id;
                 """
 
         async with ctx.acquire() as conn:
