@@ -71,7 +71,6 @@ class BotClient(commands.AutoShardedBot):
         intents = discord.Intents.none()
         intents.guilds = True
         intents.guild_messages = True
-        intents.guild_reactions = True
 
         super().__init__(
             intents=intents,
