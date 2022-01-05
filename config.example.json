@@ -32,8 +32,7 @@
             "bot.cogs.shop"
         ],
         "prefix" : "%",
-        "activity-status" : "%help",
-        "ban-duration": 86400
+        "activity-status" : "%help"
     },
     "ipc" : {
         "bot-id" : 526436949481881610,

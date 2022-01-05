@@ -10,7 +10,6 @@ import aiohttp
 import aioredis
 import asyncpg
 import discord
-from collections import Counter
 from logging.handlers import RotatingFileHandler
 from discord.ext import commands
 
@@ -75,7 +74,6 @@ class BotClient(commands.AutoShardedBot):
         super().__init__(
             intents=intents,
             chunk_guilds_at_startup=False,
-            max_messages=7500,
             command_prefix=self.get_custom_prefix,
             case_insensitive=True,
             strip_after_prefix=True,
@@ -83,22 +81,7 @@ class BotClient(commands.AutoShardedBot):
             loop=loop
         )
 
-        self.global_cooldown = commands.CooldownMapping.from_cooldown(
-            4, 9, commands.BucketType.user
-        )
-        self.spam_control = commands.CooldownMapping.from_cooldown(
-            10, 12.0, commands.BucketType.user
-        )
-        self._auto_spam_count = Counter()
-        self.add_check(self.check_global_cooldown, call_once=True)
-
-        self.add_check(
-            commands.bot_has_permissions(
-                read_message_history=True,
-                embed_links=True,
-                add_reactions=True
-            ).predicate
-        )
+        self.add_check(commands.bot_has_permissions(embed_links=True).predicate)
 
         for extension in self.config['bot']['initial-cogs']:
             try:
@@ -150,10 +133,7 @@ class BotClient(commands.AutoShardedBot):
         return self.guard_mode > datetime.datetime.now()
 
     def enable_field_guard(self, seconds: int) -> datetime.datetime:
-        self.guard_mode = datetime.datetime.now() + datetime.timedelta(
-            seconds=seconds
-        )
-
+        self.guard_mode = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
         self.log.info(f"Enabled field guard until: {self.guard_mode}")
 
         return self.guard_mode
@@ -170,9 +150,7 @@ class BotClient(commands.AutoShardedBot):
         else:
             log.setLevel(logging.INFO)
 
-        log_formatter = logging.Formatter(
-            "[%(asctime)s %(name)s/%(levelname)s] %(message)s"
-        )
+        log_formatter = logging.Formatter("[%(asctime)s %(name)s/%(levelname)s] %(message)s")
         file_handler = RotatingFileHandler(
             f"cluster-{self.cluster_name}.log",
             encoding="utf-8",
@@ -216,10 +194,7 @@ class BotClient(commands.AutoShardedBot):
         embed: discord.Embed = None
     ) -> None:
         async with aiohttp.ClientSession() as session:
-            webhook = discord.Webhook.from_url(
-                self._log_webhook,
-                session=session
-            )
+            webhook = discord.Webhook.from_url(self._log_webhook, session=session)
 
             await webhook.send(
                 f"**[{self.cluster_name}]** " + content,
@@ -267,13 +242,6 @@ class BotClient(commands.AutoShardedBot):
             return
         elif isinstance(error, exceptions.FarmException):
             await ctx.reply(f"\u274c {str(error)}")
-        elif isinstance(error, exceptions.GlobalCooldownException):
-            return await ctx.reply(
-                "\u23f2\ufe0f You are typing those commands way too fast! "
-                f"Try again in: **{int(error.retry_after)} seconds**. "
-                "Intensive command spamming might get you temporarily banned "
-                "from using the bot itself."
-            )
         elif isinstance(error, commands.errors.CommandOnCooldown):
             return await ctx.reply(
                 "\u23f0 This command is on cooldown for:  "
@@ -312,18 +280,14 @@ class BotClient(commands.AutoShardedBot):
             original = error.original
             if not isinstance(original, discord.HTTPException):
                 exc_info = (type(original), original, original.__traceback__)
-                self.log.error(
-                    f"In {ctx.command.qualified_name}:", exc_info=exc_info
-                )
+                self.log.error(f"In {ctx.command.qualified_name}:", exc_info=exc_info)
         elif isinstance(error, commands.errors.ArgumentParsingError):
             return await ctx.reply(error)
         elif isinstance(error, commands.errors.CheckFailure):
             pass
         else:
             exc_info = (type(error), error, error.__traceback__)
-            self.log.error(
-                f"In {ctx.command.qualified_name}:", exc_info=exc_info
-            )
+            self.log.error(f"In {ctx.command.qualified_name}:", exc_info=exc_info)
 
     async def on_guild_join(self, guild) -> None:
         message = (
@@ -334,11 +298,7 @@ class BotClient(commands.AutoShardedBot):
         )
 
         txt_chans = guild.text_channels
-        channels = list(
-            filter(
-                lambda x: x.permissions_for(guild.me).send_messages, txt_chans
-            )
-        )
+        channels = list(filter(lambda x: x.permissions_for(guild.me).send_messages, txt_chans))
 
         if channels:
             await channels[0].send(message)
@@ -353,11 +313,9 @@ class BotClient(commands.AutoShardedBot):
     async def on_guild_remove(self, guild) -> None:
         async with self.db_pool.acquire() as conn:
             query = "DELETE FROM store WHERE guild_id = $1;"
-
             await conn.execute(query, guild.id)
 
             query = "DELETE FROM guilds WHERE guild_id = $1;"
-
             await conn.execute(query, guild.id)
 
         try:
@@ -383,71 +341,11 @@ class BotClient(commands.AutoShardedBot):
         except Exception as e:
             self.log.exception(f'Error occured while executing commands: {e}')
 
-    async def check_global_cooldown(self, ctx) -> bool:
-        current = ctx.message.created_at.replace(
-            tzinfo=datetime.timezone.utc
-        ).timestamp()
-        bucket = self.global_cooldown.get_bucket(ctx.message)
-        retry_after = bucket.update_rate_limit(current)
-
-        if retry_after and not await self.is_owner(ctx.author):
-            raise exceptions.GlobalCooldownException(
-                ctx, retry_after, commands.BucketType.user
-            )
-
-        return True
-
-    async def log_spammer(self, message, banned=False):
-        if not banned:
-            await self.log_to_discord(
-                f"\ud83d\udfe7 {message.author} (`{message.author.id}`) "
-                f"Mass spam: {message.clean_content[:200]}"
-            )
-        else:
-            await self.log_to_discord(
-                f"\ud83d\udfe5 {message.author} (`{message.author.id}`) "
-                f"Mass spam ban: {message.clean_content[:200]}"
-            )
-
     async def process_commands(self, message) -> None:
         ctx = await self.get_context(message, cls=Context)
 
         if ctx.command is None:
             return
-
-        author_id = message.author.id
-
-        # Check if user is banned
-        banned = await self.redis.execute_command("GET", f"ban:{author_id}")
-        if banned:
-            return
-
-        # Check mass commands spam
-        current = message.created_at.replace(
-            tzinfo=datetime.timezone.utc
-        ).timestamp()
-
-        bucket = self.spam_control.get_bucket(message)
-        retry_after = bucket.update_rate_limit(current)
-
-        if retry_after and not await self.is_owner(message.author):
-            self._auto_spam_count[author_id] += 1
-
-            if self._auto_spam_count[author_id] >= 3:
-                await self.redis.execute_command(
-                    "SET", f"ban:{author_id}", 1,
-                    "EX", self.config['bot']['ban-duration']
-                )
-                del self._auto_spam_count[author_id]
-
-                await self.log_spammer(message, banned=True)
-                self.log.info(f"Banned user: {author_id}")
-            else:
-                await self.log_spammer(message)
-
-            return
-        else:
-            self._auto_spam_count.pop(author_id, None)
 
         if not message.channel.permissions_for(message.guild.me).send_messages:
             return
@@ -464,10 +362,7 @@ class BotClient(commands.AutoShardedBot):
         return content.strip("` \n")
 
     async def eval_code(self, code: str, ctx=None) -> str:
-        env = {
-            "bot": self,
-            "ctx": ctx
-        }
+        env = {"bot": self, "ctx": ctx}
 
         env.update(globals())
 
