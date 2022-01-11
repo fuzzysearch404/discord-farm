@@ -15,15 +15,12 @@ class Account(commands.Cog):
     def __init__(self, bot) -> None:
         super().__init__()
         self.bot = bot
-        
+
     @property
     def help_meta(self) -> tuple:
         return ("\ud83d\udc64", "Manage your game account")
 
-    async def send_disable_reminders_to_ipc(
-        self,
-        user_id: int
-    ) -> None:
+    async def send_disable_reminders_to_ipc(self, user_id: int) -> None:
         cluster_cog = self.bot.get_cog("Clusters")
         if not cluster_cog:
             self.bot.log.critical("Reminder failed: Cluster cog not loaded!")
@@ -31,10 +28,7 @@ class Account(commands.Cog):
 
         await cluster_cog.send_disable_reminders_message(user_id)
 
-    async def send_enable_reminders_to_ipc(
-        self,
-        user_id: int
-    ) -> None:
+    async def send_enable_reminders_to_ipc(self, user_id: int) -> None:
         cluster_cog = self.bot.get_cog("Clusters")
         if not cluster_cog:
             self.bot.log.critical("Reminder failed: Cluster cog not loaded!")
@@ -42,10 +36,7 @@ class Account(commands.Cog):
 
         await cluster_cog.send_enable_reminders_message(user_id)
 
-    async def send_delete_reminders_to_ipc(
-        self,
-        user_id: int
-    ) -> None:
+    async def send_delete_reminders_to_ipc(self, user_id: int) -> None:
         cluster_cog = self.bot.get_cog("Clusters")
         if not cluster_cog:
             self.bot.log.critical("Reminder failed: Cluster cog not loaded!")
@@ -56,7 +47,7 @@ class Account(commands.Cog):
     @commands.command()
     async def tutorial(self, ctx):
         """
-        \ud83d\udcd6 Some quickstart tips for new players.
+        \ud83d\udcd6 Some quickstart tips for new players
         """
         embed = embeds.congratulations_embed(
             title="Welcome to your new farm! \ud83e\udd73",
@@ -67,7 +58,7 @@ class Account(commands.Cog):
                 "explain only the very basics to get you started. The rest "
                 "of the stuff you will have to learn on your own...\""
                 "\u261d\ufe0f\n\n\u231bWant to read this again later? "
-                f"Sure, just type **{ctx.prefix}tutorial**"
+                "Sure, just type **/tutorial**"
             ),
             ctx=ctx
         )
@@ -76,10 +67,10 @@ class Account(commands.Cog):
             name="\ud83c\udfe1 Profile",
             value=(
                 "The most important profile commands for beginners are:\n"
-                f"**{ctx.prefix}profile** - Your profile\n"
-                f"**{ctx.prefix}allitems** - Items you have unlocked\n"
-                f"**{ctx.prefix}inventory** - Your inventory\n"
-                f"**{ctx.prefix}item** - To view some item's properties"
+                "**/profile** - Your profile\n"
+                "**/allitems** - Items you have unlocked\n"
+                "**/inventory** - Your inventory\n"
+                "**/item** - To view some items properties"
             )
         )
         embed.add_field(
@@ -88,10 +79,9 @@ class Account(commands.Cog):
                 "Your farm has a limited space to plant items in.\n"
                 "Right now it is 2 space tiles, but you will be able "
                 "to increase it later.\nThis means, that you can plant "
-                "2 items at a time.\nYou have unlocked: \ud83e\udd6c Lettuce. "
-                f"\nPlant 2 lettuce items with the command: **{ctx.prefix}"
-                "plant lettuce 2**.\nTo view your farm, check out command "
-                f"**{ctx.prefix}farm**"
+                "2 items at a time.\nYou have unlocked: \ud83e\udd6c Lettuce.\n"
+                "Plant 2 lettuce items with the command: **/plant lettuce 2**.\n"
+                "To view your farm, check out command **/farm**"
             )
         )
         embed.add_field(
@@ -103,31 +93,30 @@ class Account(commands.Cog):
                 "minutes, and is harvestable for 3 minutes after those "
                 "2 minutes of growing.\nIf you don't harvest your items in "
                 "time - they get rotten (lost forever).\nTo monitor your "
-                f"farm, check out command: **{ctx.prefix}farm** frequently. "
+                "farm, check out command: **/farm** frequently."
             )
         )
         embed.add_field(
             name="\ud83d\ude9c Farm: Harvesting items",
             value=(
                 "When it is finally time to harvest, just use the "
-                f"**{ctx.prefix}harvest** command. All items will be "
-                f"automatically collected to your **{ctx.prefix}invenotory**\n"
+                "**/harvest** command. All of the ready items will be "
+                "automatically collected to your **/inventory**\n"
                 "If some of your items get rotten - they are going to be "
-                "discarded with this command, to free up your farm field space"
+                "discarded with this command, to free up your farm field space."
             )
         )
         embed.add_field(
             name=f"{ctx.bot.gold_emoji} Earning gold coins",
             value=(
-                "You got the harvest? Nice!\nNow it is time to earn some coins"
-                ".\nThere are multiple ways for doing this, but for now I "
+                "You got the harvest? Nice!\nNow it is time to earn some coins.\n"
+                "There are multiple ways for doing this, but for now, I "
                 "will tell you about two of those:\n1) Selling items to "
                 "market - quick way to turn your items into coins BUT the "
-                "market is changing every hour, so you might not get any "
-                "profit at all.\nExample for selling 20x lettuce: **"
-                f"{ctx.prefix}sell lettuce 20**\n2) Doing missions - these "
-                "always get you some nice rewards, but they might be harder "
-                f"to complete.\nCheck them out: **{ctx.prefix}missions**."
+                "market prices are changing every hour, so you might not get any "
+                "profit at all.\nExample for selling 20x lettuce: **/sell lettuce 20**\n"
+                "2) Doing missions - these always get you some nice rewards, but "
+                "they might be harder to complete.\nCheck them out: **/missions**"
             )
         )
         embed.add_field(
@@ -135,16 +124,15 @@ class Account(commands.Cog):
             value=(
                 "These are just the very, very basics to get you started!\n"
                 "There is so much more to do and explore!\n"
-                "**Check out all of the bot's features with: "
-                f"{ctx.prefix}help**\nFor command usage examples and more "
-                f"help, do **{ctx.prefix}help** `command_name`, where "
-                "`command_name` is the name of the command you need help with."
+                "**Check out all of the bot's features with: /help**\n"
+                "For command usage examples and more help, do **/help** `command_name`, "
+                "where `command_name` is the name of the command you need help with."
             )
         )
 
         await ctx.reply(embed=embed)
 
-    @commands.command(aliases=["start"])
+    @commands.command()
     @checks.avoid_maintenance()
     async def register(self, ctx):
         """
@@ -167,9 +155,7 @@ class Account(commands.Cog):
                             "There's always lots of work to do! "
                             "\ud83d\udc68\u200d\ud83c\udf3e"
                         ),
-                        footer=(
-                            "Maybe plant some lettuce? Carrots? \ud83e\udd14"
-                        ),
+                        footer="Maybe plant some lettuce? Carrots? \ud83e\udd14",
                         ctx=ctx
                     )
                 )
@@ -178,27 +164,26 @@ class Account(commands.Cog):
 
         await self.tutorial.invoke(ctx)
 
-    @commands.command(aliases=["resetaccount"])
+    @commands.command()
     @checks.has_account()
     @checks.avoid_maintenance()
     async def deleteaccount(self, ctx):
         """
-        \u274c Deletes your farm and ALL your game data.
+        \u274c Deletes your farm and ALL your game data
 
         There is no way to get your farm back after using this command,
         so be careful with your decision.
-        However, you can start a new game any time with the
-        **{prefix}register** command.
+        However, you can start a new game any time with the **/register** command.
         """
         embed = embeds.prompt_embed(
             title="Woah. Are you really, really sure about that?",
             text=(
-                "**This is going to delete ALL your current progress** "
-                "in game, because then we are transfering your farm to Mary "
+                "**This is going to delete ALL of your current progress in game**, "
+                "because then we will be transfering your farm to Mary "
                 "the pig \ud83d\udc37, and knowing that she is very greedy "
                 "and she is never going to give it back to you, "
-                "means that your farm is going to be lost FOREVER!"
-                "\nBut you can start over again fresh any time... \ud83d\ude43"
+                "means that your farm is going to be lost FOREVER!\n"
+                "But you can start over again fresh any time... \ud83d\ude43"
             ),
             ctx=ctx
         )
@@ -208,7 +193,7 @@ class Account(commands.Cog):
             style=discord.ButtonStyle.primary,
             emoji="\u267b\ufe0f",
             label="Delete account forever",
-            deny_label="Nevermind, I will take a break"
+            deny_label="Nevermind, I will just take a break..."
         )
         confirm, msg = await prompt.prompt(ctx)
 
@@ -216,17 +201,16 @@ class Account(commands.Cog):
             return
 
         await ctx.users.delete_user(ctx.author.id)
+        # Don't bother the user with remaining remiders
         await self.send_delete_reminders_to_ipc(ctx.author.id)
 
         await msg.edit(
             embed=embeds.success_embed(
-                title=(
-                    f"Goodbye, {ctx.author}! Thanks for playing! \ud83d\udc4b"
-                ),
+                title=f"Goodbye, {ctx.author.name}! Thanks for playing! \ud83d\udc4b",
                 text=(
                     "Your account has been deleted! "
                     "If you ever consider playing again, then just type "
-                    f"**{ctx.prefix}register** again and you are ready to go! "
+                    "**/register** again and you are ready to go! "
                     "Take care! Bye for now! :)"
                 ),
                 footer="We are going to miss you!",
@@ -235,36 +219,38 @@ class Account(commands.Cog):
             view=None
         )
 
-    @commands.command(aliases=["dms"])
+    @commands.command()
     @checks.has_account()
     @checks.avoid_maintenance()
-    async def notifications(self, ctx):
+    async def notifications(
+        self,
+        ctx,
+        enable: bool = commands.Option(
+            description="Set to True if you want to receive notifications, otherwise False"
+        )
+    ):
         """
-        \ud83d\udce7 Disables or reenables notifications.
+        \ud83d\udce7 Disables or reenables notifications
 
         Allows to disable or reenable various notifications e.g.,
-        notifications when someone accepts trade with you or
-        your harvest is ready to be collected.
+        private messages, when someone accepts trade with you, or
+        chat mentions when your harvest is ready to be collected.
         Please note that the some notifications might not
-        get delivered, so don't fully rely on them.
+        get delivered, so please don't fully rely on these.
         """
-        user = ctx.user_data
-        user.notifications = not user.notifications
+        ctx.user_data.notifications = enable
+        await ctx.users.update_user(ctx.user_data)
 
-        await ctx.users.update_user(user)
-
-        if not user.notifications:
+        if not enable:
             embed = embeds.success_embed(
                 title="Game notifications disabled",
                 text=(
                     "\u26a0\ufe0f **It might take a few minutes for your new "
                     "notifcation settings to take effect**.\n"
-                    "Okay, so: I told the *mail man* **not to "
-                    "bother you** with all those private messages \ud83d\udced"
+                    "\ud83d\udced Okay, so: I told the *mail man* **not to "
+                    "bother you** with all those messages."
                 ),
-                footer=(
-                    "He then said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74"
-                ),
+                footer="He then said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74",
                 ctx=ctx
             )
             await self.send_disable_reminders_to_ipc(ctx.author.id)
@@ -274,12 +260,10 @@ class Account(commands.Cog):
                 text=(
                     "\u26a0\ufe0f **It might take a few minutes for your new "
                     "notifcation settings to take effect**.\n"
-                    "Okay, so: I told the *mail man* **to "
-                    "send you** private messages about the game \ud83d\udcec"
+                    "\ud83d\udcec Okay, so: I told the *mail man* **to "
+                    "send you** messages about the game."
                 ),
-                footer=(
-                    "He then said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74"
-                ),
+                footer="He then said: \"Ehhh.. brrrhh.. Will do!\" \ud83d\udc74",
                 ctx=ctx
             )
             await self.send_enable_reminders_to_ipc(ctx.author.id)
