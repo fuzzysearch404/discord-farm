@@ -55,22 +55,14 @@ class HelpCommand(commands.MinimalHelpCommand):
     def __init__(self):
         super().__init__(
             verify_checks=False,
-            command_attrs={
-                "help": "Shows help about a command, or a category",
-                "aliases": ["commands", "comands", "cmd", "helpme"]
-            }
+            command_attrs={"help": "Shows help about a command, or a category"}
         )
-        self.description = ""
-        self.all_command_infos_by_category = {}
 
     def get_command_signature(self, command):
         if command.full_parent_name:
-            cmd = (
-                f"**{self.context.prefix}{command.full_parent_name} "
-                f"{command.name}**"
-            )
+            cmd = f"**/{command.full_parent_name} {command.name}**"
         else:
-            cmd = f"**{self.context.prefix}{command.name}**"
+            cmd = f"**/{command.name}**"
 
         if command.signature:
             cmd += f" `{command.signature}`"
@@ -89,15 +81,10 @@ class HelpCommand(commands.MinimalHelpCommand):
         ctx = self.context
         bot = ctx.bot
 
-        note = self.get_opening_note()
-        if note:
-            self.description = note
-
-        filtered = await self.filter_commands(
-            bot.commands, sort=True, key=self.get_category
-        )
+        filtered = await self.filter_commands(bot.commands, sort=True, key=self.get_category)
         to_iterate = itertools.groupby(filtered, key=self.get_category)
 
+        all_command_infos_by_category = {}
         for category, cmds in to_iterate:
             if self.sort_commands:
                 sorted_commands = sorted(cmds, key=lambda c: c.name)
@@ -107,17 +94,20 @@ class HelpCommand(commands.MinimalHelpCommand):
             if len(sorted_commands) > 0:
                 cog = sorted_commands[0].cog
 
-                self.all_command_infos_by_category[cog] = [
-                    CommandInfo(f"{command.name}", command.short_doc)
+                all_command_infos_by_category[cog] = [
+                    CommandInfo(f"/{command.name}", command.short_doc)
                     for command in sorted_commands
                 ]
 
-        await self.send_command_pages()
-
-    # For general help message, we create custom help message
-    async def send_command_pages(self):
         opts_and_sources = {}
-        for cog, infos in self.all_command_infos_by_category.items():
+        for cog, infos in all_command_infos_by_category.items():
+            try:
+                # Hide cog if it has hide_in_help_command property set to True
+                if cog is not None and cog.hide_in_help_command:
+                    continue
+            except AttributeError:
+                pass
+
             name = cog.qualified_name if cog else f"\u200b{self.no_category}"
 
             try:
@@ -131,14 +121,16 @@ class HelpCommand(commands.MinimalHelpCommand):
                 description=short_desc
             )
 
-            if cog and cog.description:
-                description = self.description + "\n\n" + cog.description
-            else:
-                description = self.description
+            note = self.get_opening_note()
+            if not note:
+                note = ""
 
-            opts_and_sources[opt] = HelpCommandsMessageSource(
-                description, infos
-            )
+            if cog and cog.description:
+                description = note + "\n\n" + cog.description
+            else:
+                description = note
+
+            opts_and_sources[opt] = HelpCommandsMessageSource(description, infos)
 
         paginator = views.SelectButtonPaginatorView(
             opts_and_sources,
@@ -149,17 +141,12 @@ class HelpCommand(commands.MinimalHelpCommand):
 
     # For command, groups, and cog help, rely on the default help command impl.
     async def send_pages(self):
-        # Replace prefix with invoked prefix
-        new_pages = []
-
-        for page in self.paginator.pages:
-            new_pages.append(page.replace("{prefix}", self.context.prefix))
-
-        paginator = views.ButtonPaginatorView(
-            source=HelpMessageSource(new_pages)
-        )
+        paginator = views.ButtonPaginatorView(source=HelpMessageSource(self.paginator.pages))
 
         await paginator.start(self.context)
+
+    async def send_error_message(self, error):
+        await self.context.reply("\u274c " + error, ephemeral=True)
 
 
 class Info(commands.Cog, name="Information"):

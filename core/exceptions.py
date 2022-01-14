@@ -1,13 +1,13 @@
 from discord.ext import commands
 
 
-class GameIsInMaintenance(commands.CheckFailure):
-    """Exception raised when game is in maintenance."""
+class FarmException(commands.CommandError):
+    """Base exception class"""
     pass
 
 
-class FarmException(commands.CommandError):
-    """Base exception class"""
+class GameIsInMaintenance(FarmException):
+    """Exception raised when game is in maintenance."""
     pass
 
 

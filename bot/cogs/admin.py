@@ -1,24 +1,38 @@
 import io
-import copy
 import time
 import traceback
 import discord
 from contextlib import suppress
 from discord.ext import commands
 
+from core import exceptions
 
-class Admin(commands.Cog, command_attrs={"hidden": True}):
+
+DEVELOPEMENT_GUILD_IDS = (697351647826935839, )
+
+
+class Admin(commands.Cog):
+    """
+    Developer only commands for testing purposes.
+    """
 
     def __init__(self, bot) -> None:
         super().__init__()
         self.bot = bot
 
-    async def cog_check(self, ctx) -> None:
-        return await self.bot.is_owner(ctx.author)
+    async def cog_check(self, ctx) -> bool:
+        if await self.bot.is_owner(ctx.author):
+            return True
 
-    @commands.command(name="eval")
+        raise exceptions.FarmException("Sorry, this is a bot owner-only command.")
+
+    @property
+    def hide_in_help_command(self) -> bool:
+        return True
+
+    @commands.command(name="eval", slash_command_guilds=DEVELOPEMENT_GUILD_IDS)
     async def _eval(self, ctx, *, body: str):
-        """Evaluates Python code"""
+        """\ud83d\udd27 [Developer only] Evaluates Python code"""
         results = await self.bot.eval_code(body, ctx=ctx)
 
         if not results:
@@ -27,9 +41,9 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
 
         await ctx.reply(f"```py\n{results}\n```")
 
-    @commands.command()
+    @commands.command(slash_command_guilds=DEVELOPEMENT_GUILD_IDS)
     async def sql(self, ctx, *, query: str):
-        """Execute SQL"""
+        """\ud83d\udd27 [Developer only] Execute a SQL query"""
         query = self.bot.cleanup_code(query)
 
         is_multi = query.count(';') > 1
@@ -58,15 +72,13 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
 
         if len(fmt) > 2000:
             fp = io.BytesIO(fmt.encode("utf-8"))
-            await ctx.reply(
-                "Output too long...", file=discord.File(fp, "data.txt")
-            )
+            await ctx.reply("Output too long...", file=discord.File(fp, "data.txt"))
         else:
             await ctx.reply(fmt)
 
-    @commands.command()
+    @commands.command(slash_command_guilds=DEVELOPEMENT_GUILD_IDS)
     async def redis(self, ctx, *, query: str):
-        """Execute Redis command"""
+        """\ud83d\udd27 [Developer only] Execute a Redis command"""
         try:
             results = await ctx.redis.execute_command(query)
         except Exception as e:
@@ -80,25 +92,13 @@ class Admin(commands.Cog, command_attrs={"hidden": True}):
 
         if len(result_str) > 2000:
             fp = io.BytesIO(result_str.encode("utf-8"))
-            await ctx.reply(
-                "Output too long...", file=discord.File(fp, "data.txt")
-            )
+            await ctx.reply("Output too long...", file=discord.File(fp, "data.txt"))
         else:
             await ctx.reply(result_str)
 
-    @commands.command()
-    async def sudo(self, ctx, user: discord.User, *, command: str):
-        """Run a command as another user."""
-        message = copy.copy(ctx.message)
-        message.author = user
-        message.content = ctx.prefix + command
-        new_ctx = await self.bot.get_context(message, cls=type(ctx))
-
-        await self.bot.invoke(new_ctx)
-
-    @commands.command()
+    @commands.command(slash_command_guilds=DEVELOPEMENT_GUILD_IDS)
     async def uptime(self, ctx):
-        """Get instance uptime"""
+        """\ud83d\udd27 [Developer only] Get instance uptime"""
         await ctx.reply(self.bot.uptime)
 
 
