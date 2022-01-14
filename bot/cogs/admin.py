@@ -6,9 +6,7 @@ from contextlib import suppress
 from discord.ext import commands
 
 from core import exceptions
-
-
-DEVELOPEMENT_GUILD_IDS = (697351647826935839, )
+from core import static
 
 
 class Admin(commands.Cog):
@@ -30,7 +28,16 @@ class Admin(commands.Cog):
     def hide_in_help_command(self) -> bool:
         return True
 
-    @commands.command(name="eval", slash_command_guilds=DEVELOPEMENT_GUILD_IDS)
+    @commands.group(
+        name="run",
+        invoke_without_command=False,
+        slash_command_guilds=static.DEVELOPMENT_GUILD_IDS
+    )
+    async def run_group(self, ctx):
+        """\ud83d\udd27 [Developer only] Developer only commands for remote controls"""
+        pass
+
+    @run_group.command(name="eval")
     async def _eval(self, ctx, *, body: str):
         """\ud83d\udd27 [Developer only] Evaluates Python code"""
         results = await self.bot.eval_code(body, ctx=ctx)
@@ -41,7 +48,7 @@ class Admin(commands.Cog):
 
         await ctx.reply(f"```py\n{results}\n```")
 
-    @commands.command(slash_command_guilds=DEVELOPEMENT_GUILD_IDS)
+    @run_group.command()
     async def sql(self, ctx, *, query: str):
         """\ud83d\udd27 [Developer only] Execute a SQL query"""
         query = self.bot.cleanup_code(query)
@@ -76,7 +83,7 @@ class Admin(commands.Cog):
         else:
             await ctx.reply(fmt)
 
-    @commands.command(slash_command_guilds=DEVELOPEMENT_GUILD_IDS)
+    @run_group.command()
     async def redis(self, ctx, *, query: str):
         """\ud83d\udd27 [Developer only] Execute a Redis command"""
         try:
@@ -95,11 +102,6 @@ class Admin(commands.Cog):
             await ctx.reply("Output too long...", file=discord.File(fp, "data.txt"))
         else:
             await ctx.reply(result_str)
-
-    @commands.command(slash_command_guilds=DEVELOPEMENT_GUILD_IDS)
-    async def uptime(self, ctx):
-        """\ud83d\udd27 [Developer only] Get instance uptime"""
-        await ctx.reply(self.bot.uptime)
 
 
 def setup(bot) -> None:

@@ -1,11 +1,9 @@
 from discord.ext import commands
 
 from core import exceptions
+from core import static
 from .utils import converters
 from .utils import checks
-
-
-DEVELOPEMENT_GUILD_IDS = (697351647826935839, )
 
 
 class Beta(commands.Cog):
@@ -30,12 +28,18 @@ class Beta(commands.Cog):
     @commands.group(
         name="set",
         invoke_without_command=False,
-        slash_command_guilds=DEVELOPEMENT_GUILD_IDS
+        slash_command_guilds=static.DEVELOPMENT_GUILD_IDS
     )
-    async def beta_set(self, ctx):
+    async def set_group(self, ctx):
+        """\ud83d\udd27 [Beta only] Utility commands for quick account modifications"""
         pass
 
-    @beta_set.command(name="gold")
+    @set_group.group(name="units", invoke_without_command=False)
+    async def set_units_group(self, ctx):
+        """\ud83d\udd27 [Beta only] Utility commands for quick account modifications"""
+        pass
+
+    @set_units_group.command(name="gold")
     @checks.has_account()
     async def set_gold(self, ctx, gold: int):
         """\ud83d\udd27 [Beta only] Set the gold amount"""
@@ -44,7 +48,7 @@ class Beta(commands.Cog):
         await ctx.users.update_user(ctx.user_data)
         await ctx.reply(f"Gold set to {ctx.user_data.gold}")
 
-    @beta_set.command(name="gems")
+    @set_units_group.command(name="gems")
     @checks.has_account()
     async def set_gems(self, ctx, gems: int):
         """\ud83d\udd27 [Beta only] Set the gems amount"""
@@ -53,7 +57,7 @@ class Beta(commands.Cog):
         await ctx.users.update_user(ctx.user_data)
         await ctx.reply(f"Gems set to {ctx.user_data.gems}")
 
-    @beta_set.command(name="xp")
+    @set_units_group.command(name="xp")
     @checks.has_account()
     async def set_xp(self, ctx, xp: int):
         """\ud83d\udd27 [Beta only] Set the XP amount"""
@@ -64,7 +68,7 @@ class Beta(commands.Cog):
         await ctx.users.update_user(ctx.user_data)
         await ctx.reply(f"XP set to {ctx.user_data.xp} (level {ctx.user_data.level})")
 
-    @beta_set.command()
+    @set_units_group.command()
     @checks.has_account()
     async def farmsize(self, ctx, size: int):
         """\ud83d\udd27 [Beta only] Set the farm size"""
@@ -73,7 +77,7 @@ class Beta(commands.Cog):
         await ctx.users.update_user(ctx.user_data)
         await ctx.reply(f"Farm size set to {ctx.user_data.gold}")
 
-    @beta_set.command()
+    @set_units_group.command()
     @checks.has_account()
     async def factorysize(self, ctx, size: int):
         """\ud83d\udd27 [Beta only] Set the factory size"""
@@ -82,14 +86,19 @@ class Beta(commands.Cog):
         await ctx.users.update_user(ctx.user_data)
         await ctx.reply(f"Factory size set to {ctx.user_data.gold}")
 
-    @beta_set.command()
+    @set_group.group(name="items", invoke_without_command=False)
+    async def set_items_group(self, ctx):
+        """\ud83d\udd27 [Beta only] Utility commands for quick account modifications"""
+        pass
+
+    @set_items_group.command()
     @checks.has_account()
     async def getitem(self, ctx, item: converters.Item, amount: int):
         """\ud83d\udd27 [Beta only] Get game items"""
         await ctx.user_data.give_item(ctx, item.id, amount)
         await ctx.reply(f"Obtained {amount}x {item.full_name}")
 
-    @beta_set.command()
+    @set_items_group.command()
     @checks.has_account()
     async def getchest(self, ctx, item: converters.Chest, amount: int):
         """\ud83d\udd27 [Beta only] Get chests"""

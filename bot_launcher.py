@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import json
 import aiohttp
@@ -10,9 +9,7 @@ import signal
 
 from bot.bot import BotClient
 
-LOG_FORMATTER = logging.Formatter(
-    "[%(asctime)s %(name)s/%(levelname)s] %(message)s"
-)
+LOG_FORMATTER = logging.Formatter("[%(asctime)s %(name)s/%(levelname)s] %(message)s")
 log = logging.getLogger("Launcher")
 log.setLevel(logging.DEBUG)
 hdlr = logging.StreamHandler()
@@ -57,16 +54,13 @@ class Launcher:
         headers = {
             "Authorization": "Bot " + self._config['bot']['discord-token'],
             "User-Agent": (
-                f"Discord Farm Bot {self._config['bot']['version']}"
+                f"Discord Farm Bot {self._config['bot']['version']} "
                 "(https://github.com/fuzzysearch404/discord-farm/)"
             )
         }
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://discord.com/api/gateway/bot",
-                headers=headers
-            ) as response:
+            async with session.get("https://discord.com/api/gateway/bot", headers=headers) as response:
                 json_body = await response.json()
 
         if response.status != 200:
@@ -74,7 +68,7 @@ class Launcher:
             self.loop.stop()
 
         log.info(
-            f"Successfully got shard count of {json_body['shards']}"
+            f"Successfully got shard count of {json_body['shards']} "
             f"({response.status}, {response.reason})"
         )
 
@@ -92,9 +86,6 @@ class Launcher:
 
     def cleanup(self) -> None:
         self.loop.stop()
-        if sys.platform == "win32":
-            print("press ^C again")
-        self.loop.close()
 
     def task_complete(self, task) -> None:
         if task.exception():
@@ -109,18 +100,14 @@ class Launcher:
         log.info(f"Preparing {len(size)} clusters")
 
         for shard_ids in size:
-            self.cluster_queue.append(
-                Cluster(self, next(NAMES), shard_ids, len(shards))
-            )
+            self.cluster_queue.append(Cluster(self, next(NAMES), shard_ids, len(shards)))
 
         await self.start_cluster()
 
         self.keep_alive = self.loop.create_task(self.rebooter())
         self.keep_alive.add_done_callback(self.task_complete)
 
-        log.info(
-            f"Startup completed in {time.perf_counter() - self.init_time}s"
-        )
+        log.info(f"Startup completed in {time.perf_counter() - self.init_time}s")
 
     async def shutdown(self) -> None:
         log.info("Shutting down clusters")

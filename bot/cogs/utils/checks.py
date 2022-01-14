@@ -82,10 +82,9 @@ def avoid_maintenance() -> commands.check:
             return True
 
         raise exceptions.GameIsInMaintenance(
-            "\u26a0\ufe0f Game commands are disabled for bot's maintenance "
-            "or update.\n\ud83d\udd50 Please try again after a while... :)"
-            "\n\ud83d\udcf0 For more information "
-            f"use command - **{ctx.prefix}news**."
+            "Game commands are disabled for a bot maintenance or update.\n"
+            "\ud83d\udd50 Please try again after a while...\n"
+            f"\ud83d\udcf0 For more information use command - **/news**"
         )
 
     return commands.check(pred)

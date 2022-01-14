@@ -8,7 +8,6 @@ from discord.ext import commands, tasks
 from .utils import views
 from .utils import checks
 from .utils import embeds
-from .utils import time as time_util
 
 
 @dataclass
@@ -199,13 +198,6 @@ class Info(commands.Cog, name="Information"):
 
         await ctx.reply(embed=embed, view=view)
 
-    @commands.command(hidden=True)
-    async def ping(self, ctx):
-        """
-        Check if the bot even wants to talk to you
-        """
-        await ctx.reply("ponh!")
-
     @commands.command(aliases=["support"])
     async def invite(self, ctx):
         """
@@ -329,34 +321,6 @@ class Info(commands.Cog, name="Information"):
                 "| This bot is not made or maintained by Discord"
             )
         )
-
-        await ctx.reply(embed=embed)
-
-    @commands.command(hidden=True)
-    async def clusters(self, ctx):
-        """\ud83d\udef0\ufe0f View bot's all cluster statuses"""
-        embed = discord.Embed(
-            title="Clusters information",
-            color=discord.Color.random()
-        )
-
-        for cluster in self.bot.cluster_data:
-            fmt = ""
-
-            for id, ping in cluster.latencies:
-                ping = ping * 1000
-                fmt += (
-                    f"> **#{id} - {'%.0f' % ping}ms** "
-                    f"IPC: {'%.0f' % self.bot.ipc_ping}ms\n"
-                )
-
-            uptime = time_util.seconds_to_time(cluster.uptime.total_seconds())
-            fmt += f"\n**Uptime: {uptime} **"
-
-            embed.add_field(
-                name=f"**{cluster.name} ({cluster.guild_count} guilds)**",
-                value=fmt
-            )
 
         await ctx.reply(embed=embed)
 
