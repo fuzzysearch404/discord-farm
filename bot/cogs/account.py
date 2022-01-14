@@ -271,5 +271,5 @@ class Account(commands.Cog):
         await ctx.reply(embed=embed)
 
 
-def setup(bot):
+def setup(bot) -> None:
     bot.add_cog(Account(bot))
