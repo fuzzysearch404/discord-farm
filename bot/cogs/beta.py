@@ -21,10 +21,6 @@ class Beta(commands.Cog):
 
         raise exceptions.FarmException("Sorry, this is a bot owner-only command.")
 
-    @property
-    def hide_in_help_command(self) -> bool:
-        return True
-
     @commands.group(
         name="set",
         invoke_without_command=False,

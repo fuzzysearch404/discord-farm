@@ -1,7 +1,7 @@
-import itertools
 import psutil
-import pkg_resources
 import discord
+import itertools
+import pkg_resources
 from dataclasses import dataclass
 from discord.ext import commands, tasks
 
@@ -29,7 +29,7 @@ class HelpMessageSource(views.PaginatorSource):
         return embed
 
 
-class HelpCommandsMessageSource(views.PaginatorSource):
+class HelpAllCommandsMessageSource(views.PaginatorSource):
     def __init__(self, description: str, entries):
         super().__init__(entries, per_page=8)
         self.description = description
@@ -77,10 +77,11 @@ class HelpCommand(commands.MinimalHelpCommand):
             return f"\u200b{self.no_category}"
 
     async def send_bot_help(self, mapping):
-        ctx = self.context
-        bot = ctx.bot
-
-        filtered = await self.filter_commands(bot.commands, sort=True, key=self.get_category)
+        filtered = await self.filter_commands(
+            self.context.bot.commands,
+            sort=True,
+            key=self.get_category
+        )
         to_iterate = itertools.groupby(filtered, key=self.get_category)
 
         all_command_infos_by_category = {}
@@ -100,22 +101,19 @@ class HelpCommand(commands.MinimalHelpCommand):
 
         opts_and_sources = {}
         for cog, infos in all_command_infos_by_category.items():
-            try:
-                # Hide cog if it has hide_in_help_command property set to True
-                if cog is not None and cog.hide_in_help_command:
-                    continue
-            except AttributeError:
-                pass
-
-            name = cog.qualified_name if cog else f"\u200b{self.no_category}"
+            if not cog:
+                # Ignore non-cog commands
+                continue
 
             try:
                 emoji, short_desc = cog.help_meta
             except AttributeError:
-                emoji, short_desc = None, None
+                # If cog does not have metadata, then it is not intended
+                # to be shown in the help command.
+                continue
 
             opt = discord.SelectOption(
-                label=name,
+                label=cog.qualified_name,
                 emoji=emoji,
                 description=short_desc
             )
@@ -129,11 +127,11 @@ class HelpCommand(commands.MinimalHelpCommand):
             else:
                 description = note
 
-            opts_and_sources[opt] = HelpCommandsMessageSource(description, infos)
+            opts_and_sources[opt] = HelpAllCommandsMessageSource(description, infos)
 
         paginator = views.SelectButtonPaginatorView(
             opts_and_sources,
-            select_placeholder="\ud83d\udcda Select a category for commands"
+            select_placeholder="\ud83d\udcda Select a category of commands"
         )
 
         await paginator.start(self.context)

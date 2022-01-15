@@ -56,10 +56,6 @@ class Clusters(commands.Cog):
 
         raise exceptions.FarmException("Sorry, this is a bot owner-only command.")
 
-    @property
-    def hide_in_help_command(self) -> bool:
-        return True
-
     def cog_unload(self) -> None:
         self.bot.loop.create_task(self._unregister_tasks())
 

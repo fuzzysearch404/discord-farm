@@ -100,7 +100,7 @@ class AllItemsSource(views.PaginatorSource):
 
 class Profile(commands.Cog):
     """
-    Common commands relating to your profile.
+    Common commands, related to your profile.
     """
 
     def __init__(self, bot) -> None:
