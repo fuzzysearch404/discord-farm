@@ -238,6 +238,15 @@ class BotClient(commands.AutoShardedBot):
             f"Shards: `{self.shard_ids}` Total guilds: `{len(self.guilds)}`"
         )
 
+    async def on_interaction(self, interaction: discord.Interaction):
+        if interaction.guild_id is None:
+            await interaction.response.send_message(
+                "\u274c Sorry, you can only interact with this bot in Discord servers!"
+            )
+            return
+
+        await self.process_slash_commands(interaction)
+
     async def on_command_error(self, ctx, error) -> None:
         if isinstance(error, commands.errors.CommandNotFound):
             pass
