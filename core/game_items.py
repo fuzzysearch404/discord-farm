@@ -10,27 +10,27 @@ from core.exceptions import ItemNotFoundException
 
 # < 10 Minutes
 VERY_SHORT_PERIOD = 599
-# 1 Hour
-SHORT_PERIOD = 3600
-# 6 Hours
-MEDIUM_PERIOD = 21600
-# 12 hours
-LONG_PERIOD = 43200
+# 30 Minutes
+SHORT_PERIOD = 1800
+# 3 Hours
+MEDIUM_PERIOD = 10800
+# 6 hours
+LONG_PERIOD = 21600
 
 # We lose 25% of item's value if we sell it at lowest price
 MIN_MARKET_PRICE_LOSS = 0.25
 
-PLANTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT = 500
-PLANTABLE_GOLD_GAIN_PER_HOUR_SHORT = 250
-PLANTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 190
-PLANTABLE_GOLD_GAIN_PER_HOUR_LONG = 130
-PLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 85
+PLANTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT = 450
+PLANTABLE_GOLD_GAIN_PER_HOUR_SHORT = 350
+PLANTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 200
+PLANTABLE_GOLD_GAIN_PER_HOUR_LONG = 100
+PLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 70
 
-REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT = 725
-REPLANTABLE_GOLD_GAIN_PER_HOUR_SHORT = 415
-REPLANTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 265
-REPLANTABLE_GOLD_GAIN_PER_HOUR_LONG = 185
-REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 130
+REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT = 650
+REPLANTABLE_GOLD_GAIN_PER_HOUR_SHORT = 550
+REPLANTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 300
+REPLANTABLE_GOLD_GAIN_PER_HOUR_LONG = 225
+REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 150
 
 CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_SHORT = 1500
 CRAFTABLE_GOLD_GAIN_PER_HOUR_SHORT = 950
@@ -38,7 +38,12 @@ CRAFTABLE_GOLD_GAIN_PER_HOUR_MEDIUM = 465
 CRAFTABLE_GOLD_GAIN_PER_HOUR_LONG = 270
 CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG = 155
 
-GROWABLE_XP_GAIN_PER_HOUR = 200
+GROWABLE_XP_GAIN_PER_HOUR_VERY_SHORT = 200
+GROWABLE_XP_GAIN_PER_HOUR_SHORT = 180
+GROWABLE_XP_GAIN_PER_HOUR_MEDIUM = 160
+GROWABLE_XP_GAIN_PER_HOUR_LONG = 135
+GROWABLE_XP_GAIN_PER_HOUR_VERY_LONG = 105
+
 CRAFTABLE_XP_GAIN_PER_HOUR = 1000
 
 # 10% discount
@@ -49,6 +54,7 @@ BOOST_SEVEN_DAYS_DISCOUNT = 0.25
 
 @dataclass
 class GameItem:
+    """Base class for game items"""
     id: int
     level: int
     emoji: str
@@ -65,19 +71,28 @@ class GameItem:
 
 @dataclass
 class PurchasableItem:
+    """Marks an item as purchasable with the buy command."""
     gold_price: int
 
 
 @dataclass
 class SellableItem:
+    """Marks an item as sellable with the sell command."""
     gold_reward: int
 
 
+@dataclass
 class MarketItem:
-    pass
+    """
+    Marks an item that it is going to have a dynamic price.
+    Also marks an item as tradeable.
+    """
+    min_market_price: int
+    max_market_price: int
 
 
 class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
+    """Represents an abstract game item, that can be planted on a farm field."""
 
     def __init__(
         self,
@@ -97,26 +112,36 @@ class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
         self.grow_time = grow_time
         self.image_url = image_url
 
+        min_price = self._calculate_min_market_price()
+        max_price = self._calculate_max_market_price()
+        MarketItem.__init__(self, min_price, max_price)
+
         self.collect_time = int(grow_time * 1.5)
         self.xp = self._calculate_xp()
 
-        self.min_market_price = self._calculate_min_market_price()
-        self.max_market_price = self._calculate_max_market_price()
-
     def generate_new_price(self) -> None:
-        self.gold_reward = random.randint(
-            self.min_market_price, self.max_market_price
-        )
+        """
+        Generates a new price for the item.
+        This should be called outside of the class.
+        """
+        self.gold_reward = random.randint(self.min_market_price, self.max_market_price)
 
     def _calculate_xp(self) -> int:
-        return int(
-            (self.grow_time / 3600) * GROWABLE_XP_GAIN_PER_HOUR / self.amount
-        ) or 1
+        if self.grow_time <= VERY_SHORT_PERIOD:
+            gain = GROWABLE_XP_GAIN_PER_HOUR_VERY_SHORT
+        elif self.grow_time <= SHORT_PERIOD:
+            gain = GROWABLE_XP_GAIN_PER_HOUR_SHORT
+        elif self.grow_time <= MEDIUM_PERIOD:
+            gain = GROWABLE_XP_GAIN_PER_HOUR_MEDIUM
+        elif self.grow_time <= LONG_PERIOD:
+            gain = GROWABLE_XP_GAIN_PER_HOUR_LONG
+        else:
+            gain = GROWABLE_XP_GAIN_PER_HOUR_VERY_LONG
+
+        return int((self.grow_time / 3600) * gain / self.amount) or 1
 
     def _calculate_min_market_price(self) -> int:
-        total_new_value = \
-            self.gold_price - (self.gold_price * MIN_MARKET_PRICE_LOSS)
-
+        total_new_value = self.gold_price - (self.gold_price * MIN_MARKET_PRICE_LOSS)
         return int(total_new_value / self.amount) or 1
 
     def _calculate_max_market_price(self) -> int:
@@ -134,20 +159,18 @@ class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
             gain = PLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG
 
         total_profit = (self.grow_time / 3600) * gain
-
         return int(gold_per_item + (total_profit / self.amount)) or 1
 
 
 class ReplantableItem(PlantableItem):
+    """Represents an abstract plantable item that has multiple harvests."""
 
     def __init__(self, iterations: int, *args, **kwargs):
         self.iterations = iterations
         super().__init__(*args, **kwargs)
 
     def _calculate_min_market_price(self) -> int:
-        total_new_value = \
-            self.gold_price - (self.gold_price * MIN_MARKET_PRICE_LOSS)
-
+        total_new_value = self.gold_price - (self.gold_price * MIN_MARKET_PRICE_LOSS)
         return int(total_new_value / (self.amount * self.iterations)) or 1
 
     def _calculate_max_market_price(self) -> int:
@@ -165,29 +188,30 @@ class ReplantableItem(PlantableItem):
             gain = REPLANTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG
 
         total_profit = (self.grow_time / 3600) * gain
-
-        return int(
-            gold_per_item + (total_profit / self.amount)
-        ) or 1
+        return int(gold_per_item + (total_profit / self.amount)) or 1
 
 
 class Crop(PlantableItem):
+    """Item class for crop items"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
 class Tree(ReplantableItem):
+    """Item class for tree items"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
 class Animal(ReplantableItem):
+    """Item class for animal items"""
     def __init__(self, emoji_animal: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.emoji_animal = emoji_animal
 
 
 class Special(GameItem, SellableItem, MarketItem):
+    """Represents an item ingame that has a special use case."""
 
     def __init__(
         self,
@@ -210,12 +234,15 @@ class Special(GameItem, SellableItem, MarketItem):
         self.image_url = image_url
 
     def generate_new_price(self) -> None:
-        self.gold_reward = random.randint(
-            self.min_market_price, self.max_market_price
-        )
+        """
+        Generates a new price for the item.
+        This should be called outside of the class.
+        """
+        self.gold_reward = random.randint(self.min_market_price, self.max_market_price)
 
 
 class Chest(GameItem):
+    """Represents a chest item."""
     def __init__(self, image_url: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.image_url = image_url
@@ -223,7 +250,7 @@ class Chest(GameItem):
 
 @dataclass
 class ItemAndAmount:
-    """A helper class to store item and amount info in product objects"""
+    """A helper class to store item and amount info in Product objects"""
 
     __slots__ = ("item", "amount")
 
@@ -232,6 +259,7 @@ class ItemAndAmount:
 
 
 class Product(GameItem, SellableItem, MarketItem):
+    """Represents an item that can be produced in a factory."""
 
     def __init__(
         self,
@@ -252,42 +280,35 @@ class Product(GameItem, SellableItem, MarketItem):
         self.image_url = image_url
 
         self.xp = self._calculate_xp()
-
         # WARNING: Must manually init min, max market prices
         # after the made_from list is parsed into list of ItemAndAmount objects
         self.min_market_price = 0
         self.max_market_price = 0
 
     def generate_new_price(self) -> None:
-        self.gold_reward = random.randint(
-            self.min_market_price, self.max_market_price
-        )
+        """
+        Generates a new price for the item.
+        This should be called outside of the class.
+        """
+        self.gold_reward = random.randint(self.min_market_price, self.max_market_price)
 
     def _calculate_total_value(self) -> int:
-        # Just to check if we have items at all,
-        # and if there are ItemAndAmount instances, not dicts.
-        if not isinstance(self.made_from[0], ItemAndAmount):
-            raise Exception(
-                f"Product ID: {self.id} made_from not initialized"
-            )
+        # Just to check if we have items at all and if there are ItemAndAmount instances, not dicts.
+        assert isinstance(self.made_from[0], ItemAndAmount), "Product made_from not initialized"
 
-        value = 0
-
+        total_value = 0
         for item_and_amount in self.made_from:
             if isinstance(item_and_amount.item, Product):
-                value += item_and_amount.item._calculate_total_value() \
+                total_value += item_and_amount.item._calculate_total_value() \
                     * item_and_amount.amount
             else:
-                value += \
-                    item_and_amount.item.max_market_price \
-                    * item_and_amount.amount
+                total_value += item_and_amount.item.max_market_price * item_and_amount.amount
 
-        return value
+        return total_value
 
     def _calculate_min_market_price(self) -> int:
         total_value = self._calculate_total_value()
-        total_new_value = \
-            total_value - (total_value * MIN_MARKET_PRICE_LOSS)
+        total_new_value = total_value - (total_value * MIN_MARKET_PRICE_LOSS)
 
         return int(total_new_value) or 1
 
@@ -306,7 +327,6 @@ class Product(GameItem, SellableItem, MarketItem):
             gain = CRAFTABLE_GOLD_GAIN_PER_HOUR_VERY_LONG
 
         total_profit = (self.craft_time / 3600) * gain
-
         return int(total_value + total_profit) or 1
 
     def _calculate_xp(self) -> int:
@@ -317,12 +337,14 @@ class Product(GameItem, SellableItem, MarketItem):
 
 
 class BoostDuration(Enum):
+    """Defines available boost durations in seconds."""
     ONE_DAY = 86400
     THREE_DAYS = 259200
     SEVEN_DAYS = 604800
 
 
 class Boost:
+    """A special class to represent booster items."""
 
     __slots__ = (
         "id",
@@ -352,16 +374,14 @@ class Boost:
         self.emoji = emoji
         self.base_price = base_price
         self.price_increase_per_farm_slots = price_increase_per_farm_slots
-        self.price_increase_per_factory_slots = \
-            price_increase_per_factory_slots
+        self.price_increase_per_factory_slots = price_increase_per_factory_slots
         self.price_increase_per_user_level = price_increase_per_user_level
 
     def get_boost_price(self, duration: BoostDuration, user) -> int:
         price_per_day = self.base_price
 
         price_per_day += self.price_increase_per_farm_slots * user.farm_slots
-        price_per_day += \
-            self.price_increase_per_factory_slots * user.factory_slots
+        price_per_day += self.price_increase_per_factory_slots * user.factory_slots
         price_per_day += self.price_increase_per_user_level * user.level
 
         if duration == BoostDuration.ONE_DAY:
@@ -369,16 +389,14 @@ class Boost:
             return price_per_day
         elif duration == BoostDuration.THREE_DAYS:
             total = price_per_day * 3
-
             return int(total - total * BOOST_THREE_DAYS_DISCOUNT)
         else:
             total = price_per_day * 7
-
             return int(total - total * BOOST_SEVEN_DAYS_DISCOUNT)
 
 
 class ObtainedBoost:
-    """Boost instance to store in Redis"""
+    """Partial Boost class to be used for storing boosts in Redis."""
 
     __slots__ = ("id", "duration")
 
@@ -388,6 +406,7 @@ class ObtainedBoost:
 
 
 class ItemPool:
+    """Utility class for easy access to items and utility methods."""
 
     __slots__ = (
         "all_items",
@@ -403,17 +422,12 @@ class ItemPool:
         "all_specials"
     )
 
-    def __init__(
-        self,
-        all_items: list,
-        all_boosts: list,
-        all_chests: list
-    ) -> None:
+    def __init__(self, all_items: list, all_boosts: list, all_chests: list) -> None:
         self.all_items = all_items
         self.all_boosts = all_boosts
         self.all_chests = all_chests
-        self.items_per_id = self._group_items_per_id()
-        self.items_per_name = self._group_items_per_name()
+        self.items_per_id = self._group_all_items_per_id()
+        self.items_per_name = self._group_all_items_per_name()
         self.all_item_names = list(self.items_per_name.keys())
         self.all_crops = self._list_items_per_class(Crop)
         self.all_trees = self._list_items_per_class(Tree)
@@ -423,18 +437,12 @@ class ItemPool:
 
     def find_item_by_id(self, item_id: int) -> GameItem:
         try:
-            item = self.items_per_id[str(item_id)]
+            return self.items_per_id[str(item_id)]
         except KeyError:
             raise ItemNotFoundException(f"Item {item_id} not found!")
 
-        return item
-
     def find_item_by_name(self, item_name: str) -> GameItem:
-        matches = get_close_matches(
-            item_name,
-            self.all_item_names,
-            cutoff=0.65
-        )
+        matches = get_close_matches(item_name, self.all_item_names, cutoff=0.65)
 
         if not matches:
             raise ItemNotFoundException(f"Item \"{item_name}\" not found!")
@@ -453,11 +461,7 @@ class ItemPool:
         for boost in self.all_boosts:
             boosts_per_name[boost.name] = boost
 
-        matches = get_close_matches(
-            boost_name,
-            list(boosts_per_name.keys()),
-            cutoff=0.5
-        )
+        matches = get_close_matches(boost_name, list(boosts_per_name.keys()), cutoff=0.5)
 
         if not matches:
             raise ItemNotFoundException(f"Boost \"{boost_name}\" not found!")
@@ -466,11 +470,9 @@ class ItemPool:
 
     def find_boost_by_id(self, boost_id: str) -> Boost:
         try:
-            boost = next(x for x in self.all_boosts if x.id == boost_id)
+            return next(x for x in self.all_boosts if x.id == boost_id)
         except StopIteration:
             raise ItemNotFoundException(f"Boost {boost_id} not found!")
-
-        return boost
 
     def find_chest_by_name(self, chest_name: str) -> Chest:
         chests_per_name = {}
@@ -478,9 +480,7 @@ class ItemPool:
         for chest in self.all_chests:
             chests_per_name[chest.name] = chest
 
-        matches = get_close_matches(
-            chest_name, list(chests_per_name.keys())
-        )
+        matches = get_close_matches(chest_name, list(chests_per_name.keys()))
 
         if not matches:
             raise ItemNotFoundException(f"Chest \"{chest_name}\" not found!")
@@ -489,18 +489,16 @@ class ItemPool:
 
     def find_chest_by_id(self, chest_id: int) -> Boost:
         try:
-            chest = next(x for x in self.all_chests if x.id == chest_id)
+            return next(x for x in self.all_chests if x.id == chest_id)
         except StopIteration:
             raise ItemNotFoundException(f"Chest {chest_id} not found!")
-
-        return chest
 
     def update_market_prices(self) -> None:
         for item in self.all_items:
             if isinstance(item, MarketItem):
                 item.generate_new_price()
 
-    def _group_items_per_id(self) -> dict:
+    def _group_all_items_per_id(self) -> dict:
         items_per_id = {}
 
         for item in self.all_items:
@@ -508,7 +506,7 @@ class ItemPool:
 
         return items_per_id
 
-    def _group_items_per_name(self) -> dict:
+    def _group_all_items_per_name(self) -> dict:
         items_per_name = {}
 
         for item in self.all_items:
@@ -557,7 +555,6 @@ class ItemPool:
             current = weights[i]
             # If extra luck is 1 (max), then all items have equal weights
             with_luck = current - (current * extra_luck)
-
             new_weights[i] = (max_weight + 1) - with_luck
 
         items = random.choices(population, weights=new_weights, k=total_draws)
@@ -618,7 +615,6 @@ def _load_crops() -> list:
                 grow_time=item_data['grow_time'],
                 image_url=item_data['image_url']
             )
-
             all_items.append(item)
 
     return all_items
@@ -642,7 +638,6 @@ def _load_trees() -> list:
                 image_url=item_data['image_url'],
                 iterations=item_data['iterations']
             )
-
             all_items.append(item)
 
     return all_items
@@ -667,7 +662,6 @@ def _load_animals() -> list:
                 iterations=item_data['iterations'],
                 emoji_animal=item_data['emoji_animal']
             )
-
             all_items.append(item)
 
     return all_items
@@ -691,14 +685,13 @@ def _load_special_items() -> list:
                 max_market_price=item_data['max_market_price'],
                 image_url=item_data['image_url']
             )
-
             all_items.append(item)
 
     return all_items
 
 
 def _load_craftables(all_loaded_items: list) -> None:
-    all_items = []
+    all_craftables = []
 
     with open("data/items/craftables.json", "r") as file:
         data = json.load(file)
@@ -714,29 +707,25 @@ def _load_craftables(all_loaded_items: list) -> None:
                 craft_time=item_data['craft_time'],
                 image_url=item_data['image_url']
             )
+            all_craftables.append(item)
 
-            all_items.append(item)
+    # Add craftables to all items list
+    all_loaded_items.extend(all_craftables)
 
-    all_loaded_items.extend(all_items)
-
-    # Update relations
-    for craftable in all_items:
+    # Initialize relations to other items
+    for craftable in all_craftables:
         made_from_list = craftable.made_from
 
         made_from_new_list = []
         for requirement in made_from_list:
             for item, amount in requirement.items():
-                item_obj = next(
-                    obj for obj in all_loaded_items if obj.id == int(item)
-                )
-
-                item_and_amount = ItemAndAmount(item_obj, amount)
-                made_from_new_list.append(item_and_amount)
+                item_obj = next(obj for obj in all_loaded_items if obj.id == int(item))
+                made_from_new_list.append(ItemAndAmount(item_obj, amount))
 
         craftable.made_from = made_from_new_list
 
-    # Fully init craftables
-    for craftable in all_items:
+    # Only now we can calculate the prices of these items
+    for craftable in all_craftables:
         craftable.min_market_price = craftable._calculate_min_market_price()
         craftable.max_market_price = craftable._calculate_max_market_price()
 
@@ -749,8 +738,7 @@ def _load_boosts() -> list:
 
         for boost_data in data['boosts']:
             increase_farm_slots = boost_data['price_increase_per_farm_slots']
-            increase_factory_slots = \
-                boost_data['price_increase_per_factory_slots']
+            increase_factory_slots = boost_data['price_increase_per_factory_slots']
             increase_user_level = boost_data['price_increase_per_user_level']
 
             boost = Boost(
@@ -763,7 +751,6 @@ def _load_boosts() -> list:
                 price_increase_per_factory_slots=increase_factory_slots,
                 price_increase_per_user_level=increase_user_level
             )
-
             all_boosts.append(boost)
 
     return all_boosts
@@ -784,7 +771,6 @@ def _load_chests() -> list:
                 amount=chest_data['amount'],
                 image_url=chest_data['image_url']
             )
-
             all_chests.append(chest)
 
     return all_chests
@@ -802,8 +788,6 @@ def load_all_items() -> ItemPool:
     _load_craftables(all_items)
 
     # Items have no market prices, so we generate them
-    # Can't do this in any __init__ to not regenerate
-    # That is needed to have identical market prices across all bot clients
     for item in all_items:
         if isinstance(item, MarketItem):
             item.generate_new_price()

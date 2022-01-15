@@ -65,7 +65,7 @@ class BotClient(commands.AutoShardedBot):
 
         intents = discord.Intents.none()
         intents.guilds = True
-        intents.guild_messages = True
+        intents.guild_messages = True  # TODO: For removal in May 2022
 
         super().__init__(
             intents=intents,
