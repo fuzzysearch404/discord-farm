@@ -418,7 +418,7 @@ class Farm(commands.Cog):
                 update_rows = []
 
                 for plant in to_update:
-                    item_mods = await modifications.get_item_mods(
+                    item_mods = await modifications.get_item_mods_for_user(
                         ctx,
                         plant.item,
                         conn=conn
@@ -605,7 +605,7 @@ class Farm(commands.Cog):
                 )
             )
 
-        item_mods = await modifications.get_item_mods(ctx, item)
+        item_mods = await modifications.get_item_mods_for_user(ctx, item)
         grow_time = item_mods[0]
         collect_time = item_mods[1]
         max_volume = item_mods[2]
