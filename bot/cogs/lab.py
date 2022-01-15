@@ -10,7 +10,7 @@ from core import game_items
 from core import modifications
 
 
-class LabSource(views.PaginatorSource):
+class LabSource(views.AbstractPaginatorSource):
     def __init__(
         self,
         entries: list,

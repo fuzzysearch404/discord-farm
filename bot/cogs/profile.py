@@ -14,7 +14,7 @@ from .utils import embeds
 from .utils import converters
 
 
-class InventorySource(views.PaginatorSource):
+class InventorySource(views.AbstractPaginatorSource):
     def __init__(self, entries, target_user: discord.Member):
         super().__init__(entries, per_page=30)
         self.target = target_user
@@ -73,7 +73,7 @@ class InventorySource(views.PaginatorSource):
         return embed
 
 
-class AllItemsSource(views.PaginatorSource):
+class AllItemsSource(views.AbstractPaginatorSource):
     def __init__(self, entries):
         super().__init__(entries, per_page=15)
 

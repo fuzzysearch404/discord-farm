@@ -16,7 +16,7 @@ class CommandInfo:
     description: str
 
 
-class HelpMessageSource(views.PaginatorSource):
+class HelpMessageSource(views.AbstractPaginatorSource):
     def __init__(self, entries):
         super().__init__(entries, per_page=1)
 
@@ -29,7 +29,7 @@ class HelpMessageSource(views.PaginatorSource):
         return embed
 
 
-class HelpAllCommandsMessageSource(views.PaginatorSource):
+class HelpAllCommandsMessageSource(views.AbstractPaginatorSource):
     def __init__(self, description: str, entries):
         super().__init__(entries, per_page=8)
         self.description = description

@@ -130,7 +130,7 @@ def no_gems_embed(ctx, user_data, cost: int) -> Embed:
     )
 
 
-def not_enough_items(ctx, item, req_amount: int):
+def not_enough_items(ctx, item, req_amount: int) -> Embed:
     return error_embed(
         title=f"You don't have enough {item.name}!",
         text=(

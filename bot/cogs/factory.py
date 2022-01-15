@@ -53,7 +53,7 @@ class FactoryItem:
             return ProductState.READY
 
 
-class FactorySource(views.PaginatorSource):
+class FactorySource(views.AbstractPaginatorSource):
     def __init__(
         self,
         entries: list,

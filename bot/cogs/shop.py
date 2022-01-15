@@ -11,7 +11,7 @@ from .utils import converters
 from core import game_items
 
 
-class MarketSource(views.PaginatorSource):
+class MarketSource(views.AbstractPaginatorSource):
     def __init__(self, entries, section: str):
         super().__init__(entries, per_page=6)
         self.section = section
@@ -54,7 +54,7 @@ class MarketSource(views.PaginatorSource):
         return embed
 
 
-class ShopSource(views.PaginatorSource):
+class ShopSource(views.AbstractPaginatorSource):
     def __init__(self, entries, section: str):
         super().__init__(entries, per_page=6)
         self.section = section
@@ -86,7 +86,7 @@ class ShopSource(views.PaginatorSource):
         return embed
 
 
-class TradesSource(views.PaginatorSource):
+class TradesSource(views.AbstractPaginatorSource):
     def __init__(self, entries, server_name: str, own_trades: bool = False):
         super().__init__(entries, per_page=6)
         self.server_name = server_name

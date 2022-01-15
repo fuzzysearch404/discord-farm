@@ -76,7 +76,7 @@ class PlantedFieldItem:
             state == PlantState.ROTTEN and self.cat_boost
 
 
-class FarmFieldSource(views.PaginatorSource):
+class FarmFieldSource(views.AbstractPaginatorSource):
     def __init__(
         self,
         entries: list,
