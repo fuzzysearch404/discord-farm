@@ -1,5 +1,5 @@
-import jsonpickle
 import asyncpg
+import jsonpickle
 from datetime import datetime
 
 from . import exceptions
@@ -33,8 +33,7 @@ class User:
         factory_slots: int,
         factory_level: int,
         store_slots: int,
-        notifications: bool,
-
+        notifications: bool
     ) -> None:
         self.user_id = user_id
         self.xp = xp
@@ -76,13 +75,11 @@ class User:
         # that is 2.5 million XP per level.
         remaining = self.xp - 11_500_000
         lev = int(remaining / 2_500_000)
-
         return 30 + lev, 11_500_000 + ((lev + 1) * 2_500_000)
 
     async def give_xp_and_level_up(self, ctx, xp: int) -> None:
         old_level = self.level
         self.xp += xp
-
         self.level, self.next_level_xp = self._calculate_user_level()
 
         if old_level == self.level:
@@ -92,41 +89,32 @@ class User:
         self.gems += self.level - old_level
 
         embed = embeds.congratulations_embed(
-            title=(
-                "Level up! You have reached: "
-                f"\ud83d\udd31 Level **{self.level}**"
-            ),
+            title=f"Level up! You have reached: \ud83d\udd31 Level **{self.level}**",
             text=f"You have been rewarded with a shiny {ctx.bot.gem_emoji}",
-            footer=f"Congratulations, {ctx.author.name} ;)",
+            footer=f"Congratulations, {ctx.author.nick or ctx.author.name}!",
             ctx=ctx
         )
 
         unlocked_items = ctx.bot.item_pool.find_items_by_level(self.level)
-
         if unlocked_items:
             fmt = [x.full_name for x in unlocked_items]
-            embed.description += \
-                "\n\nAnd also you have unlocked the following items: "
+            embed.description += "\n\nAnd also you have unlocked the following items: "
             embed.description += ", ".join(fmt)
 
         await ctx.reply(embed=embed)
 
     async def get_all_boosts(self, ctx) -> list:
-        boosts = await ctx.redis.execute_command(
-            "GET", f"user_boosts:{self.user_id}"
-        )
+        boosts = await ctx.redis.execute_command("GET", f"user_boosts:{self.user_id}")
 
         if not boosts:
             return []
 
         boosts = jsonpickle.decode(boosts)
-
         # Removes expired boosts
         return [x for x in boosts if x.duration > datetime.now()]
 
     async def is_boost_active(self, ctx, boost_id: str) -> bool:
         all_boosts = await self.get_all_boosts(ctx)
-
         return boost_id in [x.id for x in all_boosts]
 
     async def give_boost(self, ctx, boost) -> list:
@@ -139,7 +127,7 @@ class User:
         except StopIteration:
             existing_boosts.append(boost)
 
-        # Find the longest boost
+        # Find the new longest boost
         longest = max(existing_boosts, key=lambda b: b.duration)
         seconds_until = (longest.duration - datetime.now()).total_seconds()
 
@@ -152,6 +140,7 @@ class User:
         return existing_boosts
 
     async def get_all_items(self, ctx, conn=None) -> list:
+        """Fetches all items currently in inventory"""
         if not conn:
             release_required = True
             conn = await ctx.acquire()
@@ -163,7 +152,6 @@ class User:
                 WHERE user_id = $1
                 ORDER BY item_id;
                 """
-
         items = await conn.fetch(query, self.user_id)
 
         if release_required:
@@ -172,6 +160,7 @@ class User:
         return items
 
     async def get_item(self, ctx, item_id: int, conn=None) -> asyncpg.Record:
+        """Fetches a single item currently in inventory"""
         if not conn:
             release_required = True
             conn = await ctx.acquire()
@@ -183,7 +172,6 @@ class User:
                 WHERE user_id = $1
                 AND item_id = $2;
                 """
-
         item = await conn.fetchrow(query, self.user_id, item_id)
 
         if release_required:
@@ -191,16 +179,8 @@ class User:
 
         return item
 
-    async def give_item(
-        self,
-        ctx,
-        item_id: int,
-        amount: int,
-        conn=None
-    ) -> None:
-        """
-        Adds a single type of items to inventory
-        """
+    async def give_item(self, ctx, item_id: int, amount: int, conn=None) -> None:
+        """Adds a single type of items to inventory"""
         if not conn:
             release_required = True
             conn = await ctx.acquire()
@@ -214,19 +194,15 @@ class User:
                 DO UPDATE
                 SET amount = inventory.amount + $3;
                 """
-
         await conn.execute(query, self.user_id, item_id, amount)
 
         if release_required:
             await ctx.release()
 
     async def give_items(self, ctx, items: list, conn=None) -> None:
-        """
-        Accepts a list of tuples with items IDs and amounts
-        """
+        """Adds items to user. Accepts a list of tuples with items IDs and amounts"""
         items_with_user_id = []
         for item, amount in items:
-
             if isinstance(item, GameItem):
                 item = item.id
 
@@ -245,22 +221,13 @@ class User:
                 DO UPDATE
                 SET amount = inventory.amount + $3;
                 """
-
         await conn.executemany(query, items_with_user_id)
 
         if release_required:
             await ctx.release()
 
-    async def remove_item(
-        self,
-        ctx,
-        item_id: int,
-        amount: int,
-        conn=None
-    ) -> None:
-        """
-        Removes a single type of items from inventory
-        """
+    async def remove_item(self, ctx, item_id: int, amount: int, conn=None) -> None:
+        """Removes a single type of items from inventory"""
         if not conn:
             release_required = True
             conn = await ctx.acquire()
@@ -281,25 +248,19 @@ class User:
                         SET amount = inventory.amount - $2
                         WHERE id = $1;
                         """
-
                 await conn.execute(query, current_data['id'], amount)
             else:
                 query = """
                         DELETE FROM inventory
                         WHERE id = $1;
                         """
-
                 await conn.execute(query, current_data['id'])
 
         if release_required:
             await ctx.release()
 
-    async def get_item_modification(
-        self,
-        ctx,
-        item_id: int,
-        conn=None
-    ) -> None:
+    async def get_item_modification(self, ctx, item_id: int, conn=None) -> asyncpg.Record:
+        """Fetches item modifications data for a single item"""
         if not conn:
             release_required = True
             conn = await ctx.acquire()
@@ -311,7 +272,6 @@ class User:
                 WHERE user_id = $1
                 AND item_id = $2;
                 """
-
         data = await conn.fetchrow(query, self.user_id, item_id)
 
         if release_required:
@@ -320,6 +280,7 @@ class User:
         return data
 
     async def get_farm_field(self, ctx, conn=None) -> list:
+        """Fetches all items currently in farm"""
         if not conn:
             release_required = True
             conn = await ctx.acquire()
@@ -331,7 +292,6 @@ class User:
                 WHERE user_id = $1
                 ORDER BY item_id;
                 """
-
         data = await conn.fetch(query, self.user_id)
 
         if release_required:
@@ -340,6 +300,7 @@ class User:
         return data
 
     async def get_factory(self, ctx, conn=None) -> list:
+        """Fetches all items currently in factory"""
         if not conn:
             release_required = True
             conn = await ctx.acquire()
@@ -351,7 +312,6 @@ class User:
                 WHERE user_id = $1
                 ORDER by starts;
                 """
-
         data = await conn.fetch(query, self.user_id)
 
         if release_required:
@@ -369,9 +329,7 @@ class UserManager:
         self.db_pool = db_pool
 
     async def get_user(self, user_id: int, conn=None) -> User:
-        user_data = await self.redis.execute_command(
-            "GET", f"user_profile:{user_id}"
-        )
+        user_data = await self.redis.execute_command("GET", f"user_profile:{user_id}")
 
         if user_data:
             return jsonpickle.decode(user_data)
@@ -389,10 +347,8 @@ class UserManager:
             await self.db_pool.release(conn)
 
         if not user_data:
-            # If someone deletes their account during a command
-            raise exceptions.UserNotFoundException(
-                "You don't have a game account"
-            )
+            # If someone deletes their account during a command execution
+            raise exceptions.UserNotFoundException("You don't have a game account")
 
         user = User(
             user_id=user_data['user_id'],
@@ -429,7 +385,6 @@ class UserManager:
             await self.db_pool.release(conn)
 
         user = await self.get_user(user_id)
-
         return user
 
     async def update_user(self, user: User, conn=None) -> None:
@@ -487,7 +442,6 @@ class UserManager:
             await self.db_pool.release(conn)
 
         await self.redis.execute_command("DEL", f"user_profile:{user_id}")
-
         # Delete boosts and export mission
         await self.redis.execute_command("DEL", f"user_boosts:{user_id}")
         await self.redis.execute_command("DEL", f"export:{user_id}")
