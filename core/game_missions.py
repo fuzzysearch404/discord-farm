@@ -10,12 +10,8 @@ with open("data/mission_names.json", "r") as file:
 
 
 @dataclass
-class MissionRequest:
-    """
-    Used to store less data in DB.
-    We could just jsonpickle it, but why should we store all
-    item data? Also item properties might change any time.
-    """
+class PartialMissionRequest:
+    """Utility class for storing partial mission request data in the database"""
 
     __slots__ = ("item_id", "amount")
 
@@ -67,20 +63,19 @@ class BusinessMission:
 
         # Increase growables_multiplier for extra complexity
         multiplier = int(growables_multiplier * user_level)
-
         request_items = []
-        request_amount = random.randint(1, max_requests)
+        total_request_amount = random.randint(1, max_requests)
 
         # 1/3 chance to require products
         if user_level >= 3 and random.randint(1, 3) == 1:
             # Default max product request amount is 1.
-            # If multiplier, lower the chance to get more requests
-            population = []
+            # If multiplier, lower the chance to get more product requests
+            product_amount_population = []
             for i in range(max_products_req):
-                population.extend([i + 1] * (max_products_req - i) * 3)
+                product_amount_population.extend([i + 1] * (max_products_req - i) * 3)
 
-            product_req_amount = random.choice(population)
-            request_amount = request_amount - product_req_amount
+            product_req_amount = random.choice(product_amount_population)
+            total_request_amount = total_request_amount - product_req_amount
 
             products = ctx.items.get_random_items(
                 user_level=user_level,
@@ -94,11 +89,11 @@ class BusinessMission:
             request_items.extend(products)
 
         # If we still have requests to add
-        if request_amount > 0:
+        if total_request_amount > 0:
             growables = ctx.items.get_random_items(
                 user_level=user_level,
                 extra_luck=0.62,
-                total_draws=request_amount,
+                total_draws=total_request_amount,
                 growables_multiplier=multiplier,
                 growables=True,
                 products=False,
@@ -108,15 +103,13 @@ class BusinessMission:
 
         total_worth, requests = 0, []
         for item, amount in request_items:
-            requests.append(MissionRequest(item.id, amount))
+            requests.append(PartialMissionRequest(item.id, amount))
 
             extra_worth = random.randint(70, 115) / 100  # 0.7 - 1.15
             total_worth += int(item.max_market_price * amount * extra_worth)
 
         total_worth = int(total_worth * reward_multiplier)
-        xp_reward = random.randint(
-            int(total_worth / 20), int(total_worth / 18)
-        )
+        xp_reward = random.randint(int(total_worth / 17), int(total_worth / 16))
         gold_reward = total_worth - xp_reward
 
         # Add chest in every 8th mission
@@ -177,14 +170,14 @@ class ExportMission:
     def generate(cls, ctx):
         # Small chance to randomize with products
         # Because we have more products than other items
-        randomize_products = random.randint(1, 3) == 1
+        randomize_products: bool = random.randint(1, 3) == 1
 
         item, amount = ctx.items.get_random_items(
             user_level=ctx.user_data.level,
             extra_luck=0.75,
             total_draws=1,
             growables_multiplier=ctx.user_data.level,
-            products_multiplier=int(ctx.user_data.level / 10) or 1,
+            products_multiplier=int(ctx.user_data.level / 15) or 1,
             growables=True,
             products=randomize_products,
             specials=False
@@ -193,7 +186,7 @@ class ExportMission:
         return cls(
             item=item,
             amount=amount,
-            base_gold=int(item.max_market_price / 6.2 * amount) or 1,
+            base_gold=int(item.max_market_price / 5.11 * amount) or 1,
             base_xp=int(item.xp * amount / 12) or 1,
             shipments=0,
             port_name=random.choice(MISSION_NAMES['ports'])
@@ -202,9 +195,7 @@ class ExportMission:
     def rewards_for_shipment(self, shipment: int = 0) -> tuple:
         shipment = shipment or self.shipments + 1
 
-        chests_per_shipments = {
-            3: 1001, 7: 1003, 10: 1004
-        }
+        chests_per_shipments = {3: 1001, 7: 1003, 10: 1004}
 
         try:
             chest_id = chests_per_shipments[shipment]
@@ -212,6 +203,6 @@ class ExportMission:
             chest_id = None
 
         gold = self.base_gold * shipment
-        xp = self.base_xp + self.base_xp * (shipment * 0.28)
+        xp = self.base_xp + self.base_xp * (shipment * 0.4)
 
         return (int(gold), int(xp), chest_id)
