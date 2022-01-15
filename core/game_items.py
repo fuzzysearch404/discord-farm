@@ -395,8 +395,8 @@ class Boost:
             return int(total - total * BOOST_SEVEN_DAYS_DISCOUNT)
 
 
-class ObtainedBoost:
-    """Partial Boost class to be used for storing boosts in Redis."""
+class PartialBoost:
+    """Boost class for storing boosts in Redis."""
 
     __slots__ = ("id", "duration")
 

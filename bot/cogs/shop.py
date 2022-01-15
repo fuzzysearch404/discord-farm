@@ -460,7 +460,7 @@ class Shop(commands.Cog):
             user_data.gold -= actual_price
             await ctx.users.update_user(user_data, conn=conn)
 
-        obtained_boost = game_items.ObtainedBoost(
+        obtained_boost = game_items.PartialBoost(
             booster.id, datetime.now() + timedelta(seconds=duration.value)
         )
         await ctx.user_data.give_boost(ctx, obtained_boost)
