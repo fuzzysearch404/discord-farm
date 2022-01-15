@@ -28,9 +28,7 @@ class IPC:
         else:
             log.setLevel(logging.INFO)
 
-        log_formatter = logging.Formatter(
-            "[%(asctime)s %(name)s/%(levelname)s] %(message)s"
-        )
+        log_formatter = logging.Formatter("[%(asctime)s %(name)s/%(levelname)s] %(message)s")
         file_handler = RotatingFileHandler(
             "ipc.log",
             encoding="utf-8",
@@ -44,7 +42,6 @@ class IPC:
         self.log = log
 
         log.debug("Launching...")
-
         log.debug("Loading game news")
         self.game_news = self._load_game_news()
 
@@ -109,10 +106,8 @@ class IPC:
             self._loop.run_until_complete(self.stop())
 
     async def stop(self) -> None:
-        await self._unregister_redis_channels()
-
         self.log.info("Exiting")
-
+        await self._unregister_redis_channels()
         self._loop.stop()
 
     def _load_config(self) -> dict:
@@ -206,11 +201,7 @@ class IPC:
             else:
                 self.log.error(f"Unknown action: {ipc_message.action}")
 
-    async def _update_cluster_status(
-        self,
-        message: IPCMessage,
-        reply_channel: str
-    ) -> None:
+    async def _update_cluster_status(self, message: IPCMessage, reply_channel: str) -> None:
         cluster = jsonpickle.decode(message.data)
 
         try:
@@ -220,7 +211,6 @@ class IPC:
             pass
 
         self.active_clusters.append(cluster)
-
         await self._send_ping_message(reply_channel)
 
     async def _cluster_check_task(self) -> None:
@@ -251,7 +241,6 @@ class IPC:
         }
 
         conn = await asyncpg.connect(**connect_args)
-
         ignore_ids = await conn.fetch("SELECT user_id FROM profile WHERE notifications = false;")
 
         for id in ignore_ids:
@@ -335,7 +324,6 @@ class IPC:
 
     async def _handle_set_items(self) -> None:
         self.item_pool = load_all_items()
-
         self.item_pool.update_market_prices()
 
         await self._send_update_items_message(self.global_channel)
@@ -360,11 +348,7 @@ class IPC:
 
         await self.redis.publish(channel, jsonpickle.encode(message))
 
-    async def _send_set_game_guard_message(
-        self,
-        channel: str,
-        duration: int
-    ) -> None:
+    async def _send_set_game_guard_message(self, channel: str, duration: int) -> None:
         message = IPCMessage(
             author=self.ipc_name,
             action="enable_guard",
@@ -513,9 +497,7 @@ class IPC:
     async def _global_task_update_items(self) -> None:
         while not self._loop.is_closed():
             self.item_pool.update_market_prices()
-
             await self._send_update_items_message(self.global_channel)
-
             self.log.info("Published global update items message")
 
             # Update every hour, exactly at minute 0
@@ -526,7 +508,6 @@ class IPC:
             ) + timedelta(hours=1)
 
             time_until = next_refresh - datetime.now()
-
             await asyncio.sleep(time_until.total_seconds())
 
     async def _global_task_send_stats(self) -> None:
@@ -547,8 +528,8 @@ class IPC:
 
             try:
                 async with aiohttp.ClientSession() as session:
-                    async with session.post(url, headers=headers, json=body) as r:
-                        if r.status == 200:
+                    async with session.post(url, headers=headers, json=body) as resp:
+                        if resp.status == 200:
                             self.log.info(
                                 "Published stats to top.gg: "
                                 f"Guild count: {self.total_guild_count} "
@@ -557,7 +538,7 @@ class IPC:
                             continue
 
                         try:
-                            r.raise_for_status()
+                            resp.raise_for_status()
                         except aiohttp.ClientResponseError as e:
                             self.log.exception(f"Failed to post top.gg stats: {e.status}")
             except Exception:
@@ -568,7 +549,6 @@ class IPC:
 
         while not self._loop.is_closed():
             await asyncio.sleep(self.db_backup_delay)
-
             self.log.info("Starting the database backup script")
 
             cmd = (
@@ -582,9 +562,7 @@ class IPC:
             process = await asyncio.create_subprocess_shell(
                 cmd, stdout=sys.stdout, stderr=sys.stderr
             )
-
             await process.wait()
-
             self.log.info(f"Backup script exited with code: {process.returncode}")
 
     async def _global_task_check_discord_incidents(self) -> None:
@@ -617,18 +595,12 @@ class IPC:
                 )
 
             if "critical" in all_impacts:
-                self.log.info(
-                    "Activating farm guard because of a "
-                    "critical Discord incident"
-                )
+                self.log.info("Activating farm guard because of a critical Discord incident")
                 await self._send_set_game_guard_message(
                     self.global_channel, self.critical_incident_guard
                 )
             elif "major" in all_impacts:
-                self.log.info(
-                    "Activating farm guard because of "
-                    "a major Discord incident"
-                )
+                self.log.info("Activating farm guard because of a major Discord incident")
                 await self._send_set_game_guard_message(
                     self.global_channel, self.major_incident_guard
                 )
