@@ -392,25 +392,20 @@ class IPC:
             "Authorization": f"Bot {self._config['bot']['discord-token']}"
         }
         body = {
-            "content": f"<@{reminder.user_id}>",
-            "message_reference": {
-                "channel_id": str(reminder.channel_id),
-                "guild_id": str(reminder.guild_id),
-                "message_id": str(reminder.message_id)
-            },
+            "content": f"<@{reminder.user_id}> \ud83d\udc26 {name}, the mail bird: *\"{msg}\"*",
             "embeds": [
                 {
                     "color": 12697268,
                     "title": "\u23f0 Your harvest is ready!",
                     "description": (
-                        f"\ud83d\udc26 {name}, the mail bird: *\"{msg}\"*\n"
                         f"\ud83c\udf31 Your **{reminder.amount}x {item.full_name}** "
-                        "have been fully grown and are now ready to be harvested!"
+                        "have been fully grown and are now ready to be harvested!\n"
+                        "\ud83d\ude9c Use **/harvest** to collect your items!"
                     ),
                     "footer": {
                         "text": (
                             "\ud83d\udca1 You can disable these game notifications with the "
-                            "\"notifications\" command."
+                            "/notifications command."
                         )
                     }
                 }

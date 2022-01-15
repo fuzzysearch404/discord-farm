@@ -298,9 +298,9 @@ class Profile(commands.Cog):
         )
         if not member:
             if user.notifications:
-                embed.set_footer(text="\ud83d\udce7 Game notifications are enabled")
+                embed.set_footer(text="\ud83d\udce7 Your game notifications are enabled")
             else:
-                embed.set_footer(text="\ud83d\udce7 Game notifications are disabled")
+                embed.set_footer(text="\ud83d\udce7 Your game notifications are disabled")
 
         await ctx.reply(embed=embed)
 
