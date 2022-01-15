@@ -379,12 +379,14 @@ class Farm(commands.Cog):
 
         for plant in field_parsed:
             if plant.iterations and plant.iterations > 1:
-                if plant.is_harvestable or self.bot.field_guard and plant.state == PlantState.ROTTEN:
+                if plant.is_harvestable or self.bot.field_guard \
+                        and plant.state == PlantState.ROTTEN:
                     to_update.append(plant)
                 elif plant.state == PlantState.ROTTEN:
                     to_discard.append(plant)
             else:
-                if plant.is_harvestable or self.bot.field_guard and plant.state == PlantState.ROTTEN:
+                if plant.is_harvestable or self.bot.field_guard \
+                        and plant.state == PlantState.ROTTEN:
                     to_harvest.append(plant)
                 elif plant.state == PlantState.ROTTEN:
                     to_discard.append(plant)

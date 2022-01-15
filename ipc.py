@@ -410,21 +410,21 @@ class IPC:
         body = {
             "content": f"<@{reminder.user_id}>",
             "message_reference": {
-                "channel_id" : str(reminder.channel_id),
-                "guild_id" : str(reminder.guild_id),
-                "message_id" : str(reminder.message_id)
+                "channel_id": str(reminder.channel_id),
+                "guild_id": str(reminder.guild_id),
+                "message_id": str(reminder.message_id)
             },
-            "embeds" : [
+            "embeds": [
                 {
-                    "color" : 12697268,
-                    "title" : "\u23f0 Your harvest is ready!",
-                    "description" : (
+                    "color": 12697268,
+                    "title": "\u23f0 Your harvest is ready!",
+                    "description": (
                         f"\ud83d\udc26 {name}, the mail bird: *\"{msg}\"*\n"
                         f"\ud83c\udf31 Your **{reminder.amount}x {item.full_name}** "
                         "have been fully grown and are now ready to be harvested!"
                     ),
-                    "footer" : {
-                        "text" : (
+                    "footer": {
+                        "text": (
                             "\ud83d\udca1 You can disable these game notifications with the "
                             "\"notifications\" command."
                         )
@@ -437,7 +437,9 @@ class IPC:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, headers=headers, json=body) as r:
                     if r.status == 200:
-                        self.log.info(f"Published reminder message to channel: {reminder.channel_id}")
+                        self.log.info(
+                            f"Published reminder message to channel: {reminder.channel_id}"
+                        )
                         return
 
                     try:

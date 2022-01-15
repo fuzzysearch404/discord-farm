@@ -313,7 +313,9 @@ class Lab(commands.Cog):
         max_volume = modifications.get_volume(item, vol_mod)
 
         if time1_mod < 10:
-            next_grow_time = time.seconds_to_time(modifications.get_growing_time(item, time1_mod + 1))
+            next_grow_time = time.seconds_to_time(
+                modifications.get_growing_time(item, time1_mod + 1)
+            )
             price = self.calculate_mod_cost(item, time1_mod + 1)
 
             cooldown = time.seconds_to_time(

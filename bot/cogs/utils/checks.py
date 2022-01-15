@@ -53,7 +53,7 @@ def has_account() -> commands.check:
         except exceptions.UserNotFoundException:
             raise exceptions.UserNotFoundException(
                 "Hey there! It looks like you don't have a game account yet! "
-                f"Type **/register** and let's get started!"
+                "Type **/register** and let's get started!"
                 "\ud83d\udc68\u200d\ud83c\udf3e"
             )
 
@@ -78,7 +78,7 @@ def avoid_maintenance() -> commands.check:
         raise exceptions.GameIsInMaintenance(
             "Game commands are disabled for a bot maintenance or update.\n"
             "\ud83d\udd50 Please try again after a while...\n"
-            f"\ud83d\udcf0 For more information use command - **/news**"
+            "\ud83d\udcf0 For more information use command - **/news**"
         )
 
     return commands.check(pred)

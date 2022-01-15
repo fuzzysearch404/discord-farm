@@ -60,16 +60,16 @@ class Launcher:
         }
 
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://discord.com/api/gateway/bot", headers=headers) as response:
-                json_body = await response.json()
+            async with session.get("https://discord.com/api/gateway/bot", headers=headers) as resp:
+                json_body = await resp.json()
 
-        if response.status != 200:
-            log.critical(f"Discord returned: {response.status}")
+        if resp.status != 200:
+            log.critical(f"Discord returned: {resp.status}")
             self.loop.stop()
 
         log.info(
             f"Successfully got shard count of {json_body['shards']} "
-            f"({response.status}, {response.reason})"
+            f"({resp.status}, {resp.reason})"
         )
 
         return json_body['shards']
