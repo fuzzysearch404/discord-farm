@@ -65,8 +65,8 @@ async def get_other_member(ctx, member: Member, conn=None):
         return await ctx.users.get_user(member.id, conn=conn)
     except exceptions.UserNotFoundException:
         raise exceptions.UserNotFoundException(
-            f"Whoops. `{member.nick or member.name}` does not have a "
-            "farm. Maybe tell them to check this bot out? \ud83e\udd14"
+            f"Whoops. {member.mention} does not have a farm. "
+            "Maybe tell them to check this bot out? \ud83e\udd14"
         )
 
 

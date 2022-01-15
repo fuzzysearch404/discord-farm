@@ -157,7 +157,8 @@ class Account(commands.Cog):
                         ),
                         footer="Maybe plant some lettuce? Carrots? \ud83e\udd14",
                         ctx=ctx
-                    )
+                    ),
+                    ephemeral=True
                 )
 
             await ctx.users.create_user(ctx.author.id, conn=conn)
