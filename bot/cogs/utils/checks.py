@@ -7,10 +7,7 @@ from core import exceptions
 
 def user_cooldown(cooldown: int, identifier: str = None) -> commands.check:
     async def predicate(ctx) -> bool:
-        if identifier is None:
-            cmd_id = ctx.command.qualified_name
-        else:
-            cmd_id = identifier
+        cmd_id = ctx.command.qualified_name if identifier is None else identifier
 
         command_ttl = await ctx.bot.redis.execute_command(
             "TTL", f"cd:{ctx.author.id}:{cmd_id}"
@@ -23,16 +20,14 @@ def user_cooldown(cooldown: int, identifier: str = None) -> commands.check:
 
             return True
         else:
-            raise commands.CommandOnCooldown(
-                ctx, command_ttl, commands.BucketType.user
-            )
+            raise commands.CommandOnCooldown(ctx, command_ttl, commands.BucketType.user)
 
     return commands.check(predicate)
 
 
 async def get_user_cooldown(ctx, identifier: str, other_user_id: int = 0):
     # other_user_id is used if we want to check other user's cooldown
-    user_id = other_user_id if other_user_id != 0 else ctx.author.id
+    user_id = other_user_id if other_user_id else ctx.author.id
 
     command_ttl = await ctx.bot.redis.execute_command(
         "TTL", f"cd:{user_id}:{identifier}"
@@ -54,12 +49,11 @@ def has_account() -> commands.check:
     async def pred(ctx) -> bool:
         try:
             ctx.user_data = await ctx.users.get_user(ctx.author.id)
-
             return True
         except exceptions.UserNotFoundException:
             raise exceptions.UserNotFoundException(
                 "Hey there! It looks like you don't have a game account yet! "
-                f"Type `{ctx.prefix}register` and let's get started!"
+                f"Type **/register** and let's get started!"
                 "\ud83d\udc68\u200d\ud83c\udf3e"
             )
 
@@ -72,7 +66,7 @@ async def get_other_member(ctx, member: Member, conn=None):
     except exceptions.UserNotFoundException:
         raise exceptions.UserNotFoundException(
             f"Whoops. `{member.nick or member.name}` does not have a "
-            "game account. Maybe tell them to check this bot out? \ud83e\udd14"
+            "farm. Maybe tell them to check this bot out? \ud83e\udd14"
         )
 
 
