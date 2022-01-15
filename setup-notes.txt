@@ -38,6 +38,7 @@ cd /home/fuzzysearch/discord-farm/
 touch ./data/news.txt
 
 3) Configure config.json as per config.example.json example
+3.1) Also core/static.py has some variables that might need to be changed
 
 4) Configure backups: (Using: https://github.com/labbots/google-drive-upload)
 # Another source: https://mikeck.elevatika.com/posts/a-simple-way-to-backup-your-postgress-db-to-google-drive-automatically-once-a-day/
