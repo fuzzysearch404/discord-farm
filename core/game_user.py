@@ -90,15 +90,26 @@ class User:
 
         embed = embeds.congratulations_embed(
             title=f"Level up! You have reached: \ud83d\udd31 Level **{self.level}**",
-            text=f"You have been rewarded with a shiny {ctx.bot.gem_emoji}",
+            text=f"\ud83c\udfe6 The bank has rewarded you with a shiny {ctx.bot.gem_emoji} gem!",
             footer=f"Congratulations, {ctx.author.nick or ctx.author.name}!",
             ctx=ctx
         )
 
+        features_per_level = {
+            3: "\ud83c\udfed Factory",
+            17: "\ud83c\udfa3 Fishing"
+        }
+
+        try:
+            unlocked_feature = features_per_level[self.level]
+            embed.description += "\n\ud83c\udd95 **New feature unlocked:** " + unlocked_feature
+        except KeyError:
+            pass
+
         unlocked_items = ctx.bot.item_pool.find_items_by_level(self.level)
         if unlocked_items:
             fmt = [x.full_name for x in unlocked_items]
-            embed.description += "\n\nAnd also you have unlocked the following items: "
+            embed.description += "\n\n\ud83d\udd13 And also you have unlocked the following items: "
             embed.description += ", ".join(fmt)
 
         await ctx.reply(embed=embed)
