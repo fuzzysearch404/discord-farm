@@ -1,8 +1,12 @@
+-- PERMISSIONS
+
 GRANT ALL PRIVILEGES ON DATABASE discordfarmdata TO discordfarm; 
 GRANT ALL PRIVILEGES ON SCHEMA public to discordfarm;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public to discordfarm;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO discordfarm;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO discordfarm;
+
+-- TABLES
 
 CREATE TABLE IF NOT EXISTS public.profile(
     user_id bigint PRIMARY KEY,
@@ -95,3 +99,56 @@ CREATE TABLE IF NOT EXISTS public.guilds(
     guild_id bigint PRIMARY KEY,
     prefix VARCHAR (6) NOT NULL
 );
+
+-- FUNCTIONS
+
+-- Profile statistics for the profile command
+CREATE TYPE profile_stats AS (
+    inventory_size integer, nearest_harvest timestamp, farm_slots_used integer,
+    nearest_factory_production timestamp, store_slots_used integer
+);
+
+CREATE OR REPLACE FUNCTION get_profile_stats(user_id bigint, guild_id bigint) 
+RETURNS profile_stats
+AS
+$$
+
+DECLARE
+    result_record profile_stats;
+
+BEGIN
+    SELECT sum(amount)
+    INTO result_record.inventory_size
+    FROM inventory
+    WHERE inventory.user_id = $1
+    AND item_id < 1000; -- exclude chests (id >= 1000)
+
+    SELECT ends
+    INTO result_record.nearest_harvest
+    FROM farm
+    WHERE farm.user_id = $1
+    ORDER BY ends
+    LIMIT 1;
+
+    SELECT sum(fields_used)
+    INTO result_record.farm_slots_used
+    FROM farm
+    WHERE farm.user_id = $1;
+
+    SELECT ends
+    INTO result_record.nearest_factory_production
+    FROM factory
+    WHERE factory.user_id = $1
+    ORDER BY ends
+    LIMIT 1;
+
+    SELECT count(id)
+    INTO result_record.store_slots_used
+    FROM store
+    WHERE store.user_id = $1
+    AND store.guild_id = $2;
+
+    RETURN result_record;
+
+END
+$$ LANGUAGE plpgsql;

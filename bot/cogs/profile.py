@@ -138,106 +138,68 @@ class Profile(commands.Cog):
             mention = target_user.mention
 
         bot = self.bot
-        prefix = ctx.prefix
+
+        total_farm_slots = user.farm_slots
+        total_farm_slots_formatted = total_farm_slots
+        factory_slots_formatted = user.factory_slots
 
         all_boosts = await user.get_all_boosts(ctx)
         boost_ids = [x.id for x in all_boosts]
 
-        farm_slots = user.farm_slots
-        farm_slots_formatted = farm_slots
-        factory_slots_formatted = user.factory_slots
-
         if "farm_slots" in boost_ids:
-            farm_slots += 2
-            farm_slots_formatted = f"**{farm_slots}** \ud83d\udc39"
+            total_farm_slots += 2
+            total_farm_slots_formatted = f"**{total_farm_slots}** \ud83d\udc39"
         if "factory_slots" in boost_ids:
-            factory_slots_formatted = \
-                f"**{user.factory_slots + 2}** \ud83e\udd89"
+            factory_slots_formatted = f"**{user.factory_slots + 2}** \ud83e\udd89"
 
         async with ctx.db.acquire() as conn:
-            # Limit the results to item_id < 1000, to not count in the chests
-            query = """
-                    SELECT sum(amount) FROM inventory
-                    WHERE user_id = $1
-                    AND item_id < 1000;
-                    """
+            # See schema.sql for this function
+            query = "SELECT get_profile_stats($1, $2);"
+            profile_stats = await conn.fetchrow(query, user.user_id, ctx.guild.id)
+            # Function returns a nested record
+            profile_stats = profile_stats[0]
 
-            inventory_size = await conn.fetchval(query, user.user_id)
+        inventory_size = profile_stats.get("inventory_size") or 0
+        farm_slots_used = profile_stats.get("farm_slots_used") or 0
+        store_slots_used = profile_stats.get("store_slots_used") or 0
 
-            query = """
-                    SELECT ends, (SELECT sum(fields_used)
-                    FROM farm WHERE user_id = $1)
-                    FROM farm WHERE user_id = $1
-                    ORDER BY ends LIMIT 1;
-                    """
-
-            field_data = await conn.fetchrow(query, user.user_id)
-
-            query = """
-                    SELECT ends FROM factory
-                    WHERE user_id = $1 ORDER BY ends;
-                    """
-
-            nearest_factory = await conn.fetchval(query, user.user_id)
-
-            query = """
-                    SELECT count(id) FROM store
-                    WHERE user_id = $1
-                    AND guild_id = $2;
-                    """
-
-            used_store_slots = await conn.fetchval(
-                query, user.user_id, ctx.guild.id
-            )
-
-        inventory_size = inventory_size or 0
+        free_farm_slots = total_farm_slots - farm_slots_used
+        if free_farm_slots < 0:  # Expired +2 farm slots booster visual bug fix
+            free_farm_slots = 0
 
         datetime_now = datetime.now()
 
-        if not field_data:
-            nearest_harvest = "-"
-            free_farm_slots = farm_slots
-        else:
-            nearest_harvest = field_data[0]
-
+        nearest_harvest = profile_stats.get("nearest_harvest")
+        if nearest_harvest:
             if nearest_harvest > datetime_now:
-                nearest_harvest = time.maybe_timestamp(
-                    nearest_harvest, since=datetime_now
-                )
+                nearest_harvest = time.maybe_timestamp(nearest_harvest, since=datetime_now)
             else:
                 nearest_harvest = self.bot.check_emoji
-
-            free_farm_slots = farm_slots - field_data[1]
-            if free_farm_slots < 0:  # Expired slots booster visual bug fix
-                free_farm_slots = 0
-
-        if not nearest_factory:
-            nearest_factory = "-"
         else:
+            nearest_harvest = "-"
+
+        nearest_factory = profile_stats.get("nearest_factory_production")
+        if nearest_factory:
             if nearest_factory > datetime_now:
-                nearest_factory = time.maybe_timestamp(
-                    nearest_factory, since=datetime_now
-                )
+                nearest_factory = time.maybe_timestamp(nearest_factory, since=datetime_now)
             else:
                 nearest_factory = self.bot.check_emoji
+        else:
+            nearest_factory = "-"
 
         lab_cooldown = await checks.get_user_cooldown(
             ctx, "recent_research", other_user_id=user.user_id
         )
-        lab_info = f"\ud83d\udd0e **{prefix}lab** {mention}"
+        lab_info = f"\ud83d\udd0e **/lab** {mention}"
 
         if lab_cooldown:
             lab_cd_ends = datetime_now + timedelta(seconds=lab_cooldown)
             lab_info = (
-                "\ud83e\uddf9 Available again: "
-                f"{time.maybe_timestamp(lab_cd_ends)}\n"
+                f"\ud83e\uddf9 Available again: {time.maybe_timestamp(lab_cd_ends)}\n"
             ) + lab_info
 
         embed = discord.Embed(
-            title=(
-                f"\ud83c\udfe1 {target_user.nick or target_user.name}'s "
-                "profile"
-            ),
+            title=f"\ud83c\udfe1 {target_user.nick or target_user.name}'s profile",
             color=discord.Color.from_rgb(189, 66, 17)
         )
         embed.add_field(
@@ -249,53 +211,48 @@ class Profile(commands.Cog):
         embed.add_field(
             name=f"{bot.warehouse_emoji} Warehouse",
             value=(
-                f"\ud83c\udff7\ufe0f {inventory_size} inventory items"
-                f"\n\ud83d\udd0e **{prefix}inventory** {mention}"
+                f"\ud83c\udff7\ufe0f {inventory_size} inventory items\n"
+                f"\ud83d\udd0e **/inventory** {mention}"
             )
         )
         embed.add_field(
-            name='\ud83c\udf31 Farm',
+            name="\ud83c\udf31 Farm",
             value=(
-                f"{bot.tile_emoji} {free_farm_slots}/{farm_slots_formatted} "
-                f"free tiles\n\u23f0 Next harvest: {nearest_harvest}"
-                f"\n\ud83d\udd0e **{prefix}farm** {mention}"
+                f"{bot.tile_emoji} {free_farm_slots}/{total_farm_slots_formatted} "
+                f"free tiles\n\u23f0 Next harvest: {nearest_harvest}\n"
+                f"\ud83d\udd0e **/farm** {mention}"
             )
         )
+
         if user.level > 2:
             embed.add_field(
-                name='\ud83c\udfed Factory',
+                name="\ud83c\udfed Factory",
                 value=(
-                    f"\ud83d\udce6 Max. capacity: {factory_slots_formatted}"
-                    "\n\ud83d\udc68\u200d\ud83c\udf73 Workers: "
-                    f"{user.factory_level}/10"
-                    f"\n\u23f0 Next production: {nearest_factory}"
-                    f"\n\ud83d\udd0e **{prefix}factory** {mention}"
+                    f"\ud83d\udce6 Max. capacity: {factory_slots_formatted}\n"
+                    f"\ud83d\udc68\u200d\ud83c\udf73 Workers: {user.factory_level}/10\n"
+                    f"\u23f0 Next production: {nearest_factory}\n"
+                    f"\ud83d\udd0e **/factory** {mention}"
                 )
             )
         else:
-            embed.add_field(
-                name="\ud83c\udfed Factory",
-                value="\ud83d\udd12 Unlocks at level 3."
-            )
+            embed.add_field(name="\ud83c\udfed Factory", value="\ud83d\udd12 Unlocks at level 3")
+
         embed.add_field(
-            name='\ud83e\udd1d Server trades',
+            name="\ud83e\udd1d Server trades",
             value=(
-                "\ud83d\udcb0 Active trades: "
-                f"{used_store_slots}/{user.store_slots}\n"
-                f"\ud83d\udd0e **{prefix}trades**"
+                f"\ud83d\udcb0 Active trades: {store_slots_used}/{user.store_slots}\n"
+                "\ud83d\udd0e **/trades**"
             )
         )
-        embed.add_field(
-            name="\ud83e\uddec Laboratory",
-            value=lab_info
-        )
+        embed.add_field(name="\ud83e\uddec Laboratory", value=lab_info)
         embed.add_field(
             name="\u2b06 Boosters",
             value=(
-                f"\ud83d\udcc8 {len(all_boosts)} boosters active"
-                f"\n\ud83d\udd0e **{prefix}boosts** {mention}"
+                f"\ud83d\udcc8 {len(all_boosts)} boosters active\n"
+                f"\ud83d\udd0e **/boosters** {mention}"
             )
         )
+
         if not member:
             if user.notifications:
                 embed.set_footer(text="\ud83d\udce7 Your game notifications are enabled")
