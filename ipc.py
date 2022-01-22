@@ -33,7 +33,8 @@ class IPC:
             "ipc.log",
             encoding="utf-8",
             maxBytes=2 * 1024,
-            backupCount=5
+            backupCount=5,
+            mode="w"
         )
         file_handler.setFormatter(log_formatter)
         stream_handler = logging.StreamHandler()
