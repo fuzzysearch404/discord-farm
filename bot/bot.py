@@ -76,7 +76,7 @@ class BotClient(commands.AutoShardedBot):
             loop=loop
         )
 
-        self.add_check(self.temp_beta_check().predicate)
+        self.add_check(self.temp_beta_check().predicate)  # TODO: For removal in May 2022
 
         for extension in self.config['bot']['initial-cogs']:
             try:
@@ -160,8 +160,8 @@ class BotClient(commands.AutoShardedBot):
         file_handler = RotatingFileHandler(
             f"cluster-{self.cluster_name}.log",
             encoding="utf-8",
-            mode="a",
-            maxBytes=2 * 1024
+            maxBytes=2 * 1024,
+            backupCount=5
         )
         file_handler.setFormatter(log_formatter)
         stream_handler = logging.StreamHandler()

@@ -32,8 +32,8 @@ class IPC:
         file_handler = RotatingFileHandler(
             "ipc.log",
             encoding="utf-8",
-            mode="a",
-            maxBytes=2 * 1024
+            maxBytes=2 * 1024,
+            backupCount=5
         )
         file_handler.setFormatter(log_formatter)
         stream_handler = logging.StreamHandler()

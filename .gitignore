@@ -5,4 +5,5 @@ botsettings.py
 config.json
 news.txt
 *.log
+*.log.*
 dump.rdb
