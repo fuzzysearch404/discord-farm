@@ -9,32 +9,30 @@ class AccountCollection(CommandCollection):
     def __init__(self, client):
         super().__init__(client, [TutorialCommand], name="Account")
 
-    async def send_disable_reminders_to_ipc(self, user_id: int) -> None:
-        cluster_collection = self.client.get_command_collection("Clusters")
-        if not cluster_collection:
-            self.client.log.critical("Reminder failed: Cluster cog not loaded!")
-            return
+    def _get_cluster_collection(self):
+        try:
+            return self.client.get_command_collection("Clusters")
+        except KeyError:
+            self.client.log.critical("Reminder failed: Cluster collection not loaded!")
+            return None
 
-        await cluster_collection.send_disable_reminders_message(user_id)
+    async def send_disable_reminders_to_ipc(self, user_id: int) -> None:
+        cluster_collection = self._get_cluster_collection()
+        if cluster_collection:
+            await cluster_collection.send_disable_reminders_message(user_id)
 
     async def send_enable_reminders_to_ipc(self, user_id: int) -> None:
-        cluster_collection = self.client.get_command_collection("Clusters")
-        if not cluster_collection:
-            self.client.log.critical("Reminder failed: Cluster cog not loaded!")
-            return
-
-        await cluster_collection.send_enable_reminders_message(user_id)
+        cluster_collection = self._get_cluster_collection()
+        if cluster_collection:
+            await cluster_collection.send_enable_reminders_message(user_id)
 
     async def send_delete_reminders_to_ipc(self, user_id: int) -> None:
-        cluster_collection = self.client.get_command_collection("Clusters")
-        if not cluster_collection:
-            self.client.log.critical("Reminder failed: Cluster cog not loaded!")
-            return
-
-        await cluster_collection.send_delete_reminders_message(user_id)
+        cluster_collection = self._get_cluster_collection()
+        if cluster_collection:
+            await cluster_collection.send_delete_reminders_message(user_id)
 
 
-class TutorialCommand(FarmSlashCommand, name="tutorial", guilds=[697351647826935839]):
+class TutorialCommand(FarmSlashCommand, name="tutorial"):
     """\N{OPEN BOOK} Some quickstart tips for new players"""
     avoid_maintenance = False  # type: bool
     requires_account = False  # type: bool
