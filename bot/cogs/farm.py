@@ -191,8 +191,6 @@ class Farm(commands.Cog):
     but they are discarded automatically when you harvest your field.
     Trees, bushes and animals have multiple collection cycles,
     so you have to collect their items multiple times in a row.
-    If they get rotten, just harvest the rotten items and the
-    next growing cycle will start unaffected.
     """
 
     def __init__(self, bot) -> None:
