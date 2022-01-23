@@ -223,7 +223,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
     def lookup_booster(self, item_id_str: str):
         try:
             return self.items.find_booster_by_id(item_id_str)
-        except (ValueError, exceptions.ItemNotFoundException):
+        except exceptions.ItemNotFoundException:
             raise exceptions.ItemNotFoundException(
                 f"Whoops. I could not find a booster called \"{item_id_str}\". \ud83d\ude1f\n"
                 "\ud83d\udd0e Could you please take this magnifying glass and try searching again?"
