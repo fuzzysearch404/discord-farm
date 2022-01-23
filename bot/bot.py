@@ -10,7 +10,7 @@ import aiohttp
 import aioredis
 import asyncpg
 import discord
-from logging.handlers import RotatingFileHandler
+from logging.handlers import TimedRotatingFileHandler
 from discord.ext.modules import AutoShardedModularCommandClient
 
 from core.game_user import UserManager
@@ -33,6 +33,7 @@ class BotClient(AutoShardedModularCommandClient):
         self.is_beta = config['bot']['beta']
         self.ipc_ping = 0
         self.custom_prefixes = {}  # TODO: For removal in May 2022
+        self.owner_ids = set()
 
         emojis = config['emoji']
         self.check_emoji = emojis['check']
@@ -48,12 +49,11 @@ class BotClient(AutoShardedModularCommandClient):
         else:
             log.setLevel(logging.INFO)
         log_formatter = logging.Formatter("[%(asctime)s %(name)s/%(levelname)s] %(message)s")
-        file_handler = RotatingFileHandler(
-            f"cluster-{self.cluster_name}.log",
+        file_handler = TimedRotatingFileHandler(
+            f"./logs/cluster-{self.cluster_name}.log",
             encoding="utf-8",
-            maxBytes=2 * 1024,
-            backupCount=5,
-            mode="w"
+            when="W0",
+            interval=2
         )
         file_handler.setFormatter(log_formatter)
         stream_handler = logging.StreamHandler()
@@ -74,13 +74,12 @@ class BotClient(AutoShardedModularCommandClient):
             loop=loop
         )
 
-        # TODO load extensions
-        # for extension in self.config['bot']['initial-cogs']:
-        #     try:
-        #         self.log.debug(f"Loading extension: {extension}")
-        #         self.load_extension(extension)
-        #     except Exception:
-        #         self.log.exception(f"Failed to load extension: {extension}")
+        for extension in self.config['bot']['initial-extensions']:
+            try:
+                self.log.debug(f"Loading extension: {extension}")
+                self.load_extension(extension)
+            except Exception:
+                self.log.exception(f"Failed to load extension: {extension}")
 
         # if self.is_beta:
         #     self.log.warning("Loading the beta debug extension")
@@ -97,6 +96,10 @@ class BotClient(AutoShardedModularCommandClient):
     def field_guard(self) -> datetime.datetime:
         return self.guard_mode > datetime.datetime.now()
 
+    # TODO
+    async def setup(self):
+        await self.upload_guild_application_commands()
+
     async def _connect_postgres(self) -> None:
         connect_args = {
             "user": self.config['postgres']['user'],
@@ -109,7 +112,8 @@ class BotClient(AutoShardedModularCommandClient):
             **connect_args,
             min_size=10,
             max_size=15,
-            command_timeout=60.0
+            command_timeout=60.0,
+            max_inactive_connection_lifetime=30.0
         )
 
         # Check if Postgres is connected
@@ -137,14 +141,23 @@ class BotClient(AutoShardedModularCommandClient):
             self.log.critical("Failed to connect to Redis", exc_info=exc_info)
             raise ex
 
+    async def is_owner(self, user: discord.User):
+        if not self.owner_ids:
+            app = await self.application_info()
+            if app.team:
+                self.owner_ids = {member.id for member in app.team.members}
+            else:
+                self.owner_ids = {app.owner.id}
+
+        return user.id in self.owner_ids
+
     def cleanup_code(self, content: str) -> str:
         if content.startswith("```") and content.endswith("```"):
             return "\n".join(content.split("\n")[1:-1])
         return content.strip("` \n")
 
-    async def eval_code(self, code: str, ctx=None) -> str:
-        # TODO: ctx param
-        env = {"bot": self, "ctx": ctx}
+    async def eval_code(self, code: str, cmd=None) -> str:
+        env = {"bot": self, "cmd": cmd}
         env.update(globals())
 
         body = self.cleanup_code(code)
@@ -218,13 +231,31 @@ class BotClient(AutoShardedModularCommandClient):
         if not message.channel.permissions_for(message.guild.me).send_messages:
             return
 
-        all_commands = ["profile"]  # TODO get all cmds
         prefix = self.get_custom_prefix(self, message)
         if not message.content.startswith(prefix):
             return
 
+        # Dirty nested for loop, but as this is only temporary, it's fine
+        all_commands = []
+        for collection in self.command_collections.values():
+            for command in collection.commands:
+                all_commands.append(command._name_)
+        # Include common aliases
+        aliases = {
+            "prof": "profile",
+            "inv": "inventory",
+            "p": "plant",
+            "i": "item",
+            "h": "harvest",
+            "mi": "missions",
+            "f": "farm",
+            "fa": "factory"
+        }
+
         cmd = message.content[len(prefix):].strip().split(" ")[0].lower()
-        if cmd not in all_commands:
+        if cmd in aliases:
+            cmd = aliases[cmd]
+        elif cmd not in all_commands:
             return
 
         await message.reply(
@@ -268,60 +299,6 @@ class BotClient(AutoShardedModularCommandClient):
             return
 
         await super().on_interaction(interaction)
-
-    # async def on_command_error(self, ctx, error) -> None:
-    #     if isinstance(error, commands.errors.CommandNotFound):
-    #         pass
-    #     elif isinstance(error, exceptions.FarmException):
-    #         await ctx.reply(f"\u274c {str(error)}", ephemeral=True)
-    #     elif isinstance(error, commands.errors.CommandOnCooldown):
-    #         return await ctx.reply(
-    #             "\u23f0 This command is on cooldown for:  "
-    #             f"**{seconds_to_time(error.retry_after)}**",
-    #             ephemeral=True
-    #         )
-    #     elif isinstance(error, commands.errors.MissingRequiredArgument):
-    #         return await ctx.reply(
-    #             "\u274c This command requires additional argument: "
-    #             f"`{error.param.name}`. For this command's usage information "
-    #             f"please see **/help {ctx.invoked_with}**.",
-    #             ephemeral=True
-    #         )
-    #     elif isinstance(error, commands.errors.BadArgument):
-    #         return await ctx.reply(
-    #             "\u274c Invalid command argument provided. "
-    #             "For this command's usage information please see "
-    #             f"**/help {ctx.invoked_with}**.",
-    #             ephemeral=True
-    #         )
-    #     elif isinstance(error, commands.errors.BotMissingPermissions):
-    #         # Keeping this one not ephemeral to inform the server staff faster
-    #         return await ctx.reply(
-    #             f"\u274c {str(error)} Please ask a server admin to enable those. "
-    #             "Otherwise, I can't function as intended \ud83d\ude2b"
-    #         )
-    #     elif isinstance(error, commands.errors.MissingPermissions):
-    #         return await ctx.reply(f"\u274c {str(error)}", ephemeral=True)
-    #     elif isinstance(error, commands.errors.MaxConcurrencyReached):
-    #         return await ctx.reply(f"\u274c {str(error)}", ephemeral=True)
-    #     elif isinstance(error, commands.errors.DisabledCommand):
-    #         return await ctx.reply(
-    #             "\u274c Sorry, this command currently has been "
-    #             "disabled and it cannot be used right now.",
-    #             ephemeral=True
-    #         )
-    #     elif isinstance(error, commands.errors.CommandInvokeError):
-    #         original = error.original
-    #         if not isinstance(original, discord.HTTPException):
-    #             exc_info = (type(original), original, original.__traceback__)
-    #             self.log.error(f"In {ctx.command.qualified_name}:", exc_info=exc_info)
-    #     elif isinstance(error, commands.errors.ArgumentParsingError):
-    #         return await ctx.reply(error, ephemeral=True)
-    #     elif isinstance(error, commands.errors.CheckFailure):
-    #         return await ctx.reply("\u274c Sorry, you can't use this command", ephemeral=True)
-    #     else:
-    #         exc_info = (type(error), error, error.__traceback__)
-    #         self.log.error(f"In {ctx.command.qualified_name}:", exc_info=exc_info)
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         message = (

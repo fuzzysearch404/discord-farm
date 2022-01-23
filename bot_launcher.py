@@ -14,7 +14,7 @@ log = logging.getLogger("Launcher")
 log.setLevel(logging.DEBUG)
 hdlr = logging.StreamHandler()
 hdlr.setFormatter(LOG_FORMATTER)
-fhdlr = logging.FileHandler("launcher.log", encoding='utf-8')
+fhdlr = logging.FileHandler("./logs/launcher.log", encoding="utf-8")
 fhdlr.setFormatter(LOG_FORMATTER)
 log.handlers = [hdlr, fhdlr]
 
@@ -179,7 +179,7 @@ class Cluster:
         self.log.setLevel(logging.DEBUG)
         hdlr = logging.StreamHandler()
         hdlr.setFormatter(LOG_FORMATTER)
-        fhdlr = logging.FileHandler("cluster-Launcher.log", encoding='utf-8')
+        fhdlr = logging.FileHandler("./logs/cluster-Launcher.log", encoding="utf-8")
         fhdlr.setFormatter(LOG_FORMATTER)
         self.log.handlers = [hdlr, fhdlr]
 

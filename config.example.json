@@ -2,9 +2,7 @@
     "redis" : {
         "host" : "redis://localhost",
         "db-index": 0,
-        "password" : null,
-        "global-channel-name" : "global",
-        "cluster-channel-prefix" : "cluster-"
+        "password" : null
     },
     "postgres" : {
         "user" : "discordfarm",
@@ -19,23 +17,13 @@
         "start-in-maintenance" : false,
         "startup-farm-guard-duration" : 330,
         "logs-webhook" : "https://canary.discord.com/api/webhooks/1234/some_symbols",
-        "initial-cogs" : [
-            "bot.cogs.account",
-            "bot.cogs.admin",
-            "bot.cogs.clusters",
-            "bot.cogs.factory",
-            "bot.cogs.farm",
-            "bot.cogs.info",
-            "bot.cogs.lab",
-            "bot.cogs.missions",
-            "bot.cogs.profile",
-            "bot.cogs.shop"
+        "initial-extensions" : [
+            "bot.commands.clusters"
         ],
-        "activity-status" : "/help"
+        "activity-status" : "Now with slash commands!!1"
     },
     "ipc" : {
         "bot-id" : 526436949481881610,
-        "ipc-author" : "IPC",
         "beta": true,
         "db-backups-delay" : 3600,
         "cluster-inactive-timeout" : 300,

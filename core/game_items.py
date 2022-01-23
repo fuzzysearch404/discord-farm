@@ -3,9 +3,8 @@ import random
 from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
-from difflib import get_close_matches
 
-from core.exceptions import ItemNotFoundException
+from bot.commands.util.exceptions import ItemNotFoundException
 
 
 # < 10 Minutes
@@ -410,44 +409,29 @@ class ItemPool:
 
     __slots__ = (
         "all_items",
-        "all_boosts",
-        "all_chests",
-        "items_per_id",
-        "items_per_name",
-        "all_item_names",
-        "all_crops",
-        "all_trees",
-        "all_animals",
-        "all_products",
-        "all_specials"
+        "all_items_by_id",
+        "all_item_ids_by_name",
+        "all_boosts_by_id",
+        "all_boost_ids_by_name",
+        "all_chests_by_id",
+        "all_chest_ids_by_name",
+        "all_plantable_ids_by_name",
+        "all_product_ids_by_name"
     )
 
     def __init__(self, all_items: list, all_boosts: list, all_chests: list) -> None:
         self.all_items = all_items
-        self.all_boosts = all_boosts
-        self.all_chests = all_chests
-        self.items_per_id = self._group_all_items_per_id()
-        self.items_per_name = self._group_all_items_per_name()
-        self.all_item_names = list(self.items_per_name.keys())
-        self.all_crops = self._list_items_per_class(Crop)
-        self.all_trees = self._list_items_per_class(Tree)
-        self.all_animals = self._list_items_per_class(Animal)
-        self.all_products = self._list_items_per_class(Product)
-        self.all_specials = self._list_items_per_class(Special)
+        self.all_items_by_id = {str(i.id): i for i in all_items}
+        self.all_item_ids_by_name = {i.name: i.id for i in all_items}
+        self.all_boosts_by_id = {b.id: b for b in all_boosts}
+        self.all_boost_ids_by_name = {b.name: b.id for b in all_boosts}
+        self.all_chests_by_id = {str(c.id): c for c in all_chests}
+        self.all_chest_ids_by_name = {c.name: c.id for c in all_chests}
+        self.all_plantable_ids_by_name = self._sort_names_by_ids_per_class(PlantableItem)
+        self.all_product_ids_by_name = self._sort_names_by_ids_per_class(Product)
 
-    def find_item_by_id(self, item_id: int) -> GameItem:
-        try:
-            return self.items_per_id[str(item_id)]
-        except KeyError:
-            raise ItemNotFoundException(f"Item {item_id} not found!")
-
-    def find_item_by_name(self, item_name: str) -> GameItem:
-        matches = get_close_matches(item_name, self.all_item_names, cutoff=0.65)
-
-        if not matches:
-            raise ItemNotFoundException(f"Item \"{item_name}\" not found!")
-
-        return self.items_per_name[matches[0]]
+    def _sort_names_by_ids_per_class(self, item_class) -> dict:
+        return {x.name: x.id for x in self.all_items if isinstance(x, item_class)}
 
     def find_items_by_level(self, item_level: int) -> list:
         return [x for x in self.all_items if x.level == item_level]
@@ -455,67 +439,28 @@ class ItemPool:
     def find_all_items_by_level(self, user_level: int) -> list:
         return [x for x in self.all_items if x.level <= user_level]
 
-    def find_boost_by_name(self, boost_name: str) -> Boost:
-        boosts_per_name = {}
-
-        for boost in self.all_boosts:
-            boosts_per_name[boost.name] = boost
-
-        matches = get_close_matches(boost_name, list(boosts_per_name.keys()), cutoff=0.5)
-
-        if not matches:
-            raise ItemNotFoundException(f"Boost \"{boost_name}\" not found!")
-
-        return boosts_per_name[matches[0]]
-
-    def find_boost_by_id(self, boost_id: str) -> Boost:
+    def find_item_by_id(self, item_id: int) -> GameItem:
         try:
-            return next(x for x in self.all_boosts if x.id == boost_id)
-        except StopIteration:
+            return self.all_items_by_id[str(item_id)]
+        except KeyError:
+            raise ItemNotFoundException(f"Item {item_id} not found!")
+
+    def find_booster_by_id(self, boost_id: str) -> Boost:
+        try:
+            return self.all_boosts_by_id[boost_id]
+        except KeyError:
             raise ItemNotFoundException(f"Boost {boost_id} not found!")
 
-    def find_chest_by_name(self, chest_name: str) -> Chest:
-        chests_per_name = {}
-
-        for chest in self.all_chests:
-            chests_per_name[chest.name] = chest
-
-        matches = get_close_matches(chest_name, list(chests_per_name.keys()))
-
-        if not matches:
-            raise ItemNotFoundException(f"Chest \"{chest_name}\" not found!")
-
-        return chests_per_name[matches[0]]
-
-    def find_chest_by_id(self, chest_id: int) -> Boost:
+    def find_chest_by_id(self, chest_id: int) -> Chest:
         try:
-            return next(x for x in self.all_chests if x.id == chest_id)
-        except StopIteration:
+            return self.all_chests_by_id[str(chest_id)]
+        except KeyError:
             raise ItemNotFoundException(f"Chest {chest_id} not found!")
 
     def update_market_prices(self) -> None:
         for item in self.all_items:
             if isinstance(item, MarketItem):
                 item.generate_new_price()
-
-    def _group_all_items_per_id(self) -> dict:
-        items_per_id = {}
-
-        for item in self.all_items:
-            items_per_id[str(item.id)] = item
-
-        return items_per_id
-
-    def _group_all_items_per_name(self) -> dict:
-        items_per_name = {}
-
-        for item in self.all_items:
-            items_per_name[item.name] = item
-
-        return items_per_name
-
-    def _list_items_per_class(self, item_class) -> list:
-        return [x for x in self.all_items if isinstance(x, item_class)]
 
     def get_random_items(
         self,
@@ -787,12 +732,10 @@ def load_all_items() -> ItemPool:
     # This has to be loaded last, to attach made_from subobject references
     _load_craftables(all_items)
 
-    # Items have no market prices, so we generate them
-    for item in all_items:
-        if isinstance(item, MarketItem):
-            item.generate_new_price()
-
     all_boosts = _load_boosts()
     all_chests = _load_chests()
 
-    return ItemPool(all_items, all_boosts, all_chests)
+    item_pool = ItemPool(all_items, all_boosts, all_chests)
+    # Items have no market prices, so we generate them
+    item_pool.update_market_prices()
+    return item_pool

@@ -2,9 +2,8 @@ import asyncpg
 import jsonpickle
 from datetime import datetime
 
-from . import exceptions
+from bot.commands.util import exceptions
 from core.game_items import GameItem
-from bot.cogs.utils import embeds
 
 
 class User:
@@ -77,7 +76,7 @@ class User:
         lev = int(remaining / 2_500_000)
         return 30 + lev, 11_500_000 + ((lev + 1) * 2_500_000)
 
-    async def give_xp_and_level_up(self, ctx, xp: int) -> None:
+    def give_xp_and_level_up(self, cmd, xp: int) -> None:
         old_level = self.level
         self.xp += xp
         self.level, self.next_level_xp = self._calculate_user_level()
@@ -87,32 +86,7 @@ class User:
 
         # If we somehow level up multiple levels at a time, give all gems
         self.gems += self.level - old_level
-
-        embed = embeds.congratulations_embed(
-            title=f"Level up! You have reached: \ud83d\udd31 Level **{self.level}**",
-            text=f"\ud83c\udfe6 The bank has rewarded you with a shiny {ctx.bot.gem_emoji} gem!",
-            footer=f"Congratulations, {ctx.author.nick or ctx.author.name}!",
-            ctx=ctx
-        )
-
-        features_per_level = {
-            3: "\ud83c\udfed Factory",
-            17: "\ud83c\udfa3 Fishing"
-        }
-
-        try:
-            unlocked_feature = features_per_level[self.level]
-            embed.description += "\n\ud83c\udd95 **New feature unlocked:** " + unlocked_feature
-        except KeyError:
-            pass
-
-        unlocked_items = ctx.bot.item_pool.find_items_by_level(self.level)
-        if unlocked_items:
-            fmt = [x.full_name for x in unlocked_items]
-            embed.description += "\n\n\ud83d\udd13 And also you have unlocked the following items: "
-            embed.description += ", ".join(fmt)
-
-        await ctx.reply(embed=embed)
+        cmd._level_up = True
 
     async def get_all_boosts(self, ctx) -> list:
         boosts = await ctx.redis.execute_command("GET", f"user_boosts:{self.user_id}")
@@ -358,7 +332,6 @@ class UserManager:
             await self.db_pool.release(conn)
 
         if not user_data:
-            # If someone deletes their account during a command execution
             raise exceptions.UserNotFoundException("You don't have a game account")
 
         user = User(

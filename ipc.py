@@ -7,7 +7,7 @@ import aiohttp
 import asyncpg
 import aioredis
 import jsonpickle
-from logging.handlers import RotatingFileHandler
+from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime, timedelta
 
 from core.ipc_classes import IPCMessage, Reminder
@@ -29,12 +29,10 @@ class IPC:
             log.setLevel(logging.INFO)
 
         log_formatter = logging.Formatter("[%(asctime)s %(name)s/%(levelname)s] %(message)s")
-        file_handler = RotatingFileHandler(
-            "ipc.log",
+        file_handler = TimedRotatingFileHandler(
+            "./logs/ipc.log",
             encoding="utf-8",
-            maxBytes=2 * 1024,
-            backupCount=5,
-            mode="w"
+            when="W0"
         )
         file_handler.setFormatter(log_formatter)
         stream_handler = logging.StreamHandler()
@@ -48,7 +46,6 @@ class IPC:
 
         ipc_config = self._config['ipc']
         self.bot_id = ipc_config['bot-id']
-        self.ipc_name = ipc_config['ipc-author']
         self.is_beta = ipc_config['beta']
         self.db_backup_delay = ipc_config['db-backups-delay']
         self.cluster_inactive_timeout = ipc_config['cluster-inactive-timeout']
@@ -58,9 +55,9 @@ class IPC:
         self.critical_incident_guard = ipc_config['critical-incident-guard']
         self.major_incident_guard = ipc_config['major-incident-guard']
 
-        redis_config = self._config['redis']
-        self.global_channel = redis_config['global-channel-name']
-        self.cluster_channel_prefix = redis_config['cluster-channel-prefix']
+        self.ipc_name = "IPC"
+        self.global_channel = "global"
+        self.cluster_channel_prefix = "cluster-"
 
         self.ignore_actions = (
             "maintenance",
@@ -511,6 +508,7 @@ class IPC:
             await asyncio.sleep(self.post_stats_delay)
 
             if not self.total_shard_count or not self.total_guild_count:
+                # Avoid posting when data is not gathered yet
                 continue
 
             url = f"https://top.gg/api/bots/{self.bot_id}/stats"

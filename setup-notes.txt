@@ -8,7 +8,12 @@ There might be stuff missing here or it might not be explained well.
 
 0) Clone repo in the home directory
 
-1) Installing the required software and dependencies:
+1) Create required directories and files:
+cd /home/fuzzysearch/discord-farm/
+mkdir logs
+touch ./data/news.txt
+
+2) Installing the required software and dependencies:
 
 sudo timedatectl set-timezone UTC
 
@@ -34,9 +39,6 @@ sudo apt install -y postgresql postgresql-contrib
     - or load a backup .sql file
  - switch back to the regular user
 
-cd /home/fuzzysearch/discord-farm/
-touch ./data/news.txt
-
 3) Configure config.json as per config.example.json example
 3.1) Also core/static.py has some variables that might need to be changed
 
@@ -52,7 +54,7 @@ https://labbots.github.io/google-drive-upload/setup/initial_setup/
 Do some random file upload to provide credentials and test if it works.
 Example - just upload schema file: gupload schema.sql
 
-5) Auto git deployment workflow:
+5) Auto git deployment workflow (Optional):
 
 /////
 Optional, I have put those in the deployment workflow too.
