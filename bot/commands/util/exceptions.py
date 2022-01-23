@@ -14,8 +14,8 @@ class GameIsInMaintenance(FarmException):
     def __init__(self) -> None:
         super().__init__(
             "Game commands are disabled for a bot maintenance or update.\n"
-            "\ud83d\udd50 Please try again after a while...\n"
-            "\ud83d\udcf0 For more information use command - **/news**"
+            "\N{CLOCK FACE ONE OCLOCK} Please try again after a while...\n"
+            "\N{NEWSPAPER} For more information use command - **/news**"
         )
 
 
@@ -39,7 +39,8 @@ class InsufficientUserLevelException(FarmException):
 
     def __init__(self, required_level: int) -> None:
         super().__init__(
-            f"\ud83d\udd12 This feature unlocks at player level \ud83d\udd31 **{required_level}**!"
+            "\N{LOCK} This feature unlocks at player level "
+            f"\N{TRIDENT EMBLEM} **{required_level}**!"
         )
 
 

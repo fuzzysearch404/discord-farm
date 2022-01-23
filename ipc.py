@@ -369,16 +369,15 @@ class IPC:
     async def _post_reminder_message(self, reminder) -> None:
         random_names = ("Thomas", "Sophia", "Liam", "Emma")
         random_messages = (
-            "Hey, are you here? Are you awake? \ud83d\udc4b",
-            "It's harvest time! \ud83e\uddd1\u200d\ud83c\udf3e",
-            "Guess who's harvest is ready? \ud83e\udd14",
-            "Hey, it's harvest time! \ud83d\ude4c",
-            "I have some good news for you! \ud83e\udd20",
-            "You might not believe it, but it's time to harvest your farm! \ud83d\udc49",
-            "Hi. Just letting you know that you harvest is ready. \ud83d\ude9c",
-            "No time for chatting, it's harvest time! \ud83e\udd2b",
-            "Get yourself ready for some work, it's harvest time! \ud83d\ude31",
-            "Come, I have something to show you! \ud83d\ude2e"
+            "Hey, are you here? Are you awake? \N{WAVING HAND SIGN}",
+            "It's harvest time! \N{ADULT}\N{ZERO WIDTH JOINER}\N{EAR OF RICE}",
+            "Guess who's harvest is ready? \N{THINKING FACE}",
+            "Hey, it's harvest time! \N{PERSON RAISING BOTH HANDS IN CELEBRATION}",
+            "I have some good news for you! \N{FACE WITH COWBOY HAT}",
+            "Hi. Just letting you know that you harvest is ready. \N{TRACTOR}",
+            "No time for chatting, it's harvest time! \N{FACE WITH FINGER COVERING CLOSED LIPS}",
+            "Get yourself ready for some work, it's harvest time! \N{FACE SCREAMING IN FEAR}",
+            "Come, I have something to show you! \N{FACE WITH OPEN MOUTH}"
         )
         msg = random.choice(random_messages)
         name = random.choice(random_names)
@@ -390,20 +389,20 @@ class IPC:
             "Authorization": f"Bot {self._config['bot']['discord-token']}"
         }
         body = {
-            "content": f"<@{reminder.user_id}> \ud83d\udc26 {name}, the mail bird: *\"{msg}\"*",
+            "content": f"<@{reminder.user_id}> \N{BIRD} {name}, the mail bird: *\"{msg}\"*",
             "embeds": [
                 {
                     "color": 12697268,
-                    "title": "\u23f0 Your harvest is ready!",
+                    "title": "\N{ALARM CLOCK} Your harvest is ready!",
                     "description": (
-                        f"\ud83c\udf31 Your **{reminder.amount}x {item.full_name}** "
+                        f"\N{SEEDLING} Your **{reminder.amount}x {item.full_name}** "
                         "have been fully grown and are now ready to be harvested!\n"
-                        "\ud83d\ude9c Use **/harvest** to collect your items!"
+                        "\N{TRACTOR} Use **/harvest** to collect your items!"
                     ),
                     "footer": {
                         "text": (
-                            "\ud83d\udca1 You can disable these game notifications with the "
-                            "/notifications command."
+                            "\N{ELECTRIC LIGHT BULB} You can disable these game notifications with "
+                            "the /notifications command."
                         )
                     }
                 }

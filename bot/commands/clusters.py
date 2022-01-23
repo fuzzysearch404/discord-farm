@@ -16,7 +16,7 @@ class ClustersCollection(CommandCollection):
         super().__init__(client, [], name="Clusters")
         self.redis_pubsub = client.redis.pubsub()
 
-        self.global_channel = "IPC"
+        self.global_channel = "global"
         self.self_name = "cluster-" + client.cluster_name
 
         self.cluster_update_delay = client.config['ipc']['cluster-update-delay']
@@ -175,7 +175,7 @@ class ClustersCollection(CommandCollection):
     async def _handle_maintenance(self, message: IPCMessage) -> None:
         self.client.maintenance_mode = message.data
 
-        await self._send_results(f"\u2705 {self.client.maintenance_mode}")
+        await self._send_results(f"\N{WHITE HEAVY CHECK MARK} {self.client.maintenance_mode}")
 
     async def _handle_farm_guard(self, message: IPCMessage) -> None:
         self.client.enable_field_guard(message.data)
@@ -205,7 +205,7 @@ class ClustersCollection(CommandCollection):
             await self._send_results(str(e))
             return
 
-        await self._send_results("\u2705")
+        await self._send_results("\N{WHITE HEAVY CHECK MARK}")
 
     async def _handle_load_extension(self, message: IPCMessage) -> None:
         try:
@@ -214,7 +214,7 @@ class ClustersCollection(CommandCollection):
             await self._send_results(str(e))
             return
 
-        await self._send_results("\u2705")
+        await self._send_results("\N{WHITE HEAVY CHECK MARK}")
 
     async def _handle_unload_extension(self, message: IPCMessage) -> None:
         try:
@@ -223,7 +223,7 @@ class ClustersCollection(CommandCollection):
             await self._send_results(str(e))
             return
 
-        await self._send_results("\u2705")
+        await self._send_results("\N{WHITE HEAVY CHECK MARK}")
 
     def _handle_shutdown(self) -> None:
         self.client.loop.create_task(self.client.close())

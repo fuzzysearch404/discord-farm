@@ -59,7 +59,7 @@ class ButtonPaginatorView(discord.ui.View):
             return True
 
         await interaction.response.send_message(
-            f"\u274c This menu can only be used by {self.author.mention}, "
+            f"\N{CROSS MARK} This menu can only be used by {self.author.mention}, "
             "because they used this command.",
             ephemeral=True
         )
@@ -95,13 +95,21 @@ class ButtonPaginatorView(discord.ui.View):
         embed = await self.current_page_embed()
         await self.msg.edit(embed=embed, view=self)
 
-    @discord.ui.button(emoji="\u23ee\ufe0f", style=discord.ButtonStyle.blurple, disabled=True)
+    @discord.ui.button(
+        emoji="\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}",
+        style=discord.ButtonStyle.blurple,
+        disabled=True
+    )
     async def first_page(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
         self.current_page = 0
         self.update_button_states()
         await self.update_page_view()
 
-    @discord.ui.button(emoji="\u25c0\ufe0f", style=discord.ButtonStyle.blurple, disabled=True)
+    @discord.ui.button(
+        emoji="\N{BLACK LEFT-POINTING TRIANGLE}",
+        style=discord.ButtonStyle.blurple,
+        disabled=True
+    )
     async def previous_page(
         self,
         button: discord.ui.Button,
@@ -116,13 +124,16 @@ class ButtonPaginatorView(discord.ui.View):
         # This is a dummy button just to show the current page number
         pass
 
-    @discord.ui.button(emoji="\u25b6\ufe0f", style=discord.ButtonStyle.blurple)
+    @discord.ui.button(emoji="\N{BLACK RIGHT-POINTING TRIANGLE}", style=discord.ButtonStyle.blurple)
     async def next_page(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
         self.current_page += 1
         self.update_button_states()
         await self.update_page_view()
 
-    @discord.ui.button(emoji="\u23ed\ufe0f", style=discord.ButtonStyle.blurple)
+    @discord.ui.button(
+        emoji="\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}",
+        style=discord.ButtonStyle.blurple
+    )
     async def last_page(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
         self.current_page = self.source.max_pages - 1
         self.update_button_states()
@@ -225,7 +236,7 @@ class AbstractOptionPromptView(discord.ui.View):
             return True
 
         await interaction.response.send_message(
-            f"\u274c This menu can only be used by {self.ctx.author.mention}, "
+            f"\N{CROSS MARK} This menu can only be used by {self.ctx.author.mention}, "
             "because they used this command.",
             ephemeral=True
         )
@@ -237,7 +248,7 @@ class AbstractOptionPromptView(discord.ui.View):
     def create_deny_button(self) -> None:
         deny_button = discord.ui.Button(
             style=discord.ButtonStyle.danger,
-            emoji="\u2716\ufe0f",
+            emoji="\N{HEAVY MULTIPLICATION X}",
             label=self.deny_label
         )
 
@@ -279,7 +290,7 @@ class ConfirmPromptView(AbstractOptionPromptView):
     def __init__(
         self,
         style: discord.ButtonStyle = discord.ButtonStyle.green,
-        emoji: str = "\u2705",
+        emoji: str = "\N{WHITE HEAVY CHECK MARK}",
         label: str = None,
         *args,
         **kwargs

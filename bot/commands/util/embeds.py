@@ -42,7 +42,7 @@ def error_embed(
 ) -> Embed:
     return _create_embed(
         color=Color.from_rgb(221, 46, 68),
-        emoji="\ud83d\udeab",
+        emoji="\N{NO ENTRY SIGN}",
         text=text,
         cmd=cmd,
         title=title,
@@ -78,7 +78,7 @@ def congratulations_embed(
 ) -> Embed:
     return _create_embed(
         color=Color.from_rgb(217, 234, 25),
-        emoji="\ud83c\udf89",
+        emoji="\N{PARTY POPPER}",
         text=text,
         cmd=cmd,
         title=title,
@@ -96,7 +96,7 @@ def prompt_embed(
 ) -> Embed:
     return _create_embed(
         color=Color.from_rgb(204, 214, 221),
-        emoji="\u2754",
+        emoji="\N{WHITE QUESTION MARK ORNAMENT}",
         text=text,
         cmd=cmd,
         title=title,
@@ -109,9 +109,9 @@ def no_money_embed(cmd, cost: int) -> Embed:
     return error_embed(
         title="Insufficient gold coins!",
         text=(
-            f"\ud83c\udfe6 **You are missing {cost - cmd.user_data.gold} {cmd.client.gold_emoji} "
+            f"\N{BANK} **You are missing {cost - cmd.user_data.gold} {cmd.client.gold_emoji} "
             "for this purchase!** I just smashed the piggy and there were no coins left too! "
-            "No, not the pig! \ud83d\udc37 The piggy bank!\n "
+            "No, not the pig! \N{PIG FACE} The piggy bank!\n "
         ),
         footer=f"You have a total of {cmd.user_data.gold} gold coins",
         cmd=cmd
@@ -122,8 +122,9 @@ def no_gems_embed(cmd, cost: int) -> Embed:
     return error_embed(
         title="Insufficient gems!",
         text=(
-            f"\ud83c\udfe6 **You are missing {cost - cmd.user_data.gems} {cmd.client.gem_emoji} "
-            "for this purchase!** Oh no! We are going need more of those shiny rocks! \ud83d\ude2f"
+            f"\N{BANK} **You are missing {cost - cmd.user_data.gems} {cmd.client.gem_emoji} "
+            "for this purchase!** Oh no! We are going need more of those shiny rocks! "
+            "\N{HUSHED FACE}"
         ),
         footer=f"You have a total of {cmd.user_data.gems} gems",
         cmd=cmd
@@ -146,27 +147,27 @@ def level_up(cmd) -> Embed:
     new_level = cmd.user_data.level
 
     embed = congratulations_embed(
-        title=f"Level up! You have reached: \ud83d\udd31 Level **{new_level}**",
-        text=f"\ud83c\udfe6 The bank has rewarded you with a shiny {cmd.client.gem_emoji} gem!",
+        title=f"Level up! You have reached: \N{TRIDENT EMBLEM} Level **{new_level}**",
+        text=f"\N{BANK} The bank has rewarded you with a shiny {cmd.client.gem_emoji} gem!",
         footer=f"Congratulations, {cmd.author.nick or cmd.author.name}!",
         cmd=cmd
     )
 
     features_per_level = {
-        3: "\ud83c\udfed Factory",
-        17: "\ud83c\udfa3 Fishing"
+        3: "\N{FACTORY} Factory",
+        17: "\N{FISHING POLE AND FISH} Fishing"
     }
 
     try:
         unlocked_feature = features_per_level[new_level]
-        embed.description += "\n\ud83c\udd95 **New feature unlocked:** " + unlocked_feature
+        embed.description += "\n\N{SQUARED NEW} **New feature unlocked:** " + unlocked_feature
     except KeyError:
         pass
 
     unlocked_items = cmd.items.find_items_by_level(new_level)
     if unlocked_items:
         fmt = [x.full_name for x in unlocked_items]
-        embed.description += "\n\n\ud83d\udd13 And also you have unlocked the following items: "
+        embed.description += "\n\n\N{OPEN LOCK} And also you have unlocked the following items: "
         embed.description += ", ".join(fmt)
 
     return embed

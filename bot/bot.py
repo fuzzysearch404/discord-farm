@@ -287,14 +287,14 @@ class BotClient(AutoShardedModularCommandClient):
         await self.fetch_custom_prefixes()
 
         await self.log_to_discord(
-            f"\ud83d\udfe2 Ready! Maintenance mode: `{self.maintenance_mode}` "
+            f"\N{LARGE GREEN CIRCLE} Ready! Maintenance mode: `{self.maintenance_mode}` "
             f"Shards: `{self.shard_ids}` Total guilds: `{len(self.guilds)}`"
         )
 
     async def on_interaction(self, interaction: discord.Interaction):
         if interaction.guild_id is None:
             await interaction.response.send_message(
-                "\u274c Sorry, you can only interact with this bot in Discord servers!"
+                "\N{CROSS MARK} Sorry, you can only interact with this bot in Discord servers!"
             )
             return
 
@@ -302,10 +302,10 @@ class BotClient(AutoShardedModularCommandClient):
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         message = (
-            "Hello! \ud83d\udc4b Thanks for adding me here!\n"
+            "Hello! \N{WAVING HAND SIGN} Thanks for adding me here!\n"
             "Access the command list with: **/help**\n"
             "Start the game with **/register**\n"
-            "Happy farming! \ud83d\udc68\u200d\ud83c\udf3e"
+            "Happy farming! \N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE}"
         )
 
         txt_chans = guild.text_channels
@@ -315,7 +315,7 @@ class BotClient(AutoShardedModularCommandClient):
             await channels[0].send(message)
 
         await self.log_to_discord(
-            f"\ud83d\udce5 Joined guild: {guild.name} "
+            f"\N{INBOX TRAY} Joined guild: {guild.name} "
             f"(`{guild.id}`) Large:`{guild.large}` "
             f"Total guilds: `{len(self.guilds)}`"
         )
@@ -327,7 +327,7 @@ class BotClient(AutoShardedModularCommandClient):
             await conn.execute(query, guild.id)
 
         await self.log_to_discord(
-            f"\ud83d\udce4 Left guild: {guild.name} "
+            f"\N{OUTBOX TRAY} Left guild: {guild.name} "
             f"(`{guild.id}`) Large:`{guild.large}`"
             f"Total guilds: `{len(self.guilds)}`"
         )

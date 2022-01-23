@@ -133,7 +133,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
                 raise exceptions.UserNotFoundException(
                     "Hey there! It looks like you don't have a game account yet! "
                     "Type **/register** and let's get your farming journey started! "
-                    "\ud83d\udc68\u200d\ud83c\udf3e"
+                    "\N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE}"
                 )
 
             if self.required_level > self.user_data.level:
@@ -151,7 +151,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
             else:
                 ttl_fmt = time.seconds_to_time(command_ttl)
                 raise exceptions.CommandOnCooldown(
-                    f"\u23f0 This command is on a cooldown for **{ttl_fmt}**!"
+                    f"\N{ALARM CLOCK} This command is on a cooldown for **{ttl_fmt}**!"
                 )
 
         return True
@@ -167,13 +167,13 @@ class FarmSlashCommand(discord.app.SlashCommand):
                     await self.edit(embed=exception.embed)
             else:
                 if not responded:
-                    await self.reply(f"\u274c {str(exception)}", ephemeral=True)
+                    await self.reply(f"\N{CROSS MARK} {str(exception)}", ephemeral=True)
                 else:
-                    await self.edit(content=f"\u274c {str(exception)}")
+                    await self.edit(content=f"\N{CROSS MARK} {str(exception)}")
         else:
             message = (
-                "\u274c Sorry, an unexpected error occurred, while running this command.\n"
-                "\ud83e\udea0 Please try again later. If this issue persists, please report this "
+                "\N{CROSS MARK} Sorry, an unexpected error occurred, while running this command.\n"
+                "\N{PLUNGER} Please try again later. If this issue persists, please report this "
                 "to the official support server with as many details, as possible."
             )
             if not responded:
@@ -218,8 +218,9 @@ class FarmSlashCommand(discord.app.SlashCommand):
             return self.items.find_item_by_id(int(item_id_str[:8]))
         except (ValueError, exceptions.ItemNotFoundException):
             raise exceptions.ItemNotFoundException(
-                f"Whoops. I could not find an item called \"{item_id_str}\". \ud83d\ude1f\n"
-                "\ud83d\udd0e Could you please take this magnifying glass and try searching again?"
+                f"Whoops. I could not find an item called \"{item_id_str}\". \N{WORRIED FACE}\n"
+                "\N{RIGHT-POINTING MAGNIFYING GLASS} Could you please take this magnifying glass "
+                "and try searching again?"
             )
 
     def lookup_chest(self, item_id_str: str):
@@ -228,8 +229,9 @@ class FarmSlashCommand(discord.app.SlashCommand):
             return self.items.find_chest_by_id(int(item_id_str[:8]))
         except (ValueError, exceptions.ItemNotFoundException):
             raise exceptions.ItemNotFoundException(
-                f"Whoops. I could not find a chest called \"{item_id_str}\". \ud83d\ude1f\n"
-                "\ud83d\udd0e Could you please take this magnifying glass and try searching again?"
+                f"Whoops. I could not find a chest called \"{item_id_str}\". \N{WORRIED FACE}\n"
+                "\N{RIGHT-POINTING MAGNIFYING GLASS} Could you please take this magnifying glass "
+                "and try searching again?"
             )
 
     def lookup_booster(self, item_id_str: str):
@@ -237,8 +239,9 @@ class FarmSlashCommand(discord.app.SlashCommand):
             return self.items.find_booster_by_id(item_id_str)
         except exceptions.ItemNotFoundException:
             raise exceptions.ItemNotFoundException(
-                f"Whoops. I could not find a booster called \"{item_id_str}\". \ud83d\ude1f\n"
-                "\ud83d\udd0e Could you please take this magnifying glass and try searching again?"
+                f"Whoops. I could not find a booster called \"{item_id_str}\". \N{WORRIED FACE}\n"
+                "\N{RIGHT-POINTING MAGNIFYING GLASS} Could you please take this magnifying glass "
+                "and try searching again?"
             )
 
     async def _acquire(self, timeout: float):
