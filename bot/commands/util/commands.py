@@ -157,18 +157,30 @@ class FarmSlashCommand(discord.app.SlashCommand):
         return True
 
     async def error(self, exception: Exception) -> None:
+        responded = self.interaction.response.is_done()
+
         if isinstance(exception, exceptions.FarmException):
             if exception.embed:
-                await self.reply(embed=exception.embed, ephemeral=True)
+                if not responded:
+                    await self.reply(embed=exception.embed, ephemeral=True)
+                else:
+                    await self.edit(embed=exception.embed)
             else:
-                await self.reply(f"\u274c {str(exception)}", ephemeral=True)
+                if not responded:
+                    await self.reply(f"\u274c {str(exception)}", ephemeral=True)
+                else:
+                    await self.edit(content=f"\u274c {str(exception)}")
         else:
             message = (
                 "\u274c Sorry, an unexpected error occurred, while running this command.\n"
                 "\ud83e\udea0 Please try again later. If this issue persists, please report this "
                 "to the official support server with as many details, as possible."
             )
-            await self.reply(message, ephemeral=True)
+            if not responded:
+                await self.reply(message, ephemeral=True)
+            else:
+                await self.edit(content=message)
+
             await super().error(exception)
 
     def _find_items_for_autocomplete(self, item_names_per_id: dict, query: str) -> dict:
