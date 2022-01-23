@@ -115,7 +115,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
         else:
             return fmt
 
-    async def check(self) -> bool:
+    async def pre_check(self) -> bool:
         if self.avoid_maintenance and self.client.maintenance_mode:
             if not await self.client.is_owner(self.author):
                 raise exceptions.GameIsInMaintenance()
