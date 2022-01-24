@@ -38,7 +38,6 @@ class TutorialCommand(FarmSlashCommand, name="tutorial"):
     requires_account = False  # type: bool
 
     async def callback(self) -> None:
-        print(self.__doc__)
         embed = embeds.congratulations_embed(
             title="Welcome to your new farm! \N{FACE WITH PARTY HORN AND PARTY HAT}",
             text=(
