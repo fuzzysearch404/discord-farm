@@ -99,6 +99,7 @@ class BotClient(AutoShardedModularCommandClient):
     # TODO
     async def setup(self):
         await self.upload_guild_application_commands()
+        await self.upload_global_application_commands()
 
     async def _connect_postgres(self) -> None:
         connect_args = {
@@ -263,9 +264,9 @@ class BotClient(AutoShardedModularCommandClient):
             "by Discord for all bots from May 2022.\n"
             "You can now see my commands, by starting to type the **/** symbol in chat.\n"
             "For example, the command you just wanted to use, is now accessible with "
-            f"**/{cmd}**\nIf you don't see any commands, please reinvite the bot "
+            f"**/{cmd}**\n\n**If you don't see any slash commands, please reinvite the bot "
             "to your server with the \"Add to server\" button in "
-            "my profile. Sorry, there is no way we can keep the old command system."
+            "my profile.**\nSorry, there is no way we can keep the old command system."
         )
 
     async def on_shard_ready(self, shard_id: int) -> None:

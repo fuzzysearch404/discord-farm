@@ -1,11 +1,9 @@
-from discord.ext.modules import CommandCollection
-
-from .util.commands import FarmSlashCommand
+from .util.commands import FarmSlashCommand, FarmCommandCollection
 from .util import embeds
 
 
-class AccountCollection(CommandCollection):
-    """Commands for managing your game account."""
+class AccountCollection(FarmCommandCollection):
+    """\N{BUSTS IN SILHOUETTE} Commands for managing your game account."""
     def __init__(self, client):
         super().__init__(client, [TutorialCommand], name="Account")
 
@@ -32,8 +30,11 @@ class AccountCollection(CommandCollection):
             await cluster_collection.send_delete_reminders_message(user_id)
 
 
-class TutorialCommand(FarmSlashCommand, name="tutorial"):
-    """\N{OPEN BOOK} Some quickstart tips for new players"""
+class TutorialCommand(
+    FarmSlashCommand,
+    name="tutorial",
+    description="\N{OPEN BOOK} Few brief tips for new players for getting started"
+):
     avoid_maintenance = False  # type: bool
     requires_account = False  # type: bool
 

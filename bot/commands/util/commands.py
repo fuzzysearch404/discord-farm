@@ -1,5 +1,6 @@
 import discord
 import itertools
+from discord.ext import modules
 
 from . import time
 from . import embeds
@@ -7,6 +8,11 @@ from bot.commands.util import exceptions
 
 
 AUTOCOMPLETE_RESULTS_LIMIT = 25
+
+
+class FarmCommandCollection(modules.CommandCollection):
+    """Base class for all command collections."""
+    hidden_in_help_command: bool = False
 
 
 class _DBContextAcquire:
@@ -257,3 +263,11 @@ class FarmSlashCommand(discord.app.SlashCommand):
         if self._db is not None:
             await self.client.db_pool.release(self._db)
             self._db = None
+
+
+def format_docstring_help(doc: str) -> str:
+    """
+    Removes new line characters from the docstring and then replaces our new line placeholders with
+    actual newline characters. Also strips the string just in case.
+    """
+    return doc.replace("\n", "").replace("<br>", "\n").strip()

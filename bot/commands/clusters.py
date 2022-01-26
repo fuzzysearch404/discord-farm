@@ -3,14 +3,15 @@ import asyncio
 import discord
 import jsonpickle
 import datetime
-from discord.ext.modules import CommandCollection
 
 from core.ipc_classes import Cluster, IPCMessage, Reminder
 from .util import exceptions
+from .util.commands import FarmCommandCollection
 
 
-class ClustersCollection(CommandCollection):
+class ClustersCollection(FarmCommandCollection):
     """Developer only commands for bot management purposes."""
+    hidden_in_help_command = True
 
     def __init__(self, client) -> None:
         super().__init__(client, [], name="Clusters")
