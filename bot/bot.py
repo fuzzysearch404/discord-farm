@@ -152,6 +152,14 @@ class BotClient(AutoShardedModularCommandClient):
 
         return user.id in self.owner_ids
 
+    def find_loaded_command_by_name(self, command_name: str):
+        for collection in self.command_collections.values():
+            for command in collection.commands:
+                if command_name == command.get_full_name(command):
+                    return command
+
+        return None
+
     def cleanup_code(self, content: str) -> str:
         if content.startswith("```") and content.endswith("```"):
             return "\n".join(content.split("\n")[1:-1])

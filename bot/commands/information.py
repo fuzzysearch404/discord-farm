@@ -38,8 +38,11 @@ class HelpCommand(
                 continue
 
             for command in category.commands:
-                # Hide owner only and guild specific commands
-                if command.owner_only or command._guilds_:
+                # Hide owner only commands
+                if command.owner_only:
+                    continue
+                # Hide guild specific commands if not in the same guild
+                if command._guilds_ and self.interaction.guild_id not in command._guilds_:
                     continue
 
                 full_name = command.get_full_name(command)
@@ -50,16 +53,8 @@ class HelpCommand(
     async def autocomplete(self, options, focused):
         return discord.AutoCompleteResponse(self.bot_commands_autocomplete(options[focused]))
 
-    def find_loaded_command_by_name(self, command_name: str):
-        for collection in self.client.command_collections.values():
-            for command in collection.commands:
-                if command_name == command.get_full_name(command):
-                    return command
-
-        return None
-
     async def send_command_help(self) -> None:
-        command = self.find_loaded_command_by_name(self.command.lower())
+        command = self.client.find_loaded_command_by_name(self.command.lower())
         if not command:
             raise exceptions.FarmException(f"Couldn't find a command named \"{self.command}\".")
 
