@@ -41,6 +41,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
     requires_account: bool = True
     required_level: int = 0
     invoke_cooldown: int = None
+    inner_cooldown: int = None
     _db = None
     _level_up: bool = False
 
@@ -111,6 +112,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
         return await self.interaction.response.defer(*args, **kwargs)
 
     def get_full_name(self, _prev: str = None) -> str:
+        """Concats the full name of the command"""
         fmt = self._name_
 
         if _prev is not None:
@@ -120,6 +122,17 @@ class FarmSlashCommand(discord.app.SlashCommand):
             return self._parent_.get_full_name(self._parent_, _prev=fmt)
         else:
             return fmt
+
+    def find_all_children(self) -> list:
+        """Finds all subcommands for this command"""
+        results = []
+
+        if self._children_:
+            for child in self._children_.values():
+                results.append(child)
+                results.extend(child.find_all_children(child))
+
+        return results
 
     async def pre_check(self) -> bool:
         if self.avoid_maintenance and self.client.maintenance_mode:
@@ -190,16 +203,15 @@ class FarmSlashCommand(discord.app.SlashCommand):
             await super().error(exception)
 
     def _find_items_for_autocomplete(self, item_names_per_id: dict, query: str) -> dict:
-        query_len = len(query)
         options = {}
 
-        if query_len == 0:
+        if len(query) == 0:
             for name, id in item_names_per_id.items():
-                options[name.capitalize()] = str(id)
+                options[name] = str(id)
         else:
             for name, id in item_names_per_id.items():
                 if name.startswith(query.lower()):
-                    options[name.capitalize()] = str(id)
+                    options[name] = str(id)
 
         return dict(itertools.islice(options.items(), AUTOCOMPLETE_RESULTS_LIMIT))
 
@@ -257,9 +269,11 @@ class FarmSlashCommand(discord.app.SlashCommand):
         return self._db
 
     def acquire(self, *, timeout: float = 300.0) -> _DBContextAcquire:
+        """Acquires database pool connection"""
         return _DBContextAcquire(self, timeout)
 
     async def release(self) -> None:
+        """Releases database pool connection, if acquired"""
         if self._db is not None:
             await self.client.db_pool.release(self._db)
             self._db = None

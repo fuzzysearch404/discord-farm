@@ -4,6 +4,7 @@ from typing import Optional
 
 from .util import commands
 from .util import exceptions
+from .util import time
 
 
 class InformationCollection(commands.FarmCommandCollection):
@@ -31,6 +32,7 @@ class HelpCommand(
     )
 
     def bot_commands_autocomplete(self, query: str) -> dict:
+        # This is fairly slow, maybe we can improve it later
         options = {}
 
         for category in self.client.command_collections.values():
@@ -47,6 +49,10 @@ class HelpCommand(
 
                 full_name = command.get_full_name(command)
                 options[full_name] = full_name
+
+                for child in command.find_all_children(command):
+                    full_name = child.get_full_name(child)
+                    options[full_name] = full_name
 
         return self._find_items_for_autocomplete(options, query)
 
@@ -85,15 +91,36 @@ class HelpCommand(
         if command.__doc__:
             embed.description += "\n\n" + commands.format_docstring_help(command.__doc__)
 
-        if param_descriptions:
-            embed.description += "\n\n__Parameters:__\n"
-            embed.description += "\n".join(param_descriptions)
+        command_features = ""
+        if command.owner_only:
+            command_features += "\n\N{WRENCH} This command can only be used by the bot owners"
+        if command.required_level:
+            command_features += f"\n\N{TRIDENT EMBLEM} **Required level:** {command.required_level}"
+        if command.inner_cooldown:
+            cd_fmt = time.seconds_to_time(command.inner_cooldown)
+            command_features += f"\n\N{TIMER CLOCK} **Cooldown duration:** {cd_fmt}"
+        elif command.invoke_cooldown:
+            cd_fmt = time.seconds_to_time(command.invoke_cooldown)
+            command_features += f"\n\N{TIMER CLOCK} **Cooldown duration:** {cd_fmt}"
 
-            embed.description += (
+        if command_features:
+            embed.add_field(name="Properties", value=command_features, inline=False)
+
+        if param_descriptions:
+            param_desc = "\n".join(param_descriptions)
+            param_desc += (
                 "\n\nOkay that's all cool, but what are those brackets for? \N{THINKING FACE}\n"
                 "It's easy - something in `[]` means that the parameter is optional, "
                 "`<>` means that it is required."
             )
+            embed.add_field(name="Parameters", value=param_desc, inline=False)
+
+        if command._children_:
+            subcommands = command._children_.values()
+            child_desc = "\n".join(
+                [f"**/{c.get_full_name(c)}** - {c._description_}" for c in subcommands]
+            )
+            embed.add_field(name="Commands", value=child_desc, inline=False)
 
         await self.reply(embed=embed)
 

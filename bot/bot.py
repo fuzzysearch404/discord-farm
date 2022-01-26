@@ -153,10 +153,19 @@ class BotClient(AutoShardedModularCommandClient):
         return user.id in self.owner_ids
 
     def find_loaded_command_by_name(self, command_name: str):
+        """Finds a loaded command by it's full name"""
         for collection in self.command_collections.values():
             for command in collection.commands:
-                if command_name == command.get_full_name(command):
+                # In collections we store only top level commands
+                if command._name_ == command_name:
                     return command
+
+                if command_name.startswith(command._name_):
+                    for child in command.find_all_children(command):
+                        if child.get_full_name(child) == command_name:
+                            return child
+                    # Dead search
+                    return None
 
         return None
 
@@ -301,11 +310,19 @@ class BotClient(AutoShardedModularCommandClient):
         )
 
     async def on_interaction(self, interaction: discord.Interaction):
-        if interaction.guild_id is None:
-            await interaction.response.send_message(
-                "\N{CROSS MARK} Sorry, you can only interact with this bot in Discord servers!"
-            )
-            return
+        if interaction.type == discord.InteractionType.application_command:
+            if interaction.guild_id is None:
+                await interaction.response.send_message(
+                    "\N{CROSS MARK} Sorry, you can only interact with this bot in Discord servers!"
+                )
+                return
+
+            # TODO: Remove before release
+            if interaction.user.id not in (234622520739758080, 665906176264896533):
+                await interaction.response.send_message(
+                    "\N{CROSS MARK} Sorry, testing is currently disabled."
+                )
+                return
 
         await super().on_interaction(interaction)
 
