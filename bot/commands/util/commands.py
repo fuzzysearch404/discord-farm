@@ -125,14 +125,15 @@ class FarmSlashCommand(discord.app.SlashCommand):
         else:
             return fmt
 
-    def find_all_children(self) -> list:
-        """Finds all subcommands for this command"""
+    def find_all_lowest_children(self) -> list:
+        """Finds all lowest level subcommands for this command"""
         results = []
 
         if self._children_:
             for child in self._children_.values():
-                results.append(child)
-                results.extend(child.find_all_children(child))
+                results.extend(child.find_all_lowest_children(child))
+        else:
+            results.append(self)
 
         return results
 

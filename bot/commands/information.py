@@ -18,8 +18,25 @@ class InformationCollection(commands.FarmCommandCollection):
 
 
 class HelpAllCommandsMessageSource(views.AbstractPaginatorSource):
-    def __init__(self, collection: commands.FarmCommandCollection):
-        super().__init__(collection.commands, per_page=8)
+
+    def __init__(
+        self,
+        current_guild_id: int,
+        collection: commands.FarmCommandCollection
+    ):
+        all_commands = []
+        for cmd in collection.commands:
+            for child in cmd.find_all_lowest_children(cmd):
+                # Hide owner only commands
+                if child.owner_only:
+                    continue
+                # Hide guild specific commands if not in the same guild
+                if child._guilds_ and current_guild_id not in child._guilds_:
+                    continue
+
+                all_commands.append(child)
+
+        super().__init__(all_commands, per_page=8)
         self.collection = collection
 
     async def format_page(self, page, view):
@@ -30,7 +47,11 @@ class HelpAllCommandsMessageSource(views.AbstractPaginatorSource):
         )
 
         for command in page:
-            embed.add_field(name=f"/{command._name_}", value=command._description_, inline=False)
+            embed.add_field(
+                name=f"/{command.get_full_name(command)}",
+                value=command._description_,
+                inline=False
+            )
 
         embed.set_footer(
             text=(
@@ -60,24 +81,22 @@ class HelpCommand(
 
     def bot_commands_autocomplete(self, query: str) -> dict:
         # This is fairly slow, maybe we can improve it later
-        options = {}
+        current_guild_id = self.interaction.guild_id
 
+        options = {}
         for category in self.client.command_collections.values():
             if category.hidden_in_help_command:
                 continue
 
             for command in category.commands:
-                # Hide owner only commands
-                if command.owner_only:
-                    continue
-                # Hide guild specific commands if not in the same guild
-                if command._guilds_ and self.interaction.guild_id not in command._guilds_:
-                    continue
+                for child in command.find_all_lowest_children(command):
+                    # Hide owner only commands
+                    if child.owner_only:
+                        continue
+                    # Hide guild specific commands if not in the same guild
+                    if child._guilds_ and current_guild_id not in child._guilds_:
+                        continue
 
-                full_name = command.get_full_name(command)
-                options[full_name] = full_name
-
-                for child in command.find_all_children(command):
                     full_name = child.get_full_name(child)
                     options[full_name] = full_name
 
@@ -172,7 +191,8 @@ class HelpCommand(
                 description=collection.help_short_description
             )
 
-            options_and_sources[opt] = HelpAllCommandsMessageSource(collection)
+            current_guild_id = self.interaction.guild_id
+            options_and_sources[opt] = HelpAllCommandsMessageSource(current_guild_id, collection)
 
         await views.SelectButtonPaginatorView(
             options_and_sources,

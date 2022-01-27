@@ -161,7 +161,7 @@ class BotClient(AutoShardedModularCommandClient):
                     return command
 
                 if command_name.startswith(command._name_):
-                    for child in command.find_all_children(command):
+                    for child in command.find_all_lowest_children(command):
                         if child.get_full_name(child) == command_name:
                             return child
                     # Dead search
