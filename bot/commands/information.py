@@ -143,10 +143,10 @@ class HelpCommand(
             param_desc = "\n".join(param_descriptions)
             param_desc += (
                 "\n\nOkay that's all cool, but what are those brackets for? \N{THINKING FACE}\n"
-                "It's easy - something in `[]` means that the parameter is optional, "
+                "It's easy - something in `[]` means that the argument is optional, "
                 "`<>` means that it is required."
             )
-            embed.add_field(name="Parameters", value=param_desc, inline=False)
+            embed.add_field(name="Arguments", value=param_desc, inline=False)
 
         if command._children_:
             subcommands = command._children_.values()
