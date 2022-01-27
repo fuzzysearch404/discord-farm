@@ -3,7 +3,10 @@ from .util import embeds
 
 
 class AccountCollection(FarmCommandCollection):
-    """\N{BUSTS IN SILHOUETTE} Commands for managing your game account."""
+    """Commands for managing your game account."""
+    help_emoji: str = "\N{BUSTS IN SILHOUETTE}"
+    help_short_description: str = "Manage your game account"
+
     def __init__(self, client):
         super().__init__(client, [TutorialCommand], name="Account")
 

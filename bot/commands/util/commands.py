@@ -13,6 +13,8 @@ AUTOCOMPLETE_RESULTS_LIMIT = 25
 class FarmCommandCollection(modules.CommandCollection):
     """Base class for all command collections."""
     hidden_in_help_command: bool = False
+    help_emoji: str = None
+    help_short_description: str = None
 
 
 class _DBContextAcquire:
@@ -40,8 +42,8 @@ class FarmSlashCommand(discord.app.SlashCommand):
     owner_only: bool = False
     requires_account: bool = True
     required_level: int = 0
-    invoke_cooldown: int = None
-    inner_cooldown: int = None
+    invoke_cooldown: int = None  # Negative = Shows as "Varying" in help
+    inner_cooldown: int = None  # Managed inside of the command itself
     _db = None
     _level_up: bool = False
 

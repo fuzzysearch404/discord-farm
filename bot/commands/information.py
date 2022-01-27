@@ -5,13 +5,40 @@ from typing import Optional
 from .util import commands
 from .util import exceptions
 from .util import time
+from .util import views
 
 
 class InformationCollection(commands.FarmCommandCollection):
-    """\N{NEWSPAPER} Get the latest information about the bot - news, events, links, etc."""
+    """Get the latest information about the bot - news, events, links, etc."""
+    help_emoji: str = "\N{NEWSPAPER}"
+    help_short_description: str = "Get offical bot news, update information etc."
 
     def __init__(self, client):
         super().__init__(client, [HelpCommand], name="Information")
+
+
+class HelpAllCommandsMessageSource(views.AbstractPaginatorSource):
+    def __init__(self, collection: commands.FarmCommandCollection):
+        super().__init__(collection.commands, per_page=8)
+        self.collection = collection
+
+    async def format_page(self, page, view):
+        embed = discord.Embed(
+            title=f"{self.collection.help_emoji} {self.collection.name}",
+            description=commands.format_docstring_help(self.collection.description),
+            color=discord.Color.blurple()
+        )
+
+        for command in page:
+            embed.add_field(name=f"/{command._name_}", value=command._description_, inline=False)
+
+        embed.set_footer(
+            text=(
+                "\N{ELECTRIC LIGHT BULB} Use \"/help command_name\" for detailed help "
+                "about specific command usage"
+            )
+        )
+        return embed
 
 
 class HelpCommand(
@@ -91,17 +118,23 @@ class HelpCommand(
         if command.__doc__:
             embed.description += "\n\n" + commands.format_docstring_help(command.__doc__)
 
+        def cooldown_fmt(duration: int) -> str:
+            if duration > 0:
+                cd_fmt = time.seconds_to_time(duration)
+            else:
+                cd_fmt = "Varying"
+
+            return f"\n\N{TIMER CLOCK} **Cooldown duration:** {cd_fmt}"
+
         command_features = ""
         if command.owner_only:
             command_features += "\n\N{WRENCH} This command can only be used by the bot owners"
         if command.required_level:
             command_features += f"\n\N{TRIDENT EMBLEM} **Required level:** {command.required_level}"
         if command.inner_cooldown:
-            cd_fmt = time.seconds_to_time(command.inner_cooldown)
-            command_features += f"\n\N{TIMER CLOCK} **Cooldown duration:** {cd_fmt}"
+            command_features += cooldown_fmt(command.inner_cooldown)
         elif command.invoke_cooldown:
-            cd_fmt = time.seconds_to_time(command.invoke_cooldown)
-            command_features += f"\n\N{TIMER CLOCK} **Cooldown duration:** {cd_fmt}"
+            command_features += cooldown_fmt(command.invoke_cooldown)
 
         if command_features:
             embed.add_field(name="Properties", value=command_features, inline=False)
@@ -128,7 +161,23 @@ class HelpCommand(
         if self.command:
             return await self.send_command_help()
 
-        await self.reply("Help paginator")
+        options_and_sources = {}
+        for collection in self.client.command_collections.values():
+            if collection.hidden_in_help_command:
+                continue
+
+            opt = discord.SelectOption(
+                label=collection.name,
+                emoji=collection.help_emoji,
+                description=collection.help_short_description
+            )
+
+            options_and_sources[opt] = HelpAllCommandsMessageSource(collection)
+
+        await views.SelectButtonPaginatorView(
+            options_and_sources,
+            select_placeholder="\ud83d\udcda Select a category of commands"
+        ).start(self)
 
 
 def setup(client) -> list:

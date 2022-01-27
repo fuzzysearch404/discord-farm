@@ -1,11 +1,11 @@
 """
-Paginator with paginator sources concept inspired by:
-https://github.com/Rapptz/discord-ext-menus
+Paginator with paginator sources concept inspired by: https://github.com/Rapptz/discord-ext-menus
 """
 import discord
 
 
 class AbstractPaginatorSource:
+
     def __init__(self, entries: list, per_page: int = 10) -> None:
         self.entries = entries
         self.per_page = per_page
@@ -31,18 +31,14 @@ class AbstractPaginatorSource:
 
 
 class ButtonPaginatorView(discord.ui.View):
+
     def __init__(self, source: AbstractPaginatorSource) -> None:
         super().__init__(timeout=180.0)
         self.source = source
         self.current_page = 0
 
-        # From the message that invoked the command
-        self.ctx = None
-        self.bot = None
+        self.command = None
         self.author = None
-
-        # The message where the paginator will be at
-        self.msg = None
 
         self.update_page_counter_label()
         self.update_button_states()
@@ -52,7 +48,7 @@ class ButtonPaginatorView(discord.ui.View):
             if hasattr(ui_item, "disabled"):
                 ui_item.disabled = True
 
-        await self.msg.edit(view=self)
+        await self.command.edit(view=self)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if self.author == interaction.user:
@@ -63,7 +59,6 @@ class ButtonPaginatorView(discord.ui.View):
             "because they used this command.",
             ephemeral=True
         )
-
         return False
 
     def update_page_counter_label(self) -> None:
@@ -93,7 +88,7 @@ class ButtonPaginatorView(discord.ui.View):
         self.update_page_counter_label()
 
         embed = await self.current_page_embed()
-        await self.msg.edit(embed=embed, view=self)
+        await self.command.edit(embed=embed, view=self)
 
     @discord.ui.button(
         emoji="\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}",
@@ -139,18 +134,16 @@ class ButtonPaginatorView(discord.ui.View):
         self.update_button_states()
         await self.update_page_view()
 
-    async def start(self, ctx) -> discord.Message:
-        self.ctx = ctx
-        self.bot = ctx.bot
-        self.author = ctx.author
+    async def start(self, command) -> discord.Message:
+        self.command = command
+        self.author = command.interaction.user
 
         embed = await self.current_page_embed()
         # No need for a paginator? - Not adding it.
         if not self.source.should_paginate():
-            return await ctx.reply(embed=embed)
+            return await command.reply(embed=embed)
 
-        self.msg = await ctx.reply(embed=embed, view=self)
-        return self.msg
+        return await command.reply(embed=embed, view=self)
 
 
 class SelectButtonPaginatorView(ButtonPaginatorView):
@@ -160,8 +153,8 @@ class SelectButtonPaginatorView(ButtonPaginatorView):
     """
     def __init__(self, options_and_sources: dict, select_placeholder: str = None) -> None:
         """
-        options_and_sources: A dictionary of select options
-        and their corresponding paginator sources.
+        options_and_sources: A dictionary of select options and their corresponding
+        paginator sources.
         """
         self.keys_and_sources = {}
 
@@ -187,14 +180,12 @@ class SelectButtonPaginatorView(ButtonPaginatorView):
         self.update_button_states()
         await self.update_page_view()
 
-    async def start(self, ctx) -> discord.Message:
-        self.ctx = ctx
-        self.bot = ctx.bot
-        self.author = ctx.author
+    async def start(self, command) -> discord.Message:
+        self.command = command
+        self.author = command.interaction.user
 
         embed = await self.current_page_embed()
-        self.msg = await ctx.reply(embed=embed, view=self)
-        return self.msg
+        return await command.reply(embed=embed, view=self)
 
 
 class AbstractOptionPromptView(discord.ui.View):
