@@ -33,7 +33,7 @@ NAMES = iter(CLUSTER_NAMES)
 class Launcher:
     def __init__(self, loop) -> None:
         log.info("Launching...")
-        self._config = self._load_config()
+        self.config = self._load_config()
 
         self.cluster_queue = []
         self.clusters = []
@@ -43,7 +43,6 @@ class Launcher:
         self.alive = True
 
         self.keep_alive = None
-
         self.init_time = time.perf_counter()
 
     def _load_config(self) -> dict:
@@ -52,9 +51,9 @@ class Launcher:
 
     async def get_shard_count(self) -> int:
         headers = {
-            "Authorization": "Bot " + self._config['bot']['discord-token'],
+            "Authorization": "Bot " + self.config['bot']['discord-token'],
             "User-Agent": (
-                f"Discord Farm Bot {self._config['bot']['version']} "
+                f"Discord Farm Bot {self.config['bot']['version']} "
                 "(https://github.com/fuzzysearch404/discord-farm/)"
             )
         }
@@ -71,7 +70,6 @@ class Launcher:
             f"Successfully got shard count of {json_body['shards']} "
             f"({resp.status}, {resp.reason})"
         )
-
         return json_body['shards']
 
     def start(self) -> None:
@@ -96,7 +94,6 @@ class Launcher:
     async def startup(self) -> None:
         shards = list(range(await self.get_shard_count()))
         size = [shards[x:x + 4] for x in range(0, len(shards), 4)]
-
         log.info(f"Preparing {len(size)} clusters")
 
         for shard_ids in size:
@@ -106,12 +103,10 @@ class Launcher:
 
         self.keep_alive = self.loop.create_task(self.rebooter())
         self.keep_alive.add_done_callback(self.task_complete)
-
         log.info(f"Startup completed in {time.perf_counter() - self.init_time}s")
 
     async def shutdown(self) -> None:
         log.info("Shutting down clusters")
-
         self.alive = False
 
         if self.keep_alive:
@@ -153,7 +148,6 @@ class Launcher:
     async def start_cluster(self) -> None:
         if self.cluster_queue:
             cluster = self.cluster_queue.pop(0)
-
             log.info(f"Starting Cluster#{cluster.name}")
             await cluster.start()
             self.clusters.append(cluster)
@@ -171,7 +165,8 @@ class Cluster:
         self.kwargs = dict(
             shard_ids=shard_ids,
             shard_count=max_shards,
-            cluster_name=name
+            cluster_name=name,
+            config=launcher.config
         )
         self.name = name
 
@@ -182,11 +177,7 @@ class Cluster:
         fhdlr = logging.FileHandler("./logs/cluster-Launcher.log", encoding="utf-8")
         fhdlr.setFormatter(LOG_FORMATTER)
         self.log.handlers = [hdlr, fhdlr]
-
-        self.log.info(
-            f"Initialized with shard ids {shard_ids}, "
-            f"total shards {max_shards}"
-        )
+        self.log.info(f"Initialized with shard ids {shard_ids}, total shards {max_shards}")
 
     def wait_close(self) -> None:
         self.process.join()
@@ -195,8 +186,7 @@ class Cluster:
         if self.process and self.process.is_alive():
             if not force:
                 self.log.warning(
-                    "Start called with already running cluster, pass "
-                    "`force=True` to override"
+                    "Start called with already running cluster, pass `force=True` to override"
                 )
                 return False
 
@@ -205,15 +195,10 @@ class Cluster:
             self.process.close()
 
         stdout, stdin = multiprocessing.Pipe()
-        kw = self.kwargs
-        kw['pipe'] = stdin
+        kwargs = self.kwargs
+        kwargs['pipe'] = stdin
 
-        self.process = multiprocessing.Process(
-            target=BotClient,
-            kwargs=kw,
-            daemon=True
-        )
-
+        self.process = multiprocessing.Process(target=BotClient, kwargs=kwargs, daemon=True)
         self.process.start()
         self.log.info(f"Process started with PID {self.process.pid}")
 
@@ -225,7 +210,6 @@ class Cluster:
 
     def stop(self, sign=signal.SIGINT) -> None:
         self.log.info(f"Shutting down with signal {sign!r}")
-
         try:
             os.kill(self.process.pid, sign)
         except ProcessLookupError:

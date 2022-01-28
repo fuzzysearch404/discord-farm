@@ -14,37 +14,37 @@ from core.ipc_classes import IPCMessage, Reminder
 from core.game_items import load_all_items
 
 
+if sys.platform == "linux":
+    import uvloop
+    uvloop.install()
+
+
 class IPC:
     def __init__(self) -> None:
-        self._loop = asyncio.get_event_loop()
+        self.loop = asyncio.get_event_loop()
 
-        self._config = self._load_config()
+        self.config = self._load_config()
         self.game_news = self._load_game_news()
         self.eval_responses = {}
 
         log = logging.getLogger("IPC")
-        if self._config['ipc']['beta']:
+        if self.config['ipc']['beta']:
             log.setLevel(logging.DEBUG)
         else:
             log.setLevel(logging.INFO)
 
         log_formatter = logging.Formatter("[%(asctime)s %(name)s/%(levelname)s] %(message)s")
-        file_handler = TimedRotatingFileHandler(
-            "./logs/ipc.log",
-            encoding="utf-8",
-            when="W0"
-        )
+        file_handler = TimedRotatingFileHandler("./logs/ipc.log", encoding="utf-8", when="W0")
         file_handler.setFormatter(log_formatter)
         stream_handler = logging.StreamHandler()
         stream_handler.setFormatter(log_formatter)
         log.handlers = [file_handler, stream_handler]
         self.log = log
 
-        log.debug("Launching...")
         log.debug("Loading game news")
         self.game_news = self._load_game_news()
 
-        ipc_config = self._config['ipc']
+        ipc_config = self.config['ipc']
         self.bot_id = ipc_config['bot-id']
         self.is_beta = ipc_config['beta']
         self.db_backup_delay = ipc_config['db-backups-delay']
@@ -85,8 +85,8 @@ class IPC:
         log.debug("Connecting to Redis")
         self._connect_redis()
         log.debug("Fetching reminders")
-        self._loop.run_until_complete(self.fetch_reminder_ignore_ids())
-        self._loop.run_until_complete(self.get_current_reminders())
+        self.loop.run_until_complete(self.fetch_reminder_ignore_ids())
+        self.loop.run_until_complete(self.get_current_reminders())
 
         log.debug("Loading game items")
         self.item_pool = load_all_items()
@@ -95,18 +95,17 @@ class IPC:
 
     def start(self) -> None:
         self.log.info("Starting: Registering tasks")
-
-        self._loop.create_task(self._register_tasks())
+        self.loop.create_task(self._register_tasks())
 
         try:
-            self._loop.run_forever()
+            self.loop.run_forever()
         except KeyboardInterrupt:
-            self._loop.run_until_complete(self.stop())
+            self.loop.run_until_complete(self.stop())
 
     async def stop(self) -> None:
         self.log.info("Exiting")
         await self._unregister_redis_channels()
-        self._loop.stop()
+        self.loop.stop()
 
     def _load_config(self) -> dict:
         with open("config.json", "r") as file:
@@ -120,9 +119,9 @@ class IPC:
         self.log.debug("Connecting Redis")
 
         self.redis = aioredis.from_url(
-            self._config['redis']['host'],
-            password=self._config['redis']['password'],
-            db=self._config['redis']['db-index']
+            self.config['redis']['host'],
+            password=self.config['redis']['password'],
+            db=self.config['redis']['db-index']
         )
         self.redis_pubsub = self.redis.pubsub()
 
@@ -138,19 +137,19 @@ class IPC:
         await self._register_redis_channels()
 
         # Incoming messages handler
-        self._loop.create_task(self._redis_event_handler())
+        self.loop.create_task(self._redis_event_handler())
         # Local tasks
-        self._loop.create_task(self._cluster_check_task())
+        self.loop.create_task(self._cluster_check_task())
         # Global message publish tasks
-        self._loop.create_task(self._global_task_update_items())
+        self.loop.create_task(self._global_task_update_items())
         # Global reminders task
-        self.reminder_scheduler = self._loop.create_task(self._global_task_dispatch_reminders())
+        self.reminder_scheduler = self.loop.create_task(self._global_task_dispatch_reminders())
         # Discord incidents check task for Farm Guard
-        self._loop.create_task(self._global_task_check_discord_incidents())
+        self.loop.create_task(self._global_task_check_discord_incidents())
 
         if not self.is_beta:
-            self._loop.create_task(self._global_task_send_stats())
-            self._loop.create_task(self._global_task_do_backups())
+            self.loop.create_task(self._global_task_send_stats())
+            self.loop.create_task(self._global_task_do_backups())
 
     async def _redis_event_handler(self) -> None:
         async for message in self.redis_pubsub.listen():
@@ -212,7 +211,7 @@ class IPC:
         await self._send_ping_message(reply_channel)
 
     async def _cluster_check_task(self) -> None:
-        while not self._loop.is_closed():
+        while not self.loop.is_closed():
             await asyncio.sleep(self.cluster_check_delay)
 
             guild_count, shard_count = 0, 0
@@ -232,10 +231,10 @@ class IPC:
 
     async def fetch_reminder_ignore_ids(self) -> None:
         connect_args = {
-            "user": self._config['postgres']['user'],
-            "password": self._config['postgres']['password'],
-            "database": self._config['postgres']['database'],
-            "host": self._config['postgres']['host']
+            "user": self.config['postgres']['user'],
+            "password": self.config['postgres']['password'],
+            "database": self.config['postgres']['database'],
+            "host": self.config['postgres']['host']
         }
 
         conn = await asyncpg.connect(**connect_args)
@@ -292,7 +291,7 @@ class IPC:
 
             self.reminder_scheduler.cancel()
             self.next_reminder = None
-            self.reminder_scheduler = self._loop.create_task(
+            self.reminder_scheduler = self.loop.create_task(
                 self._global_task_dispatch_reminders()
             )
 
@@ -386,7 +385,11 @@ class IPC:
 
         url = f"https://discord.com/api/v9/channels/{reminder.channel_id}/messages"
         headers = {
-            "Authorization": f"Bot {self._config['bot']['discord-token']}"
+            "Authorization": f"Bot {self.config['bot']['discord-token']}",
+            "User-Agent": (
+                f"Discord Farm Bot {self.config['bot']['version']} "
+                "(https://github.com/fuzzysearch404/discord-farm/)"
+            )
         }
         body = {
             "content": f"<@{reminder.user_id}> \N{BIRD} {name}, the mail bird: *\"{msg}\"*",
@@ -444,7 +447,7 @@ class IPC:
             await asyncio.sleep(seconds)
             self.reminder_scheduler_sleeping = False
 
-        while not self._loop.is_closed():
+        while not self.loop.is_closed():
             if not self.next_reminder and self.reminder_queue.empty():
                 await wait()
                 continue
@@ -487,7 +490,7 @@ class IPC:
             self.next_reminder = None
 
     async def _global_task_update_items(self) -> None:
-        while not self._loop.is_closed():
+        while not self.loop.is_closed():
             self.item_pool.update_market_prices()
             await self._send_update_items_message(self.global_channel)
             self.log.info("Published global update items message")
@@ -503,7 +506,7 @@ class IPC:
             await asyncio.sleep(time_until.total_seconds())
 
     async def _global_task_send_stats(self) -> None:
-        while not self._loop.is_closed():
+        while not self.loop.is_closed():
             await asyncio.sleep(self.post_stats_delay)
 
             if not self.total_shard_count or not self.total_guild_count:
@@ -512,7 +515,7 @@ class IPC:
 
             url = f"https://top.gg/api/bots/{self.bot_id}/stats"
             headers = {
-                "Authorization": self._config['topgg']['auth_token']
+                "Authorization": self.config['topgg']['auth_token']
             }
             body = {
                 "server_count": self.total_guild_count,
@@ -538,9 +541,9 @@ class IPC:
                 self.log.exception("Failed to post top.gg stats")
 
     async def _global_task_do_backups(self) -> None:
-        postgres_config = self._config['postgres']
+        postgres_config = self.config['postgres']
 
-        while not self._loop.is_closed():
+        while not self.loop.is_closed():
             await asyncio.sleep(self.db_backup_delay)
             self.log.info("Starting the database backup script")
 
@@ -559,7 +562,7 @@ class IPC:
             self.log.info(f"Backup script exited with code: {process.returncode}")
 
     async def _global_task_check_discord_incidents(self) -> None:
-        while not self._loop.is_closed():
+        while not self.loop.is_closed():
             await asyncio.sleep(self.incident_check_delay)
 
             url = "https://discordstatus.com/api/v2/incidents/unresolved.json"
@@ -600,5 +603,4 @@ class IPC:
 
 
 if __name__ == "__main__":
-    ipc = IPC()
-    ipc.start()
+    IPC().start()

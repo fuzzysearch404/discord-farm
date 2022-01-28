@@ -1,5 +1,5 @@
 import io
-import json
+import sys
 import datetime
 import asyncio
 import textwrap
@@ -16,17 +16,16 @@ from discord.ext.modules import AutoShardedModularCommandClient
 from core.game_user import UserManager
 
 
+if sys.platform == "linux":
+    import uvloop
+    uvloop.install()
+
+
 class BotClient(AutoShardedModularCommandClient):
     def __init__(self, **kwargs) -> None:
         self.pipe = kwargs.pop("pipe")
         self.cluster_name = kwargs.pop("cluster_name")
-
-        # We need new loop, because the launcher is using one
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        with open("config.json", "r") as file:
-            config = json.load(file)
+        config = kwargs.pop("config")
         self.config = config
         self._log_webhook = config['bot']['logs-webhook']
         self.maintenance_mode = config['bot']['start-in-maintenance']
@@ -42,6 +41,9 @@ class BotClient(AutoShardedModularCommandClient):
         self.tile_emoji = emojis['farm_tile']
         self.xp_emoji = emojis['xp']
         self.warehouse_emoji = emojis['warehouse']
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
         log = logging.getLogger(f"Cluster#{self.cluster_name}")
         if self.is_beta:
