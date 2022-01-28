@@ -88,8 +88,8 @@ class User:
         self.gems += self.level - old_level
         cmd._level_up = True
 
-    async def get_all_boosts(self, ctx) -> list:
-        boosts = await ctx.redis.execute_command("GET", f"user_boosts:{self.user_id}")
+    async def get_all_boosts(self, cmd) -> list:
+        boosts = await cmd.redis.execute_command("GET", f"user_boosts:{self.user_id}")
 
         if not boosts:
             return []
@@ -98,12 +98,12 @@ class User:
         # Removes expired boosts
         return [x for x in boosts if x.duration > datetime.now()]
 
-    async def is_boost_active(self, ctx, boost_id: str) -> bool:
-        all_boosts = await self.get_all_boosts(ctx)
+    async def is_boost_active(self, cmd, boost_id: str) -> bool:
+        all_boosts = await self.get_all_boosts(cmd)
         return boost_id in [x.id for x in all_boosts]
 
-    async def give_boost(self, ctx, boost) -> list:
-        existing_boosts = await self.get_all_boosts(ctx)
+    async def give_boost(self, cmd, boost) -> list:
+        existing_boosts = await self.get_all_boosts(cmd)
 
         try:
             # Extend duration if already currently active
@@ -116,7 +116,7 @@ class User:
         longest = max(existing_boosts, key=lambda b: b.duration)
         seconds_until = (longest.duration - datetime.now()).total_seconds()
 
-        await ctx.redis.execute_command(
+        await cmd.redis.execute_command(
             "SET", f"user_boosts:{self.user_id}",
             jsonpickle.encode(existing_boosts),
             "EX", round(seconds_until)
@@ -124,11 +124,11 @@ class User:
 
         return existing_boosts
 
-    async def get_all_items(self, ctx, conn=None) -> list:
+    async def get_all_items(self, cmd, conn=None) -> list:
         """Fetches all items currently in inventory"""
         if not conn:
             release_required = True
-            conn = await ctx.acquire()
+            conn = await cmd.acquire()
         else:
             release_required = False
 
@@ -140,15 +140,15 @@ class User:
         items = await conn.fetch(query, self.user_id)
 
         if release_required:
-            await ctx.release()
+            await cmd.release()
 
         return items
 
-    async def get_item(self, ctx, item_id: int, conn=None) -> asyncpg.Record:
+    async def get_item(self, cmd, item_id: int, conn=None) -> asyncpg.Record:
         """Fetches a single item currently in inventory"""
         if not conn:
             release_required = True
-            conn = await ctx.acquire()
+            conn = await cmd.acquire()
         else:
             release_required = False
 
@@ -160,15 +160,15 @@ class User:
         item = await conn.fetchrow(query, self.user_id, item_id)
 
         if release_required:
-            await ctx.release()
+            await cmd.release()
 
         return item
 
-    async def give_item(self, ctx, item_id: int, amount: int, conn=None) -> None:
+    async def give_item(self, cmd, item_id: int, amount: int, conn=None) -> None:
         """Adds a single type of items to inventory"""
         if not conn:
             release_required = True
-            conn = await ctx.acquire()
+            conn = await cmd.acquire()
         else:
             release_required = False
 
@@ -182,9 +182,9 @@ class User:
         await conn.execute(query, self.user_id, item_id, amount)
 
         if release_required:
-            await ctx.release()
+            await cmd.release()
 
-    async def give_items(self, ctx, items: list, conn=None) -> None:
+    async def give_items(self, cmd, items: list, conn=None) -> None:
         """Adds items to user. Accepts a list of tuples with items IDs and amounts"""
         items_with_user_id = []
         for item, amount in items:
@@ -195,7 +195,7 @@ class User:
 
         if not conn:
             release_required = True
-            conn = await ctx.acquire()
+            conn = await cmd.acquire()
         else:
             release_required = False
 
@@ -209,13 +209,13 @@ class User:
         await conn.executemany(query, items_with_user_id)
 
         if release_required:
-            await ctx.release()
+            await cmd.release()
 
-    async def remove_item(self, ctx, item_id: int, amount: int, conn=None) -> None:
+    async def remove_item(self, cmd, item_id: int, amount: int, conn=None) -> None:
         """Removes a single type of items from inventory"""
         if not conn:
             release_required = True
-            conn = await ctx.acquire()
+            conn = await cmd.acquire()
         else:
             release_required = False
 
@@ -242,13 +242,13 @@ class User:
                 await conn.execute(query, current_data['id'])
 
         if release_required:
-            await ctx.release()
+            await cmd.release()
 
-    async def get_item_modification(self, ctx, item_id: int, conn=None) -> asyncpg.Record:
+    async def get_item_modification(self, cmd, item_id: int, conn=None) -> asyncpg.Record:
         """Fetches item modifications data for a single item"""
         if not conn:
             release_required = True
-            conn = await ctx.acquire()
+            conn = await cmd.acquire()
         else:
             release_required = False
 
@@ -260,15 +260,15 @@ class User:
         data = await conn.fetchrow(query, self.user_id, item_id)
 
         if release_required:
-            await ctx.release()
+            await cmd.release()
 
         return data
 
-    async def get_farm_field(self, ctx, conn=None) -> list:
+    async def get_farm_field(self, cmd, conn=None) -> list:
         """Fetches all items currently in farm"""
         if not conn:
             release_required = True
-            conn = await ctx.acquire()
+            conn = await cmd.acquire()
         else:
             release_required = False
 
@@ -280,15 +280,15 @@ class User:
         data = await conn.fetch(query, self.user_id)
 
         if release_required:
-            await ctx.release()
+            await cmd.release()
 
         return data
 
-    async def get_factory(self, ctx, conn=None) -> list:
+    async def get_factory(self, cmd, conn=None) -> list:
         """Fetches all items currently in factory"""
         if not conn:
             release_required = True
-            conn = await ctx.acquire()
+            conn = await cmd.acquire()
         else:
             release_required = False
 
@@ -300,7 +300,7 @@ class User:
         data = await conn.fetch(query, self.user_id)
 
         if release_required:
-            await ctx.release()
+            await cmd.release()
 
         return data
 
