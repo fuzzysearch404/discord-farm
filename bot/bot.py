@@ -83,9 +83,9 @@ class BotClient(AutoShardedModularCommandClient):
             except Exception:
                 self.log.exception(f"Failed to load extension: {extension}")
 
-        # if self.is_beta:
-        #     self.log.warning("Loading the beta debug extension")
-        #     self.load_extension("bot.cogs.beta")
+        if self.is_beta:
+            self.log.warning("Loading the beta debug extension")
+            self.load_extension("bot.commands.beta")
 
         self.enable_field_guard(config['bot']['startup-farm-guard-duration'])
         self.run()
@@ -331,9 +331,9 @@ class BotClient(AutoShardedModularCommandClient):
     async def on_guild_join(self, guild: discord.Guild) -> None:
         message = (
             "Hello! \N{WAVING HAND SIGN} Thanks for adding me here!\n"
-            "Access the command list with: **/help**\n"
-            "Start the game with **/register**\n"
-            "Happy farming! \N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE}"
+            "Access my command list with: **/help**. "
+            "Start the game with **/account create**.\n"
+            "Have fun! \N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE}"
         )
 
         txt_chans = guild.text_channels
