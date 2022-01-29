@@ -197,7 +197,7 @@ class HelpCommand(
         await views.SelectButtonPaginatorView(
             self,
             options_and_sources,
-            select_placeholder="\ud83d\udcda Select a category of commands"
+            select_placeholder="\N{BOOKS} Select a category for commands"
         ).start()
 
 
