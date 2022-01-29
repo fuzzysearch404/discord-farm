@@ -32,14 +32,13 @@ class AbstractPaginatorSource:
 
 class ButtonPaginatorView(discord.ui.View):
 
-    def __init__(self, source: AbstractPaginatorSource) -> None:
+    def __init__(self, command, source: AbstractPaginatorSource) -> None:
         super().__init__(timeout=180.0)
+        self.command = command
+        self.author = command.interaction.user
         self.source = source
+
         self.current_page = 0
-
-        self.command = None
-        self.author = None
-
         self.update_page_counter_label()
         self.update_button_states()
 
@@ -134,16 +133,19 @@ class ButtonPaginatorView(discord.ui.View):
         self.update_button_states()
         await self.update_page_view()
 
-    async def start(self, command) -> discord.Message:
-        self.command = command
-        self.author = command.interaction.user
+    async def _reply_or_edit(self, **kwargs) -> None:
+        if not self.command.interaction.response.is_done():
+            await self.command.reply(**kwargs)
+        else:
+            await self.command.edit(**kwargs)
 
+    async def start(self) -> None:
         embed = await self.current_page_embed()
         # No need for a paginator? - Not adding it.
         if not self.source.should_paginate():
-            return await command.reply(embed=embed)
+            return await self._reply_or_edit(embed=embed)
 
-        return await command.reply(embed=embed, view=self)
+        await self._reply_or_edit(embed=embed, view=self)
 
 
 class SelectButtonPaginatorView(ButtonPaginatorView):
@@ -151,7 +153,7 @@ class SelectButtonPaginatorView(ButtonPaginatorView):
     A paginator type that can display multiple paginator sources,
     by selecting them with a select component.
     """
-    def __init__(self, options_and_sources: dict, select_placeholder: str = None) -> None:
+    def __init__(self, command, options_and_sources: dict, select_placeholder: str = None) -> None:
         """
         options_and_sources: A dictionary of select options and their corresponding
         paginator sources.
@@ -163,7 +165,7 @@ class SelectButtonPaginatorView(ButtonPaginatorView):
 
         first_option = next(iter(options_and_sources))
         first_source = options_and_sources[first_option]
-        super().__init__(first_source)
+        super().__init__(command, first_source)
 
         self.select_source.options = list(options_and_sources.keys())
         self.select_source.placeholder = select_placeholder
@@ -180,12 +182,9 @@ class SelectButtonPaginatorView(ButtonPaginatorView):
         self.update_button_states()
         await self.update_page_view()
 
-    async def start(self, command) -> discord.Message:
-        self.command = command
-        self.author = command.interaction.user
-
+    async def start(self) -> None:
         embed = await self.current_page_embed()
-        return await command.reply(embed=embed, view=self)
+        await self._reply_or_edit(embed=embed, view=self)
 
 
 class AbstractOptionPromptView(discord.ui.View):
@@ -195,6 +194,7 @@ class AbstractOptionPromptView(discord.ui.View):
     """
     def __init__(
         self,
+        command,
         initial_msg: str = None,
         initial_embed: discord.Embed = None,
         deny_button: bool = True,
@@ -202,18 +202,15 @@ class AbstractOptionPromptView(discord.ui.View):
         timeout: int = 60
     ) -> None:
         super().__init__(timeout=timeout)
+        self.command = command
+        self.author = command.interaction.user
         # Message or/and embed to send as an initial message
         self.initial_msg = initial_msg
         self.initial_embed = initial_embed
-        # Context from the original command invoke
-        self.ctx = None
-        # Message with the view itself
-        self._msg = None
 
         self._result = None
 
         self.create_option_buttons()
-
         # We do this here to make the deny button appear last
         if deny_button:
             self.deny_label = deny_label
@@ -223,11 +220,11 @@ class AbstractOptionPromptView(discord.ui.View):
         await self.disable_all_items()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if self.ctx.author == interaction.user:
+        if self.author == interaction.user:
             return True
 
         await interaction.response.send_message(
-            f"\N{CROSS MARK} This menu can only be used by {self.ctx.author.mention}, "
+            f"\N{CROSS MARK} This menu can only be used by {self.author.mention}, "
             "because they used this command.",
             ephemeral=True
         )
@@ -244,8 +241,7 @@ class AbstractOptionPromptView(discord.ui.View):
         )
 
         # This time we do an extra step and disable the buttons
-        # Because in most of the code the command execution
-        # just stops in this case anyways
+        # Because in most of the code the command execution just stops in this case anyways
         async def deny_callback(interaction) -> None:
             self._result = False
             await self.disable_all_items()
@@ -259,18 +255,20 @@ class AbstractOptionPromptView(discord.ui.View):
             if hasattr(ui_item, "disabled"):
                 ui_item.disabled = True
 
-        await self._msg.edit(view=self)
+        await self.command.edit(view=self)
 
     async def send_initial_message(self) -> None:
-        self._msg = await self.ctx.reply(self.initial_msg, embed=self.initial_embed, view=self)
+        if not self.command.interaction.response.is_done():
+            await self.command.reply(self.initial_msg, embed=self.initial_embed, view=self)
+        else:
+            await self.command.edit(content=self.initial_msg, embed=self.initial_embed, view=self)
 
-    async def prompt(self, ctx) -> tuple:
-        self.ctx = ctx
+    async def prompt(self):
         await self.send_initial_message()
         # Wait until the view times out or user clicks a button
         await self.wait()
 
-        return self._result, self._msg
+        return self._result
 
 
 class ConfirmPromptView(AbstractOptionPromptView):
@@ -280,28 +278,24 @@ class ConfirmPromptView(AbstractOptionPromptView):
     """
     def __init__(
         self,
+        command,
         style: discord.ButtonStyle = discord.ButtonStyle.green,
         emoji: str = "\N{WHITE HEAVY CHECK MARK}",
         label: str = None,
-        *args,
         **kwargs
     ) -> None:
         self.style = style
         self.emoji = emoji
         self.label = label
-        super().__init__(*args, **kwargs)
+        super().__init__(command, **kwargs)
 
     def create_option_buttons(self) -> None:
-        approve_button = discord.ui.Button(
-            style=self.style,
-            emoji=self.emoji,
-            label=self.label
-        )
+        approve_button = discord.ui.Button(style=self.style, emoji=self.emoji, label=self.label)
 
         async def approve_callback(interaction) -> None:
             self._result = True
             # Here we don't disable or send request to remove the buttons,
-            # because most likely we will edit the "self._msg" message
+            # because most likely we will edit the message,
             # by just passing view as None or this empty view
             # to not do an extra request to API just to remove these
             self.clear_items()
@@ -313,7 +307,7 @@ class ConfirmPromptView(AbstractOptionPromptView):
 
 class OptionButton(discord.ui.Button):
     """
-    A button instance that also holds an option.
+    A button instance that also holds a result option.
     These type of buttons are used for MultiOptionView.
     On callback sets the option as a result onto the view.
     """
@@ -329,12 +323,10 @@ class OptionButton(discord.ui.Button):
 
 
 class MultiOptionView(AbstractOptionPromptView):
-    """
-    Option prompt view that takes list of OptionButton for the prompt.
-    """
-    def __init__(self, options: list, *args, **kwargs) -> None:
+    """Option prompt view that takes list of OptionButton for the prompt."""
+    def __init__(self, command, options: list, **kwargs) -> None:
         self.options = options
-        super().__init__(*args, **kwargs)
+        super().__init__(command, **kwargs)
 
     def create_option_buttons(self) -> None:
         for option in self.options:

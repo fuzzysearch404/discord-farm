@@ -11,7 +11,7 @@ from .util import views
 class InformationCollection(commands.FarmCommandCollection):
     """Get the latest information about the bot - news, events, links, etc."""
     help_emoji: str = "\N{NEWSPAPER}"
-    help_short_description: str = "Get offical bot news, update information etc."
+    help_short_description: str = "Get official bot news, update information etc."
 
     def __init__(self, client):
         super().__init__(client, [HelpCommand], name="Information")
@@ -195,9 +195,10 @@ class HelpCommand(
             options_and_sources[opt] = HelpAllCommandsMessageSource(current_guild_id, collection)
 
         await views.SelectButtonPaginatorView(
+            self,
             options_and_sources,
             select_placeholder="\ud83d\udcda Select a category of commands"
-        ).start(self)
+        ).start()
 
 
 def setup(client) -> list:

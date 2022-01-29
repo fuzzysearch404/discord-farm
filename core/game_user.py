@@ -1,6 +1,7 @@
 import asyncpg
+import datetime
 import jsonpickle
-from datetime import datetime
+
 
 from bot.commands.util import exceptions
 from core.game_items import GameItem
@@ -18,6 +19,7 @@ class User:
         "factory_level",
         "store_slots",
         "notifications",
+        "registration_date",
         "level",
         "next_level_xp"
     )
@@ -32,7 +34,8 @@ class User:
         factory_slots: int,
         factory_level: int,
         store_slots: int,
-        notifications: bool
+        notifications: bool,
+        registration_date: datetime.date
     ) -> None:
         self.user_id = user_id
         self.xp = xp
@@ -43,6 +46,7 @@ class User:
         self.factory_level = factory_level
         self.store_slots = store_slots
         self.notifications = notifications
+        self.registration_date = registration_date
         self.level, self.next_level_xp = self._calculate_user_level()
 
     def _calculate_user_level(self) -> tuple:
@@ -96,7 +100,7 @@ class User:
 
         boosts = jsonpickle.decode(boosts)
         # Removes expired boosts
-        return [x for x in boosts if x.duration > datetime.now()]
+        return [x for x in boosts if x.duration > datetime.datetime.now()]
 
     async def is_boost_active(self, cmd, boost_id: str) -> bool:
         all_boosts = await self.get_all_boosts(cmd)
@@ -108,13 +112,13 @@ class User:
         try:
             # Extend duration if already currently active
             existing = next(x for x in existing_boosts if x.id == boost.id)
-            existing.duration += (boost.duration - datetime.now())
+            existing.duration += (boost.duration - datetime.datetime.now())
         except StopIteration:
             existing_boosts.append(boost)
 
         # Find the new longest boost
         longest = max(existing_boosts, key=lambda b: b.duration)
-        seconds_until = (longest.duration - datetime.now()).total_seconds()
+        seconds_until = (longest.duration - datetime.datetime.now()).total_seconds()
 
         await cmd.redis.execute_command(
             "SET", f"user_boosts:{self.user_id}",
@@ -343,7 +347,8 @@ class UserManager:
             factory_slots=user_data['factory_slots'],
             factory_level=user_data['factory_level'],
             store_slots=user_data['store_slots'],
-            notifications=user_data['notifications']
+            notifications=user_data['notifications'],
+            registration_date=user_data['registration_date']
         )
 
         # Keep in Redis for 10 minutes, then refetch

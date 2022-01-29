@@ -152,7 +152,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
             except exceptions.UserNotFoundException:
                 raise exceptions.UserNotFoundException(
                     "Hey there! It looks like you don't have a game account yet! "
-                    "Type **/register** and let's get your farming journey started! "
+                    "Type **/account create** and let's get your farming journey started! "
                     "\N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE}"
                 )
 

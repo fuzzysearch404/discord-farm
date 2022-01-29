@@ -434,9 +434,11 @@ class ItemPool:
         return {x.name: x.id for x in self.all_items if isinstance(x, item_class)}
 
     def find_items_by_level(self, item_level: int) -> list:
+        """Finds all items unique to a certain level."""
         return [x for x in self.all_items if x.level == item_level]
 
     def find_all_items_by_level(self, user_level: int) -> list:
+        """Finds all unlocked items for specified user level."""
         return [x for x in self.all_items if x.level <= user_level]
 
     def find_item_by_id(self, item_id: int) -> GameItem:
