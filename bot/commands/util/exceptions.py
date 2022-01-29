@@ -3,12 +3,25 @@ from . import embeds
 
 class FarmException(RuntimeError):
     """Base exception class"""
+
     def __init__(self, message: str = None, **kwargs) -> None:
         super().__init__(message)
         self.embed = kwargs.get("embed", None)
 
 
-class GameIsInMaintenance(FarmException):
+class CommandOwnerOnlyException(FarmException):
+    """Exception for owner-only commands"""
+
+    def __init__(self, message: str = None) -> None:
+        super().__init__("Sorry, this command is only available to the owners of this bot")
+
+
+class CommandOnCooldownException(FarmException):
+    """Exception raised when command cooldown has been reached"""
+    pass
+
+
+class GameIsInMaintenanceException(FarmException):
     """Exception raised when game is in maintenance"""
 
     def __init__(self) -> None:
@@ -17,11 +30,6 @@ class GameIsInMaintenance(FarmException):
             "\N{CLOCK FACE ONE OCLOCK} Please try again after a while...\n"
             "\N{NEWSPAPER} For more information use command - **/news**"
         )
-
-
-class CommandOnCooldown(FarmException):
-    """Exception raised when command cooldown has been reached"""
-    pass
 
 
 class UserNotFoundException(FarmException):
@@ -46,6 +54,7 @@ class InsufficientUserLevelException(FarmException):
 
 class InsufficientGoldException(FarmException):
     """Exception for handling cases when user has insufficient gold"""
+
     def __init__(self, cmd, cost: int):
         super().__init__(
             "User has insufficient gold to perform this action",
@@ -55,6 +64,7 @@ class InsufficientGoldException(FarmException):
 
 class InsufficientGemsException(FarmException):
     """Exception for handling cases when user has insufficient gems"""
+
     def __init__(self, cmd, cost: int):
         super().__init__(
             "User has insufficient gems to perform this action",
@@ -64,6 +74,7 @@ class InsufficientGemsException(FarmException):
 
 class InsufficientItemException(FarmException):
     """Exception for handling cases when user has insufficient item amount"""
+
     def __init__(self, cmd, item, req_amount: int):
         super().__init__(
             "User has insufficient item amount to perform this action",

@@ -126,7 +126,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
             return fmt
 
     def find_all_lowest_children(self) -> list:
-        """Finds all lowest level subcommands for this command"""
+        """Finds all lowest level subcommands for this command (might include self)"""
         results = []
 
         if self._children_:
@@ -140,13 +140,11 @@ class FarmSlashCommand(discord.app.SlashCommand):
     async def pre_check(self) -> bool:
         if self.avoid_maintenance and self.client.maintenance_mode:
             if not await self.client.is_owner(self.author):
-                raise exceptions.GameIsInMaintenance()
+                raise exceptions.GameIsInMaintenanceException()
 
         if self.owner_only:
             if not await self.client.is_owner(self.author):
-                raise exceptions.FarmException(
-                    "Sorry, this command is only available for this bot owners."
-                )
+                raise exceptions.CommandOwnerOnlyException()
 
         if self.requires_account:
             try:
@@ -172,7 +170,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
                 )
             else:
                 ttl_fmt = time.seconds_to_time(command_ttl)
-                raise exceptions.CommandOnCooldown(
+                raise exceptions.CommandOnCooldownException(
                     f"\N{ALARM CLOCK} This command is on a cooldown for **{ttl_fmt}**!"
                 )
 
