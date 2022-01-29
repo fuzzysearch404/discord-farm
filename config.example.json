@@ -19,6 +19,7 @@
         "logs-webhook" : "https://canary.discord.com/api/webhooks/1234/some_symbols",
         "initial-extensions" : [
             "bot.commands.account",
+            "bot.commands.admin",
             "bot.commands.clusters",
             "bot.commands.information"
         ],
