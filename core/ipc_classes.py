@@ -43,18 +43,14 @@ class Reminder:
 
     __slots__ = (
         "user_id",
-        "guild_id",
         "channel_id",
-        "message_id",
         "item_id",
         "amount",
         "time"
     )
 
     user_id: int
-    guild_id: int
     channel_id: int
-    message_id: int
     item_id: int
     amount: int
     time: datetime
