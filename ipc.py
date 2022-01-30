@@ -397,8 +397,7 @@ class NotificationsService(IPCService):
         headers = {
             "Authorization": f"Bot {self.ipc.config['bot']['discord-token']}",
             "User-Agent": (
-                f"Discord Farm Bot {self.ipc.config['bot']['version']} "
-                "(https://github.com/fuzzysearch404/discord-farm/)"
+                f"Discord Farm Bot {self.ipc.config['bot']['version']} ({static.GIT_REPO})"
             )
         }
         body = {

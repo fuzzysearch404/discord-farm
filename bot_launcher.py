@@ -8,6 +8,8 @@ import multiprocessing
 import signal
 
 from bot.bot import BotClient
+from core import static
+
 
 LOG_FORMATTER = logging.Formatter("[%(asctime)s %(name)s/%(levelname)s] %(message)s")
 log = logging.getLogger("Launcher")
@@ -46,16 +48,13 @@ class Launcher:
         self.init_time = time.perf_counter()
 
     def _load_config(self) -> dict:
-        with open("config.json", "r") as file:
+        with open(static.CONFIG_PATH, "r") as file:
             return json.load(file)
 
     async def get_shard_count(self) -> int:
         headers = {
             "Authorization": "Bot " + self.config['bot']['discord-token'],
-            "User-Agent": (
-                f"Discord Farm Bot {self.config['bot']['version']} "
-                "(https://github.com/fuzzysearch404/discord-farm/)"
-            )
+            "User-Agent": f"Discord Farm Bot {self.config['bot']['version']} ({static.GIT_REPO})"
         }
 
         async with aiohttp.ClientSession() as session:
