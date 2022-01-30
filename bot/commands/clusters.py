@@ -125,7 +125,6 @@ class ClustersCollection(FarmCommandCollection):
 
     async def _ensure_all_required_data(self) -> None:
         retry_in = 0
-
         # Well, we can't get the responses instantly
         await asyncio.sleep(0.1)
 
@@ -215,6 +214,22 @@ class ClustersCollection(FarmCommandCollection):
     def _handle_shutdown(self) -> None:
         self.client.loop.create_task(self.client.close())
 
+    async def send_ipc_message(
+        self,
+        action: str,
+        reply_global: bool,
+        data=None,
+        global_channel: bool = False
+    ) -> None:
+        message = IPCMessage(
+            author=self.self_name,
+            action=action,
+            reply_global=reply_global,
+            data=data
+        )
+        channel = self.self_name if not global_channel else self.global_channel
+        await self.client.redis.publish(channel, jsonpickle.encode(message))
+
     async def _send_ping_message(self) -> None:
         self.last_ping = datetime.datetime.now()
 
@@ -224,182 +239,63 @@ class ClustersCollection(FarmCommandCollection):
             uptime = datetime.timedelta(seconds=0)
 
         cluster = Cluster(
-            self.client.cluster_name,
-            self.client.latencies,
-            self.client.ipc_ping,
-            len(self.client.guilds),
-            self.last_ping,
-            uptime
+            name=self.client.cluster_name,
+            latencies=self.client.latencies,
+            ipc_latency=self.client.ipc_ping,
+            guild_count=len(self.client.guilds),
+            last_ping=self.last_ping,
+            uptime=uptime
         )
 
-        message = IPCMessage(
-            author=self.self_name,
-            action="ping",
-            reply_global=False,
-            data=cluster
-        )
-
-        await self.client.redis.publish(self.self_name, jsonpickle.encode(message))
+        await self.send_ipc_message("ping", False, cluster)
 
     async def send_set_reminder_message(self, reminder: Reminder) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="add_reminder",
-            reply_global=False,
-            data=reminder
-        )
-
-        await self.client.redis.publish(self.self_name, jsonpickle.encode(message))
+        await self.send_ipc_message("add_reminder", False, reminder)
 
     async def send_disable_reminders_message(self, user_id: int) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="stop_reminders",
-            reply_global=False,
-            data=user_id
-        )
-
-        await self.client.redis.publish(self.self_name, jsonpickle.encode(message))
+        await self.send_ipc_message("stop_reminders", False, user_id)
 
     async def send_enable_reminders_message(self, user_id: int) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="start_reminders",
-            reply_global=False,
-            data=user_id
-        )
-
-        await self.client.redis.publish(self.self_name, jsonpickle.encode(message))
+        await self.send_ipc_message("start_reminders", False, user_id)
 
     async def send_delete_reminders_message(self, user_id: int) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="del_reminders",
-            reply_global=False,
-            data=user_id
-        )
-
-        await self.client.redis.publish(self.self_name, jsonpickle.encode(message))
+        await self.send_ipc_message("del_reminders", False, user_id)
 
     async def _send_get_items_message(self, reply_global: bool = False) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="get_items",
-            reply_global=reply_global,
-            data=None
-        )
-
-        await self.client.redis.publish(self.self_name, jsonpickle.encode(message))
+        await self.send_ipc_message("get_items", reply_global, None)
 
     async def _send_set_items_message(self) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="set_items",
-            reply_global=True,
-            data=None
-        )
-
-        await self.client.redis.publish(self.self_name, jsonpickle.encode(message))
+        await self.send_ipc_message("set_items", True, None)
 
     async def _send_get_game_news_message(self, reply_global: bool = False) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="get_game_news",
-            reply_global=reply_global,
-            data=None
-        )
-
-        await self.client.redis.publish(self.self_name, jsonpickle.encode(message))
+        await self.send_ipc_message("get_game_news", reply_global, None)
 
     async def _send_set_game_news_message(self, game_news: str) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="set_game_news",
-            reply_global=False,
-            data=game_news
-        )
-
-        await self.client.redis.publish(self.self_name, jsonpickle.encode(message))
+        await self.send_ipc_message("set_game_news", True, game_news)
 
     async def _send_set_field_guard_message(self, duration: int) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="enable_guard",
-            reply_global=True,
-            data=duration
-        )
-
-        await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
+        await self.send_ipc_message("enable_guard", True, duration, global_channel=True)
 
     async def _send_set_maintenance_message(self, enabled: bool) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="maintenance",
-            reply_global=True,
-            data=enabled
-        )
-
-        await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
+        await self.send_ipc_message("maintenance", True, enabled, global_channel=True)
 
     async def _send_eval_message(self, eval_code: str) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="eval",
-            reply_global=True,
-            data=eval_code
-        )
-
-        await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
+        await self.send_ipc_message("eval", True, eval_code, global_channel=True)
 
     async def _send_results(self, result: str) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="result",
-            reply_global=True,
-            data=result
-        )
-
-        await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
+        await self.send_ipc_message("result", True, result, global_channel=True)
 
     async def _send_reload_message(self, extension: str) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="reload",
-            reply_global=True,
-            data=extension
-        )
-
-        await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
+        await self.send_ipc_message("reload", True, extension, global_channel=True)
 
     async def _send_load_message(self, extension: str) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="load",
-            reply_global=True,
-            data=extension
-        )
-
-        await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
+        await self.send_ipc_message("load", True, extension, global_channel=True)
 
     async def _send_unload_message(self, extension: str) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="unload",
-            reply_global=True,
-            data=extension
-        )
-
-        await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
+        await self.send_ipc_message("unload", True, extension, global_channel=True)
 
     async def _send_shutdown_message(self) -> None:
-        message = IPCMessage(
-            author=self.self_name,
-            action="shutdown",
-            reply_global=True,
-            data=None
-        )
-
-        await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
+        await self.send_ipc_message("shutdown", True, None, global_channel=True)
 
     async def _wait_and_publish_responses(self, cmd) -> None:
         # Wait for responses
