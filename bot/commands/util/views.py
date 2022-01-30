@@ -33,7 +33,7 @@ class AbstractPaginatorSource:
 class ButtonPaginatorView(discord.ui.View):
 
     def __init__(self, command, source: AbstractPaginatorSource) -> None:
-        super().__init__(timeout=180.0)
+        super().__init__(timeout=120.0)
         self.command = command
         self.author = command.interaction.user
         self.source = source
