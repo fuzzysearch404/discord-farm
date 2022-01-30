@@ -1,6 +1,4 @@
-import io
 import asyncio
-import discord
 import jsonpickle
 import datetime
 
@@ -38,20 +36,19 @@ class ClustersCollection(FarmCommandCollection):
         self.responses = {}
         self.response_lock = asyncio.Lock()
 
-        self.client.loop.create_task(self._register_tasks())
+        self.client.loop.create_task(self._register_tasks_and_channels())
         self.client.loop.create_task(self._request_all_required_data())
         # Block the bot from firing ready until
         # ensuring that we have the mandatory data
         self.client.loop.run_until_complete(self._ensure_all_required_data())
 
-    async def collection_check(self, ctx) -> bool:
-        if await self.client.is_owner(ctx.author):
-            return
-
-        raise exceptions.FarmException("Sorry, this is a bot owner-only command.")
+    async def collection_check(self, command) -> bool:
+        # I am aware that this is a double check when using "owner_only" = True
+        if not await self.client.is_owner(command.author):
+            raise exceptions.CommandOwnerOnlyException()
 
     def on_unload(self) -> None:
-        self.client.loop.create_task(self._unregister_tasks())
+        self.client.loop.create_task(self._unregister_tasks_and_channels())
 
     async def _register_redis_channels(self) -> None:
         await self.redis_pubsub.subscribe(self.global_channel)
@@ -61,21 +58,19 @@ class ClustersCollection(FarmCommandCollection):
         await self.redis_pubsub.unsubscribe(self.global_channel)
         await self.redis_pubsub.unsubscribe(self.self_name)
 
-    async def _register_tasks(self) -> None:
+    async def _register_tasks_and_channels(self) -> None:
         await self._register_redis_channels()
-
         self._handler_task = self.client.loop.create_task(self._redis_event_handler())
         self._ping_task = self.client.loop.create_task(self._cluster_ping_task())
 
-    async def _unregister_tasks(self) -> None:
+    async def _unregister_tasks_and_channels(self) -> None:
         self._handler_task.cancel()
         self._ping_task.cancel()
-
         await self._unregister_redis_channels()
 
     async def _redis_event_handler(self) -> None:
         async for message in self.redis_pubsub.listen():
-            if message['type'] != 'message':
+            if message['type'] != "message":
                 continue
 
             try:
@@ -148,55 +143,46 @@ class ClustersCollection(FarmCommandCollection):
 
             if not missing:
                 return
-            else:
-                self.client.log.critical(
-                    "Missing required data from IPC. "
-                    f"Retrying in: {retry_in} seconds"
-                )
 
-                await asyncio.sleep(retry_in)
-                if retry_in < 60:
-                    retry_in += 3
+            self.client.log.critical(
+                f"Missing required data from IPC. Retrying in: {retry_in} seconds"
+            )
 
-                await self._request_all_required_data()
+            await asyncio.sleep(retry_in)
+            if retry_in < 60:
+                retry_in += 3
+
+            await self._request_all_required_data()
 
     async def _cluster_ping_task(self) -> None:
         await self.client.wait_until_ready()
 
         while not self.client.is_closed():
             await self._send_ping_message()
-
             await asyncio.sleep(self.cluster_update_delay)
 
     def _handle_update_items(self, message: IPCMessage) -> None:
-        item_pool = jsonpickle.decode(message.data)
-
-        self.client.item_pool = item_pool
+        self.client.item_pool = message.data
 
     async def _handle_maintenance(self, message: IPCMessage) -> None:
         self.client.maintenance_mode = message.data
-
         await self._send_results(f"\N{WHITE HEAVY CHECK MARK} {self.client.maintenance_mode}")
 
     async def _handle_farm_guard(self, message: IPCMessage) -> None:
         self.client.enable_field_guard(message.data)
-
         await self._send_results(self.client.guard_mode)
 
     def _handle_update_cluster_data(self, message: IPCMessage) -> None:
-        cluster_data = jsonpickle.decode(message.data)
+        self.client.cluster_data = message.data
 
         time_delta = datetime.datetime.now() - self.last_ping
         self.client.ipc_ping = time_delta.total_seconds() * 1000  # ms
-
-        self.client.cluster_data = cluster_data
 
     def _handle_update_game_news(self, message: IPCMessage) -> None:
         self.client.game_news = message.data
 
     async def _handle_eval_command(self, message: IPCMessage) -> None:
         result = await self.client.eval_code(message.data)
-
         await self._send_results(result)
 
     async def _handle_reload_extension(self, message: IPCMessage) -> None:
@@ -250,7 +236,7 @@ class ClustersCollection(FarmCommandCollection):
             author=self.self_name,
             action="ping",
             reply_global=False,
-            data=jsonpickle.encode(cluster)
+            data=cluster
         )
 
         await self.client.redis.publish(self.self_name, jsonpickle.encode(message))
@@ -343,9 +329,7 @@ class ClustersCollection(FarmCommandCollection):
             data=duration
         )
 
-        await self.client.redis.publish(
-            self.global_channel, jsonpickle.encode(message)
-        )
+        await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
 
     async def _send_set_maintenance_message(self, enabled: bool) -> None:
         message = IPCMessage(
@@ -397,12 +381,12 @@ class ClustersCollection(FarmCommandCollection):
 
         await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
 
-    async def _send_unload_message(self, extenstion: str) -> None:
+    async def _send_unload_message(self, extension: str) -> None:
         message = IPCMessage(
             author=self.self_name,
             action="unload",
             reply_global=True,
-            data=extenstion
+            data=extension
         )
 
         await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
@@ -417,22 +401,22 @@ class ClustersCollection(FarmCommandCollection):
 
         await self.client.redis.publish(self.global_channel, jsonpickle.encode(message))
 
-    async def _wait_and_publish_responses(self, ctx) -> None:
+    async def _wait_and_publish_responses(self, cmd) -> None:
         # Wait for responses
-        await ctx.defer()
+        await cmd.defer()
         await asyncio.sleep(3)
 
         fmt = ""
         for cluster_name, result in self.responses.items():
             fmt += f"{cluster_name}: {result}\n"
 
-        fmt = f"```{fmt}```"
-
-        if len(fmt) > 2000:
-            fp = io.BytesIO(fmt.encode("utf-8"))
-            await ctx.send("Output too long...", file=discord.File(fp, "data.txt"))
+        if len(fmt) > 1994:  # 2000 - 6 for code block
+            # TODO: Send as a file, when it's going to be possible
+            await cmd.edit("Output too long...")
+            #  fp = io.BytesIO(fmt.encode("utf-8"))
+            #  await cmd.edit(content="Output too long...", file=discord.File(fp, "data.txt"))
         else:
-            await ctx.reply(fmt)
+            await cmd.edit(content=f"```{fmt}```")
 
 
 def setup(client) -> list:

@@ -10,7 +10,7 @@ import jsonpickle
 from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime, timedelta
 
-from core.ipc_classes import IPCMessage, Reminder
+from core import ipc_classes
 from core.game_items import load_all_items
 
 
@@ -176,7 +176,7 @@ class IPC:
                 reply_channel = ipc_message.author
 
             if ipc_message.action == "ping":
-                await self._update_cluster_status(ipc_message, reply_channel)
+                await self._update_cluster_status(ipc_message.data, reply_channel)
             elif ipc_message.action == "add_reminder":
                 await self._handle_add_reminder(ipc_message.data)
             elif ipc_message.action == "get_items":
@@ -198,9 +198,11 @@ class IPC:
             else:
                 self.log.error(f"Unknown action: {ipc_message.action}")
 
-    async def _update_cluster_status(self, message: IPCMessage, reply_channel: str) -> None:
-        cluster = jsonpickle.decode(message.data)
-
+    async def _update_cluster_status(
+        self,
+        cluster: ipc_classes.Cluster,
+        reply_channel: str
+    ) -> None:
         try:
             to_remove = next(x for x in self.active_clusters if x.name == cluster.name)
             self.active_clusters.remove(to_remove)
@@ -220,7 +222,6 @@ class IPC:
 
                 if delta_time.total_seconds() >= self.cluster_inactive_timeout:
                     self.active_clusters.remove(cluster)
-
                     continue
 
                 guild_count += cluster.guild_count
@@ -264,7 +265,7 @@ class IPC:
             ends_milis = int(key.split(":")[-1])
             await self.reminder_queue.put((ends_milis, key))
 
-    async def _handle_add_reminder(self, reminder: Reminder) -> None:
+    async def _handle_add_reminder(self, reminder: ipc_classes.Reminder) -> None:
         milis = int(reminder.time.timestamp() * 1000)
         rem_secs = int((reminder.time - datetime.now()).total_seconds())
         # Set expiry to 30 seconds more, to avoid expiring it on Redis side
@@ -311,7 +312,7 @@ class IPC:
             await self.redis.execute_command("DEL", rem)
             self.reminder_deleted_keys.add(rem)
 
-    async def _handle_set_news(self, message: IPCMessage) -> None:
+    async def _handle_set_news(self, message: ipc_classes.IPCMessage) -> None:
         self.game_news = message.data
 
         with open("data/news.txt", "w") as file:
@@ -326,17 +327,17 @@ class IPC:
         await self._send_update_items_message(self.global_channel)
 
     async def _send_ping_message(self, channel: str) -> None:
-        message = IPCMessage(
+        message = ipc_classes.IPCMessage(
             author=self.ipc_name,
             action="ping",
             reply_global=False,
-            data=jsonpickle.encode(self.active_clusters)
+            data=self.active_clusters
         )
 
         await self.redis.publish(channel, jsonpickle.encode(message))
 
     async def _send_update_game_news_message(self, channel: str) -> None:
-        message = IPCMessage(
+        message = ipc_classes.IPCMessage(
             author=self.ipc_name,
             action="get_game_news",
             reply_global=False,
@@ -346,7 +347,7 @@ class IPC:
         await self.redis.publish(channel, jsonpickle.encode(message))
 
     async def _send_set_game_guard_message(self, channel: str, duration: int) -> None:
-        message = IPCMessage(
+        message = ipc_classes.IPCMessage(
             author=self.ipc_name,
             action="enable_guard",
             reply_global=False,
@@ -356,16 +357,16 @@ class IPC:
         await self.redis.publish(channel, jsonpickle.encode(message))
 
     async def _send_update_items_message(self, channel: str) -> None:
-        message = IPCMessage(
+        message = ipc_classes.IPCMessage(
             author=self.ipc_name,
             action="get_items",
             reply_global=False,
-            data=jsonpickle.encode(self.item_pool)
+            data=self.item_pool
         )
 
         await self.redis.publish(channel, jsonpickle.encode(message))
 
-    async def _post_reminder_message(self, reminder) -> None:
+    async def _post_reminder_message(self, reminder: ipc_classes.Reminder) -> None:
         random_names = ("Thomas", "Sophia", "Liam", "Emma")
         random_messages = (
             "Hey, are you here? Are you awake? \N{WAVING HAND SIGN}",
