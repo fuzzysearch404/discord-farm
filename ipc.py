@@ -24,7 +24,6 @@ class IPC:
         self.loop = asyncio.get_event_loop()
 
         self.config = self._load_config()
-        self.game_news = self._load_game_news()
         self.eval_responses = {}
 
         log = logging.getLogger("IPC")

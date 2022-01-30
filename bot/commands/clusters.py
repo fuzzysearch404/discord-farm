@@ -2,7 +2,7 @@ import asyncio
 import jsonpickle
 import datetime
 
-from core.ipc_classes import Cluster, IPCMessage, Reminder
+from core import ipc_classes
 from .util import exceptions
 from .util.commands import FarmCommandCollection
 
@@ -160,31 +160,31 @@ class ClustersCollection(FarmCommandCollection):
             await self._send_ping_message()
             await asyncio.sleep(self.cluster_update_delay)
 
-    def _handle_update_items(self, message: IPCMessage) -> None:
+    def _handle_update_items(self, message: ipc_classes.IPCMessage) -> None:
         self.client.item_pool = message.data
 
-    async def _handle_maintenance(self, message: IPCMessage) -> None:
+    async def _handle_maintenance(self, message: ipc_classes.IPCMessage) -> None:
         self.client.maintenance_mode = message.data
         await self._send_results(f"\N{WHITE HEAVY CHECK MARK} {self.client.maintenance_mode}")
 
-    async def _handle_farm_guard(self, message: IPCMessage) -> None:
+    async def _handle_farm_guard(self, message: ipc_classes.IPCMessage) -> None:
         self.client.enable_field_guard(message.data)
         await self._send_results(self.client.guard_mode)
 
-    def _handle_update_cluster_data(self, message: IPCMessage) -> None:
+    def _handle_update_cluster_data(self, message: ipc_classes.IPCMessage) -> None:
         self.client.cluster_data = message.data
 
         time_delta = datetime.datetime.now() - self.last_ping
         self.client.ipc_ping = time_delta.total_seconds() * 1000  # ms
 
-    def _handle_update_game_news(self, message: IPCMessage) -> None:
+    def _handle_update_game_news(self, message: ipc_classes.IPCMessage) -> None:
         self.client.game_news = message.data
 
-    async def _handle_eval_command(self, message: IPCMessage) -> None:
+    async def _handle_eval_command(self, message: ipc_classes.IPCMessage) -> None:
         result = await self.client.eval_code(message.data)
         await self._send_results(result)
 
-    async def _handle_reload_extension(self, message: IPCMessage) -> None:
+    async def _handle_reload_extension(self, message: ipc_classes.IPCMessage) -> None:
         try:
             self.client.reload_extension(message.data)
         except Exception as e:
@@ -193,7 +193,7 @@ class ClustersCollection(FarmCommandCollection):
 
         await self._send_results("\N{WHITE HEAVY CHECK MARK}")
 
-    async def _handle_load_extension(self, message: IPCMessage) -> None:
+    async def _handle_load_extension(self, message: ipc_classes.IPCMessage) -> None:
         try:
             self.client.load_extension(message.data)
         except Exception as e:
@@ -202,7 +202,7 @@ class ClustersCollection(FarmCommandCollection):
 
         await self._send_results("\N{WHITE HEAVY CHECK MARK}")
 
-    async def _handle_unload_extension(self, message: IPCMessage) -> None:
+    async def _handle_unload_extension(self, message: ipc_classes.IPCMessage) -> None:
         try:
             self.client.unload_extension(message.data)
         except Exception as e:
@@ -221,7 +221,7 @@ class ClustersCollection(FarmCommandCollection):
         data=None,
         global_channel: bool = False
     ) -> None:
-        message = IPCMessage(
+        message = ipc_classes.IPCMessage(
             author=self.self_name,
             action=action,
             reply_global=reply_global,
@@ -238,7 +238,7 @@ class ClustersCollection(FarmCommandCollection):
         else:
             uptime = datetime.timedelta(seconds=0)
 
-        cluster = Cluster(
+        cluster = ipc_classes.Cluster(
             name=self.client.cluster_name,
             latencies=self.client.latencies,
             ipc_latency=self.client.ipc_ping,
@@ -249,7 +249,7 @@ class ClustersCollection(FarmCommandCollection):
 
         await self.send_ipc_message("ping", False, cluster)
 
-    async def send_set_reminder_message(self, reminder: Reminder) -> None:
+    async def send_set_reminder_message(self, reminder: ipc_classes.Reminder) -> None:
         await self.send_ipc_message("add_reminder", False, reminder)
 
     async def send_disable_reminders_message(self, user_id: int) -> None:
