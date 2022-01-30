@@ -23,8 +23,10 @@ class IPC:
     def __init__(self) -> None:
         self.loop = asyncio.get_event_loop()
 
-        self.config = self._load_config()
-        self.eval_responses = {}
+        with open("config.json", "r") as file:
+            self.config = json.load(file)
+        with open("data/news.txt", "r") as file:
+            self.game_news = file.read()
 
         log = logging.getLogger("IPC")
         if self.config['ipc']['beta']:
@@ -39,9 +41,6 @@ class IPC:
         stream_handler.setFormatter(log_formatter)
         log.handlers = [file_handler, stream_handler]
         self.log = log
-
-        log.debug("Loading game news")
-        self.game_news = self._load_game_news()
 
         ipc_config = self.config['ipc']
         self.bot_id = ipc_config['bot-id']
@@ -80,17 +79,22 @@ class IPC:
         self.active_clusters = []
         self.total_guild_count = 0
         self.total_shard_count = 0
+        self.eval_responses = {}
 
         log.debug("Connecting to Redis")
-        self._connect_redis()
+        self.redis = aioredis.from_url(
+            self.config['redis']['host'],
+            password=self.config['redis']['password'],
+            db=self.config['redis']['db-index']
+        )
+        self.redis_pubsub = self.redis.pubsub()
+
         log.debug("Fetching reminders")
         self.loop.run_until_complete(self.fetch_reminder_ignore_ids())
         self.loop.run_until_complete(self.get_current_reminders())
 
         log.debug("Loading game items")
         self.item_pool = load_all_items()
-
-        log.debug("Ready")
 
     def start(self) -> None:
         self.log.info("Starting: Registering tasks")
@@ -105,24 +109,6 @@ class IPC:
         self.log.info("Exiting")
         await self._unregister_redis_channels()
         self.loop.stop()
-
-    def _load_config(self) -> dict:
-        with open("config.json", "r") as file:
-            return json.load(file)
-
-    def _load_game_news(self) -> str:
-        with open("data/news.txt", "r") as file:
-            return file.read()
-
-    def _connect_redis(self) -> None:
-        self.log.debug("Connecting Redis")
-
-        self.redis = aioredis.from_url(
-            self.config['redis']['host'],
-            password=self.config['redis']['password'],
-            db=self.config['redis']['db-index']
-        )
-        self.redis_pubsub = self.redis.pubsub()
 
     async def _register_redis_channels(self) -> None:
         await self.redis_pubsub.subscribe(self.global_channel)
