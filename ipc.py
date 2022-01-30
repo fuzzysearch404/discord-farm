@@ -116,7 +116,7 @@ class IPC:
             self.topgg_service.stop()
 
         self.log.info("All tasks should be canceled. Exiting...")
-        self.redis_pubsub.close()
+        await self.redis_pubsub.close()
         await self.redis.close()
         self.loop.stop()
 
