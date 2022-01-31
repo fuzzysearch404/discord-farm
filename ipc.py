@@ -414,7 +414,7 @@ class NotificationsService(IPCService):
                     "footer": {
                         "text": (
                             "\N{ELECTRIC LIGHT BULB} You can disable these game notifications with "
-                            "the /notifications command."
+                            "the \"/account manage\" command."
                         )
                     }
                 }

@@ -14,11 +14,11 @@ from core import static
 LOG_FORMATTER = logging.Formatter("[%(asctime)s %(name)s/%(levelname)s] %(message)s")
 log = logging.getLogger("Launcher")
 log.setLevel(logging.DEBUG)
-hdlr = logging.StreamHandler()
-hdlr.setFormatter(LOG_FORMATTER)
-fhdlr = logging.FileHandler("./logs/launcher.log", encoding="utf-8")
-fhdlr.setFormatter(LOG_FORMATTER)
-log.handlers = [hdlr, fhdlr]
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(LOG_FORMATTER)
+file_handler = logging.FileHandler("./logs/launcher.log", encoding="utf-8")
+file_handler.setFormatter(LOG_FORMATTER)
+log.handlers = [stream_handler, file_handler]
 
 
 CLUSTER_NAMES = (
@@ -171,11 +171,11 @@ class Cluster:
 
         self.log = logging.getLogger(f"Cluster#{name}")
         self.log.setLevel(logging.DEBUG)
-        hdlr = logging.StreamHandler()
-        hdlr.setFormatter(LOG_FORMATTER)
-        fhdlr = logging.FileHandler("./logs/cluster-Launcher.log", encoding="utf-8")
-        fhdlr.setFormatter(LOG_FORMATTER)
-        self.log.handlers = [hdlr, fhdlr]
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(LOG_FORMATTER)
+        file_handler = logging.FileHandler("./logs/cluster-Launcher.log", encoding="utf-8")
+        file_handler.setFormatter(LOG_FORMATTER)
+        self.log.handlers = [stream_handler, file_handler]
         self.log.info(f"Initialized with shard ids {shard_ids}, total shards {max_shards}")
 
     def wait_close(self) -> None:
