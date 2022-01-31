@@ -266,14 +266,14 @@ class ClustersCollection(FarmCommandCollection):
     async def send_delete_reminders_message(self, user_id: int) -> None:
         await self.send_ipc_message("del_reminders", False, user_id)
 
-    async def send_get_items_message(self, reply_global: bool = False) -> None:
-        await self.send_ipc_message("get_items", reply_global, None)
+    async def send_get_items_message(self) -> None:
+        await self.send_ipc_message("get_items", False, None)
 
     async def send_set_items_message(self) -> None:
         await self.send_ipc_message("set_items", True, None)
 
-    async def send_get_game_news_message(self, reply_global: bool = False) -> None:
-        await self.send_ipc_message("get_game_news", reply_global, None)
+    async def send_get_game_news_message(self) -> None:
+        await self.send_ipc_message("get_game_news", False, None)
 
     async def send_set_game_news_message(self, game_news: str) -> None:
         await self.send_ipc_message("set_game_news", True, game_news)
