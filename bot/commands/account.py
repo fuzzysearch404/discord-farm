@@ -1,6 +1,7 @@
 import discord
 import datetime
 
+from .clusters import get_cluster_collection
 from .util import embeds
 from .util import exceptions
 from .util import views
@@ -158,25 +159,18 @@ class AccountManageCommand(
     it might take some time for them to take effect.
     """
 
-    def _get_cluster_collection(self):
-        try:
-            return self.client.get_command_collection("Clusters")
-        except KeyError:
-            self.client.log.critical("Reminder settings failed: Cluster collection not loaded!")
-            return None
-
     async def send_disable_reminders_to_ipc(self, user_id: int) -> None:
-        cluster_collection = self._get_cluster_collection()
+        cluster_collection = get_cluster_collection(self.client)
         if cluster_collection:
             await cluster_collection.send_disable_reminders_message(user_id)
 
     async def send_enable_reminders_to_ipc(self, user_id: int) -> None:
-        cluster_collection = self._get_cluster_collection()
+        cluster_collection = get_cluster_collection(self.client)
         if cluster_collection:
             await cluster_collection.send_enable_reminders_message(user_id)
 
     async def send_delete_reminders_to_ipc(self, user_id: int) -> None:
-        cluster_collection = self._get_cluster_collection()
+        cluster_collection = get_cluster_collection(self.client)
         if cluster_collection:
             await cluster_collection.send_delete_reminders_message(user_id)
 

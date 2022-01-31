@@ -157,6 +157,8 @@ class ActionsFlushRedisCommand(
     description="\N{TEST TUBE} [Beta only] Flushes the redis database",
     parent=ActionsCommand
 ):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
     owner_only = True  # type: bool
 
     async def callback(self) -> None:

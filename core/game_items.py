@@ -192,25 +192,28 @@ class ReplantableItem(PlantableItem):
 
 class Crop(PlantableItem):
     """Item class for crop items"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
 class Tree(ReplantableItem):
     """Item class for tree items"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
 class Animal(ReplantableItem):
     """Item class for animal items"""
+
     def __init__(self, emoji_animal: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.emoji_animal = emoji_animal
 
 
 class Special(GameItem, SellableItem, MarketItem):
-    """Represents an item ingame that has a special use case."""
+    """Represents an item in-game that has a special use case."""
 
     def __init__(
         self,
@@ -242,6 +245,7 @@ class Special(GameItem, SellableItem, MarketItem):
 
 class Chest(GameItem):
     """Represents a chest item."""
+
     def __init__(self, image_url: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.image_url = image_url

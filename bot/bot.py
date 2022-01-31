@@ -98,10 +98,11 @@ class BotClient(AutoShardedModularCommandClient):
     def field_guard(self) -> datetime.datetime:
         return self.guard_mode > datetime.datetime.now()
 
-    # TODO
     async def setup(self):
-        await self.upload_guild_application_commands()
-        await self.upload_global_application_commands()
+        # Upload commands only once (if this client has shard zero)
+        if 0 in self.shard_ids:
+            await self.upload_global_application_commands()
+            await self.upload_guild_application_commands()
 
     async def _connect_postgres(self) -> None:
         connect_args = {

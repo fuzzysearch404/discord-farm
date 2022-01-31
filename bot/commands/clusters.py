@@ -1,10 +1,14 @@
 import asyncio
-import jsonpickle
 import datetime
+import discord
+import jsonpickle
+from typing import Optional
 
 from core import ipc_classes
+from core import static
 from .util import exceptions
-from .util.commands import FarmCommandCollection
+from .util import time as time_util
+from .util.commands import FarmSlashCommand, FarmCommandCollection
 
 
 class ClustersCollection(FarmCommandCollection):
@@ -12,7 +16,7 @@ class ClustersCollection(FarmCommandCollection):
     hidden_in_help_command = True
 
     def __init__(self, client) -> None:
-        super().__init__(client, [], name="Clusters")
+        super().__init__(client, [ClustersCommand], name="Clusters")
         self.redis_pubsub = client.redis.pubsub()
 
         self.global_channel = "global"
@@ -67,6 +71,7 @@ class ClustersCollection(FarmCommandCollection):
         self._handler_task.cancel()
         self._ping_task.cancel()
         await self._unregister_redis_channels()
+        await self.redis_pubsub.close()
 
     async def _redis_event_handler(self) -> None:
         async for message in self.redis_pubsub.listen():
@@ -115,13 +120,13 @@ class ClustersCollection(FarmCommandCollection):
 
     async def _request_all_required_data(self) -> None:
         if not hasattr(self.client, "item_pool"):
-            await self._send_get_items_message()
+            await self.send_get_items_message()
 
         if not hasattr(self.client, "cluster_data"):
-            await self._send_ping_message()
+            await self.send_ping_message()
 
         if not hasattr(self.client, "game_news"):
-            await self._send_get_game_news_message()
+            await self.send_get_game_news_message()
 
     async def _ensure_all_required_data(self) -> None:
         retry_in = 0
@@ -157,7 +162,7 @@ class ClustersCollection(FarmCommandCollection):
         await self.client.wait_until_ready()
 
         while not self.client.is_closed():
-            await self._send_ping_message()
+            await self.send_ping_message()
             await asyncio.sleep(self.cluster_update_delay)
 
     def _handle_update_items(self, message: ipc_classes.IPCMessage) -> None:
@@ -165,11 +170,11 @@ class ClustersCollection(FarmCommandCollection):
 
     async def _handle_maintenance(self, message: ipc_classes.IPCMessage) -> None:
         self.client.maintenance_mode = message.data
-        await self._send_results(f"\N{WHITE HEAVY CHECK MARK} {self.client.maintenance_mode}")
+        await self.send_results(f"\N{WHITE HEAVY CHECK MARK} {self.client.maintenance_mode}")
 
     async def _handle_farm_guard(self, message: ipc_classes.IPCMessage) -> None:
         self.client.enable_field_guard(message.data)
-        await self._send_results(self.client.guard_mode)
+        await self.send_results(self.client.guard_mode)
 
     def _handle_update_cluster_data(self, message: ipc_classes.IPCMessage) -> None:
         self.client.cluster_data = message.data
@@ -182,34 +187,34 @@ class ClustersCollection(FarmCommandCollection):
 
     async def _handle_eval_command(self, message: ipc_classes.IPCMessage) -> None:
         result = await self.client.eval_code(message.data)
-        await self._send_results(result)
+        await self.send_results(result)
 
     async def _handle_reload_extension(self, message: ipc_classes.IPCMessage) -> None:
         try:
             self.client.reload_extension(message.data)
         except Exception as e:
-            await self._send_results(str(e))
+            await self.send_results(str(e))
             return
 
-        await self._send_results("\N{WHITE HEAVY CHECK MARK}")
+        await self.send_results("\N{WHITE HEAVY CHECK MARK}")
 
     async def _handle_load_extension(self, message: ipc_classes.IPCMessage) -> None:
         try:
             self.client.load_extension(message.data)
         except Exception as e:
-            await self._send_results(str(e))
+            await self.send_results(str(e))
             return
 
-        await self._send_results("\N{WHITE HEAVY CHECK MARK}")
+        await self.send_results("\N{WHITE HEAVY CHECK MARK}")
 
     async def _handle_unload_extension(self, message: ipc_classes.IPCMessage) -> None:
         try:
             self.client.unload_extension(message.data)
         except Exception as e:
-            await self._send_results(str(e))
+            await self.send_results(str(e))
             return
 
-        await self._send_results("\N{WHITE HEAVY CHECK MARK}")
+        await self.send_results("\N{WHITE HEAVY CHECK MARK}")
 
     def _handle_shutdown(self) -> None:
         self.client.loop.create_task(self.client.close())
@@ -230,7 +235,7 @@ class ClustersCollection(FarmCommandCollection):
         channel = self.self_name if not global_channel else self.global_channel
         await self.client.redis.publish(channel, jsonpickle.encode(message))
 
-    async def _send_ping_message(self) -> None:
+    async def send_ping_message(self) -> None:
         self.last_ping = datetime.datetime.now()
 
         if hasattr(self.client, "launch_time"):
@@ -261,43 +266,43 @@ class ClustersCollection(FarmCommandCollection):
     async def send_delete_reminders_message(self, user_id: int) -> None:
         await self.send_ipc_message("del_reminders", False, user_id)
 
-    async def _send_get_items_message(self, reply_global: bool = False) -> None:
+    async def send_get_items_message(self, reply_global: bool = False) -> None:
         await self.send_ipc_message("get_items", reply_global, None)
 
-    async def _send_set_items_message(self) -> None:
+    async def send_set_items_message(self) -> None:
         await self.send_ipc_message("set_items", True, None)
 
-    async def _send_get_game_news_message(self, reply_global: bool = False) -> None:
+    async def send_get_game_news_message(self, reply_global: bool = False) -> None:
         await self.send_ipc_message("get_game_news", reply_global, None)
 
-    async def _send_set_game_news_message(self, game_news: str) -> None:
+    async def send_set_game_news_message(self, game_news: str) -> None:
         await self.send_ipc_message("set_game_news", True, game_news)
 
-    async def _send_set_field_guard_message(self, duration: int) -> None:
+    async def send_set_farm_guard_message(self, duration: int) -> None:
         await self.send_ipc_message("enable_guard", True, duration, global_channel=True)
 
-    async def _send_set_maintenance_message(self, enabled: bool) -> None:
+    async def send_set_maintenance_message(self, enabled: bool) -> None:
         await self.send_ipc_message("maintenance", True, enabled, global_channel=True)
 
-    async def _send_eval_message(self, eval_code: str) -> None:
+    async def send_eval_message(self, eval_code: str) -> None:
         await self.send_ipc_message("eval", True, eval_code, global_channel=True)
 
-    async def _send_results(self, result: str) -> None:
+    async def send_results(self, result: str) -> None:
         await self.send_ipc_message("result", True, result, global_channel=True)
 
-    async def _send_reload_message(self, extension: str) -> None:
+    async def send_reload_message(self, extension: str) -> None:
         await self.send_ipc_message("reload", True, extension, global_channel=True)
 
-    async def _send_load_message(self, extension: str) -> None:
+    async def send_load_message(self, extension: str) -> None:
         await self.send_ipc_message("load", True, extension, global_channel=True)
 
-    async def _send_unload_message(self, extension: str) -> None:
+    async def send_unload_message(self, extension: str) -> None:
         await self.send_ipc_message("unload", True, extension, global_channel=True)
 
-    async def _send_shutdown_message(self) -> None:
+    async def send_shutdown_message(self) -> None:
         await self.send_ipc_message("shutdown", True, None, global_channel=True)
 
-    async def _wait_and_publish_responses(self, cmd) -> None:
+    async def wait_and_publish_responses(self, cmd) -> None:
         # Wait for responses
         await cmd.defer()
         await asyncio.sleep(3)
@@ -313,6 +318,269 @@ class ClustersCollection(FarmCommandCollection):
             #  await cmd.edit(content="Output too long...", file=discord.File(fp, "data.txt"))
         else:
             await cmd.edit(content=f"```{fmt}```")
+
+
+def get_cluster_collection(client) -> ClustersCollection:
+    try:
+        return client.get_command_collection("Clusters")
+    except KeyError:
+        client.log.critical("Cluster collection not loaded!")
+        return None
+
+
+class ClustersCommand(FarmSlashCommand, name="clusters", guilds=static.DEVELOPMENT_GUILD_IDS):
+    pass
+
+
+class ClustersEvalCommand(
+    FarmSlashCommand,
+    name="eval",
+    description="\N{SATELLITE} [Developer only] Runs Python code on all clusters",
+    parent=ClustersCommand
+):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+    owner_only = True  # type: bool
+    # TODO: Use multi line text input, when possible
+    body: str = discord.app.Option(description="Python code to execute")
+
+    async def callback(self) -> None:
+        clusters_collection = get_cluster_collection(self.client)
+        async with clusters_collection.response_lock:
+            clusters_collection.responses = {}
+            await clusters_collection.send_eval_message(self.body)
+            await clusters_collection.wait_and_publish_responses(self)
+
+
+class ClustersStatusCommand(
+    FarmSlashCommand,
+    name="status",
+    description="\N{SATELLITE} [Developer only] Shows bot's all cluster statuses",
+    parent=ClustersCommand
+):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+    owner_only = True  # type: bool
+
+    async def callback(self) -> None:
+        embed = discord.Embed()
+        embed.set_footer(text=f"Local IPC ping: {'%.0f' % self.client.ipc_ping}ms")
+
+        for cluster in self.client.cluster_data:
+            fmt = ""
+            for id, ping in cluster.latencies:
+                fmt += f"> **#{id} - {'%.0f' % (ping * 1000)}ms**\n"
+
+            fmt += f"\n**Uptime: {time_util.seconds_to_time(cluster.uptime.total_seconds())} **"
+            embed.add_field(name=f"**{cluster.name} ({cluster.guild_count} guilds)**", value=fmt)
+
+        await self.reply(embed=embed)
+
+
+class ClustersLogoutCommand(
+    FarmSlashCommand,
+    name="logout",
+    description="\N{SATELLITE} [Developer only] Logs off this or all bot instances",
+    parent=ClustersCommand
+):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+    owner_only = True  # type: bool
+
+    run_locally: Optional[bool] = discord.app.Option(
+        description="Set to True to logout only the current instance",
+        default=False
+    )
+
+    async def callback(self) -> None:
+        if self.run_locally:
+            await self.reply("\N{WHITE HEAVY CHECK MARK} Logging off this instance...")
+            self.client.loop.create_task(self.client.close())
+        else:
+            await self.reply("\N{WHITE HEAVY CHECK MARK} Logging off all instances...")
+            await get_cluster_collection(self.client).send_shutdown_message()
+
+
+class ClustersCommandsCommand(FarmSlashCommand, name="commands", parent=ClustersCommand):
+    pass
+
+
+class ClustersCommandsSyncCommand(
+    FarmSlashCommand,
+    name="sync",
+    description="\N{SATELLITE} [Developer only] Synchronizes commands based on this instance",
+    parent=ClustersCommandsCommand
+):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+    owner_only = True  # type: bool
+
+    global_commands: Optional[bool] = discord.app.Option(
+        description="If set to True, global application commands are going to be synced",
+        default=True
+    )
+    guild_commands: Optional[bool] = discord.app.Option(
+        description="If set to True, guild application commands are going to be synced",
+        default=True
+    )
+
+    async def callback(self) -> None:
+        await self.defer()
+
+        if self.global_commands:
+            await self.client.upload_global_application_commands()
+        if self.guild_commands:
+            await self.client.upload_guild_application_commands()
+
+        await self.edit(content="\N{WHITE HEAVY CHECK MARK} Sync request sent to Discord!")
+
+
+class ClustersCommandsLoadModuleCommand(
+    FarmSlashCommand,
+    name="load_module",
+    description="\N{SATELLITE} [Developer only] Loads an extension",
+    parent=ClustersCommandsCommand
+):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+    owner_only = True  # type: bool
+
+    extension: str = discord.app.Option(description="Extension name")
+
+    async def callback(self) -> None:
+        if not self.extension.startswith("bot.commands."):
+            self.extension = "bot.commands." + self.extension
+
+        clusters_collection = get_cluster_collection(self.client)
+        async with clusters_collection.response_lock:
+            clusters_collection.responses = {}
+            await clusters_collection.send_load_message(self.extension)
+            await clusters_collection.wait_and_publish_responses(self)
+
+
+class ClustersCommandsUnloadModuleCommand(
+    FarmSlashCommand,
+    name="unload_module",
+    description="\N{SATELLITE} [Developer only] Unloads an extension",
+    parent=ClustersCommandsCommand
+):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+    owner_only = True  # type: bool
+
+    extension: str = discord.app.Option(description="Extension name")
+
+    async def callback(self) -> None:
+        if not self.extension.startswith("bot.commands."):
+            self.extension = "bot.commands." + self.extension
+
+        clusters_collection = get_cluster_collection(self.client)
+        async with clusters_collection.response_lock:
+            clusters_collection.responses = {}
+            await clusters_collection.send_unload_message(self.extension)
+            await clusters_collection.wait_and_publish_responses(self)
+
+
+class ClustersCommandsReloadModuleCommand(
+    FarmSlashCommand,
+    name="reload_module",
+    description="\N{SATELLITE} [Developer only] Reloads an extension",
+    parent=ClustersCommandsCommand
+):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+    owner_only = True  # type: bool
+
+    extension: str = discord.app.Option(description="Extension name")
+
+    async def callback(self) -> None:
+        if not self.extension.startswith("bot.commands."):
+            self.extension = "bot.commands." + self.extension
+
+        clusters_collection = get_cluster_collection(self.client)
+        async with clusters_collection.response_lock:
+            clusters_collection.responses = {}
+            await clusters_collection.send_reload_message(self.extension)
+            await clusters_collection.wait_and_publish_responses(self)
+
+
+class ClustersGameMasterCommand(FarmSlashCommand, name="game_master", parent=ClustersCommand):
+    pass
+
+
+class ClustersGameMasterReloadItemsCommand(
+    FarmSlashCommand,
+    name="reload_items",
+    description="\N{SATELLITE} [Developer only] Reloads game items data on all clusters",
+    parent=ClustersGameMasterCommand
+):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+    owner_only = True  # type: bool
+
+    async def callback(self) -> None:
+        await get_cluster_collection(self.client).send_set_items_message()
+        await self.reply("\N{WHITE HEAVY CHECK MARK} Sent reload items request to IPC")
+
+
+class ClustersGameMasterEditNewsCommand(
+    FarmSlashCommand,
+    name="edit_news",
+    description="\N{SATELLITE} [Developer only] Edits the game news",
+    parent=ClustersGameMasterCommand
+):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+    owner_only = True  # type: bool
+    # TODO: Use multi line text input, when possible
+    news: str = discord.app.Option(description="The news text to set")
+
+    async def callback(self) -> None:
+        await get_cluster_collection(self.client).send_set_game_news_message(self.news)
+        # Wait for the news to arrive to self
+        await self.defer()
+        await asyncio.sleep(2)
+        await self.edit(content=self.client.game_news)
+
+
+class ClustersGameMasterEditMaintenanceCommand(
+    FarmSlashCommand,
+    name="edit_maintenance",
+    description="\N{SATELLITE} [Developer only] Edits the bot's maintenance status",
+    parent=ClustersGameMasterCommand
+):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+    owner_only = True  # type: bool
+
+    enabled: bool = discord.app.Option(description="Set to True to enable maintenance")
+
+    async def callback(self) -> None:
+        cluster_collection = get_cluster_collection(self.client)
+        async with cluster_collection.response_lock:
+            cluster_collection.responses = {}
+            await cluster_collection.send_set_maintenance_message(self.enabled)
+            await cluster_collection.wait_and_publish_responses(self)
+
+
+class ClustersGameMasterFarmGuardCommand(
+    FarmSlashCommand,
+    name="farm_guard",
+    description="\N{SATELLITE} [Developer only] Enables the farm guard feature",
+    parent=ClustersGameMasterCommand
+):
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+    owner_only = True  # type: bool
+
+    duration: int = discord.app.Option(description="Duration in seconds", min=0)
+
+    async def callback(self) -> None:
+        cluster_collection = get_cluster_collection(self.client)
+        async with cluster_collection.response_lock:
+            cluster_collection.responses = {}
+            await cluster_collection.send_set_farm_guard_message(self.duration)
+            await cluster_collection.wait_and_publish_responses(self)
 
 
 def setup(client) -> list:
