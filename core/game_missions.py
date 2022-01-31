@@ -40,12 +40,12 @@ class BusinessMission:
     @classmethod
     def generate(
         cls,
-        ctx,
+        cmd,
         growables_multiplier: float = 1.0,
         reward_multiplier: float = 1.0,
         add_chest: bool = True
     ):
-        user_level = ctx.user_data.level
+        user_level = cmd.user_data.level
         if user_level < 3:
             max_requests = 1
         elif user_level < 5:
@@ -77,7 +77,7 @@ class BusinessMission:
             product_req_amount = random.choice(product_amount_population)
             total_request_amount = total_request_amount - product_req_amount
 
-            products = ctx.items.get_random_items(
+            products = cmd.items.get_random_items(
                 user_level=user_level,
                 extra_luck=0.82,
                 total_draws=product_req_amount,
@@ -90,7 +90,7 @@ class BusinessMission:
 
         # If we still have requests to add
         if total_request_amount > 0:
-            growables = ctx.items.get_random_items(
+            growables = cmd.items.get_random_items(
                 user_level=user_level,
                 extra_luck=0.62,
                 total_draws=total_request_amount,
@@ -167,17 +167,17 @@ class ExportMission:
         self.port_name = port_name
 
     @classmethod
-    def generate(cls, ctx):
+    def generate(cls, cmd):
         # Small chance to randomize with products
         # Because we have more products than other items
         randomize_products: bool = random.randint(1, 3) == 1
 
-        item, amount = ctx.items.get_random_items(
-            user_level=ctx.user_data.level,
+        item, amount = cmd.items.get_random_items(
+            user_level=cmd.user_data.level,
             extra_luck=0.75,
             total_draws=1,
-            growables_multiplier=ctx.user_data.level,
-            products_multiplier=int(ctx.user_data.level / 15) or 1,
+            growables_multiplier=cmd.user_data.level,
+            products_multiplier=int(cmd.user_data.level / 15) or 1,
             growables=True,
             products=randomize_products,
             specials=False
