@@ -1,4 +1,5 @@
 import typing
+import asyncio
 import discord
 from typing import Optional
 
@@ -15,6 +16,20 @@ class InformationCollection(commands.FarmCommandCollection):
 
     def __init__(self, client):
         super().__init__(client, [HelpCommand], name="Information")
+        self.activity_status = client.config['bot']['activity-status']
+        self.presence_task = self.client.loop.create_task(self.update_presence_task())
+
+    def on_unload(self):
+        self.presence_task.cancel()
+
+    async def update_presence_task(self):
+        await self.client.wait_until_ready()
+
+        while not self.client.is_closed():
+            await asyncio.sleep(1800)
+            await self.client.change_presence(
+                activity=discord.Activity(name=self.activity_status, type=2)
+            )
 
 
 class HelpAllCommandsMessageSource(views.AbstractPaginatorSource):
