@@ -231,6 +231,15 @@ class FarmSlashCommand(discord.app.SlashCommand):
     def booster_autocomplete(self, query: str) -> dict:
         return self._find_items_for_autocomplete(self.items.all_boost_ids_by_name, query)
 
+    async def lookup_other_player(self, user: discord.Member):
+        try:
+            return await self.users.get_user(user.id)
+        except exceptions.UserNotFoundException:
+            raise exceptions.UserNotFoundException(
+                f"Whoops. {user.mention} doesn't have a game account yet! "
+                "Maybe consider inviting them to join this game? \N{THINKING FACE}"
+            )
+
     def lookup_item(self, item_id_str: str):
         try:
             # Use only first 8 digits, because the ids will never be that huge
@@ -262,6 +271,20 @@ class FarmSlashCommand(discord.app.SlashCommand):
                 "\N{RIGHT-POINTING MAGNIFYING GLASS} Could you please take this magnifying glass "
                 "and try searching again?"
             )
+
+    async def get_cooldown_ttl(self, identifier: str, other_user_id: int = None):
+        user_id = self.author.id if other_user_id is None else other_user_id
+        command_ttl = await self.redis.execute_command("TTL", f"cd:{user_id}:{identifier}")
+
+        if command_ttl == -2:
+            return False
+        else:
+            return command_ttl
+
+    async def set_cooldown(self, duration: int, identifier: str) -> None:
+        await self.redis.execute_command(
+            "SET", f"cd:{self.author.id}:{identifier}", identifier, "EX", identifier
+        )
 
     async def _acquire(self, timeout: float):
         if self._db is None:

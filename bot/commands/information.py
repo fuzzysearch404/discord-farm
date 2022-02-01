@@ -313,7 +313,7 @@ class AboutCommand(
             title="\N{EAR OF RICE} Discord Farm",
             description=(
                 "The original, most advanced farming strategy game bot on Discord.\n"
-                "If you want to help covering hosting costs, see the buttons below. "
+                "If you want to help to cover hosting costs, see the buttons below. "
                 "Huge thanks to everyone who have contributed to this bot."
             ),
             color=discord.Color.random()

@@ -21,7 +21,8 @@
             "bot.commands.account",
             "bot.commands.admin",
             "bot.commands.clusters",
-            "bot.commands.information"
+            "bot.commands.information",
+            "bot.commands.profile"
         ],
         "activity-status" : "Now with slash commands!!1"
     },
