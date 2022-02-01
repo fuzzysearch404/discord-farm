@@ -102,7 +102,7 @@ class ProfileCommand(
         has_lab_unlocked: bool = user.level > 1
         if has_lab_unlocked:
             lab_cd = await self.get_cooldown_ttl("recent_research", other_user_id=user.user_id)
-            lab_info = f"\N{RIGHT-POINTING MAGNIFYING GLASS} **/lab** {mention}"
+            lab_info = f"\N{RIGHT-POINTING MAGNIFYING GLASS} **/laboratory** {mention}"
 
             if lab_cd:
                 lab_cd_ends = datetime_now + datetime.timedelta(seconds=lab_cd)
@@ -112,7 +112,7 @@ class ProfileCommand(
 
         embed = discord.Embed(
             title=f"\N{HOUSE WITH GARDEN} {target_user.nick or target_user.name}'s profile",
-            color=discord.Color.from_rgb(189, 66, 17)
+            color=discord.Color.from_rgb(184, 124, 59)
         )
         embed.add_field(
             name=f"\N{TRIDENT EMBLEM} {user.level}. level",
