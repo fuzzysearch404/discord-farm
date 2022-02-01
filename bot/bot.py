@@ -1,5 +1,6 @@
 import io
 import sys
+import psutil
 import datetime
 import asyncio
 import textwrap
@@ -33,6 +34,7 @@ class BotClient(AutoShardedModularCommandClient):
         self.ipc_ping = 0
         self.custom_prefixes = {}  # TODO: For removal in May 2022
         self.owner_ids = set()
+        self.process_info = psutil.Process()
 
         emojis = config['emoji']
         self.check_emoji = emojis['check']

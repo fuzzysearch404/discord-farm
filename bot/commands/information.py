@@ -1,28 +1,35 @@
+import psutil
 import typing
 import asyncio
 import discord
+import pkg_resources
 from typing import Optional
 
+from core import static
 from .util import commands
 from .util import exceptions
-from .util import time
 from .util import views
+from .util import time as time_util
 
 
 class InformationCollection(commands.FarmCommandCollection):
-    """Get the latest information about the bot - news, events, links, etc."""
+    """Get the latest information about the bot - news, event info, links, etc."""
     help_emoji: str = "\N{NEWSPAPER}"
     help_short_description: str = "Get official bot news, update information etc."
 
-    def __init__(self, client):
-        super().__init__(client, [HelpCommand], name="Information")
+    def __init__(self, client) -> None:
+        super().__init__(
+            client,
+            [HelpCommand, NewsCommand, InviteCommand, AboutCommand],
+            name="Information"
+        )
         self.activity_status = client.config['bot']['activity-status']
         self.presence_task = self.client.loop.create_task(self.update_presence_task())
 
-    def on_unload(self):
+    def on_unload(self) -> None:
         self.presence_task.cancel()
 
-    async def update_presence_task(self):
+    async def update_presence_task(self) -> None:
         await self.client.wait_until_ready()
 
         while not self.client.is_closed():
@@ -154,7 +161,7 @@ class HelpCommand(
 
         def cooldown_fmt(duration: int) -> str:
             if duration > 0:
-                cd_fmt = time.seconds_to_time(duration)
+                cd_fmt = time_util.seconds_to_time(duration)
             else:
                 cd_fmt = "Varying"
 
@@ -214,6 +221,142 @@ class HelpCommand(
             options_and_sources,
             select_placeholder="\N{BOOKS} Select a category for commands"
         ).start()
+
+
+class NewsCommand(
+    commands.FarmSlashCommand,
+    name="news",
+    description="\N{NEWSPAPER} Displays update and announcement information",
+):
+    """
+    Provides information about the latest bot updates.
+    As displaying long contents in commands is limited, for more information,
+    consider joining the bot's official support server.
+    """
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+
+    async def callback(self) -> None:
+        embed = discord.Embed(
+            title="\N{NEWSPAPER} Your farm newspaper",
+            colour=discord.Color.from_rgb(222, 222, 222),
+            description=self.client.game_news
+        )
+
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            emoji="\N{BUSTS IN SILHOUETTE}",
+            label="Join the official support server for more information",
+            url=static.DISCORD_COMMUNITY_INVITE
+        ))
+
+        await self.reply(embed=embed, view=view)
+
+
+class InviteCommand(
+    commands.FarmSlashCommand,
+    name="invite",
+    description="\N{ENVELOPE WITH DOWNWARDS ARROW ABOVE} Invites this bot to your own server"
+):
+    """
+    You can invite the bot to your own server or join the support server and play the bot there
+    with Discord Farm's community.
+    """
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+
+    async def callback(self) -> None:
+        permissions = discord.Permissions.none()
+        permissions.read_messages = True
+        permissions.send_messages = True
+        permissions.external_emojis = True
+        permissions.embed_links = True
+        permissions.attach_files = True
+        permissions.add_reactions = True
+        permissions.send_messages_in_threads = True
+
+        oauth_link = discord.utils.oauth_url(
+            self.client.user.id,
+            permissions=permissions,
+            scopes=("bot", "applications.commands")
+        )
+
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            emoji="\N{ROBOT FACE}",
+            label="Invite this bot to your server",
+            url=oauth_link
+        ))
+        view.add_item(discord.ui.Button(
+            emoji="\N{BUSTS IN SILHOUETTE}",
+            label="Join the official support server",
+            url=static.DISCORD_COMMUNITY_INVITE
+        ))
+
+        await self.reply(
+            "Here you go! Also consider joining the official support server \N{WINKING FACE}",
+            view=view
+        )
+
+
+class AboutCommand(
+    commands.FarmSlashCommand,
+    name="about",
+    description="\N{HEAVY BLACK HEART} Shows the bot's status, version and credits"
+):
+    """Thanks to Aneteee for helping out with the documentation for bot commands."""
+    avoid_maintenance = False  # type: bool
+    requires_account = False  # type: bool
+
+    async def callback(self) -> None:
+        embed = discord.Embed(
+            title="\N{EAR OF RICE} Discord Farm",
+            description=(
+                "The original, most advanced farming strategy game bot on Discord.\n"
+                "If you want to help covering hosting costs, see the buttons below. "
+                "Huge thanks to everyone who have contributed to this bot."
+            ),
+            color=discord.Color.random()
+        )
+        embed.add_field(
+            name="Your server's cluster",
+            value=f"**{self.client.cluster_name}**\nIPC ping: {'%.0f' % self.client.ipc_ping}ms"
+        )
+
+        shards_and_lat = ""
+        for shard, lat in self.client.latencies:
+            shards_and_lat += f"\N{SATELLITE ANTENNA} Shard #{shard} - {'%.0f' % (lat * 1000)}ms\n"
+
+        embed.add_field(name="Cluster's shards", value=shards_and_lat)
+        embed.add_field(name="Your server's shard", value=f"#{self.guild.shard_id}")
+
+        memory_usage = self.client.process_info.memory_full_info().uss / 1024 ** 2
+        cpu_usage = self.client.process_info.cpu_percent() / psutil.cpu_count()
+        embed.add_field(name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU")
+        embed.add_field(name="Uptime", value=self.client.uptime)
+        embed.add_field(name="Version", value=self.client.config['bot']['version'])
+
+        enhanced_dpy_version = pkg_resources.get_distribution('discord.py').version
+        embed.set_footer(
+            text=(
+                f"Written in Python with enhanced-dpy v{enhanced_dpy_version} "
+                "| This bot is not made or maintained by Discord itself"
+            )
+        )
+
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            emoji="\N{HOT BEVERAGE}",
+            label="Buy me a coffee",
+            url="https://ko-fi.com/fuzzysearch"
+        ))
+        view.add_item(discord.ui.Button(
+            emoji="\N{BLUE HEART}",
+            label="Help to cover hosting expenses via PayPal",
+            url="https://paypal.me/fuzzysearch"
+        ))
+
+        await self.reply(embed=embed, view=view)
 
 
 def setup(client) -> list:
