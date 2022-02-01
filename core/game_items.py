@@ -192,6 +192,8 @@ class ReplantableItem(PlantableItem):
 
 class Crop(PlantableItem):
     """Item class for crop items"""
+    inventory_name = "Crops"
+    inventory_emoji = "\N{EAR OF MAIZE}"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -199,6 +201,8 @@ class Crop(PlantableItem):
 
 class Tree(ReplantableItem):
     """Item class for tree items"""
+    inventory_name = "Trees and bushes"
+    inventory_emoji = "\N{CHERRIES}"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -206,6 +210,8 @@ class Tree(ReplantableItem):
 
 class Animal(ReplantableItem):
     """Item class for animal items"""
+    inventory_name = "Animal products"
+    inventory_emoji = "\N{PIG NOSE}"
 
     def __init__(self, emoji_animal: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -214,6 +220,8 @@ class Animal(ReplantableItem):
 
 class Special(GameItem, SellableItem, MarketItem):
     """Represents an item in-game that has a special use case."""
+    inventory_name = "Other items"
+    inventory_emoji = "\N{PACKAGE}"
 
     def __init__(
         self,
@@ -263,6 +271,8 @@ class ItemAndAmount:
 
 class Product(GameItem, SellableItem, MarketItem):
     """Represents an item that can be produced in a factory."""
+    inventory_name = "Factory products"
+    inventory_emoji = "\N{SOFT ICE CREAM}"
 
     def __init__(
         self,

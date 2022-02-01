@@ -2,21 +2,71 @@ import discord
 import datetime
 from typing import Optional
 
+from core import game_items
+from .util import views
+from .util import exceptions
 from .util.commands import FarmSlashCommand, FarmCommandCollection
 from .util import time as time_util
 
 
 class ProfileCollection(FarmCommandCollection):
-    """Commands for general use, mostly related to your individual profile."""
+    """Commands for general use, mostly related to player individual profiles."""
     help_emoji: str = "\N{HOUSE WITH GARDEN}"
     help_short_description: str = "Various game profile and item commands"
 
     def __init__(self, client) -> None:
         super().__init__(
             client,
-            [ProfileCommand],
+            [ProfileCommand, BalanceCommand, InventoryCommand],
             name="Profile"
         )
+
+
+class InventorySource(views.AbstractPaginatorSource):
+    def __init__(
+        self,
+        entries: list,
+        target_user: discord.Member,
+        inventory_category: str,
+        inventory_emoji: str
+    ):
+        super().__init__(entries, per_page=30)
+        self.target = target_user
+        self.inventory_category = inventory_category
+        self.inventory_emoji = inventory_emoji
+
+    async def format_page(self, page, view):
+        target = self.target
+
+        embed = discord.Embed(
+            title=f"{view.command.client.warehouse_emoji} {target.nick or target.name}'s warehouse",
+            color=discord.Color.from_rgb(234, 231, 231)
+        )
+
+        fmt, iteration = "", 0
+        for item_and_amount in page:
+            iteration += 1
+            item = item_and_amount.item
+            amount = item_and_amount.amount
+            # 3 items per line
+            if iteration <= 3:
+                fmt += f"{item.full_name} x{amount} "
+            else:
+                fmt += f"\n{item.full_name} x{amount} "
+                iteration = 1
+
+        fmt += (
+            f"**\n\n\N{BOOKS} Selected category:** {self.inventory_emoji} "
+            f"{self.inventory_category}."
+        )
+        embed.description = fmt
+
+        if target != view.command.author:
+            embed.set_footer(
+                text="These items can only be accessed by their owner",
+                icon_url=target.display_avatar.url
+            )
+        return embed
 
 
 class ProfileCommand(
@@ -183,6 +233,88 @@ class ProfileCommand(
             )
 
         await self.reply(embed=embed)
+
+
+class BalanceCommand(
+    FarmSlashCommand,
+    name="balance",
+    description="\N{MONEY BAG} Shows your or someone else's funds"
+):
+    """With this command you can check how much money you or someone else has. That's about it."""
+    player: Optional[discord.Member] = discord.app.Option(
+        description="Other user, whose balance to check"
+    )
+
+    async def callback(self) -> None:
+        if not self.player:
+            await self.reply(
+                f"{self.client.gold_emoji} **Gold:** {self.user_data.gold} "
+                f"{self.client.gem_emoji} **Gems:** {self.user_data.gems}"
+            )
+        else:
+            user = await self.lookup_other_player(self.player)
+            await self.reply(
+                f"{self.player.nick or self.player.name} has: "
+                f"{self.client.gold_emoji} **Gold:** {user.gold} "
+                f"{self.client.gem_emoji} **Gems:** {user.gems}"
+            )
+
+
+class InventoryCommand(
+    FarmSlashCommand,
+    name="inventory",
+    description="\N{LOCK} Shows your or someone else's inventory"
+):
+    """
+    Do you want to know what items you have? This command will show you!<br>
+    You can even check what items someone else has! However, you can't
+    access someone else's inventory - it's guarded very well.
+    """
+    player: Optional[discord.Member] = discord.app.Option(
+        description="Other user, whose inventory to view"
+    )
+
+    async def callback(self) -> None:
+        if not self.player:
+            user = self.user_data
+            target_user = self.author
+        else:
+            user = await self.lookup_other_player(self.player)
+            target_user = self.player
+
+        async with self.acquire() as conn:
+            all_items_data = await user.get_all_items(self, conn=conn)
+
+        if not all_items_data:
+            await self.reply("\N{RAT} It's empty. There are only a few unfriendly rats in here...")
+            return
+
+        items_and_amounts_by_class = {}
+        for data in all_items_data:
+            try:
+                item = self.items.find_item_by_id(data['item_id'])
+            except exceptions.ItemNotFoundException:
+                # Could be a chest, we exclude those
+                continue
+
+            item_and_amt = game_items.ItemAndAmount(item, data['amount'])
+            try:
+                items_and_amounts_by_class[item.__class__].append(item_and_amt)
+            except KeyError:
+                items_and_amounts_by_class[item.__class__] = [item_and_amt]
+
+        options_and_sources = {}
+        for clazz, items in items_and_amounts_by_class.items():
+            item_type = clazz.inventory_name
+            item_emoji = clazz.inventory_emoji
+            opt = discord.SelectOption(label=item_type, emoji=item_emoji)
+            options_and_sources[opt] = InventorySource(items, target_user, item_type, item_emoji)
+
+        await views.SelectButtonPaginatorView(
+            self,
+            options_and_sources,
+            select_placeholder="\N{BOOKS} Pick another item category"
+        ).start()
 
 
 def setup(client) -> list:
