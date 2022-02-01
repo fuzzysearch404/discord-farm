@@ -159,6 +159,7 @@ class SelectButtonPaginatorView(ButtonPaginatorView):
         paginator sources.
         """
         self.keys_and_sources = {}
+        self.buttons_removed = False
 
         for option, source in options_and_sources.items():
             self.keys_and_sources[option.value] = source
@@ -170,6 +171,23 @@ class SelectButtonPaginatorView(ButtonPaginatorView):
         self.select_source.options = list(options_and_sources.keys())
         self.select_source.placeholder = select_placeholder
 
+    def check_if_paging_needed(self) -> None:
+        """Temporarily removes the paging buttons if the current source has only one page."""
+        if not self.source.should_paginate() and not self.buttons_removed:
+            self.buttons_removed = True
+            self.remove_item(self.first_page)
+            self.remove_item(self.previous_page)
+            self.remove_item(self.counter)
+            self.remove_item(self.next_page)
+            self.remove_item(self.last_page)
+        elif self.source.should_paginate() and self.buttons_removed:
+            self.buttons_removed = False
+            self.add_item(self.first_page)
+            self.add_item(self.previous_page)
+            self.add_item(self.counter)
+            self.add_item(self.next_page)
+            self.add_item(self.last_page)
+
     @discord.ui.select(min_values=1, max_values=1, row=4)
     async def select_source(
         self,
@@ -180,9 +198,11 @@ class SelectButtonPaginatorView(ButtonPaginatorView):
         self.current_page = 0
 
         self.update_button_states()
+        self.check_if_paging_needed()
         await self.update_page_view()
 
     async def start(self) -> None:
+        self.check_if_paging_needed()
         embed = await self.current_page_embed()
         await self._reply_or_edit(embed=embed, view=self)
 

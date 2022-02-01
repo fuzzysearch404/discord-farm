@@ -310,7 +310,7 @@ class AboutCommand(
 
     async def callback(self) -> None:
         embed = discord.Embed(
-            title="\N{EAR OF RICE} Discord Farm",
+            title="\N{EAR OF MAIZE} Discord Farm",
             description=(
                 "The original, most advanced farming strategy game bot on Discord.\n"
                 "If you want to help to cover hosting costs, see the buttons below. "
