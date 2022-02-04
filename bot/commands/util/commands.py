@@ -182,12 +182,15 @@ class FarmSlashCommand(discord.app.SlashCommand):
         if isinstance(exception, exceptions.FarmException):
             if exception.embed:
                 if not responded:
-                    await self.reply(embed=exception.embed, ephemeral=True)
+                    await self.reply(embed=exception.embed, ephemeral=exception.ephemeral)
                 else:
                     await self.edit(embed=exception.embed)
             else:
                 if not responded:
-                    await self.reply(f"\N{CROSS MARK} {str(exception)}", ephemeral=True)
+                    await self.reply(
+                        f"\N{CROSS MARK} {str(exception)}",
+                        ephemeral=exception.ephemeral
+                    )
                 else:
                     await self.edit(content=f"\N{CROSS MARK} {str(exception)}")
         else:

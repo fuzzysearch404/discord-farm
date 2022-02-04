@@ -1,3 +1,4 @@
+import random
 import discord
 import datetime
 from typing import Optional
@@ -18,7 +19,7 @@ class ProfileCollection(FarmCommandCollection):
     def __init__(self, client) -> None:
         super().__init__(
             client,
-            [ProfileCommand, BalanceCommand, InventoryCommand, BoostersCommand],
+            [ProfileCommand, BalanceCommand, InventoryCommand, BoostersCommand, ChestsCommand],
             name="Profile"
         )
 
@@ -335,7 +336,7 @@ class BoostersCommand(
         description="Other user, whose boosters to view"
     )
 
-    async def callback(self):
+    async def callback(self) -> None:
         if not self.player:
             user = self.user_data
             target_user = self.author
@@ -359,7 +360,7 @@ class BoostersCommand(
                 text=f"\N{SLEEPING SYMBOL} {msg}\n{buy_tip}",
                 cmd=self
             )
-            return await self.reply(embed=embed)
+            raise exceptions.FarmException(embed=embed)
 
         embed = discord.Embed(
             title=f"\N{UPWARDS BLACK ARROW} {name}'s active boosters",
@@ -375,6 +376,240 @@ class BoostersCommand(
                 name=f"{boost_info.emoji} {boost_info.name}",
                 value=f"Active for: {time_str}"
             )
+
+        await self.reply(embed=embed)
+
+
+class ChestsCommand(FarmSlashCommand, name="chests"):
+    pass
+
+
+class ChestsViewCommand(
+    FarmSlashCommand,
+    name="view",
+    description="\N{TOOLBOX} Lists your owned chests",
+    parent=ChestsCommand
+):
+    """
+    This command shows what and how many chests you currently own.
+    Chests are mysterious boxes that contain random goodies.
+    Each different chest type has different possible rewards and odds of getting them.<br>
+    You can obtain chests in various ways, while playing the game. One of those is by
+    claiming daily and hourly bonuses.
+    """
+
+    async def callback(self) -> None:
+        async with self.acquire() as conn:
+            # When adding new chests, please increase this range
+            query = """
+                    SELECT * FROM inventory
+                    WHERE user_id = $1
+                    AND item_id BETWEEN 1000 AND 1005;
+                    """
+
+            chest_data = await conn.fetch(query, self.author.id)
+
+        embed = discord.Embed(
+            title="\N{TOOLBOX} Your chest inventory",
+            color=discord.Color.from_rgb(196, 145, 16),
+            description=(
+                "\N{MAGIC WAND} These are your stashed chests. Open a chest with **/chests open**"
+            )
+        )
+
+        chest_ids_and_amounts = {}
+        for chest in chest_data:
+            chest_ids_and_amounts[chest['item_id']] = chest['amount']
+
+        for chest in self.items.all_chests_by_id.values():
+            try:
+                amount = chest_ids_and_amounts[chest.id]
+            except KeyError:
+                amount = 0
+
+            embed.add_field(
+                name=f"{chest.emoji} {chest.name.capitalize()}",
+                value=f"Available: **{amount}**"
+            )
+
+        await self.reply(embed=embed)
+
+
+class ChestsOpenCommand(
+    FarmSlashCommand,
+    name="open",
+    description="\N{CLOSED LOCK WITH KEY} Opens a chest",
+    parent=ChestsCommand
+):
+    """
+    This command opens a chest and gives you random rewards, based on the chest type you have chosen
+    and other factors, for example, your current level.<br>
+    \N{ELECTRIC LIGHT BULB} For more information about chests, see **/help chests view**.
+    """
+    chest: str = discord.app.Option(description="Chest to open", autocomplete=True)
+    amount: Optional[int] = discord.app.Option(
+        description="How many chests to open",
+        min=1,
+        max=100,
+        default=1
+    )
+
+    def ladder_random(self, min: int, max: int, continue_chance: int, _last: int = 0) -> int:
+        """Randint with a chance of summing up with another randint recursively."""
+        result = random.randint(min, max) + _last
+
+        if not random.randint(0, continue_chance):
+            result += self.ladder_random(min, max, continue_chance=continue_chance, _last=result)
+
+        return result
+
+    async def autocomplete(self, options, focused):
+        return discord.AutoCompleteResponse(self.chests_autocomplete(options[focused]))
+
+    async def callback(self):
+        chest = self.lookup_chest(self.chest)
+
+        async with self.acquire() as conn:
+            chest_data = await self.user_data.get_item(self, chest.id, conn=conn)
+
+        if not chest_data or chest_data['amount'] < self.amount:
+            embed = embed_util.error_embed(
+                title=f"You don't have {self.amount}x {chest.name}!",
+                text=(
+                    "I just contacted our warehouse manager, and with a deep regret, I have to say "
+                    f"that *inhales*, you don't have **{self.amount}x {chest.emoji} "
+                    f"{chest.name.capitalize()}** in your inventory."
+                ),
+                footer="Check your chests with the \"/chests view\" command",
+                cmd=self
+            )
+            raise exceptions.FarmException(embed=embed)
+
+        user_level = self.user_data.level
+        gold_reward = gems_reward = 0
+        items_won = []
+        base_growables_multiplier = int(self.user_data.level / 4) + 1
+
+        if chest.id == 1000:  # Gold chest
+            min_gold = user_level * 20
+            max_gold = user_level * 45
+
+            for _ in range(self.amount):
+                gold_reward += self.ladder_random(min_gold, max_gold, 3)
+        elif chest.id == 1001:  # Common chest
+            min_gold = user_level * 2
+            max_gold = user_level * 5
+            multiplier = int(base_growables_multiplier / 2) or 1
+
+            for _ in range(self.amount):
+                if bool(random.getrandbits(1)):
+                    items = self.items.get_random_items(
+                        user_level,
+                        growables_multiplier=multiplier,
+                        products=False
+                    )
+                    items_won.extend(items)
+                else:
+                    gold_reward += self.ladder_random(min_gold, max_gold, 10)
+        elif chest.id == 1002:  # Uncommon chest
+            min_gold = user_level * 3
+            max_gold = user_level * 4
+
+            for _ in range(self.amount):
+                items = self.items.get_random_items(
+                    user_level,
+                    extra_luck=0.055,
+                    growables_multiplier=base_growables_multiplier,
+                    products=False,
+                    total_draws=self.ladder_random(1, 2, 14)
+                )
+                items_won.extend(items)
+
+                if not random.randint(0, 6):
+                    gold_reward += self.ladder_random(min_gold, max_gold, 8)
+        elif chest.id == 1003:  # Rare chest
+            min_gold = user_level * 4
+            max_gold = user_level * 5
+
+            for _ in range(self.amount):
+                items = self.items.get_random_items(
+                    user_level,
+                    extra_luck=0.1,
+                    growables_multiplier=base_growables_multiplier + 2,
+                    total_draws=self.ladder_random(1, 3, 12)
+                )
+                items_won.extend(items)
+
+                if not random.randint(0, 4):
+                    gold_reward += self.ladder_random(min_gold, max_gold, 6)
+        elif chest.id == 1004:  # Epic chest
+            min_gold = user_level * 15
+            max_gold = user_level * 25
+
+            for _ in range(self.amount):
+                items = self.items.get_random_items(
+                    user_level,
+                    extra_luck=0.35,
+                    growables_multiplier=base_growables_multiplier + 6,
+                    total_draws=self.ladder_random(3, 4, 9)
+                )
+                items_won.extend(items)
+
+                gold_reward += self.ladder_random(min_gold, max_gold, 5)
+        elif chest.id == 1005:  # Legendary chest
+            min_gold = user_level * 20
+            max_gold = user_level * 50
+
+            for _ in range(self.amount):
+                items = self.items.get_random_items(
+                    user_level,
+                    extra_luck=0.85,
+                    growables_multiplier=base_growables_multiplier + 12,
+                    products_multiplier=2,
+                    total_draws=self.ladder_random(4, 5, 6)
+                )
+                items_won.extend(items)
+
+                gold_reward += self.ladder_random(min_gold, max_gold, 3)
+                if not random.randint(0, 14):
+                    gems_reward += 1
+
+        self.user_data.gold += gold_reward
+        self.user_data.gems += gems_reward
+
+        async with self.acquire() as conn:
+            async with conn.transaction():
+                await self.user_data.remove_item(self, chest.id, self.amount, conn=conn)
+
+                if gold_reward or gems_reward:
+                    await self.users.update_user(self.user_data, conn=conn)
+                if items_won:
+                    await self.user_data.give_items(self, items_won, conn=conn)
+
+        rewards, grouped = "\n\n", {}
+        for item, amt in items_won:
+            try:
+                grouped[item] += amt
+            except KeyError:
+                grouped[item] = amt
+        for item, amt in grouped.items():
+            rewards += f"**{item.full_name}**: {amt} "
+
+        if gold_reward:
+            rewards += f"**{self.client.gold_emoji} {gold_reward} gold** "
+        if gems_reward:
+            rewards += f"**{self.client.gem_emoji} {gems_reward} gems** "
+
+        embed = embed_util.congratulations_embed(
+            title=f"{chest.name.capitalize()} opened!",
+            text=(
+                f"{self.author.mention} tried their luck, by opening their **{self.amount}x "
+                f"{chest.emoji} {chest.name.capitalize()}**, and won these awesome rewards:"
+                + rewards
+            ),
+            footer="These items are now moved to your inventory",
+            cmd=self
+        )
 
         await self.reply(embed=embed)
 

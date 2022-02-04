@@ -7,13 +7,17 @@ class FarmException(RuntimeError):
     def __init__(self, message: str = None, **kwargs) -> None:
         super().__init__(message)
         self.embed = kwargs.get("embed", None)
+        self.ephemeral = kwargs.get("ephemeral", False)
 
 
 class CommandOwnerOnlyException(FarmException):
     """Exception for owner-only commands"""
 
     def __init__(self, message: str = None) -> None:
-        super().__init__("Sorry, this command is only available to the owners of this bot")
+        super().__init__(
+            "Sorry, this command is only available to the owners of this bot",
+            ephemeral=True
+        )
 
 
 class CommandOnCooldownException(FarmException):
@@ -34,12 +38,16 @@ class GameIsInMaintenanceException(FarmException):
 
 class UserNotFoundException(FarmException):
     """Exception raised when user profile could not be found"""
-    pass
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, ephemeral=True)
 
 
 class ItemNotFoundException(FarmException):
     """Exception for handling cases when game item can't be found"""
-    pass
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, ephemeral=True)
 
 
 class InsufficientUserLevelException(FarmException):
@@ -56,27 +64,18 @@ class InsufficientGoldException(FarmException):
     """Exception for handling cases when user has insufficient gold"""
 
     def __init__(self, cmd, cost: int):
-        super().__init__(
-            "User has insufficient gold to perform this action",
-            embed=embeds.no_money_embed(cmd, cost)
-        )
+        super().__init__(embed=embeds.no_money_embed(cmd, cost))
 
 
 class InsufficientGemsException(FarmException):
     """Exception for handling cases when user has insufficient gems"""
 
     def __init__(self, cmd, cost: int):
-        super().__init__(
-            "User has insufficient gems to perform this action",
-            embed=embeds.no_gems_embed(cmd, cost)
-        )
+        super().__init__(embed=embeds.no_gems_embed(cmd, cost))
 
 
 class InsufficientItemException(FarmException):
     """Exception for handling cases when user has insufficient item amount"""
 
     def __init__(self, cmd, item, req_amount: int):
-        super().__init__(
-            "User has insufficient item amount to perform this action",
-            embed=embeds.not_enough_items(cmd, item, req_amount)
-        )
+        super().__init__(embed=embeds.not_enough_items(cmd, item, req_amount))
