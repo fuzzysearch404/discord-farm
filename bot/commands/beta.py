@@ -1,6 +1,8 @@
 import discord
+import datetime
 
 from core import static
+from core import game_items
 from .util import exceptions
 from .util.commands import FarmSlashCommand, FarmCommandCollection
 
@@ -145,6 +147,28 @@ class SetChestCommand(
         chest = self.lookup_chest(self.chest)
         await self.user_data.give_item(self, chest.id, self.amount)
         await self.reply(f"Obtained {self.amount}x {chest.full_name} chests")
+
+
+class SetBoosterCommand(
+    FarmSlashCommand,
+    name="booster",
+    description="\N{TEST TUBE} [Beta only] Gets booster",
+    parent=SetCommand
+):
+    owner_only = True  # type: bool
+
+    booster: str = discord.app.Option(description="Booster to add", autocomplete=True)
+    duration: int = discord.app.Option(description="Duration in seconds")
+
+    async def autocomplete(self, options, focused):
+        return discord.AutoCompleteResponse(self.booster_autocomplete(options[focused]))
+
+    async def callback(self) -> None:
+        booster = self.lookup_booster(self.booster)
+        ends = datetime.datetime.now() + datetime.timedelta(seconds=self.duration)
+        boost = game_items.PartialBoost(booster.id, ends)
+        await self.user_data.give_boost(self, boost)
+        await self.reply(f"Obtained {booster.name} for {self.duration} seconds")
 
 
 class ActionsCommand(FarmSlashCommand, name="actions", parent=BetaCommand):

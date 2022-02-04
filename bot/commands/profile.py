@@ -5,8 +5,9 @@ from typing import Optional
 from core import game_items
 from .util import views
 from .util import exceptions
-from .util.commands import FarmSlashCommand, FarmCommandCollection
+from .util import embeds as embed_util
 from .util import time as time_util
+from .util.commands import FarmSlashCommand, FarmCommandCollection
 
 
 class ProfileCollection(FarmCommandCollection):
@@ -17,7 +18,7 @@ class ProfileCollection(FarmCommandCollection):
     def __init__(self, client) -> None:
         super().__init__(
             client,
-            [ProfileCommand, BalanceCommand, InventoryCommand],
+            [ProfileCommand, BalanceCommand, InventoryCommand, BoostersCommand],
             name="Profile"
         )
 
@@ -315,6 +316,67 @@ class InventoryCommand(
             options_and_sources,
             select_placeholder="\N{BOOKS} Pick another item category"
         ).start()
+
+
+class BoostersCommand(
+    FarmSlashCommand,
+    name="boosters",
+    description="\N{UPWARDS BLACK ARROW} Lists your or someone else's boosters"
+):
+    """
+    Boosters are very powerful items that can help you in various ways.<br>
+    They can make your farm more productive or facilitate different limits.<br>
+    However, they can also be very expensive, so you should buy them wisely.
+    You can purchase boosters from the shop via **/shop boosters** after reaching level 7.
+    """
+    required_level = 7
+
+    player: Optional[discord.Member] = discord.app.Option(
+        description="Other user, whose boosters to view"
+    )
+
+    async def callback(self):
+        if not self.player:
+            user = self.user_data
+            target_user = self.author
+        else:
+            user = await self.lookup_other_player(self.player)
+            target_user = self.player
+
+        all_boosts = await user.get_all_boosts(self)
+
+        buy_tip = "\N{SHOPPING BAGS} Purchase boosters with the **/shop boosters** command."
+        name = target_user.nick or target_user.name
+
+        if not all_boosts:
+            if not self.player:
+                msg = "Nope, you don't have any active boosters! Why not buy some?"
+            else:
+                msg = f"Nope, {name} does not have any active boosters!"
+
+            embed = embed_util.error_embed(
+                title="No active boosters!",
+                text=f"\N{SLEEPING SYMBOL} {msg}\n{buy_tip}",
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        embed = discord.Embed(
+            title=f"\N{UPWARDS BLACK ARROW} {name}'s active boosters",
+            color=discord.Color.from_rgb(39, 128, 184),
+            description=buy_tip
+        )
+
+        for boost in all_boosts:
+            boost_info = self.items.find_booster_by_id(boost.id)
+            time_str = discord.utils.format_dt(boost.duration, style="f")
+
+            embed.add_field(
+                name=f"{boost_info.emoji} {boost_info.name}",
+                value=f"Active for: {time_str}"
+            )
+
+        await self.reply(embed=embed)
 
 
 def setup(client) -> list:

@@ -2,9 +2,9 @@ import discord
 import datetime
 
 from .clusters import get_cluster_collection
-from .util import embeds
 from .util import exceptions
 from .util import views
+from .util import embeds as embed_util
 from .util.commands import FarmSlashCommand, FarmCommandCollection
 
 
@@ -26,7 +26,7 @@ class TutorialCommand(
     requires_account = False  # type: bool
 
     async def callback(self) -> None:
-        embed = embeds.congratulations_embed(
+        embed = embed_util.congratulations_embed(
             title="Welcome to your new farm! \N{FACE WITH PARTY HORN AND PARTY HAT}",
             text=(
                 "\"Who's this? Are you the new owner? Hey Bob, look at this - another "
@@ -128,7 +128,7 @@ class AccountCreateCommand(
             except exceptions.UserNotFoundException:
                 pass
             else:
-                embed = embeds.error_embed(
+                embed = embed_util.error_embed(
                     title="You already own a farm!",
                     text=(
                         "What do you mean? \N{FLUSHED FACE} You already own a cool farm! "
@@ -175,7 +175,7 @@ class AccountManageCommand(
             await cluster_collection.send_delete_reminders_message(user_id)
 
     async def delete_account(self) -> None:
-        embed = embeds.prompt_embed(
+        embed = embed_util.prompt_embed(
             title="Woah! Are you really, really, really, really sure about that?",
             text=(
                 "**This is going to delete ALL of your current progress in game**, "
@@ -203,7 +203,7 @@ class AccountManageCommand(
         await self.users.delete_user(self.author.id)
 
         await self.edit(
-            embed=embeds.success_embed(
+            embed=embed_util.success_embed(
                 title=f"Goodbye, {self.author.name}! Thanks for playing! \N{WAVING HAND SIGN}",
                 text=(
                     "Your account has been deleted! If you ever consider playing again, then just "
@@ -224,7 +224,7 @@ class AccountManageCommand(
         await self.users.update_user(self.user_data)
 
         if not enable:
-            embed = embeds.success_embed(
+            embed = embed_util.success_embed(
                 title="Game notifications disabled",
                 text=(
                     "\N{WARNING SIGN} **It might take a few minutes for your new "
@@ -237,7 +237,7 @@ class AccountManageCommand(
             )
             await self.send_disable_reminders_to_ipc(self.author.id)
         else:
-            embed = embeds.success_embed(
+            embed = embed_util.success_embed(
                 title="Game notifications enabled",
                 text=(
                     "\N{WARNING SIGN} **It might take a few minutes for your new "

@@ -106,15 +106,15 @@ class User:
         all_boosts = await self.get_all_boosts(cmd)
         return boost_id in [x.id for x in all_boosts]
 
-    async def give_boost(self, cmd, boost) -> list:
+    async def give_boost(self, cmd, partial_boost) -> list:
         existing_boosts = await self.get_all_boosts(cmd)
 
         try:
             # Extend duration if already currently active
-            existing = next(x for x in existing_boosts if x.id == boost.id)
-            existing.duration += (boost.duration - datetime.datetime.now())
+            existing = next(x for x in existing_boosts if x.id == partial_boost.id)
+            existing.duration += (partial_boost.duration - datetime.datetime.now())
         except StopIteration:
-            existing_boosts.append(boost)
+            existing_boosts.append(partial_boost)
 
         # Find the new longest boost
         longest = max(existing_boosts, key=lambda b: b.duration)
