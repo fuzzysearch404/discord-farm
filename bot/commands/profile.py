@@ -330,7 +330,7 @@ class BoostersCommand(
     However, they can also be very expensive, so you should buy them wisely.
     You can purchase boosters from the shop via **/shop boosters** after reaching level 7.
     """
-    required_level = 7
+    required_level = 7  # type: int
 
     player: Optional[discord.Member] = discord.app.Option(
         description="Other user, whose boosters to view"
@@ -608,6 +608,50 @@ class ChestsOpenCommand(
                 + rewards
             ),
             footer="These items are now moved to your inventory",
+            cmd=self
+        )
+
+        await self.reply(embed=embed)
+
+
+class ChestsDailyCommand(
+    FarmSlashCommand,
+    name="daily",
+    description="\N{SLOT MACHINE} Gets a free random chest every day",
+    parent=ChestsCommand
+):
+    """
+    Do you want that cool, shiny chest? Well, you can get one for free every day with this command.
+    <br>\N{ELECTRIC LIGHT BULB} For more information about chests, see **/help chests view**.
+    """
+    invoke_cooldown = 82800  # type: int
+
+    async def callback(self) -> None:
+        chests_and_rarities = {
+            1000: 80.0,  # Gold
+            1002: 110.0,  # Uncommon
+            1003: 70.0,  # Rare
+            1004: 28.5,  # Epic
+            1005: 5.2  # Legendary
+        }
+
+        chest = random.choices(
+            population=list(chests_and_rarities.keys()),
+            weights=chests_and_rarities.values(),
+            k=1
+        )[0]
+
+        async with self.acquire() as conn:
+            await self.user_data.give_item(self, chest, 1, conn=conn)
+
+        chest_data = self.items.find_chest_by_id(chest)
+        embed = embed_util.congratulations_embed(
+            title="Daily bonus chest received!",
+            text=(
+                f"You won {chest_data.emoji} **{chest_data.name.capitalize()}** as your daily "
+                "bonus! \N{FACE WITH COWBOY HAT}"
+            ),
+            footer=f"Use command \"/chests open {chest_data.name}\", to open",
             cmd=self
         )
 
