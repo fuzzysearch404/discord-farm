@@ -286,7 +286,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
 
     async def set_cooldown(self, duration: int, identifier: str) -> None:
         await self.redis.execute_command(
-            "SET", f"cd:{self.author.id}:{identifier}", identifier, "EX", identifier
+            "SET", f"cd:{self.author.id}:{identifier}", identifier, "EX", duration
         )
 
     async def _acquire(self, timeout: float):

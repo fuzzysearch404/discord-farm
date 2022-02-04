@@ -651,10 +651,60 @@ class ChestsDailyCommand(
                 f"You won {chest_data.emoji} **{chest_data.name.capitalize()}** as your daily "
                 "bonus! \N{FACE WITH COWBOY HAT}"
             ),
-            footer=f"Use command \"/chests open {chest_data.name}\", to open",
+            footer=f"Use the \"/chests open {chest_data.name}\" command, to open",
             cmd=self
         )
 
+        await self.reply(embed=embed)
+
+
+class ChestsHourlyCommand(
+    FarmSlashCommand,
+    name="hourly",
+    description="\N{CLOCK FACE TWELVE OCLOCK} Gets a free random chest every hour",
+    parent=ChestsCommand
+):
+    """
+    Do you want that cool, shiny chest? Well, you can get one for free every hour with this command.
+    <br>\N{ELECTRIC LIGHT BULB} For more information about chests, see **/help chests view**.
+    """
+    invoke_cooldown = 3600  # type: int
+
+    async def callback(self):
+        chests_and_rarities = {
+            1000: 45.5,  # Gold
+            1001: 125.0,  # Common
+            1002: 85.0,  # Uncommon
+            1003: 30.0,  # Rare
+            1004: 4.0,  # Epic
+            1005: 0.25  # Legendary
+        }
+        chest_id = random.choices(
+            population=list(chests_and_rarities.keys()),
+            weights=chests_and_rarities.values(),
+            k=1
+        )[0]
+
+        amount = 1
+        # If common chest, give multiple
+        if chest_id == 1001:
+            min = int(self.user_data.level / 16) or 1
+            max = int(self.user_data.level / 8) or 1
+            amount = random.randint(min, max + 1)
+
+        async with self.acquire() as conn:
+            await self.user_data.give_item(self, chest_id, amount, conn=conn)
+
+        chest_data = self.items.find_chest_by_id(chest_id)
+        embed = embed_util.congratulations_embed(
+            title="Hourly bonus chest received!",
+            text=(
+                f"You won **{amount}x {chest_data.full_name} ** as your hourly bonus! "
+                "\N{FACE WITH COWBOY HAT}"
+            ),
+            footer=f"Use the \"/chests open {chest_data.name}\" command, to open",
+            cmd=self
+        )
         await self.reply(embed=embed)
 
 
