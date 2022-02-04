@@ -13,7 +13,7 @@ class FarmException(RuntimeError):
 class CommandOwnerOnlyException(FarmException):
     """Exception for owner-only commands"""
 
-    def __init__(self, message: str = None) -> None:
+    def __init__(self) -> None:
         super().__init__(
             "Sorry, this command is only available to the owners of this bot",
             ephemeral=True
@@ -39,8 +39,8 @@ class GameIsInMaintenanceException(FarmException):
 class UserNotFoundException(FarmException):
     """Exception raised when user profile could not be found"""
 
-    def __init__(self, message: str) -> None:
-        super().__init__(message, ephemeral=True)
+    def __init__(self, message: str = None, embed=None) -> None:
+        super().__init__(message, embed=embed, ephemeral=True)
 
 
 class ItemNotFoundException(FarmException):

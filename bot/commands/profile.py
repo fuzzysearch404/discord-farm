@@ -705,6 +705,7 @@ class ChestsHourlyCommand(
             footer=f"Use the \"/chests open {chest_data.name}\" command, to open",
             cmd=self
         )
+
         await self.reply(embed=embed)
 
 
