@@ -20,7 +20,7 @@ class InformationCollection(commands.FarmCommandCollection):
     def __init__(self, client) -> None:
         super().__init__(
             client,
-            [HelpCommand, NewsCommand, InviteCommand, AboutCommand],
+            [HelpCommand, NewsCommand, InviteCommand, StatusCommand],
             name="Information"
         )
         self.activity_status = client.config['bot']['activity-status']
@@ -75,12 +75,10 @@ class HelpAllCommandsMessageSource(views.AbstractPaginatorSource):
                 inline=False
             )
 
-        embed.set_footer(
-            text=(
-                "\N{ELECTRIC LIGHT BULB} Use \"/help command_name\" for detailed help "
-                "about specific command usage"
-            )
-        )
+        embed.set_footer(text=(
+            "\N{ELECTRIC LIGHT BULB} Use \"/help command_name\" for detailed help about "
+            "specific command usage"
+        ))
         return embed
 
 
@@ -299,9 +297,9 @@ class InviteCommand(
         )
 
 
-class AboutCommand(
+class StatusCommand(
     commands.FarmSlashCommand,
-    name="about",
+    name="status",
     description="\N{HEAVY BLACK HEART} Shows the bot's status, version and credits"
 ):
     """Thanks to Aneteee for helping out with the documentation for bot commands."""
@@ -337,12 +335,10 @@ class AboutCommand(
         embed.add_field(name="Version", value=self.client.config['bot']['version'])
 
         enhanced_dpy_version = pkg_resources.get_distribution('discord.py').version
-        embed.set_footer(
-            text=(
-                f"Written in Python with enhanced-dpy v{enhanced_dpy_version} "
-                "| This bot is not made or maintained by Discord itself"
-            )
-        )
+        embed.set_footer(text=(
+            f"Written in Python with enhanced-dpy v{enhanced_dpy_version} "
+            "| This bot is not made or maintained by Discord itself"
+        ))
 
         view = discord.ui.View()
         view.add_item(discord.ui.Button(
