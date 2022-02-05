@@ -409,7 +409,7 @@ class NotificationsService(IPCService):
                     "description": (
                         f"\N{SEEDLING} Your **{reminder.amount}x {item.full_name}** "
                         "have been fully grown and are now ready to be harvested!\n"
-                        "\N{TRACTOR} Use **/harvest** to collect your items!"
+                        "\N{TRACTOR} Use **/farm harvest** to collect your items!"
                     ),
                     "footer": {
                         "text": (
