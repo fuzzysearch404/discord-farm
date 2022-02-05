@@ -1,11 +1,14 @@
+import random
 import discord
 import datetime
 from enum import Enum
 from typing import Optional
 
 from core import game_items
+from core import ipc_classes
+from core import modifications
+from .clusters import get_cluster_collection
 from .util import views
-from .util import exceptions
 from .util import time as time_util
 from .util import embeds as embed_util
 from .util.commands import FarmSlashCommand, FarmCommandCollection
@@ -85,8 +88,7 @@ class PlantedFieldItem:
 
     @property
     def is_stealable(self) -> bool:
-        state = self.state
-        return state == PlantState.COLLECTABLE and self.robbed_fields < self.fields_used
+        return self.is_harvestable and self.robbed_fields < self.fields_used
 
 
 def _parse_db_rows_to_plant_data_objects(client, rows: dict) -> list:
@@ -188,7 +190,7 @@ class FarmFieldSource(views.AbstractPaginatorSource):
             total_slots = f"**{self.total_slots + 2}** \N{HAMSTER FACE}"
 
         tile_emoji = view.command.client.tile_emoji
-        header = f"{tile_emoji} Farm's used space tiles: {self.used_slots}/{total_slots}.\n\n"
+        header = f"{tile_emoji} Used farm's space tiles: {self.used_slots}/{total_slots}.\n\n"
 
         if self.farm_guard:
             remaining = time_util.seconds_to_time(self.farm_guard)
@@ -240,7 +242,7 @@ class FarmFieldCommand(
         description="Other user, whose farm field to view"
     )
 
-    async def callback(self) -> None:
+    async def callback(self):
         if not self.player:
             user = self.user_data
             target_user = self.author
@@ -262,7 +264,7 @@ class FarmFieldCommand(
                 text="\N{SEEDLING} Plant items on your farm field with the **/farm plant** command",
                 cmd=self
             )
-            raise exceptions.FarmException(embed=embed)
+            return await self.reply(embed=embed)
 
         field_parsed = _parse_db_rows_to_plant_data_objects(self.client, field_data)
         field_guard_seconds = 0
@@ -281,6 +283,209 @@ class FarmFieldCommand(
                 farm_guard=field_guard_seconds
             )
         ).start()
+
+
+class FarmPlantCommand(
+    FarmSlashCommand,
+    name="plant",
+    description="\N{SEEDLING} Plants crops and trees, grows animals on your farm field",
+    parent=FarmCommand
+):
+    """
+    Before planting items on your farm field, make sure that you have enough space for them.
+    Every time you want to plant something, it will cost you some gold.
+    Each item also has specific growing and harvest durations.
+    To check how much it will cost, and how long it will take to grow use the **/item inspect**
+    command. If you are unsure about what you can afford, you can also check the **/shop** command.
+    """
+    item: str = discord.app.Option(description="Item to plant on the field", autocomplete=True)
+    tiles: int = discord.app.Option(description="How many space tiles to plant in", min=1, max=100)
+
+    async def autocomplete(self, options, focused):
+        return discord.AutoCompleteResponse(self.plantables_autocomplete(options[focused]))
+
+    async def send_reminder_to_ipc(self, item_id: int, item_amount: int, when: datetime.datetime):
+        cluster_collection = get_cluster_collection(self.client)
+        if not cluster_collection:
+            return
+
+        reminder = ipc_classes.Reminder(
+            user_id=self.author.id,
+            channel_id=self.channel.id,
+            item_id=item_id,
+            amount=item_amount,
+            time=when
+        )
+        await cluster_collection.send_set_reminder_message(reminder)
+
+    async def callback(self):
+        item = self.lookup_item(self.item)
+
+        if not isinstance(item, game_items.PlantableItem):
+            embed = embed_util.error_embed(
+                title=f"{item.name.capitalize()} is not a growable item!",
+                text=(
+                    "Hey! HEY! YOU! STOP it right there! \N{WEARY CAT FACE} You can't just plant "
+                    f"**{item.full_name}** on your farm field! That's illegal! \N{FLUSHED FACE} "
+                    "It would be cool though. \N{THINKING FACE}"
+                ),
+                footer="Check out the shop to discover plantable items",
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        if item.level > self.user_data.level:
+            embed = embed_util.error_embed(
+                title="\N{LOCK} Insufficient experience level!",
+                text=(
+                    f"**Sorry, you can't grow {item.full_name} just yet!** I was told by shop "
+                    "cashier that they can't let you purchase these, because you are not yet "
+                    "experienced enough to handle these, you know? Anyways, this item unlocks "
+                    f"at level \N{TRIDENT EMBLEM} **{item.level}**."
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        item_mods = await modifications.get_item_mods_for_user(self, item)
+        grow_time, collect_time, max_volume = item_mods[0], item_mods[1], item_mods[2]
+
+        total_cost = self.tiles * item.gold_price
+        total_items_min = self.tiles * item.amount  # Default
+        total_items_max = self.tiles * max_volume  # With modification
+        total_items = random.randint(total_items_min, total_items_max)
+
+        # Don't show the actual amount of items that will be planted if modifications are applied
+        if total_items_min != total_items_max:
+            total_items_fmt = f"{total_items_min} - {total_items_max}"
+        else:
+            total_items_fmt = total_items_min
+
+        embed = embed_util.prompt_embed(
+            title=f"Are you really going to grow {self.tiles}x tiles of {item.full_name}?",
+            text="Check out these purchase details and let me know if you approve",
+            cmd=self
+        )
+        embed.add_field(name="\N{RECEIPT} Item", value=item.full_name)
+        embed.add_field(name="\N{SCALES} Quantity", value=f"{self.tiles} farm tiles")
+        embed.add_field(
+            name="\N{MONEY BAG} Total cost",
+            value=f"{total_cost} {self.client.gold_emoji}"
+        )
+
+        if isinstance(item, game_items.ReplantableItem):
+            grow_info = f"{total_items_fmt}x {item.full_name} ({item.iterations} times)"
+        else:
+            grow_info = f"{total_items_fmt}x {item.full_name}"
+
+        embed.add_field(name="\N{LABEL} Will grow into", value=grow_info)
+        embed.add_field(
+            name="\N{MANTELPIECE CLOCK} Growing duration",
+            value=time_util.seconds_to_time(grow_time)
+        )
+        embed.add_field(
+            name="\N{MANTELPIECE CLOCK} Maximum harvesting period before item gets rotten",
+            value=time_util.seconds_to_time(collect_time)
+        )
+        embed.set_footer(text=f"You have a total of {self.user_data.gold} gold coins")
+
+        confirm = await views.ConfirmPromptView(
+            self,
+            initial_embed=embed,
+            emoji=self.client.gold_emoji,
+            label="Purchase and start growing"
+        ).prompt()
+
+        if not confirm:
+            return
+
+        boosts = await self.user_data.get_all_boosts(self)
+        has_slots_boost = "farm_slots" in [x.id for x in boosts]
+        has_cat_boost = "cat" in [x.id for x in boosts]
+
+        conn = await self.acquire()
+        # Refetch user data, because user could have no money after prompt
+        self.user_data = await self.users.get_user(self.author.id, conn=conn)
+
+        if total_cost > self.user_data.gold:
+            await self.release()
+            return await self.edit(embed=embed_util.no_money_embed(self, total_cost), view=None)
+
+        query = "SELECT sum(fields_used) FROM farm WHERE user_id = $1;"
+        used_fields = await conn.fetchval(query, self.author.id) or 0
+
+        total_slots = self.user_data.farm_slots
+        if has_slots_boost:
+            total_slots += 2
+        available_slots = total_slots - used_fields
+
+        if available_slots < self.tiles:
+            await self.release()
+            embed = embed_util.error_embed(
+                title="Not enough farm space!",
+                text=(
+                    f"**You are already currently using {used_fields} of your {total_slots} farm "
+                    "space tiles**!\nI'm sorry to say, but there is no more space for "
+                    f"**{self.tiles} tiles of {item.full_name}**.\n\n"
+                    "What you can do about this:\na) Wait for your currently planted items to "
+                    "grow and harvest them.\nb) Upgrade your farm size if you have gems "
+                    "with: **/upgrade farm**."
+                ),
+                cmd=self
+            )
+            return await self.edit(embed=embed, view=None)
+
+        iterations = None
+        if isinstance(item, game_items.ReplantableItem):
+            iterations = item.iterations
+        now = datetime.datetime.now()
+        ends = now + datetime.timedelta(seconds=grow_time)
+        dies = ends + datetime.timedelta(seconds=collect_time)
+
+        transaction = conn.transaction()
+        await transaction.start()
+        try:
+            query = """
+                    INSERT INTO farm
+                    (user_id, item_id, amount, iterations, fields_used, ends, dies, cat_boost)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+                    """
+            await conn.execute(
+                query,
+                self.author.id,
+                item.id,
+                total_items,
+                iterations,
+                self.tiles,
+                ends,
+                dies,
+                has_cat_boost
+            )
+            self.user_data.gold -= total_cost
+            await self.users.update_user(self.user_data, conn=conn)
+        except Exception:
+            await transaction.rollback()
+            raise
+        else:
+            await transaction.commit()
+        await self.release()
+
+        end_fmt = time_util.maybe_timestamp(ends, since=now)
+        dies_fmt = discord.utils.format_dt(dies, style="f")
+
+        embed = embed_util.success_embed(
+            title=f"Successfully started growing {item.full_name}!",
+            text=(
+                f"Nicely done! You are now growing {item.full_name}! \N{FACE WITH COWBOY HAT}\n"
+                f"You will be able to collect it: **{end_fmt}**. Just remember to harvest in time, "
+                "because you will only have limited time to do so - **items are going to be rotten "
+                f"at {dies_fmt}** \N{ALARM CLOCK}"
+            ),
+            footer="Track your item growth with the \"/farm field\" command",
+            cmd=self
+        )
+        await self.edit(embed=embed, view=None)
+        await self.send_reminder_to_ipc(item.id, total_items, ends)
 
 
 def setup(client) -> list:
