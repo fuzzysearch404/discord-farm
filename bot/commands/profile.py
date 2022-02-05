@@ -4,6 +4,7 @@ import datetime
 from typing import Optional
 
 from core import game_items
+from core import modifications
 from .util import views
 from .util import exceptions
 from .util import embeds as embed_util
@@ -19,12 +20,20 @@ class ProfileCollection(FarmCommandCollection):
     def __init__(self, client) -> None:
         super().__init__(
             client,
-            [ProfileCommand, BalanceCommand, InventoryCommand, BoostersCommand, ChestsCommand],
+            [
+                ProfileCommand,
+                BalanceCommand,
+                InventoryCommand,
+                BoostersCommand,
+                ItemsCommand,
+                ChestsCommand
+            ],
             name="Profile"
         )
 
 
 class InventorySource(views.AbstractPaginatorSource):
+
     def __init__(
         self,
         entries: list,
@@ -69,6 +78,22 @@ class InventorySource(views.AbstractPaginatorSource):
                 icon_url=target.display_avatar.url
             )
         return embed
+
+
+class AllItemsSource(views.AbstractPaginatorSource):
+
+    def __init__(self, entries: list):
+        super().__init__(entries, per_page=15)
+
+    async def format_page(self, page, view):
+        head = "\N{LABEL} Item - \N{TRIDENT EMBLEM} Unlocked at level\n\n"
+        fmt = "\n".join(f"**{i.full_name}** - Level {i.level}" for i in page)
+
+        return discord.Embed(
+            title="\N{OPEN LOCK} All items unlocked for your level:",
+            color=discord.Color.from_rgb(255, 172, 51),
+            description=head + fmt
+        )
 
 
 class ProfileCommand(
@@ -164,7 +189,7 @@ class ProfileCommand(
 
         embed = discord.Embed(
             title=f"\N{HOUSE WITH GARDEN} {target_user.nick or target_user.name}'s profile",
-            color=discord.Color.from_rgb(184, 124, 59)
+            color=discord.Color.from_rgb(196, 98, 12)
         )
         embed.add_field(
             name=f"\N{TRIDENT EMBLEM} {user.level}. level",
@@ -380,6 +405,127 @@ class BoostersCommand(
         await self.reply(embed=embed)
 
 
+class ItemsCommand(FarmSlashCommand, name="items"):
+    pass
+
+
+class ItemsUnlockedCommand(
+    FarmSlashCommand,
+    name="unlocked",
+    description="\N{SPIRAL NOTE PAD} Lists all unlocked items for your level",
+    parent=ItemsCommand
+):
+    """
+    Do you ever wonder what items you have never used that you unlocked some long time ago?
+    This command shows all items that you have previously unlocked.<br>
+    \N{ELECTRIC LIGHT BULB} To view some item's unique properties, use the **/items inspect**
+    command instead.
+    """
+
+    async def callback(self) -> None:
+        all_items = self.items.find_all_items_by_level(self.user_data.level)
+        await views.ButtonPaginatorView(self, source=AllItemsSource(all_items)).start()
+
+
+class ItemsInspectCommand(
+    FarmSlashCommand,
+    name="inspect",
+    description="\N{LEFT-POINTING MAGNIFYING GLASS} Shows detailed information about a game item",
+    parent=ItemsCommand
+):
+    """
+    *How long does it take to grow that one item? How big is the harvest?* If you want to know
+    what item has what properties, then this is the right command for checking exactly that.<br>
+    This command displays lots of useful information about almost any game item.
+    """
+    item: str = discord.app.Option(description="Game item to inspect", autocomplete=True)
+
+    async def autocomplete(self, options, focused):
+        return discord.AutoCompleteResponse(self.all_items_autocomplete(options[focused]))
+
+    async def callback(self) -> None:
+        item = self.lookup_item(self.item)
+
+        embed = discord.Embed(
+            title=item.full_name,
+            description=f"\N{RIGHT-POINTING MAGNIFYING GLASS} **Item ID: {item.id}**",
+            color=discord.Color.from_rgb(38, 202, 49)
+        )
+        embed.add_field(name="\N{TRIDENT EMBLEM} Required level", value=str(item.level))
+        embed.add_field(
+            name=f"{self.client.xp_emoji} Experience reward",
+            value=f"{item.xp} xp / per unit"
+        )
+
+        if isinstance(item, game_items.PurchasableItem):
+            embed.add_field(
+                name="\N{MONEY BAG} Shop price (growing costs)",
+                value=f"{item.gold_price} {self.client.gold_emoji}"
+            )
+        if isinstance(item, game_items.MarketItem):
+            embed.add_field(
+                name="\N{SHOPPING TROLLEY} Market price range",
+                value=(
+                    f"{item.min_market_price} - {item.max_market_price}"
+                    f" {self.client.gold_emoji} / unit"
+                )
+            )
+        if isinstance(item, game_items.SellableItem):
+            embed.add_field(
+                name="\N{CHART WITH UPWARDS TREND} Current market price",
+                value=f"{item.gold_reward} {self.client.gold_emoji} / per unit"
+            )
+
+        if isinstance(item, game_items.ReplantableItem):
+            embed.add_field(
+                name="\N{CLOCKWISE RIGHTWARDS AND LEFTWARDS OPEN CIRCLE ARROWS} Production cycles",
+                value=f"Grows {item.iterations} times"
+            )
+        if isinstance(item, game_items.PlantableItem):
+            async with self.acquire() as conn:
+                mods = await self.user_data.get_item_modification(self, item.id, conn=conn)
+
+            growing_time = time_util.seconds_to_time(item.grow_time)
+            harvest_time = time_util.seconds_to_time(item.collect_time)
+            volume = item.amount
+
+            if mods:
+                time1_mod, time2_mod, vol_mod = mods['time1'], mods['time2'], mods['volume']
+                if time1_mod:
+                    fmt = time_util.seconds_to_time(modifications.get_growing_time(item, time1_mod))
+                    growing_time = f"\N{DNA DOUBLE HELIX} {fmt}"
+                if time2_mod:
+                    fmt = time_util.seconds_to_time(modifications.get_harvest_time(item, time2_mod))
+                    harvest_time = f"\N{DNA DOUBLE HELIX} {fmt}"
+                if vol_mod:
+                    new_vol = modifications.get_volume(item, vol_mod)
+                    volume = f"\N{DNA DOUBLE HELIX} {volume} - {new_vol}"
+
+                embed.set_footer(text=(
+                    "The \N{DNA DOUBLE HELIX} emoji is indicating, that the "
+                    "corresponding property is upgraded for this item"
+                ))
+            embed.add_field(name="\N{SCALES} Harvest volume", value=f"{volume} units")
+            embed.add_field(name="\N{MANTELPIECE CLOCK} Growing duration", value=growing_time)
+            embed.add_field(name="\N{MANTELPIECE CLOCK} Harvestable for", value=harvest_time)
+            embed.add_field(name=f"{item.emoji} Grow", value=f"**/farm plant {item.name}**")
+
+        if isinstance(item, game_items.Product):
+            made_from = "\n".join(f"{i.item.full_name} x{i.amount}" for i in item.made_from)
+            embed.add_field(name="\N{SCROLL} Required raw materials", value=made_from)
+            embed.add_field(
+                name="\N{MANTELPIECE CLOCK} Production duration",
+                value=time_util.seconds_to_time(item.craft_time)
+            )
+            embed.add_field(name=f"{item.emoji} Produce", value=f"**/factory make {item.name}**")
+            embed.color = discord.Color.from_rgb(168, 22, 56)
+
+        if hasattr(item, "image_url"):
+            embed.set_thumbnail(url=item.image_url)
+
+        await self.reply(embed=embed)
+
+
 class ChestsCommand(FarmSlashCommand, name="chests"):
     pass
 
@@ -406,7 +552,6 @@ class ChestsViewCommand(
                     WHERE user_id = $1
                     AND item_id BETWEEN 1000 AND 1005;
                     """
-
             chest_data = await conn.fetch(query, self.author.id)
 
         embed = discord.Embed(
@@ -586,7 +731,7 @@ class ChestsOpenCommand(
                 if items_won:
                     await self.user_data.give_items(self, items_won, conn=conn)
 
-        rewards, grouped = "\n\n", {}
+        rewards, grouped = "", {}
         for item, amt in items_won:
             try:
                 grouped[item] += amt
@@ -604,7 +749,7 @@ class ChestsOpenCommand(
             title=f"{chest.name.capitalize()} opened!",
             text=(
                 f"{self.author.mention} tried their luck, by opening their **{self.amount}x "
-                f"{chest.emoji} {chest.name.capitalize()}**, and won these awesome rewards:"
+                f"{chest.emoji} {chest.name.capitalize()}**, and won these awesome rewards:\n\n"
                 + rewards
             ),
             footer="These items are now moved to your inventory",
