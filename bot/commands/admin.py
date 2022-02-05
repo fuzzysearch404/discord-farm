@@ -71,7 +71,7 @@ class RunSQLCommand(
         else:
             strategy = self.db.fetch
 
-        async with self.db.acquire():
+        async with self.acquire():
             try:
                 start = time.perf_counter()
                 results = await strategy(query)

@@ -18,13 +18,10 @@ class ClustersCollection(FarmCommandCollection):
     def __init__(self, client) -> None:
         super().__init__(client, [ClustersCommand], name="Clusters")
         self.redis_pubsub = client.redis.pubsub()
-
         self.global_channel = "global"
         self.self_name = "cluster-" + client.cluster_name
-
         self.cluster_update_delay = client.config['ipc']['cluster-update-delay']
         self.last_ping = None
-
         # We will execute these too (don't ignore as self author)
         self.self_execute_actions = (
             "maintenance",
@@ -36,7 +33,6 @@ class ClustersCollection(FarmCommandCollection):
             "unload",
             "shutdown"
         )
-
         self.responses = {}
         self.response_lock = asyncio.Lock()
 
@@ -121,10 +117,8 @@ class ClustersCollection(FarmCommandCollection):
     async def _request_all_required_data(self) -> None:
         if not hasattr(self.client, "item_pool"):
             await self.send_get_items_message()
-
         if not hasattr(self.client, "cluster_data"):
             await self.send_ping_message()
-
         if not hasattr(self.client, "game_news"):
             await self.send_get_game_news_message()
 
@@ -135,13 +129,10 @@ class ClustersCollection(FarmCommandCollection):
 
         while not self.client.is_closed():
             missing = False
-
             if not hasattr(self.client, "item_pool"):
                 missing = True
-
             if not hasattr(self.client, "cluster_data"):
                 missing = True
-
             if not hasattr(self.client, "game_news"):
                 missing = True
 

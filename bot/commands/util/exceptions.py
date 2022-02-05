@@ -1,5 +1,3 @@
-from . import embeds
-
 
 class FarmException(RuntimeError):
     """Base exception class"""
@@ -39,8 +37,8 @@ class GameIsInMaintenanceException(FarmException):
 class UserNotFoundException(FarmException):
     """Exception raised when user profile could not be found"""
 
-    def __init__(self, message: str = None, embed=None) -> None:
-        super().__init__(message, embed=embed, ephemeral=True)
+    def __init__(self, message: str = None) -> None:
+        super().__init__(message, ephemeral=True)
 
 
 class ItemNotFoundException(FarmException):
@@ -58,24 +56,3 @@ class InsufficientUserLevelException(FarmException):
             "\N{LOCK} This feature unlocks at player level "
             f"\N{TRIDENT EMBLEM} **{required_level}**!"
         )
-
-
-class InsufficientGoldException(FarmException):
-    """Exception for handling cases when user has insufficient gold"""
-
-    def __init__(self, cmd, cost: int):
-        super().__init__(embed=embeds.no_money_embed(cmd, cost))
-
-
-class InsufficientGemsException(FarmException):
-    """Exception for handling cases when user has insufficient gems"""
-
-    def __init__(self, cmd, cost: int):
-        super().__init__(embed=embeds.no_gems_embed(cmd, cost))
-
-
-class InsufficientItemException(FarmException):
-    """Exception for handling cases when user has insufficient item amount"""
-
-    def __init__(self, cmd, item, req_amount: int):
-        super().__init__(embed=embeds.not_enough_items(cmd, item, req_amount))

@@ -7,7 +7,6 @@ from typing import Optional
 
 from core import static
 from .util import commands
-from .util import exceptions
 from .util import views
 from .util import time as time_util
 
@@ -125,10 +124,13 @@ class HelpCommand(
     async def autocomplete(self, options, focused):
         return discord.AutoCompleteResponse(self.bot_commands_autocomplete(options[focused]))
 
-    async def send_command_help(self) -> None:
+    async def send_command_help(self):
         command = self.client.find_loaded_command_by_name(self.command.lower())
         if not command:
-            raise exceptions.FarmException(f"Couldn't find a command named \"{self.command}\".")
+            return await self.reply(
+                f"\N{CROSS MARK} Couldn't find a command named \"{self.command}\".",
+                ephemeral=True
+            )
 
         command_signature = ""
         param_descriptions = []
@@ -210,7 +212,6 @@ class HelpCommand(
                 emoji=collection.help_emoji,
                 description=collection.help_short_description
             )
-
             current_guild_id = self.interaction.guild_id
             options_and_sources[opt] = HelpAllCommandsMessageSource(current_guild_id, collection)
 
@@ -240,7 +241,6 @@ class NewsCommand(
             colour=discord.Color.from_rgb(222, 222, 222),
             description=self.client.game_news
         )
-
         view = discord.ui.View()
         view.add_item(discord.ui.Button(
             emoji="\N{BUSTS IN SILHOUETTE}",
@@ -278,7 +278,6 @@ class InviteCommand(
             permissions=permissions,
             scopes=("bot", "applications.commands")
         )
-
         view = discord.ui.View()
         view.add_item(discord.ui.Button(
             emoji="\N{ROBOT FACE}",

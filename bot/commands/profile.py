@@ -361,7 +361,7 @@ class BoostersCommand(
         description="Other user, whose boosters to view"
     )
 
-    async def callback(self) -> None:
+    async def callback(self):
         if not self.player:
             user = self.user_data
             target_user = self.author
@@ -385,7 +385,7 @@ class BoostersCommand(
                 text=f"\N{SLEEPING SYMBOL} {msg}\n{buy_tip}",
                 cmd=self
             )
-            raise exceptions.FarmException(embed=embed)
+            return await self.reply(embed=embed)
 
         embed = discord.Embed(
             title=f"\N{UPWARDS BLACK ARROW} {name}'s active boosters",
@@ -628,7 +628,7 @@ class ChestsOpenCommand(
                 footer="Check your chests with the \"/chests view\" command",
                 cmd=self
             )
-            raise exceptions.FarmException(embed=embed)
+            return await self.reply(embed=embed)
 
         user_level = self.user_data.level
         gold_reward = gems_reward = 0

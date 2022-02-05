@@ -121,8 +121,8 @@ class AccountCreateCommand(
     """
     requires_account = False  # type: bool
 
-    async def callback(self) -> None:
-        async with self.db.acquire() as conn:
+    async def callback(self):
+        async with self.acquire() as conn:
             try:
                 await self.users.get_user(self.author.id, conn=conn)
             except exceptions.UserNotFoundException:
@@ -138,7 +138,7 @@ class AccountCreateCommand(
                     footer="Maybe you want to plant some lettuce? Carrots? \N{THINKING FACE}",
                     cmd=self
                 )
-                raise exceptions.UserNotFoundException(embed=embed)
+                return await self.reply(embed=embed, ephemeral=True)
 
             await self.users.create_user(self.author.id, conn=conn)
 
