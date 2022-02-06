@@ -680,5 +680,99 @@ class FarmHarvestCommand(
             await self.send_reminder_to_ipc(reminder_data[0], reminder_data[1], reminder_data[2])
 
 
+class FarmClearCommand(
+    FarmSlashCommand,
+    name="clear",
+    description="\N{BROOM} Clears your farm field",
+    parent=FarmCommand
+):
+    """
+    Removes all of your currently planted items from your farm field for some small gold price.
+    This is a useful command if you planted something by accident and you want to get rid of it, to
+    plant something new instead, because the previous items take up your farm space.
+    However, these items won't be moved to your inventory and are going to be lost without any
+    compensation.<br>
+    \N{ELECTRIC LIGHT BULB} Before clearing your farm, make sure to double check what you are
+    currently growing with **/farm field**.
+    """
+
+    async def send_delete_reminders_to_ipc(self):
+        cluster_collection = get_cluster_collection(self.client)
+        if not cluster_collection:
+            return
+
+        await cluster_collection.send_delete_reminders_message(self.author.id)
+
+    async def callback(self) -> None:
+        async with self.acquire() as conn:
+            field_data = await self.user_data.get_farm_field(self, conn=conn)
+
+        if not field_data:
+            embed = embed_util.error_embed(
+                title="You are not growing anything!",
+                text=(
+                    "Hmmm... This is weird. So you are telling me, that you want to clear your "
+                    "farm field, but you are not even growing anything? \N{THINKING FACE}"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        total_cost = total_fields = 0
+        for data in field_data:
+            item = self.items.find_item_by_id(data['item_id'])
+            fields_used = data['fields_used']
+            total_cost += item.gold_price * fields_used
+            total_fields += fields_used
+        # 5% of total
+        total_cost = int(total_cost / 20) or 1
+
+        embed = embed_util.prompt_embed(
+            title="Are you sure that you want to clear your field?",
+            text=(
+                f"\N{WARNING SIGN} **You are about to lose ALL ({total_fields}) of your currently "
+                "growing items on farm field!**\nAnd they are NOT going to be refunded, neither "
+                f"moved to your inventory. And this is going to cost extra **{total_cost}** "
+                f"{self.client.gold_emoji}! Let's do this? \N{THINKING FACE}"
+            ),
+            cmd=self
+        )
+
+        confirm = await views.ConfirmPromptView(
+            self,
+            initial_embed=embed,
+            style=discord.ButtonStyle.primary,
+            emoji=self.client.gold_emoji,
+            label="Sure, please clear my farm"
+        ).prompt()
+
+        if not confirm:
+            return
+
+        conn = await self.acquire()
+        # Refetch user data, because user could have no money after prompt
+        self.user_data = await self.users.get_user(self.author.id, conn=conn)
+
+        if total_cost > self.user_data.gold:
+            await self.release()
+            return await self.edit(embed=embed_util.no_money_embed(self, total_cost), view=None)
+
+        async with conn.transaction():
+            query = "DELETE FROM farm WHERE user_id = $1;"
+            await conn.execute(query, self.author.id)
+            self.user_data.gold -= total_cost
+            await self.users.update_user(self.user_data, conn=conn)
+        await self.release()
+
+        embed = embed_util.success_embed(
+            title="Your farm field is cleared!",
+            text="Okay, I sent some or my workers to clear up the farm for you! \N{BROOM}",
+            footer="Your farm field items have been discarded",
+            cmd=self
+        )
+        await self.edit(embed=embed, view=None)
+        await self.send_delete_reminders_to_ipc()
+
+
 def setup(client) -> list:
     return [FarmCollection(client)]
