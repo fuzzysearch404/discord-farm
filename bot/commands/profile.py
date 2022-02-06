@@ -606,12 +606,12 @@ class ChestsOpenCommand(
         default=1
     )
 
-    def ladder_random(self, min: int, max: int, continue_chance: int, _last: int = 0) -> int:
-        """Randint with a chance of summing up with another randint recursively."""
-        result = random.randint(min, max) + _last
+    def ladder_random(self, min: int, max: int, continue_chance: int) -> int:
+        """Randint with a chance of summing up with another randint."""
+        result = random.randint(min, max)
 
-        if not random.randint(0, continue_chance):
-            result += self.ladder_random(min, max, continue_chance=continue_chance, _last=result)
+        while not random.randint(0, continue_chance):
+            result += random.randint(min, max)
 
         return result
 
