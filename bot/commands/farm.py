@@ -160,7 +160,7 @@ class FarmFieldSource(views.AbstractPaginatorSource):
             else:
                 state = "Harvestable"
         else:
-            state = "Rotten (not collected in time)"
+            state = "Rotten \N{SKULL}"
 
         em = "\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}"
         if isinstance(item, game_items.Crop):
@@ -190,15 +190,15 @@ class FarmFieldSource(views.AbstractPaginatorSource):
             total_slots = f"**{self.total_slots + 2}** \N{HAMSTER FACE}"
 
         tile_emoji = view.command.client.tile_emoji
-        header = f"{tile_emoji} Used farm's space tiles: {self.used_slots}/{total_slots}.\n\n"
+        header = f"{tile_emoji} Used farm space tiles: {self.used_slots}/{total_slots}.\n\n"
 
         if self.farm_guard:
             remaining = time_util.seconds_to_time(self.farm_guard)
             header += (
-                "\N{SHIELD} Because of Discord's or bot's downtime, for a short period of time, "
-                "farm's items can be harvested even if they are rotten, thanks to Farm Guard"
-                "\N{TRADE MARK SIGN}!\n\N{TIMER CLOCK} Farm Guard is going to be active for: "
-                f"**{remaining}**\n\n"
+                "\N{SHIELD} Because of the bot's or [Discord's downtime]"
+                "(https://discordstatus.com/), for a short period of time, farm items can "
+                "be harvested even if they are rotten, thanks to Farm Guard\N{TRADE MARK SIGN}!\n"
+                f"\N{TIMER CLOCK} Farm Guard is going to be active for: **{remaining}**\n\n"
             )
 
         fmt = ""
@@ -235,8 +235,16 @@ class FarmFieldCommand(
     **/farm harvest** command, to collect those items. You can collect the items for the
     specified period of time, before items get rotten.<br>
     *"Rotten"* - indicates that you have missed the opportunity to collect your items in time,
-    and you won't be able to get the items anymore. But you should still use the **/farm harvest**
-    command, to free up your farm space for planting new items.
+    and you won't be able to get the items anymore. \N{SKULL} But you should still use the
+    **/farm harvest** command, to free up your farm space for planting new items.<br><br>
+    __Icon descriptions:__<br>
+    \N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS} - indicates the number of
+    remaining growth cycles for the item. (how many more times it's going to be harvestable).<br>
+    \N{HAMSTER FACE} - indicates that the farm size booster "Susan" is activated.<br>
+    \N{CAT FACE} - indicates that the item will never get rotten, thanks to the "Leo" booster.<br>
+    \N{SHIELD} - indicates that all items can be harvested even if they are rotten, because of
+    the safety mechanism that is activated by the bot's or
+    [Discord's downtime](https://discordstatus.com/).
     """
     player: Optional[discord.Member] = discord.app.Option(
         description="Other user, whose farm field to view"
@@ -294,9 +302,11 @@ class FarmPlantCommand(
     """
     Before planting items on your farm field, make sure that you have enough space for them.
     Every time you want to plant something, it will cost you some gold.
-    Each item also has specific growing and harvest durations.
-    To check how much it will cost, and how long it will take to grow use the **/item inspect**
-    command. If you are unsure about what you can afford, you can also check the **/shop** command.
+    Each item also has specific growing and harvest durations.<br>
+    \N{ELECTRIC LIGHT BULB} To check how much it will cost, and how long it will take for the items
+    to grow, use the **/item inspect** command. If you are unsure about what you can afford, you
+    can also check the **/shop** command.<br>
+    To check item growth status, use the **/farm field** command.
     """
     item: str = discord.app.Option(description="Item to plant on the field", autocomplete=True)
     tiles: int = discord.app.Option(description="How many space tiles to plant in", min=1, max=100)
@@ -442,9 +452,7 @@ class FarmPlantCommand(
         ends = now + datetime.timedelta(seconds=grow_time)
         dies = ends + datetime.timedelta(seconds=collect_time)
 
-        transaction = conn.transaction()
-        await transaction.start()
-        try:
+        async with conn.transaction():
             query = """
                     INSERT INTO farm
                     (user_id, item_id, amount, iterations, fields_used, ends, dies, cat_boost)
@@ -463,11 +471,6 @@ class FarmPlantCommand(
             )
             self.user_data.gold -= total_cost
             await self.users.update_user(self.user_data, conn=conn)
-        except Exception:
-            await transaction.rollback()
-            raise
-        else:
-            await transaction.commit()
         await self.release()
 
         end_fmt = time_util.maybe_timestamp(ends, since=now)
@@ -486,6 +489,195 @@ class FarmPlantCommand(
         )
         await self.edit(embed=embed, view=None)
         await self.send_reminder_to_ipc(item.id, total_items, ends)
+
+
+class FarmHarvestCommand(
+    FarmSlashCommand,
+    name="harvest",
+    description="\N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE} Harvests your farm field",
+    parent=FarmCommand
+):
+    """
+    Collects the fully grown items and discards the rotten ones from your farm field.
+    If you collect tree, bush or animal items, then their next growing cycle begins (if
+    the item has growth cycles remaining).<br>
+    \N{ELECTRIC LIGHT BULB} To check what you are currently growing and if there are collectable
+    items use the **/farm field** command.
+    """
+
+    async def send_reminder_to_ipc(self, item_id: int, item_amount: int, when: datetime.datetime):
+        cluster_collection = get_cluster_collection(self.client)
+        if not cluster_collection:
+            return
+
+        reminder = ipc_classes.Reminder(
+            user_id=self.author.id,
+            channel_id=self.channel.id,
+            item_id=item_id,
+            amount=item_amount,
+            time=when
+        )
+        await cluster_collection.send_set_reminder_message(reminder)
+
+    async def callback(self):
+        conn = await self.acquire()
+        field_data = await self.user_data.get_farm_field(self, conn=conn)
+
+        if not field_data:
+            await self.release()
+            embed = embed_util.error_embed(
+                title="You haven't planted anything on your field!",
+                text=(
+                    "Hmmm... There is literally nothing to harvest, because you did not even plant "
+                    "anything. \N{THINKING FACE}\nPlant items on the field with the "
+                    "**/farm plant** command \N{SEEDLING}"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        field_parsed = _parse_db_rows_to_plant_data_objects(self.client, field_data)
+        # Tuples for database queries and reminders
+        to_remind, to_reward, update_rows, delete_rows = [], [], [], []
+        # Plant objects for displaying in Discord
+        harvested_plants, updated_plants, deleted_plants = [], [], []
+        xp_gain = 0
+
+        farm_guard_active = self.client.field_guard
+        for plant in field_parsed:
+            if plant.iterations and plant.iterations > 1:  # Trees, bushes, animals
+                if plant.is_harvestable or (farm_guard_active and plant.state == PlantState.ROTTEN):
+                    # Calculate the new growth cycle properties
+                    item_mods = await modifications.get_item_mods_for_user(
+                        self,
+                        plant.item,
+                        conn=conn
+                    )
+                    grow_time, collect_time, max_volume = item_mods[0], item_mods[1], item_mods[2]
+                    ends = datetime.datetime.now() + datetime.timedelta(seconds=grow_time)
+                    dies = ends + datetime.timedelta(seconds=collect_time)
+                    amount = random.randint(
+                        plant.item.amount * plant.fields_used,
+                        max_volume * plant.fields_used
+                    )
+
+                    update_rows.append((ends, dies, amount, plant.id))
+                    to_reward.append((plant.item.id, plant.amount))
+                    to_remind.append((plant.item.id, amount, ends))
+                    xp_gain += plant.item.xp * plant.amount
+                    updated_plants.append(plant)
+                elif plant.state == PlantState.ROTTEN:
+                    delete_rows.append((plant.id, ))
+                    deleted_plants.append(plant)
+            else:  # One time harvest crops
+                if plant.is_harvestable or (farm_guard_active and plant.state == PlantState.ROTTEN):
+                    delete_rows.append((plant.id, ))
+                    to_reward.append((plant.item.id, plant.amount))
+                    xp_gain += plant.item.xp * plant.amount
+                    harvested_plants.append(plant)
+                elif plant.state == PlantState.ROTTEN:
+                    delete_rows.append((plant.id, ))
+                    deleted_plants.append(plant)
+
+        if not (harvested_plants or updated_plants or deleted_plants):
+            await self.release()
+            embed = embed_util.error_embed(
+                title="Your items are still growing! \N{SEEDLING}",
+                text=(
+                    "Please be patient! Your items are growing! Soon we will get that huge "
+                    "harvest! \N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE}\nCheck out your "
+                    "remaining item growing durations with the **/farm field** command.\n"
+                    "But don't get too relaxed, because you will have a limited time to "
+                    "harvest your items. \N{ALARM CLOCK}"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        async with conn.transaction():
+            if update_rows:
+                query = """
+                        UPDATE farm
+                        SET ends = $1, dies = $2, amount = $3,
+                        iterations = iterations - 1, robbed_fields = 0
+                        WHERE id = $4;
+                        """
+                await conn.executemany(query, update_rows)
+
+            if delete_rows:
+                query = "DELETE from farm WHERE id = $1;"
+                await conn.executemany(query, delete_rows)
+
+            if to_reward:
+                await self.user_data.give_items(self, to_reward, conn=conn)
+
+            self.user_data.give_xp_and_level_up(self, xp_gain)
+            await self.users.update_user(self.user_data, conn=conn)
+
+        await self.release()
+
+        def group_plants(plants: list) -> dict:
+            grouped = {}
+            for plant in plants:
+                try:
+                    grouped[plant.item] += plant.amount
+                except KeyError:
+                    grouped[plant.item] = plant.amount
+
+            return grouped
+
+        harvested_plants.extend(updated_plants)
+
+        if deleted_plants and not harvested_plants:
+            deleted_plants = group_plants(deleted_plants)
+            fm = ", ".join(f"{amount}x {item.full_name}" for item, amount in deleted_plants.items())
+
+            embed = embed_util.error_embed(
+                title="Oh no! Your items are gone!",
+                text=(
+                    "You missed your chance to harvest your items on time, so your items: "
+                    f"**{fm}** got rotten! \N{CRYING FACE}\nPlease be more careful next time and "
+                    "follow the timers with the **/farm field** command."
+                ),
+                footer="All rotten items have been removed from your farm",
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        harvested_plants = group_plants(harvested_plants)
+        fm = ", ".join(f"{item.full_name} x{amount}" for item, amount in harvested_plants.items())
+        fmt = (
+            "\N{FACE WITH COWBOY HAT} **You successfully harvested your farm field!**\n"
+            f"\N{TRACTOR} You harvested: **{fm}**"
+        )
+
+        if updated_plants:
+            updated_plants = group_plants(updated_plants)
+            fm = ",".join(f"{item.emoji} " for item in updated_plants.keys())
+            fmt += (
+                "\n\N{CLOCKWISE RIGHTWARDS AND LEFTWARDS OPEN CIRCLE ARROWS} Some items are now "
+                f"growing their next cycle: {fm}"
+            )
+        if deleted_plants:
+            deleted_plants = group_plants(deleted_plants)
+            fm = ", ".join(f"{item.full_name} x{amount}" for item, amount in deleted_plants.items())
+            fmt += (
+                "\n\n\N{BLACK UNIVERSAL RECYCLING SYMBOL} But some items got rotten and "
+                f"had to be discarded: **{fm}** \N{NEUTRAL FACE}"
+            )
+
+        fmt += f"\n\nAnd you received: **+{xp_gain} XP** {self.client.xp_emoji}"
+
+        embed = embed_util.success_embed(
+            title="You harvested your farm! Awesome!",
+            text=fmt,
+            footer="Harvested items are now moved to your inventory",
+            cmd=self
+        )
+        await self.reply(embed=embed)
+
+        for reminder_data in to_remind:
+            await self.send_reminder_to_ipc(reminder_data[0], reminder_data[1], reminder_data[2])
 
 
 def setup(client) -> list:

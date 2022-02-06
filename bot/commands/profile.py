@@ -106,7 +106,10 @@ class ProfileCommand(
     It provides a lot of information about your profile, including your current level, resources,
     timers on different features, and more.<br>
     Looking at other people's profiles is also possible, and it is a nice way to see how other
-    people are doing.
+    people are doing.<br><br>
+    __Icon descriptions:__<br>
+    \N{HAMSTER FACE} - indicates that the farm size booster "Susan" is activated.<br>
+    \N{OWL} - indicates that the factory size booster "Alice" is activated.
     """
     player: Optional[discord.Member] = discord.app.Option(
         description="Other user, whose profile to view"
@@ -312,10 +315,6 @@ class InventoryCommand(
         async with self.acquire() as conn:
             all_items_data = await user.get_all_items(self, conn=conn)
 
-        if not all_items_data:
-            await self.reply("\N{RAT} It's empty. There are only a few unfriendly rats in here...")
-            return
-
         items_and_amounts_by_class = {}
         for data in all_items_data:
             try:
@@ -329,6 +328,10 @@ class InventoryCommand(
                 items_and_amounts_by_class[item.__class__].append(item_and_amt)
             except KeyError:
                 items_and_amounts_by_class[item.__class__] = [item_and_amt]
+
+        if not items_and_amounts_by_class:
+            await self.reply("\N{RAT} It's empty. There are only a few unfriendly rats in here...")
+            return
 
         options_and_sources = {}
         for clazz, items in items_and_amounts_by_class.items():
@@ -350,10 +353,11 @@ class BoostersCommand(
     description="\N{UPWARDS BLACK ARROW} Lists your or someone else's boosters"
 ):
     """
-    Boosters are very powerful items that can help you in various ways.<br>
-    They can make your farm more productive or facilitate different limits.<br>
-    However, they can also be very expensive, so you should buy them wisely.
-    You can purchase boosters from the shop via **/shop boosters** after reaching level 7.
+    Boosters are very powerful special items that can help you in various ways.<br>
+    They can make your farm more productive or facilitate different limits.
+    However, they can also be very expensive, so you should buy them wisely.<br>
+    \N{ELECTRIC LIGHT BULB} You can purchase boosters from the shop via **/shop boosters**
+    after reaching level 7.
     """
     required_level = 7  # type: int
 
@@ -436,7 +440,10 @@ class ItemsInspectCommand(
     """
     *How long does it take to grow that one item? How big is the harvest?* If you want to know
     what item has what properties, then this is the right command for checking exactly that.<br>
-    This command displays lots of useful information about almost any game item.
+    This command displays lots of useful information about almost any game item.<br><br>
+    __Icon descriptions:__<br>
+    \N{DNA DOUBLE HELIX} - indicates that the corresponding property of the item is upgraded
+    in the laboratory.
     """
     item: str = discord.app.Option(description="Game item to inspect", autocomplete=True)
 
