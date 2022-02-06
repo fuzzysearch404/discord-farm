@@ -780,11 +780,11 @@ class ChestsDailyCommand(
 
     async def callback(self) -> None:
         chests_and_rarities = {
-            1000: 80.0,  # Gold
-            1002: 110.0,  # Uncommon
-            1003: 70.0,  # Rare
-            1004: 28.5,  # Epic
-            1005: 5.2  # Legendary
+            1000: 90.0,  # Gold
+            1002: 125.0,  # Uncommon
+            1003: 85.0,  # Rare
+            1004: 45.5,  # Epic
+            1005: 8.0  # Legendary
         }
 
         chest = random.choices(
@@ -824,12 +824,12 @@ class ChestsHourlyCommand(
 
     async def callback(self):
         chests_and_rarities = {
-            1000: 45.5,  # Gold
-            1001: 125.0,  # Common
-            1002: 85.0,  # Uncommon
-            1003: 30.0,  # Rare
-            1004: 4.0,  # Epic
-            1005: 0.25  # Legendary
+            1000: 80.5,  # Gold
+            1001: 250.0,  # Common
+            1002: 115.0,  # Uncommon
+            1003: 70.0,  # Rare
+            1004: 20.0,  # Epic
+            1005: 2.5  # Legendary
         }
         chest_id = random.choices(
             population=list(chests_and_rarities.keys()),
@@ -840,8 +840,8 @@ class ChestsHourlyCommand(
         amount = 1
         # If common chest, give multiple
         if chest_id == 1001:
-            min = int(self.user_data.level / 16) or 1
-            max = int(self.user_data.level / 8) or 1
+            min = int(self.user_data.level / 20) or 1
+            max = int(self.user_data.level / 10) or 1
             amount = random.randint(min, max + 1)
 
         async with self.acquire() as conn:
