@@ -59,6 +59,16 @@
             "price_increase_per_farm_slots":0,
             "price_increase_per_factory_slots":100,
             "price_increase_per_user_level":210
+        },
+        {
+            "id":"fish_doubler",
+            "name":"Archie",
+            "info":"Doubles the fish you catch",
+            "emoji":"\ud83d\udc3b",
+            "base_price":2500,
+            "price_increase_per_farm_slots":0,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":50
         }
     ]
 }

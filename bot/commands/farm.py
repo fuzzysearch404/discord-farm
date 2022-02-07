@@ -2,7 +2,7 @@ import random
 import discord
 import datetime
 from enum import Enum
-from typing import Optional
+from typing import Optional, Literal
 from contextlib import suppress
 
 from core import game_items
@@ -27,7 +27,7 @@ class FarmCollection(FarmCommandCollection):
     help_short_description: str = "Plant, grow and harvest"
 
     def __init__(self, client):
-        super().__init__(client, [FarmCommand], name="Farm")
+        super().__init__(client, [FarmCommand, FishCommand], name="Farm")
 
 
 class PlantState(Enum):
@@ -950,6 +950,69 @@ class FarmStealCommand(
             # People could have direct messages closed
             with suppress(discord.HTTPException):
                 await self.player.send(embed=embed)
+
+
+class FishCommand(
+    FarmSlashCommand,
+    name="fish",
+    description="\N{FISHING POLE AND FISH} Goes fishing!"
+):
+    """
+    You can go fishing every hour and catch some random amount of fish!
+    <br><br>__Fishing locations:__<br>
+    **Pond** - Always has limited amount of fish that are easy to catch.<br>
+    **Lake** and **River** - Usually have fish in medium quantities.<br>
+    **Sea** - Has large amounts, but hard to catch fish.<br><br>
+    __Icon descriptions:__<br>
+    \N{BEAR FACE} - indicates that the reward was doubled, because of the "Archie" booster.
+    """
+    required_level = 17  # type: int
+    invoke_cooldown = 3600  # type: int
+
+    location: Literal["Pond", "Lake", "River", "Sea"] = discord.app.Option(
+        description="Place where to go fishing to. Different places have different amounts of fish."
+    )
+
+    async def callback(self) -> None:
+        if self.location == "Pond":
+            base_min_amount, base_max_amount, fail_chance = 1, 4, 0
+        elif self.location == "Lake":
+            base_min_amount, base_max_amount, fail_chance = 3, 10, 1
+        elif self.location == "River":
+            base_min_amount, base_max_amount, fail_chance = 8, 25, 2
+        elif self.location == "Sea":
+            base_min_amount, base_max_amount, fail_chance = 20, 64, 4
+
+        if random.randint(0, fail_chance) != 0:
+            embed = embed_util.error_embed(
+                title="\N{HOOK} Unlucky! No fish at all!",
+                text=(
+                    f"You went to a {base_min_amount} hour long fishing session to the "
+                    f"{self.location.lower()} and could not catch a single fish... "
+                    "No worries! Hopefully you will have a better luck next time! \N{WINKING FACE}"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        win_amount = random.randint(base_min_amount, base_max_amount)
+        has_luck_booster: bool = await self.user_data.is_boost_active(self, "fish_doubler")
+        if has_luck_booster:
+            win_amount *= 2
+
+        # ID 600 - Fish item
+        async with self.acquire() as conn:
+            await self.user_data.give_item(self, 600, win_amount, conn=conn)
+
+        embed = embed_util.congratulations_embed(
+            title="You successfully caught some fish! \N{FISHING POLE AND FISH}",
+            text=f"You went to the {self.location.lower()} and caught: **{win_amount}x** \N{FISH}",
+            cmd=self
+        )
+        if has_luck_booster:
+            embed.description += " (doubled with the \N{BEAR FACE} booster)"
+
+        await self.reply(embed=embed)
 
 
 def setup(client) -> list:
