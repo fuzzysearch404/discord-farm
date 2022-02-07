@@ -49,7 +49,11 @@ class ButtonPaginatorView(discord.ui.View):
 
         await self.command.edit(view=self)
 
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+    async def interaction_check(
+        self,
+        item: discord.Component,
+        interaction: discord.Interaction
+    ) -> bool:
         if self.author == interaction.user:
             return True
 
@@ -173,20 +177,22 @@ class SelectButtonPaginatorView(ButtonPaginatorView):
 
     def check_if_paging_needed(self) -> None:
         """Temporarily removes the paging buttons if the current source has only one page."""
+        paging_buttons = (
+            self.first_page,
+            self.previous_page,
+            self.counter,
+            self.next_page,
+            self.last_page
+        )
+
         if not self.source.should_paginate() and not self.buttons_removed:
             self.buttons_removed = True
-            self.remove_item(self.first_page)
-            self.remove_item(self.previous_page)
-            self.remove_item(self.counter)
-            self.remove_item(self.next_page)
-            self.remove_item(self.last_page)
+            for button in paging_buttons:
+                self.remove_item(button)
         elif self.source.should_paginate() and self.buttons_removed:
             self.buttons_removed = False
-            self.add_item(self.first_page)
-            self.add_item(self.previous_page)
-            self.add_item(self.counter)
-            self.add_item(self.next_page)
-            self.add_item(self.last_page)
+            for button in paging_buttons:
+                self.add_item(button)
 
     @discord.ui.select(min_values=1, max_values=1, row=4)
     async def select_source(
@@ -239,7 +245,11 @@ class AbstractOptionPromptView(discord.ui.View):
     async def on_timeout(self) -> None:
         await self.disable_all_items()
 
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+    async def interaction_check(
+        self,
+        item: discord.Component,
+        interaction: discord.Interaction
+    ) -> bool:
         if self.author == interaction.user:
             return True
 
