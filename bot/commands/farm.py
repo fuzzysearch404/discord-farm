@@ -1000,17 +1000,26 @@ class FishCommand(
         if has_luck_booster:
             win_amount *= 2
 
+        # Give XP based on the catch
+        xp_gain = win_amount * 15
+        self.user_data.give_xp_and_level_up(self, xp_gain)
+
         # ID 600 - Fish item
         async with self.acquire() as conn:
-            await self.user_data.give_item(self, 600, win_amount, conn=conn)
+            async with conn.transaction():
+                await self.users.update_user(self.user_data, conn=conn)
+                await self.user_data.give_item(self, 600, win_amount, conn=conn)
 
         embed = embed_util.congratulations_embed(
-            title="You successfully caught some fish! \N{FISHING POLE AND FISH}",
-            text=f"You went to the {self.location.lower()} and caught: **{win_amount}x** \N{FISH}",
+            title="Nice catch! You successfully caught some fish! \N{FISHING POLE AND FISH}",
+            text=(
+                f"You went to the {self.location.lower()} and caught: **{win_amount}x** \N{FISH} "
+                f"**+{xp_gain} XP** {self.client.xp_emoji}"
+            ),
             cmd=self
         )
         if has_luck_booster:
-            embed.description += " (doubled with the \N{BEAR FACE} booster)"
+            embed.description += " (x2 with \N{BEAR FACE})"
 
         await self.reply(embed=embed)
 
