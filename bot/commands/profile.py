@@ -116,14 +116,21 @@ class ProfileCommand(
     )
 
     async def callback(self) -> None:
-        if not self.player:
-            user = self.user_data
-            target_user = self.author
-            mention = ""
-        else:
-            user = await self.lookup_other_player(self.player)
-            target_user = self.player
-            mention = target_user.mention
+        async with self.acquire() as conn:
+            if not self.player:
+                user = self.user_data
+                target_user = self.author
+                mention = ""
+            else:
+                user = await self.lookup_other_player(self.player, conn=conn)
+                target_user = self.player
+                mention = target_user.mention
+
+            # See schema.sql for this function
+            query = "SELECT get_profile_stats($1, $2);"
+            profile_stats = await conn.fetchrow(query, user.user_id, self.guild.id)
+        # Function returns a nested record
+        profile_stats = profile_stats[0]
 
         total_farm_slots = user.farm_slots
         has_boosters_unlocked: bool = user.level > 6
@@ -143,13 +150,6 @@ class ProfileCommand(
         else:
             total_farm_slots_formatted = total_farm_slots
             factory_slots_formatted = user.factory_slots
-
-        async with self.acquire() as conn:
-            # See schema.sql for this function
-            query = "SELECT get_profile_stats($1, $2);"
-            profile_stats = await conn.fetchrow(query, user.user_id, self.guild.id)
-            # Function returns a nested record
-            profile_stats = profile_stats[0]
 
         inventory_size = profile_stats.get("inventory_size") or 0
         farm_slots_used = profile_stats.get("farm_slots_used") or 0
@@ -305,14 +305,14 @@ class InventoryCommand(
     )
 
     async def callback(self) -> None:
-        if not self.player:
-            user = self.user_data
-            target_user = self.author
-        else:
-            user = await self.lookup_other_player(self.player)
-            target_user = self.player
-
         async with self.acquire() as conn:
+            if not self.player:
+                user = self.user_data
+                target_user = self.author
+            else:
+                user = await self.lookup_other_player(self.player, conn=conn)
+                target_user = self.player
+
             all_items_data = await user.get_all_items(self, conn=conn)
 
         items_and_amounts_by_class = {}

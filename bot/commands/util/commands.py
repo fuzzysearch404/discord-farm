@@ -234,9 +234,9 @@ class FarmSlashCommand(discord.app.SlashCommand):
     def booster_autocomplete(self, query: str) -> dict:
         return self._find_items_for_autocomplete(self.items.all_boost_ids_by_name, query)
 
-    async def lookup_other_player(self, user: discord.Member):
+    async def lookup_other_player(self, user: discord.Member, conn=None):
         try:
-            return await self.users.get_user(user.id)
+            return await self.users.get_user(user.id, conn=conn)
         except exceptions.UserNotFoundException:
             raise exceptions.UserNotFoundException(
                 f"Whoops. {user.mention} doesn't have a game account yet! "
