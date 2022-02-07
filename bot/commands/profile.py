@@ -744,8 +744,8 @@ class ChestsOpenCommand(
                 grouped[item] += amt
             except KeyError:
                 grouped[item] = amt
-        for item, amt in grouped.items():
-            rewards += f"**{item.full_name}**: {amt} "
+
+        rewards += "".join(f"**{item.full_name}**: {amt} " for item, amt in grouped.items())
 
         if gold_reward:
             rewards += f"**{self.client.gold_emoji} {gold_reward} gold** "
