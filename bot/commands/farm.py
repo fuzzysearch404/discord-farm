@@ -3,6 +3,7 @@ import discord
 import datetime
 from enum import Enum
 from typing import Optional
+from contextlib import suppress
 
 from core import game_items
 from core import ipc_classes
@@ -772,6 +773,183 @@ class FarmClearCommand(
         )
         await self.edit(embed=embed, view=None)
         await self.send_delete_reminders_to_ipc()
+
+
+class FarmStealCommand(
+    FarmSlashCommand,
+    name="steal",
+    description="\N{SLEUTH OR SPY} Steals someone else's farm harvest",
+    parent=FarmCommand
+):
+    """
+    You can try out your luck and attempt stealing some harvest from other player farms.
+    You can only steal items that are fully grown, not rotten and not already stolen from.
+    You can't choose what items you will get, it is chosen randomly.
+    If the targeted user has a dog booster, your chances of a successful robbery are lower.<br>
+    \N{ELECTRIC LIGHT BULB} Use **/farm field @user** to check if some person has items that
+    could be stolen. If there are items that could be stolen, it's going to be stated at the very
+    bottom.
+    """
+    invoke_cooldown = 900  # type: int
+
+    player: discord.Member = discord.app.Option(description="Other user, whose farm to rob")
+
+    async def callback(self) -> None:
+        if self.player == self.author:
+            embed = embed_util.error_embed(
+                title="You can't steal from yourself!",
+                text="Silly you! Why and how would you ever do this? \N{DISGUISED FACE}",
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        async with self.acquire() as conn:
+            target_data = await self.lookup_other_player(self.player, conn=conn)
+
+            query = """
+                    SELECT * FROM farm
+                    WHERE ends < $1 AND dies > $1
+                    AND robbed_fields < fields_used
+                    AND user_id = $2;
+                    """
+            target_field = await conn.fetch(query, datetime.datetime.now(), self.player.id)
+
+        if not target_field:
+            target_name = self.player.nick or self.player.name
+            embed = embed_util.error_embed(
+                title=f"{target_name} currently has nothing to steal from!",
+                text=(
+                    "Oh no! They don't have any collectable harvest! They most likely saw us "
+                    "walking in their farm, so we must hide behind this tree for a few minutes "
+                    "\N{WHITE RIGHT POINTING BACKHAND INDEX}\N{DECIDUOUS TREE}. In case they ask "
+                    "something - I don't know you. \N{FACE WITH FINGER COVERING CLOSED LIPS}"
+                ),
+                footer=(
+                    "The target user must have items ready for harvest and the items must not be "
+                    "already robbed from by you or anyone else"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        caught_chance, caught = 0, False
+        target_boosts = await target_data.get_all_boosts(self)
+        if target_boosts:
+            boost_ids = [boost.id for boost in target_boosts]
+            if "dog_3" in boost_ids:
+                embed = embed_util.error_embed(
+                    title="Harvest stealing attempt failed!",
+                    text=(
+                        "I went in there to scout out the area and I ran away as fast, as I could, "
+                        "because they have a **HUGE** dog out there! \N{DOG} Better to be safe, "
+                        "than sorry. \N{FACE WITH COLD SWEAT}"
+                    ),
+                    cmd=self
+                )
+                return await self.reply(embed=embed)
+            elif "dog_2" in boost_ids and "dog_1" in boost_ids:
+                caught_chance = 2
+            elif "dog_2" in boost_ids:
+                caught_chance = 4
+            elif "dog_1" in boost_ids:
+                caught_chance = 8
+
+        field, rewards = [], {}
+        for data in target_field:
+            # If planted multiple same kind of items, split the chances equally
+            for _ in range(data['fields_used'] - data['robbed_fields']):
+                field.append(data)
+
+        while len(field) > 0:
+            current = random.choice(field)
+            field.remove(current)
+
+            if caught_chance and not random.randint(0, caught_chance):
+                caught = True
+                break
+
+            try:
+                rewards[current] += 1
+            except KeyError:
+                rewards[current] = 1
+
+        if not rewards:
+            embed = embed_util.error_embed(
+                title="We got caught! \N{DISAPPOINTED FACE}",
+                text=(
+                    f"Oh no! Oh no no no! {self.player.nick or self.player.name} had a dog and I "
+                    "got caught! \N{TIRED FACE}\nNow my body hurts badly! But we can try again "
+                    "some other time. It was fun! \N{SMILING FACE WITH OPEN MOUTH AND COLD SWEAT}"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        to_update, to_reward, won_items_and_amounts = [], [], {}
+        for data, field_count in rewards.items():
+            item = self.items.find_item_by_id(data['item_id'])
+            win_amount = int((item.amount * field_count) * 0.2) or 1
+            # For response to user
+            try:
+                won_items_and_amounts[item] += win_amount
+            except KeyError:
+                won_items_and_amounts[item] = win_amount
+            # For database
+            to_update.append((win_amount, field_count, data['id']))
+            to_reward.append((data['item_id'], win_amount))
+
+        async with self.acquire() as conn:
+            async with conn.transaction():
+                query = """
+                        UPDATE farm
+                        SET amount = amount - $1, robbed_fields = robbed_fields + $2
+                        WHERE id = $3;
+                        """
+
+                await conn.executemany(query, to_update)
+                await self.user_data.give_items(self, to_reward, conn=conn)
+
+        fmt = ", ".join(f"{item.full_name} x{amt}" for item, amt in won_items_and_amounts.items())
+
+        if caught:
+            embed = embed_util.success_embed(
+                title="Decent attempt, but we almost got caught...",
+                text=(
+                    f"Okay, so I went in and grabbed these: **{fmt}**! But the dog saw me and I "
+                    "had to run, so I did not get all the items! I'm glad that we got away with "
+                    "at least something. \N{RUNNER}\N{POODLE}"
+                ),
+                cmd=self
+            )
+            await self.reply(embed=embed)
+        else:
+            embed = embed_util.congratulations_embed(
+                title="We did it! You got the jackpot!",
+                text=(
+                    "We managed to get a bit from all the harvest "
+                    f"{self.player.nick or self.player.name} had: **{fmt}** \N{SLEUTH OR SPY}\n"
+                    "Now you should better watch out from them, because they won't be happy about "
+                    "this! \N{GRIMACING FACE}"
+                ),
+                cmd=self
+            )
+            await self.reply(embed=embed)
+
+        if target_data.notifications:
+            embed = embed_util.error_embed(
+                title=f"{self.author} managed to steal items from your farm! \N{SLEUTH OR SPY}",
+                text=(
+                    "Hey boss! \N{WAVING HAND SIGN}\n\nI am sorry to say, but someone named "
+                    f"\"{self.author.nick or self.author.name}\" managed to grab some items from "
+                    f"your farm: **{fmt}**!\n\n\N{ELECTRIC LIGHT BULB}Next time be a bit faster to "
+                    "harvest your farm or buy a dog booster for some protection!"
+                ),
+                private=True,
+                cmd=self
+            )
+            # People could have direct messages closed
+            with suppress(discord.HTTPException):
+                await self.player.send(embed=embed)
 
 
 def setup(client) -> list:
