@@ -960,7 +960,7 @@ class FishCommand(
     """
     You can go fishing every hour and catch some random amount of fish!
     <br><br>__Fishing locations:__<br>
-    **Pond** - Always has limited amount of fish that are easy to catch.<br>
+    **Pond** - Always has a limited amount of fish that are easy to catch.<br>
     **Lake** and **River** - Usually have fish in medium quantities.<br>
     **Sea** - Has large amounts, but hard to catch fish.<br><br>
     __Icon descriptions:__<br>
@@ -996,8 +996,8 @@ class FishCommand(
             return await self.reply(embed=embed)
 
         win_amount = random.randint(base_min_amount, base_max_amount)
-        has_luck_booster: bool = await self.user_data.is_boost_active(self, "fish_doubler")
-        if has_luck_booster:
+        has_doubler_booster: bool = await self.user_data.is_boost_active(self, "fish_doubler")
+        if has_doubler_booster:
             win_amount *= 2
 
         # ID 600 - Fish item
@@ -1019,7 +1019,7 @@ class FishCommand(
             ),
             cmd=self
         )
-        if has_luck_booster:
+        if has_doubler_booster:
             embed.description += " (x2 with \N{BEAR FACE})"
 
         await self.reply(embed=embed)
