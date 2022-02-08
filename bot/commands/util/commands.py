@@ -311,4 +311,4 @@ def format_docstring_help(doc: str) -> str:
     Removes new line characters from the docstring and then replaces our new line placeholders with
     actual newline characters. Also strips the string just in case.
     """
-    return doc.replace("\n", "").replace("<br>", "\n").strip()
+    return " ".join(doc.split()).replace("<br>", "\n")
