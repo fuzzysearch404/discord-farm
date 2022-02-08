@@ -977,11 +977,11 @@ class FishCommand(
         if self.location == "Pond":
             base_min_amount, base_max_amount, fail_chance = 1, 4, 0
         elif self.location == "Lake":
-            base_min_amount, base_max_amount, fail_chance = 3, 10, 1
+            base_min_amount, base_max_amount, fail_chance = 2, 10, 1
         elif self.location == "River":
-            base_min_amount, base_max_amount, fail_chance = 8, 25, 2
+            base_min_amount, base_max_amount, fail_chance = 5, 25, 2
         elif self.location == "Sea":
-            base_min_amount, base_max_amount, fail_chance = 20, 64, 4
+            base_min_amount, base_max_amount, fail_chance = 12, 64, 4
 
         if random.randint(0, fail_chance) != 0:
             embed = embed_util.error_embed(
@@ -1000,15 +1000,16 @@ class FishCommand(
         if has_luck_booster:
             win_amount *= 2
 
+        # ID 600 - Fish item
+        item = self.items.find_item_by_id(600)
         # Give XP based on the catch
-        xp_gain = win_amount * 15
+        xp_gain = win_amount * item.xp
         self.user_data.give_xp_and_level_up(self, xp_gain)
 
-        # ID 600 - Fish item
         async with self.acquire() as conn:
             async with conn.transaction():
                 await self.users.update_user(self.user_data, conn=conn)
-                await self.user_data.give_item(self, 600, win_amount, conn=conn)
+                await self.user_data.give_item(self, item.id, win_amount, conn=conn)
 
         embed = embed_util.congratulations_embed(
             title="Nice catch! You successfully caught some fish! \N{FISHING POLE AND FISH}",
