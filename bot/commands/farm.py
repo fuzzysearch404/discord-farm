@@ -252,14 +252,14 @@ class FarmFieldCommand(
     )
 
     async def callback(self):
-        if not self.player:
-            user = self.user_data
-            target_user = self.author
-        else:
-            user = await self.lookup_other_player(self.player)
-            target_user = self.player
-
         async with self.acquire() as conn:
+            if not self.player:
+                user = self.user_data
+                target_user = self.author
+            else:
+                user = await self.lookup_other_player(self.player, conn=conn)
+                target_user = self.player
+
             field_data = await user.get_farm_field(self, conn=conn)
 
         if not field_data:
