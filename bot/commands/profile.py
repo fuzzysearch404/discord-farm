@@ -66,11 +66,8 @@ class InventorySource(views.AbstractPaginatorSource):
                 fmt += f"\n{item.full_name} x{amount} "
                 iteration = 1
 
-        fmt += (
-            f"**\n\n\N{BOOKS} Selected category:** {self.inventory_emoji} "
-            f"{self.inventory_category}."
-        )
         embed.description = fmt
+        view.select_source.placeholder = f"{self.inventory_emoji} {self.inventory_category}"
 
         if target != view.command.author:
             embed.set_footer(
@@ -340,11 +337,7 @@ class InventoryCommand(
             opt = discord.SelectOption(label=item_type, emoji=item_emoji)
             options_and_sources[opt] = InventorySource(items, target_user, item_type, item_emoji)
 
-        await views.SelectButtonPaginatorView(
-            self,
-            options_and_sources,
-            select_placeholder="\N{BOOKS} Pick another item category"
-        ).start()
+        await views.SelectButtonPaginatorView(self, options_and_sources).start()
 
 
 class BoostersCommand(
