@@ -136,11 +136,7 @@ class User:
         else:
             release_required = False
 
-        query = """
-                SELECT * FROM inventory
-                WHERE user_id = $1
-                ORDER BY item_id;
-                """
+        query = "SELECT * FROM inventory WHERE user_id = $1 ORDER BY item_id;"
         items = await conn.fetch(query, self.user_id)
 
         if release_required:
@@ -156,11 +152,7 @@ class User:
         else:
             release_required = False
 
-        query = """
-                SELECT * FROM inventory
-                WHERE user_id = $1
-                AND item_id = $2;
-                """
+        query = "SELECT * FROM inventory WHERE user_id = $1 AND item_id = $2;"
         item = await conn.fetchrow(query, self.user_id, item_id)
 
         if release_required:
@@ -194,7 +186,6 @@ class User:
         for item, amount in items:
             if isinstance(item, GameItem):
                 item = item.id
-
             items_with_user_id.append((self.user_id, item, amount))
 
         if not conn:
@@ -223,26 +214,15 @@ class User:
         else:
             release_required = False
 
-        query = """
-                SELECT id, amount FROM inventory
-                WHERE user_id = $1
-                AND item_id = $2;
-                """
+        query = "SELECT id, amount FROM inventory WHERE user_id = $1 AND item_id = $2;"
         current_data = await conn.fetchrow(query, self.user_id, item_id)
 
         if current_data:
             if current_data['amount'] - amount > 0:
-                query = """
-                        UPDATE inventory
-                        SET amount = inventory.amount - $2
-                        WHERE id = $1;
-                        """
+                query = "UPDATE inventory SET amount = inventory.amount - $2 WHERE id = $1;"
                 await conn.execute(query, current_data['id'], amount)
             else:
-                query = """
-                        DELETE FROM inventory
-                        WHERE id = $1;
-                        """
+                query = "DELETE FROM inventory WHERE id = $1;"
                 await conn.execute(query, current_data['id'])
 
         if release_required:
@@ -256,11 +236,7 @@ class User:
         else:
             release_required = False
 
-        query = """
-                SELECT * FROM modifications
-                WHERE user_id = $1
-                AND item_id = $2;
-                """
+        query = "SELECT * FROM modifications WHERE user_id = $1 AND item_id = $2;"
         data = await conn.fetchrow(query, self.user_id, item_id)
 
         if release_required:
@@ -276,11 +252,7 @@ class User:
         else:
             release_required = False
 
-        query = """
-                SELECT * FROM farm
-                WHERE user_id = $1
-                ORDER BY item_id;
-                """
+        query = "SELECT * FROM farm WHERE user_id = $1 ORDER BY item_id;"
         data = await conn.fetch(query, self.user_id)
 
         if release_required:
@@ -296,11 +268,7 @@ class User:
         else:
             release_required = False
 
-        query = """
-                SELECT * from factory
-                WHERE user_id = $1
-                ORDER by starts;
-                """
+        query = "SELECT * from factory WHERE user_id = $1 ORDER by starts;"
         data = await conn.fetch(query, self.user_id)
 
         if release_required:

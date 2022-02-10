@@ -17,13 +17,12 @@ from .util.commands import FarmSlashCommand, FarmCommandCollection
 
 class FarmCollection(FarmCommandCollection):
     """
-    Commands for crop, animal and tree growing.<br><br>
     This is your land, where you can plant whatever you want. However, the space here is not so big,
     as you may think, so you will have to think ahead what and how much to plant at a time.
     Also the timing is very important - make sure to plant only things that you think you will be
     able to harvest in time. Nobody in this town is buying rotten harvest...
     """
-    help_emoji: str = "\N{SEEDLING}"
+    help_emoji: str = "\N{EAR OF MAIZE}"
     help_short_description: str = "Plant, grow and harvest"
 
     def __init__(self, client):
@@ -92,7 +91,7 @@ class PlantedFieldItem:
         return self.is_harvestable and self.robbed_fields < self.fields_used
 
 
-def _parse_db_rows_to_plant_data_objects(client, rows: dict) -> list:
+def _parse_db_rows_to_plant_data_objects(client, rows: list) -> list:
     parsed = []
 
     for row in rows:
@@ -433,14 +432,13 @@ class FarmPlantCommand(
         if available_slots < self.tiles:
             await self.release()
             embed = embed_util.error_embed(
-                title="Not enough farm space!",
+                title="Not enough farm space to start growing these!",
                 text=(
-                    f"**You are already currently using {used_fields} of your {total_slots} farm "
-                    "space tiles**!\nI'm sorry to say, but there is no more space for "
-                    f"**{self.tiles} tiles of {item.full_name}**.\n\n"
-                    "What you can do about this:\na) Wait for your currently planted items to "
-                    "grow and harvest them.\nb) Upgrade your farm size if you have gems "
-                    "with: **/upgrade farm**."
+                    f"**You are currently already using {used_fields} of your {total_slots} farm "
+                    f"space tiles**!\nThere is no more space for **{self.tiles} tiles of "
+                    f"{item.full_name}**.\n\n\N{ELECTRIC LIGHT BULB} What you can do about this:\n"
+                    "a) Wait for your currently planted items to grow and harvest them.\n"
+                    "b) Upgrade your farm size if you have gems with: **/upgrade farm size**."
                 ),
                 cmd=self
             )
@@ -672,7 +670,7 @@ class FarmHarvestCommand(
         embed = embed_util.success_embed(
             title="You harvested your farm! Awesome!",
             text=fmt,
-            footer="Harvested items are now moved to your inventory",
+            footer="Harvested items are now moved to your /inventory",
             cmd=self
         )
         await self.reply(embed=embed)

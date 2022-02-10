@@ -194,6 +194,8 @@ class FarmSlashCommand(discord.app.SlashCommand):
                 else:
                     await self.edit(content=f"\N{CROSS MARK} {str(exception)}")
         else:
+            await self.release()  # If there is a stale database connection - release it
+
             message = (
                 "\N{CROSS MARK} Sorry, an unexpected error occurred, while running this command.\n"
                 "\N{PLUNGER} Please try again later. If this issue persists, please report this "
