@@ -209,6 +209,10 @@ class SelectButtonPaginatorView(ButtonPaginatorView):
 
     async def start(self) -> None:
         self.check_if_paging_needed()
+        # No need for a select component if there's one source
+        if len(self.keys_and_sources) <= 1:
+            self.remove_item(self.select_source)
+
         embed = await self.current_page_embed()
         await self._reply_or_edit(embed=embed, view=self)
 
