@@ -538,7 +538,7 @@ class MarketCommand(FarmSlashCommand, name="market"):
 class MarketViewCommand(
     FarmSlashCommand,
     name="view",
-    description="\N{SHOPPING BAGS} Lists items available for selling",
+    description="\N{SCALES} Lists items available for selling",
     parent=MarketCommand
 ):
     """
@@ -573,6 +573,95 @@ class MarketViewCommand(
                 section=f"{item_class.inventory_emoji} {item_class.inventory_name}"
             )
         ).start()
+
+
+class MarketSellCommand(
+    FarmSlashCommand,
+    name="sell",
+    description="\N{BANKNOTE WITH DOLLAR SIGN} Sells your items to the market",
+    parent=MarketCommand
+):
+    """
+    Sell your goodies to game market. The price, at what your items are sold, is determined by the
+    in-game market price, that is updated every hour. The market price can be so low, that you
+    might not profit from selling your items, or it can be so high, that you might earn a lot
+    more than you spent for getting these items.<br>
+    \N{ELECTRIC LIGHT BULB} To check the current market price for an item, you can use
+    the **/market view** and **/items inspect** commands.
+    """
+    item: str = discord.app.Option(description="Item to sell to the market", autocomplete=True)
+    amount: int = discord.app.Option(description="How many items to sell", min=1, max=100_000)
+
+    async def autocomplete(self, options, focused):
+        return discord.AutoCompleteResponse(self.all_items_autocomplete(options[focused]))
+
+    async def callback(self):
+        item = self.lookup_item(self.item)
+
+        if not isinstance(item, game_items.SellableItem):
+            embed = embed_util.error_embed(
+                title="This item cannot be sold to the market",
+                text=f"Sorry, you can't sell **{item.full_name}** to our market!",
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        async with self.acquire() as conn:
+            item_data = await self.user_data.get_item(self, item.id, conn=conn)
+
+        if not item_data or item_data['amount'] < self.amount:
+            return await self.reply(embed=embed_util.not_enough_items(self, item, self.amount))
+
+        total_reward = item.gold_reward * self.amount
+
+        embed = embed_util.prompt_embed(
+            title="Please confirm market deal details",
+            text="So do you really want to sell these? Let me know if you approve",
+            cmd=self
+        )
+        embed.add_field(name="\N{SCALES} Item", value=f"{self.amount}x {item.full_name}")
+        embed.add_field(name=f"{self.client.gold_emoji} Price per unit", value=item.gold_reward)
+        embed.add_field(
+            name="\N{MONEY BAG} Total earnings",
+            value=f"**{total_reward}** {self.client.gold_emoji}"
+        )
+
+        confirm = await views.ConfirmPromptView(
+            self,
+            initial_embed=embed,
+            emoji=self.client.gold_emoji,
+            label="Sell items to the market"
+        ).prompt()
+
+        if not confirm:
+            return
+
+        conn = await self.acquire()
+        # Must refetch or users can exploit the long prompts and duplicate selling
+        item_data = await self.user_data.get_item(self, item.id, conn=conn)
+        if not item_data or item_data['amount'] < self.amount:
+            await self.release()
+            embed = embed_util.not_enough_items(self, item, self.amount)
+            return await self.edit(embed=embed, view=None)
+
+        async with conn.transaction():
+            await self.user_data.remove_item(self, item.id, self.amount, conn=conn)
+            self.user_data.gold += total_reward
+            await self.users.update_user(self.user_data, conn=conn)
+        await self.release()
+
+        embed = embed_util.success_embed(
+            title="Your items have been sold to the market! \N{SCALES}",
+            text=(
+                "Thank you for the selling these items to the market! "
+                "\N{SMILING FACE WITH SMILING EYES} We will be looking forward to working with "
+                f"you again! You sold **{item.full_name} x{self.amount}** for **{total_reward} "
+                f"{self.client.gold_emoji}**"
+            ),
+            footer=f"You now have {self.user_data.gold} gold coins!",
+            cmd=self
+        )
+        await self.edit(embed=embed, view=None)
 
 
 def setup(client) -> list:
