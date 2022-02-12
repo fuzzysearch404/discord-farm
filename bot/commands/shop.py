@@ -38,7 +38,7 @@ class ShopCollection(FarmCommandCollection):
     help_short_description: str = "Purchase upgrades. Sell items to the market or your friends"
 
     def __init__(self, client) -> None:
-        super().__init__(client, [ShopCommand], name="Shop")
+        super().__init__(client, [ShopCommand, MarketCommand], name="Shop")
 
 
 class ShopSource(views.AbstractPaginatorSource):
@@ -52,12 +52,40 @@ class ShopSource(views.AbstractPaginatorSource):
             fmt += (
                 f"**[\N{TRIDENT EMBLEM} {item.level}] {item.full_name}** - **{item.gold_price} "
                 f"{view.command.client.gold_emoji} / farm tile** \n\N{SHOPPING TROLLEY} "
-                f"Start growing in your farm: **/farm plant {item.name}**\n\n"
+                f"Start growing in your farm: **/farm plant \"{item.name}\"**\n\n"
             )
 
         return discord.Embed(
             title=f"\N{CONVENIENCE STORE} Shop: {self.section}",
             color=discord.Color.from_rgb(70, 145, 4),
+            description=fmt
+        )
+
+
+class MarketSource(views.AbstractPaginatorSource):
+    def __init__(self, entries, section: str):
+        super().__init__(entries, per_page=6)
+        self.section = section
+
+    async def format_page(self, page, view):
+        next_refresh = datetime.datetime.now().replace(
+            microsecond=0,
+            second=0,
+            minute=0
+        ) + datetime.timedelta(hours=1)
+        refresh_fmt = discord.utils.format_dt(next_refresh, style="t")
+
+        fmt = f"\N{ALARM CLOCK} Market prices are going to change at: **{refresh_fmt}**\n\n"
+        for item in page:
+            fmt += (
+                f"**{item.full_name}** - Market is buying for: "
+                f"**{item.gold_reward} {view.command.client.gold_emoji} / unit**\n"
+                f"\N{SCALES} Sell to the market: **/market sell \"{item.name}\"**\n\n"
+            )
+
+        return discord.Embed(
+            title=f"\N{SCALES} Market: {self.section}",
+            color=discord.Color.from_rgb(255, 149, 0),
             description=fmt
         )
 
@@ -480,23 +508,67 @@ class ShopItemsCommand(
     description="\N{CONVENIENCE STORE} Lists items available for purchase",
     parent=ShopCommand
 ):
-    """With this command you can see the game items available for purchase."""
+    """With this command you can see all of the game items that you can ever purchase."""
     requires_account = False  # type: bool
 
-    category: Literal["crops", "trees and bushes", "animals"] = \
+    category: Literal["crops", "trees and bushes", "animal products"] = \
         discord.app.Option(description="The category of items to view")
 
     async def callback(self):
         class_per_category = {
             "crops": game_items.Crop,
             "trees and bushes": game_items.Tree,
-            "animals": game_items.Animal
+            "animal products": game_items.Animal
         }
         item_class = class_per_category[self.category]
 
         await views.ButtonPaginatorView(
             self,
             source=ShopSource(
+                entries=[item for item in self.items.all_items if isinstance(item, item_class)],
+                section=f"{item_class.inventory_emoji} {item_class.inventory_name}"
+            )
+        ).start()
+
+
+class MarketCommand(FarmSlashCommand, name="market"):
+    pass
+
+
+class MarketViewCommand(
+    FarmSlashCommand,
+    name="view",
+    description="\N{SHOPPING BAGS} Lists items available for selling",
+    parent=MarketCommand
+):
+    """
+    With this command you can see all of the game items that you can ever sell.<br>
+    \N{ELECTRIC LIGHT BULB} For information about selling items, please see
+    **/help "market sell"**.
+    """
+    requires_account = False  # type: bool
+
+    category: Literal[
+        "crops",
+        "trees and bushes",
+        "animal products",
+        "factory products",
+        "other items"
+    ] = discord.app.Option(description="The category of items to view")
+
+    async def callback(self):
+        class_per_category = {
+            "crops": game_items.Crop,
+            "trees and bushes": game_items.Tree,
+            "animal products": game_items.Animal,
+            "factory products": game_items.Product,
+            "other items": game_items.Special
+        }
+        item_class = class_per_category[self.category]
+
+        await views.ButtonPaginatorView(
+            self,
+            source=MarketSource(
                 entries=[item for item in self.items.all_items if isinstance(item, item_class)],
                 section=f"{item_class.inventory_emoji} {item_class.inventory_name}"
             )
