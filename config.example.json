@@ -23,6 +23,7 @@
             "bot.commands.account",
             "bot.commands.profile",
             "bot.commands.farm",
+            "bot.commands.shop",
             "bot.commands.factory",
             "bot.commands.information"
         ],

@@ -294,7 +294,7 @@ class FactoryMakeCommand(
                     f"{item.full_name}**.\n\n\N{ELECTRIC LIGHT BULB} What you can do about this:\n"
                     "a) Wait for your currently manufacturing products to be produced and collect "
                     "them.\nb) Upgrade your factory capacity if you have gems with: "
-                    "**/upgrade factory capacity**."
+                    "**/shop upgrades buy \"factory capacity\"**."
                 ),
                 cmd=self
             )
@@ -360,7 +360,7 @@ class FactoryMakeCommand(
                 f"**{self.amount}x {item.full_name}**!\nNow we have to wait a bit while the "
                 "factory workers are doing their thing. \N{HOURGLASS WITH FLOWING SAND}"
             ),
-            footer="Track the manufacturing progress with the /factory queue command",
+            footer="Track the manufacturing progress with the \"/factory queue\" command",
             cmd=self
         )
         await self.reply(embed=embed)

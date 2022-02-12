@@ -364,6 +364,7 @@ class Boost:
         "name",
         "info",
         "emoji",
+        "required_level",
         "base_price",
         "price_increase_per_farm_slots",
         "price_increase_per_factory_slots",
@@ -376,6 +377,7 @@ class Boost:
         name: str,
         info: str,
         emoji: str,
+        required_level: int,
         base_price: int,
         price_increase_per_farm_slots: int,
         price_increase_per_factory_slots: int,
@@ -385,6 +387,7 @@ class Boost:
         self.name = name
         self.info = info
         self.emoji = emoji
+        self.required_level = required_level
         self.base_price = base_price
         self.price_increase_per_farm_slots = price_increase_per_farm_slots
         self.price_increase_per_factory_slots = price_increase_per_factory_slots
@@ -707,6 +710,7 @@ def _load_boosts() -> list:
                 name=boost_data['name'],
                 info=boost_data['info'],
                 emoji=boost_data['emoji'],
+                required_level=boost_data['required_level'],
                 base_price=boost_data['base_price'],
                 price_increase_per_farm_slots=increase_farm_slots,
                 price_increase_per_factory_slots=increase_factory_slots,

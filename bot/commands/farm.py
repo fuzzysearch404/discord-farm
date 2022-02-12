@@ -438,7 +438,8 @@ class FarmPlantCommand(
                     f"space tiles**!\nThere is no more space for **{self.tiles} tiles of "
                     f"{item.full_name}**.\n\n\N{ELECTRIC LIGHT BULB} What you can do about this:\n"
                     "a) Wait for your currently planted items to grow and harvest them.\n"
-                    "b) Upgrade your farm size if you have gems with: **/upgrade farm size**."
+                    "b) Upgrade your farm size if you have gems with: "
+                    "**/shop upgrades buy \"farm size\"**."
                 ),
                 cmd=self
             )
