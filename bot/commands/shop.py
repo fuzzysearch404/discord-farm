@@ -16,14 +16,14 @@ PROFILE_ATTR_FACTORY_LEVEL = "factory_level"
 PROFILE_ATTR_STORE_SLOTS = "store_slots"
 
 
-def check_if_upgrade_maxed(user_data, attr: str) -> bool:
+def check_if_upgrade_maxed(user_data, profile_attribute: str) -> bool:
     checks_for_maxed = {
         PROFILE_ATTR_FARM_SLOTS: lambda: user_data.farm_slots >= 30,
         PROFILE_ATTR_FACTORY_SLOTS: lambda: user_data.factory_slots >= 15,
         PROFILE_ATTR_FACTORY_LEVEL: lambda: user_data.factory_level >= 10,
         PROFILE_ATTR_STORE_SLOTS: lambda: user_data.store_slots >= 10
     }
-    return checks_for_maxed[attr]()
+    return checks_for_maxed[profile_attribute]()
 
 
 class ShopCollection(FarmCommandCollection):
@@ -39,6 +39,27 @@ class ShopCollection(FarmCommandCollection):
 
     def __init__(self, client) -> None:
         super().__init__(client, [ShopCommand], name="Shop")
+
+
+class ShopSource(views.AbstractPaginatorSource):
+    def __init__(self, entries, section: str):
+        super().__init__(entries, per_page=6)
+        self.section = section
+
+    async def format_page(self, page, view):
+        fmt = ""
+        for item in page:
+            fmt += (
+                f"**[\N{TRIDENT EMBLEM} {item.level}] {item.full_name}** - **{item.gold_price} "
+                f"{view.command.client.gold_emoji} / farm tile** \n\N{SHOPPING TROLLEY} "
+                f"Start growing in your farm: **/farm plant {item.name}**\n\n"
+            )
+
+        return discord.Embed(
+            title=f"\N{CONVENIENCE STORE} Shop: {self.section}",
+            color=discord.Color.from_rgb(70, 145, 4),
+            description=fmt
+        )
 
 
 class ShopCommand(FarmSlashCommand, name="shop"):
@@ -451,6 +472,35 @@ class ShopBoostersBuyCommand(
             cmd=self
         )
         await self.edit(embed=embed, view=None)
+
+
+class ShopItemsCommand(
+    FarmSlashCommand,
+    name="items",
+    description="\N{CONVENIENCE STORE} Lists items available for purchase",
+    parent=ShopCommand
+):
+    """With this command you can see the game items available for purchase."""
+    requires_account = False  # type: bool
+
+    category: Literal["crops", "trees and bushes", "animals"] = \
+        discord.app.Option(description="The category of items to view")
+
+    async def callback(self):
+        class_per_category = {
+            "crops": game_items.Crop,
+            "trees and bushes": game_items.Tree,
+            "animals": game_items.Animal
+        }
+        item_class = class_per_category[self.category]
+
+        await views.ButtonPaginatorView(
+            self,
+            source=ShopSource(
+                entries=[item for item in self.items.all_items if isinstance(item, item_class)],
+                section=f"{item_class.inventory_emoji} {item_class.inventory_name}"
+            )
+        ).start()
 
 
 def setup(client) -> list:
