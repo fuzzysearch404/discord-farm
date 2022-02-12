@@ -110,9 +110,6 @@ class FarmSlashCommand(discord.app.SlashCommand):
         kwargs = self._inject_level_up_embed(**kwargs)
         return await self.interaction.edit_original_message(*args, **kwargs)
 
-    async def defer(self, *args, **kwargs) -> None:
-        return await self.interaction.response.defer(*args, **kwargs)
-
     def get_full_name(self, _prev: str = None) -> str:
         """Concats the full name of the command"""
         fmt = self._name_
