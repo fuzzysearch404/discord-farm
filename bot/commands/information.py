@@ -164,7 +164,6 @@ class HelpCommand(
                 cd_fmt = time_util.seconds_to_time(duration)
             else:
                 cd_fmt = "Varying"
-
             return f"\n\N{TIMER CLOCK} **Cooldown duration:** {cd_fmt}"
 
         command_features = ""
@@ -193,7 +192,7 @@ class HelpCommand(
         if command._children_:
             subcommands = command._children_.values()
             child_desc = "\n".join(
-                [f"**/{c.get_full_name(c)}** - {c._description_}" for c in subcommands]
+                f"**/{c.get_full_name(c)}** - {c._description_}" for c in subcommands
             )
             embed.add_field(name="Commands", value=child_desc, inline=False)
 

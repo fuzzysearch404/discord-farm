@@ -14,7 +14,7 @@ class AdminCollection(FarmCommandCollection):
         super().__init__(client, [RunCommand], name="Admin")
 
     async def collection_check(self, command) -> None:
-        # I am aware that this is a double check when using "owner_only" = True
+        # I am aware that this is a double check when using "_owner_only" = True
         if not await self.client.is_owner(command.author):
             raise exceptions.CommandOwnerOnlyException()
 
