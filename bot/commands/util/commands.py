@@ -1,4 +1,5 @@
 import discord
+import traceback
 import itertools
 from discord.ext import modules
 
@@ -8,6 +9,50 @@ from bot.commands.util import exceptions
 
 
 AUTOCOMPLETE_RESULTS_LIMIT = 25
+
+
+class ReportCrashModal(discord.ui.Modal):
+
+    def __init__(self, command, error: Exception) -> None:
+        super().__init__("Report this crash to the developers")
+        self.command = command
+        self.error = error
+
+        self.add_item(
+            discord.ui.TextInput(
+                label="How did this crash happen?",
+                value="This crash happened as I... ",
+                style=discord.TextInputStyle.long,
+                max_length=1000
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message(
+            "Thanks! We will look into this as soon as possible",
+            ephemeral=True
+        )
+        embed = discord.Embed(title="Crash report", color=discord.Color.red())
+
+        exc_info = (type(self.error), self.error, self.error.__traceback__)
+        exc_fmt = "".join(traceback.format_exception(*exc_info))
+        embed.description = f"{self.children[0].value}\n\n```py\n{exc_fmt}```"
+
+        embed.set_author(name=f"{interaction.user} ({interaction.user.id})")
+        await self.command.client.log_to_discord("Crash report:", embed=embed)
+
+
+class CrashReportView(discord.ui.View):
+
+    def __init__(self, command, error: Exception):
+        super().__init__(timeout=60)
+        self.command = command
+        self.error = error
+
+    @discord.ui.button(label="Report this crash", style=discord.ButtonStyle.secondary)
+    async def open_modal(self, button: discord.Button, interaction: discord.Interaction):
+        modal = ReportCrashModal(self.command, self.error)
+        await interaction.response.send_modal(modal)
 
 
 class FarmCommandCollection(modules.CommandCollection):
@@ -197,12 +242,15 @@ class FarmSlashCommand(discord.app.SlashCommand):
             message = (
                 "\N{CROSS MARK} Sorry, an unexpected error occurred, while running this command.\n"
                 "\N{PLUNGER} Please try again later. If this issue persists, please report this "
-                "to the official support server with as many details, as possible."
+                "to the official support server with as many details, as possible. "
+                "Alternatively, you can fill out a crash report below. "
             )
+            view = CrashReportView(self, exception)
+
             if not responded:
-                await self.reply(message, ephemeral=True)
+                await self.reply(message, view=view, ephemeral=True)
             else:
-                await self.edit(content=message)
+                await self.edit(content=message, view=view)
 
             await super().error(exception)
 
