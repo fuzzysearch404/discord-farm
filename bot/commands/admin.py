@@ -29,9 +29,9 @@ class RunEvalCommand(
     description="\N{WRENCH} [Developer only] Evaluates Python code",
     parent=RunCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
     # TODO: Use multi line text input, when possible
     body: str = discord.app.Option(description="Python code to execute")
 
@@ -56,9 +56,9 @@ class RunSQLCommand(
     description="\N{WRENCH} [Developer only] Executes a SQL query",
     parent=RunCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     query: str = discord.app.Option(description="SQL query to execute")
 
@@ -103,9 +103,9 @@ class RunRedisCommand(
     description="\N{WRENCH} [Developer only] Executes a Redis command",
     parent=RunCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     command: str = discord.app.Option(description="Redis command to execute")
 

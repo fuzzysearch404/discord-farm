@@ -789,7 +789,7 @@ class FarmStealCommand(
     could be stolen. If there are items that could be stolen, it's going to be stated at the very
     bottom.
     """
-    invoke_cooldown = 900  # type: int
+    _invoke_cooldown: int = 900
 
     player: discord.Member = discord.app.Option(description="Other user, whose farm to rob")
 
@@ -965,8 +965,8 @@ class FishCommand(
     __Icon descriptions:__<br>
     \N{BEAR FACE} - indicates that the reward was doubled, because of the "Archie" booster.
     """
-    required_level = 17  # type: int
-    invoke_cooldown = 3600  # type: int
+    _required_level: int = 17
+    _invoke_cooldown: int = 3600
 
     location: Literal["Pond", "Lake", "River", "Sea"] = discord.app.Option(
         description="Place where to go fishing to. Different places have different amounts of fish."

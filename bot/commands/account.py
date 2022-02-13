@@ -22,8 +22,8 @@ class TutorialCommand(
     name="tutorial",
     description="\N{OPEN BOOK} Shows few brief tips for getting started"
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
 
     async def callback(self) -> None:
         embed = embed_util.congratulations_embed(
@@ -119,7 +119,7 @@ class AccountCreateCommand(
     If you want to reset your progress, you can delete your game account
     with **/account manage**, and then create a new one with this command.
     """
-    requires_account = False  # type: bool
+    _requires_account: bool = False
 
     async def callback(self):
         async with self.acquire() as conn:

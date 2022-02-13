@@ -168,7 +168,7 @@ class FactoryQueueCommand(
     __Icon descriptions:__<br>
     \N{OWL} - indicates that the factory size booster "Alice" is activated.<br>
     """
-    required_level = 3  # type: int
+    _required_level: int = 3
 
     player: Optional[discord.Member] = discord.app.Option(
         description="Other user, whose factory queue to view"
@@ -235,7 +235,7 @@ class FactoryMakeCommand(
     In the **/shop** you can buy more queue slots for your factory and upgrade your factory
     production speed, by buying the factory workers upgrade.
     """
-    required_level = 3  # type: int
+    _required_level: int = 3
 
     product: str = discord.app.Option(description="Product to manifacture", autocomplete=True)
     amount: Optional[int] = discord.app.Option(
@@ -378,7 +378,7 @@ class FactoryCollectCommand(
     \N{ELECTRIC LIGHT BULB} Use **/factory queue** to check which of your products are ready to be
     collected.
     """
-    required_level = 3  # type: int
+    _required_level: int = 3
 
     async def callback(self):
         conn = await self.acquire()

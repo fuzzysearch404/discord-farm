@@ -364,7 +364,7 @@ class ShopBoostersViewCommand(
     \N{ELECTRIC LIGHT BULB} For information about buying boosters, please see
     **/help "shop boosters buy"**.
     """
-    required_level = 7  # type: int
+    _required_level: int = 7
 
     async def callback(self):
         embed = discord.Embed(
@@ -400,7 +400,7 @@ class ShopBoostersBuyCommand(
     Booster prices are dynamically calculated based on various, your current progression related,
     factors such as your experience level.
     """
-    required_level = 7  # type: int
+    _required_level: int = 7
 
     booster: str = discord.app.Option(description="The booster to activate", autocomplete=True)
 
@@ -509,7 +509,7 @@ class ShopItemsCommand(
     parent=ShopCommand
 ):
     """With this command you can see all of the game items that you can ever purchase."""
-    requires_account = False  # type: bool
+    _requires_account: bool = False
 
     category: Literal["crops", "trees and bushes", "animal products"] = \
         discord.app.Option(description="The category of items to view")
@@ -546,7 +546,7 @@ class MarketViewCommand(
     \N{ELECTRIC LIGHT BULB} For information about selling items, please see
     **/help "market sell"**.
     """
-    requires_account = False  # type: bool
+    _requires_account: bool = False
 
     category: Literal[
         "crops",
@@ -653,7 +653,7 @@ class MarketSellCommand(
         embed = embed_util.success_embed(
             title="Your items have been sold to the market! \N{SCALES}",
             text=(
-                "Thank you for the selling these items to the market! "
+                "Thank you for selling these items to the market! "
                 "\N{SMILING FACE WITH SMILING EYES} We will be looking forward to working with "
                 f"you again! You sold **{item.full_name} x{self.amount}** for **{total_reward} "
                 f"{self.client.gold_emoji}**"

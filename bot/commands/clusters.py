@@ -43,7 +43,7 @@ class ClustersCollection(FarmCommandCollection):
         self.client.loop.run_until_complete(self._ensure_all_required_data())
 
     async def collection_check(self, command) -> bool:
-        # I am aware that this is a double check when using "owner_only" = True
+        # I am aware that this is a double check when using "_owner_only" = True
         if not await self.client.is_owner(command.author):
             raise exceptions.CommandOwnerOnlyException()
 
@@ -329,9 +329,9 @@ class ClustersEvalCommand(
     description="\N{SATELLITE} [Developer only] Runs Python code on all clusters",
     parent=ClustersCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
     # TODO: Use multi line text input, when possible
     body: str = discord.app.Option(description="Python code to execute")
 
@@ -349,9 +349,9 @@ class ClustersStatusCommand(
     description="\N{SATELLITE} [Developer only] Shows bot's all cluster statuses",
     parent=ClustersCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     async def callback(self) -> None:
         embed = discord.Embed()
@@ -374,9 +374,9 @@ class ClustersLogoutCommand(
     description="\N{SATELLITE} [Developer only] Logs off this or all bot instances",
     parent=ClustersCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     run_locally: Optional[bool] = discord.app.Option(
         description="Set to True to logout only the current instance",
@@ -402,9 +402,9 @@ class ClustersCommandsSyncCommand(
     description="\N{SATELLITE} [Developer only] Synchronizes commands based on this instance",
     parent=ClustersCommandsCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     global_commands: Optional[bool] = discord.app.Option(
         description="If set to True, global application commands are going to be synced",
@@ -432,9 +432,9 @@ class ClustersCommandsLoadModuleCommand(
     description="\N{SATELLITE} [Developer only] Loads an extension",
     parent=ClustersCommandsCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     extension: str = discord.app.Option(description="Extension name")
 
@@ -455,9 +455,9 @@ class ClustersCommandsUnloadModuleCommand(
     description="\N{SATELLITE} [Developer only] Unloads an extension",
     parent=ClustersCommandsCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     extension: str = discord.app.Option(description="Extension name")
 
@@ -478,9 +478,9 @@ class ClustersCommandsReloadModuleCommand(
     description="\N{SATELLITE} [Developer only] Reloads an extension",
     parent=ClustersCommandsCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     extension: str = discord.app.Option(description="Extension name")
 
@@ -505,9 +505,9 @@ class ClustersGameMasterReloadItemsCommand(
     description="\N{SATELLITE} [Developer only] Reloads game items data on all clusters",
     parent=ClustersGameMasterCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     async def callback(self) -> None:
         await get_cluster_collection(self.client).send_set_items_message()
@@ -520,9 +520,9 @@ class ClustersGameMasterEditNewsCommand(
     description="\N{SATELLITE} [Developer only] Edits the game news",
     parent=ClustersGameMasterCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
     # TODO: Use multi line text input, when possible
     news: str = discord.app.Option(description="The news text to set")
 
@@ -540,9 +540,9 @@ class ClustersGameMasterEditMaintenanceCommand(
     description="\N{SATELLITE} [Developer only] Edits the bot's maintenance status",
     parent=ClustersGameMasterCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     enabled: bool = discord.app.Option(description="Set to True to enable maintenance")
 
@@ -560,9 +560,9 @@ class ClustersGameMasterFarmGuardCommand(
     description="\N{SATELLITE} [Developer only] Enables the farm guard feature",
     parent=ClustersGameMasterCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     duration: int = discord.app.Option(description="Duration in seconds", min=0)
 

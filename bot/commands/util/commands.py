@@ -38,12 +38,13 @@ class _DBContextAcquire:
 
 class FarmSlashCommand(discord.app.SlashCommand):
     """Base class for all slash commands."""
-    avoid_maintenance: bool = True
-    owner_only: bool = False
-    requires_account: bool = True
-    required_level: int = 0
-    invoke_cooldown: int = None  # Negative = Shows as "Varying" in help
-    inner_cooldown: int = None  # Managed inside of the command itself
+    _avoid_maintenance: bool = True
+    _owner_only: bool = False
+    _requires_account: bool = True
+    _required_level: int = 0
+    _invoke_cooldown: int = None  # Negative = Shows as "Varying" in help
+    _inner_cooldown: int = None  # Managed inside of the command itself
+    # The below ones are not for touching
     _db = None
     _level_up: bool = False
 
@@ -135,15 +136,15 @@ class FarmSlashCommand(discord.app.SlashCommand):
         return results
 
     async def pre_check(self) -> bool:
-        if self.avoid_maintenance and self.client.maintenance_mode:
+        if self._avoid_maintenance and self.client.maintenance_mode:
             if not await self.client.is_owner(self.author):
                 raise exceptions.GameIsInMaintenanceException()
 
-        if self.owner_only:
+        if self._owner_only:
             if not await self.client.is_owner(self.author):
                 raise exceptions.CommandOwnerOnlyException()
 
-        if self.requires_account:
+        if self._requires_account:
             try:
                 self.user_data = await self.users.get_user(self.author.id)
             except exceptions.UserNotFoundException:
@@ -153,17 +154,17 @@ class FarmSlashCommand(discord.app.SlashCommand):
                     "\N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE}"
                 )
 
-            if self.required_level > self.user_data.level:
-                raise exceptions.InsufficientUserLevelException(self.required_level)
+            if self._required_level > self.user_data.level:
+                raise exceptions.InsufficientUserLevelException(self._required_level)
 
         # Check last, to not trigger cooldown if something above failed
-        if self.invoke_cooldown is not None:
+        if self._invoke_cooldown is not None:
             cmd_id = self.get_full_name()
             command_ttl = await self.redis.execute_command("TTL", f"cd:{self.author.id}:{cmd_id}")
 
             if command_ttl == -2:
                 await self.redis.execute_command(
-                    "SET", f"cd:{self.author.id}:{cmd_id}", cmd_id, "EX", self.invoke_cooldown
+                    "SET", f"cd:{self.author.id}:{cmd_id}", cmd_id, "EX", self._invoke_cooldown
                 )
             else:
                 ttl_fmt = time.seconds_to_time(command_ttl)
@@ -278,10 +279,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
         user_id = self.author.id if other_user_id is None else other_user_id
         command_ttl = await self.redis.execute_command("TTL", f"cd:{user_id}:{identifier}")
 
-        if command_ttl == -2:
-            return False
-        else:
-            return command_ttl
+        return False if command_ttl == -2 else command_ttl
 
     async def set_cooldown(self, duration: int, identifier: str) -> None:
         await self.redis.execute_command(

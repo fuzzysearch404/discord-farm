@@ -15,7 +15,7 @@ class BetaCollection(FarmCommandCollection):
         super().__init__(client, [BetaCommand], name="Beta")
 
     async def collection_check(self, command) -> None:
-        # I am aware that this is a double check when using "owner_only" = True
+        # I am aware that this is a double check when using "_owner_only" = True
         if not await self.client.is_owner(command.author):
             raise exceptions.CommandOwnerOnlyException()
 
@@ -34,7 +34,7 @@ class SetGoldCommand(
     description="\N{TEST TUBE} [Beta only] Sets the gold amount",
     parent=SetCommand
 ):
-    owner_only = True  # type: bool
+    _owner_only: bool = True
 
     gold: int = discord.app.Option(description="User's new gold amount")
 
@@ -50,7 +50,7 @@ class SetGemsCommand(
     description="\N{TEST TUBE} [Beta only] Sets the gems amount",
     parent=SetCommand
 ):
-    owner_only = True  # type: bool
+    _owner_only: bool = True
 
     gems: int = discord.app.Option(description="User's new gems amount")
 
@@ -66,7 +66,7 @@ class SetXPCommand(
     description="\N{TEST TUBE} [Beta only] Sets the XP amount",
     parent=SetCommand
 ):
-    owner_only = True  # type: bool
+    _owner_only: bool = True
 
     xp: int = discord.app.Option(description="User's new XP amount")
 
@@ -83,7 +83,7 @@ class SetFarmSizeCommand(
     description="\N{TEST TUBE} [Beta only] Sets the farm size",
     parent=SetCommand
 ):
-    owner_only = True  # type: bool
+    _owner_only: bool = True
 
     size: int = discord.app.Option(description="User's new farm size")
 
@@ -99,7 +99,7 @@ class SetFactorySizeCommand(
     description="\N{TEST TUBE} [Beta only] Sets the factory size",
     parent=SetCommand
 ):
-    owner_only = True  # type: bool
+    _owner_only: bool = True
 
     size: int = discord.app.Option(description="User's new factory size")
 
@@ -115,7 +115,7 @@ class SetItemCommand(
     description="\N{TEST TUBE} [Beta only] Gets game items",
     parent=SetCommand
 ):
-    owner_only = True  # type: bool
+    _owner_only: bool = True
 
     item: str = discord.app.Option(description="Item to add", autocomplete=True)
     amount: int = discord.app.Option(description="How many items to add")
@@ -135,7 +135,7 @@ class SetChestCommand(
     description="\N{TEST TUBE} [Beta only] Gets chests",
     parent=SetCommand
 ):
-    owner_only = True  # type: bool
+    _owner_only: bool = True
 
     chest: str = discord.app.Option(description="Chest to add", autocomplete=True)
     amount: int = discord.app.Option(description="How many chests to add")
@@ -155,7 +155,7 @@ class SetBoosterCommand(
     description="\N{TEST TUBE} [Beta only] Gets booster",
     parent=SetCommand
 ):
-    owner_only = True  # type: bool
+    _owner_only: bool = True
 
     booster: str = discord.app.Option(description="Booster to add", autocomplete=True)
     duration: int = discord.app.Option(description="Duration in seconds")
@@ -181,9 +181,9 @@ class ActionsFlushRedisCommand(
     description="\N{TEST TUBE} [Beta only] Flushes the redis database",
     parent=ActionsCommand
 ):
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
-    owner_only = True  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
     async def callback(self) -> None:
         await self.client.redis.flushdb()

@@ -49,7 +49,7 @@ class HelpAllCommandsMessageSource(views.AbstractPaginatorSource):
         for cmd in collection.commands:
             for child in cmd.find_all_lowest_children(cmd):
                 # Hide owner only commands
-                if child.owner_only:
+                if child._owner_only:
                     continue
                 # Hide guild specific commands if not in the same guild
                 if child._guilds_ and current_guild_id not in child._guilds_:
@@ -90,8 +90,8 @@ class HelpCommand(
     If you managed to get here, that means you already know how to use the help command to get help
     for a specific command usage information. Amazing! \N{THUMBS UP SIGN}
     """
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
 
     command: Optional[str] = discord.app.Option(
         description="The name of the command to show detailed help for",
@@ -110,7 +110,7 @@ class HelpCommand(
             for command in category.commands:
                 for child in command.find_all_lowest_children(command):
                     # Hide owner only commands
-                    if child.owner_only:
+                    if child._owner_only:
                         continue
                     # Hide guild specific commands if not in the same guild
                     if child._guilds_ and current_guild_id not in child._guilds_:
@@ -168,14 +168,15 @@ class HelpCommand(
             return f"\n\N{TIMER CLOCK} **Cooldown duration:** {cd_fmt}"
 
         command_features = ""
-        if command.owner_only:
+        if command._owner_only:
             command_features += "\n\N{WRENCH} This command can only be used by the bot owners"
-        if command.required_level:
-            command_features += f"\n\N{TRIDENT EMBLEM} **Required level:** {command.required_level}"
-        if command.inner_cooldown:
-            command_features += cooldown_fmt(command.inner_cooldown)
-        elif command.invoke_cooldown:
-            command_features += cooldown_fmt(command.invoke_cooldown)
+        if command._required_level:
+            command_features += \
+                f"\n\N{TRIDENT EMBLEM} **Required level:** {command._required_level}"
+        if command._inner_cooldown:
+            command_features += cooldown_fmt(command._inner_cooldown)
+        elif command._invoke_cooldown:
+            command_features += cooldown_fmt(command._invoke_cooldown)
 
         if command_features:
             embed.add_field(name="Properties", value=command_features, inline=False)
@@ -232,8 +233,8 @@ class NewsCommand(
     As displaying long contents in commands is limited, for more information,
     consider joining the bot's official support server.
     """
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
 
     async def callback(self) -> None:
         embed = discord.Embed(
@@ -260,8 +261,8 @@ class InviteCommand(
     You can invite the bot to your own server or join the support server and play the bot there
     with Discord Farm's community.
     """
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
 
     async def callback(self) -> None:
         permissions = discord.Permissions.none()
@@ -302,8 +303,8 @@ class StatusCommand(
     description="\N{HEAVY BLACK HEART} Shows the bot's status, version and credits"
 ):
     """Thanks to Aneteee for helping out with the documentation for bot commands."""
-    avoid_maintenance = False  # type: bool
-    requires_account = False  # type: bool
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
 
     async def callback(self) -> None:
         embed = discord.Embed(

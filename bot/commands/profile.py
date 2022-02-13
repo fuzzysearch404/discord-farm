@@ -352,7 +352,7 @@ class BoostersCommand(
     \N{ELECTRIC LIGHT BULB} You can purchase boosters from the shop via **/shop boosters**
     after reaching level 7.
     """
-    required_level = 7  # type: int
+    _required_level: int = 7
 
     player: Optional[discord.Member] = discord.app.Option(
         description="Other user, whose boosters to view"
@@ -769,7 +769,7 @@ class ChestsDailyCommand(
     Do you want that cool, shiny chest? Well, you can get one for free every day with this command.
     <br>\N{ELECTRIC LIGHT BULB} For more information about chests, see **/help chests view**.
     """
-    invoke_cooldown = 82800  # type: int
+    _invoke_cooldown: int = 82800
 
     async def callback(self) -> None:
         chests_and_rarities = {
@@ -813,7 +813,7 @@ class ChestsHourlyCommand(
     Do you want that cool, shiny chest? Well, you can get one for free every hour with this command.
     <br>\N{ELECTRIC LIGHT BULB} For more information about chests, see **/help chests view**.
     """
-    invoke_cooldown = 3600  # type: int
+    _invoke_cooldown: int = 3600
 
     async def callback(self):
         chests_and_rarities = {
