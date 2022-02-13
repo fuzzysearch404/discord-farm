@@ -1,6 +1,7 @@
 import discord
 import datetime
-from typing import Literal
+from contextlib import suppress
+from typing import Optional, Literal
 
 from core import game_items
 from .util import views
@@ -38,7 +39,7 @@ class ShopCollection(FarmCommandCollection):
     help_short_description: str = "Purchase upgrades. Sell items to the market or your friends"
 
     def __init__(self, client) -> None:
-        super().__init__(client, [ShopCommand, MarketCommand], name="Shop")
+        super().__init__(client, [ShopCommand, MarketCommand, TradesCommand], name="Shop")
 
 
 class ShopSource(views.AbstractPaginatorSource):
@@ -90,6 +91,51 @@ class MarketSource(views.AbstractPaginatorSource):
         )
 
 
+class TradesSource(views.AbstractPaginatorSource):
+    def __init__(self, entries, server_name: str, own_trades: bool = False):
+        super().__init__(entries, per_page=6)
+        self.server_name = discord.utils.escape_markdown(server_name)
+        self.own_trades = own_trades
+
+    async def format_page(self, page, view):
+        who = "All" if not self.own_trades else "Your"
+        title = f"\N{HANDSHAKE} {who} trade offers in \"{self.server_name}\""
+        embed = discord.Embed(title=title, color=discord.Color.from_rgb(229, 232, 21))
+
+        embed.description = (
+            f"\N{MAN IN TUXEDO} Welcome to the *\"{self.server_name}\"* trading hall! "
+            "Here you can trade items with your friends!\n\N{SQUARED NEW} "
+            "To create a new trade in this server, use the **/trades create** command\n\n"
+        )
+
+        if not page:
+            embed.description += (
+                "\N{CROSS MARK} It's empty in here! There are only some cricket noises... "
+                "\N{CRICKET}"
+            )
+            return embed
+
+        for trade in page:
+            item = view.command.items.find_item_by_id(trade['item_id'])
+
+            if not self.own_trades:
+                fmt = (
+                    f"\N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE} Seller: {trade['username']}\n"
+                    f"\N{SHOPPING TROLLEY} Buy: **/trades accept {trade['id']}**"
+                )
+            else:
+                fmt = f"\N{WASTEBASKET} Delete: **/trades delete {trade['id']}**"
+
+            gold_emoji = view.command.client.gold_emoji
+            embed.add_field(
+                name=f"{item.full_name} x{trade['amount']} for {gold_emoji} {trade['price']}",
+                value=fmt,
+                inline=False
+            )
+
+        return embed
+
+
 class ShopCommand(FarmSlashCommand, name="shop"):
     pass
 
@@ -101,7 +147,7 @@ class ShopUpgradesCommand(FarmSlashCommand, name="upgrades", parent=ShopCommand)
 class ShopUpgradesViewCommand(
     FarmSlashCommand,
     name="view",
-    description="\N{WHITE MEDIUM STAR} Lists upgrades available for purchase",
+    description="\N{WHITE MEDIUM STAR} Lists all upgrades available for purchase",
     parent=ShopUpgradesCommand
 ):
     """
@@ -356,7 +402,7 @@ class ShopBoostersCommand(FarmSlashCommand, name="boosters", parent=ShopCommand)
 class ShopBoostersViewCommand(
     FarmSlashCommand,
     name="view",
-    description="\N{UPWARDS BLACK ARROW} Lists boosters available for purchase",
+    description="\N{UPWARDS BLACK ARROW} Lists all boosters available for purchase",
     parent=ShopBoostersCommand
 ):
     """
@@ -505,7 +551,7 @@ class ShopBoostersBuyCommand(
 class ShopItemsCommand(
     FarmSlashCommand,
     name="items",
-    description="\N{CONVENIENCE STORE} Lists items available for purchase",
+    description="\N{CONVENIENCE STORE} Lists all items available for purchase",
     parent=ShopCommand
 ):
     """With this command you can see all of the game items that you can ever purchase."""
@@ -538,7 +584,7 @@ class MarketCommand(FarmSlashCommand, name="market"):
 class MarketViewCommand(
     FarmSlashCommand,
     name="view",
-    description="\N{SCALES} Lists items available for selling",
+    description="\N{SCALES} Lists all items available for selling",
     parent=MarketCommand
 ):
     """
@@ -662,6 +708,387 @@ class MarketSellCommand(
             cmd=self
         )
         await self.edit(embed=embed, view=None)
+
+
+class TradesCommand(FarmSlashCommand, name="trades"):
+    pass
+
+
+class TradesListCommand(
+    FarmSlashCommand,
+    name="list",
+    description="\N{PAGE WITH CURL} Lists all active trades in this server",
+    parent=TradesCommand
+):
+    """
+    Trades are a way to sell and buy items between players. Trade offers are created per
+    server. You can post a limited amount of trade offers per server, but you can buy
+    more trading slots with gold from the **/shop**.<br>
+    \N{ELECTRIC LIGHT BULB} To create a trade offer, use the **/trades create** command.
+    """
+    _required_level: int = 5
+
+    owned: Optional[bool] = discord.app.Option(
+        description="Set to true, to only list your created trades",
+        default=False
+    )
+
+    async def callback(self):
+        async with self.acquire() as conn:
+            if not self.owned:
+                query = "SELECT * FROM store WHERE guild_id = $1;"
+                trades_data = await conn.fetch(query, self.guild.id)
+            else:
+                query = "SELECT * FROM store WHERE guild_id = $1 AND user_id = $2;"
+                trades_data = await conn.fetch(query, self.guild.id, self.author.id)
+
+        await views.ButtonPaginatorView(
+            self,
+            source=TradesSource(
+                entries=trades_data,
+                server_name=self.guild.name,
+                own_trades=self.owned
+            )
+        ).start()
+
+
+class TradesCreateCommand(
+    FarmSlashCommand,
+    name="create",
+    description="\N{SQUARED NEW} Creates a new trade offer",
+    parent=TradesCommand
+):
+    """
+    This command posts a new trade offer in the Discord server you are currently in.
+    When creating a trade offer, you have to specify the item you want to sell, the amount
+    of items you want to sell, and the price you want to sell them for.
+    When trade offer is created, the corresponding items are removed from your inventory.<br>
+    \N{ELECTRIC LIGHT BULB} To view already posted trade offers in this server, use the
+    **/trades list** command.
+    """
+    _required_level: int = 5
+
+    item: str = discord.app.Option(description="Item to trade", autocomplete=True)
+    amount: int = discord.app.Option(description="How many items to trade", min=1, max=2000)
+    price: Literal["cheap", "average", "expensive", "very expensive"] = \
+        discord.app.Option(description="Price for the items you want to sell")
+
+    async def autocomplete(self, options, focused):
+        return discord.AutoCompleteResponse(self.all_items_autocomplete(options[focused]))
+
+    async def callback(self):
+        item = self.lookup_item(self.item)
+
+        if not isinstance(item, game_items.MarketItem):
+            embed = embed_util.error_embed(
+                title="This item can't be traded!",
+                text=f"Sorry, you can't trade **{item.full_name}** here!",
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        conn = await self.acquire()
+
+        item_data = await self.user_data.get_item(self, item.id, conn=conn)
+        if not item_data or item_data['amount'] < self.amount:
+            await self.release()
+            return await self.reply(embed=embed_util.not_enough_items(self, item, self.amount))
+
+        base_min, base_max = item.min_market_price, item.max_market_price
+        prices_map = {
+            "cheap": lambda: base_min * self.amount,
+            "average": lambda: int(((base_min + base_max) / 2) * self.amount),
+            "expensive": lambda: base_max * self.amount,
+            "very expensive": lambda: int((base_max * self.amount) * 1.25)
+        }
+        total_price = prices_map[self.price]()
+
+        query = "SELECT COUNT(*) FROM store WHERE user_id = $1 AND guild_id = $2;"
+        used_slots = await conn.fetchval(query, self.author.id, self.guild.id)
+        if used_slots >= self.user_data.store_slots:
+            await self.release()
+
+            embed = embed_util.error_embed(
+                title="You have reached maximum active trade offers in this server!",
+                text=(
+                    "Oh no! We can't create this trade offer, because you already have used "
+                    f"**{used_slots} of your {self.user_data.store_slots}** available trading "
+                    "deals! \N{BAR CHART}\n\n"
+                    "\N{ELECTRIC LIGHT BULB} What you can do about this:\na) Wait for someone "
+                    "to accept any of your current trades.\nb) Delete some trades.\n"
+                    "c) Upgrade your max. deal capacity with the "
+                    "**/shop upgrades buy \"trade deals\"** command."
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        async with conn.transaction():
+            await self.user_data.remove_item(self, item.id, self.amount, conn=conn)
+
+            # We store username, to avoid fetching the user from Discord's
+            # API just to get the username every time someone wants to view
+            # the trades. (we don't store members data in bot's cache)
+            query = """
+                    INSERT INTO store
+                    (guild_id, user_id, username, item_id, amount, price)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                    RETURNING id;
+                    """
+            trade_id = await conn.fetchval(
+                query,
+                self.guild.id,
+                self.author.id,
+                self.author.name,
+                item.id,
+                self.amount,
+                total_price
+            )
+
+        await self.release()
+
+        embed = embed_util.success_embed(
+            title="Trade offer is successfully created!",
+            text=(
+                "All set! The trade offer is up! \N{THUMBS UP SIGN}\n"
+                f"You have put **{self.amount}x {item.full_name}** for sale at a price of "
+                f"**{total_price}** {self.client.gold_emoji} for this server members!\n\n"
+                "\N{BUSTS IN SILHOUETTE} If you know the person you are selling your items to, "
+                f"they can use this command to buy your items: **/trades accept {trade_id}**\n"
+                "\N{WASTEBASKET} If you want to cancel this trade offer use: "
+                f"**/trades delete {trade_id}**"
+            ),
+            cmd=self
+        )
+        await self.reply(embed=embed)
+
+
+class TradesAcceptCommand(
+    FarmSlashCommand,
+    name="accept",
+    description="\N{HANDSHAKE} Accepts someone else's trade offer",
+    parent=TradesCommand
+):
+    """
+    This command accepts a trade offer and purchases the listed items from the other player.
+    You can only purchase items that are listed in the current Discord server you are in.<br>
+    \N{ELECTRIC LIGHT BULB} To create a trade offer in this server, use the
+    **/trades create** command.<br>
+    You can't accept your own trades, but you can delete them with the **/trades delete** command.
+    """
+    _required_level: int = 5
+
+    id: int = discord.app.Option(
+        description="Trade ID of the trade to accept",
+        min=1,
+        max=2147483647  # PostgreSQL's max int value
+    )
+
+    async def reject_for_not_found(self, edit: bool):
+        embed = embed_util.error_embed(
+            title="Trade not found!",
+            text=(
+                f"I could not find a trade with **ID: {self.id}**! \N{CONFUSED FACE}\n"
+                "This trade might already be accepted by someone else or deleted by the "
+                "trader itself. View all the available trades with the **/trades list** "
+                "command. \N{CLIPBOARD}"
+            ),
+            cmd=self
+        )
+        if not edit:
+            await self.reply(embed=embed)
+        else:
+            await self.edit(embed=embed, view=None)
+
+    async def callback(self):
+        async with self.acquire() as conn:
+            query = "SELECT * FROM store WHERE id = $1 AND guild_id = $2;"
+            trade_data = await conn.fetchrow(query, self.id, self.guild.id)
+
+        if not trade_data:
+            return await self.reject_for_not_found(False)
+
+        if trade_data['user_id'] == self.author.id:
+            embed = embed_util.error_embed(
+                title="You can't trade with yourself!",
+                text=(
+                    "\N{WASTEBASKET} If you want to cancel this trade, use: "
+                    f"**/trades delete {self.id}**"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        item = self.items.find_item_by_id(trade_data['item_id'])
+        amount, price = trade_data['amount'], trade_data['price']
+
+        if item.level > self.user_data.level:
+            embed = embed_util.error_embed(
+                title="\N{LOCK} Insufficient experience level!",
+                text=(
+                    f"Sorry, you can't buy **{item.full_name}** just yet! "
+                    "What are you planning to do with an item, that you can't even use yet? "
+                    "I'm just curious... \N{THINKING FACE}"
+                ),
+                footer=f"This item is going to be unlocked at experience level {item.level}.",
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        try:
+            seller_member = await self.guild.fetch_member(trade_data['user_id'])
+        except discord.HTTPException as e:
+            if e.status != 404:
+                raise e
+
+            async with self.acquire() as conn:
+                query = "DELETE FROM store WHERE id = $1;"
+                await conn.execute(query, self.id)
+
+            embed = embed_util.error_embed(
+                title="Oops, the trader has vanished!",
+                text=(
+                    "Looks like this trader has left this cool server, so their trade isn't "
+                    "available anymore. Sorry! \N{CRYING FACE}"
+                ),
+                footer="Let's hope that they will join back later",
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        embed = embed_util.prompt_embed(
+            title="Do you accept this trade offer?",
+            text="Are you sure that you want to buy these items from this user?",
+            cmd=self
+        )
+        embed.add_field(
+            name="\N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE} Seller",
+            value=seller_member.mention
+        )
+        embed.add_field(name="\N{LABEL} Item", value=f"{amount}x {item.full_name}")
+        embed.add_field(name="\N{MONEY BAG} Total price", value=f"{price} {self.client.gold_emoji}")
+
+        confirm = await views.ConfirmPromptView(
+            self,
+            initial_embed=embed,
+            emoji=self.client.gold_emoji,
+            label="Accept trade offer",
+            deny_label="Deny trade offer"
+        ).prompt()
+
+        if not confirm:
+            return
+
+        conn = await self.acquire()
+        # Trade might already be deleted by now
+        query = "SELECT * FROM store WHERE id = $1;"
+        trade_data = await conn.fetchrow(query, self.id)
+
+        if not trade_data:
+            await self.release()
+            return await self.reject_for_not_found(True)
+
+        user_data = await self.users.get_user(self.author.id, conn=conn)
+        trade_user_data = await self.users.get_user(trade_data['user_id'], conn=conn)
+
+        if user_data.gold < price:
+            await self.release()
+            return await self.edit(embed=embed_util.no_money_embed(self, price), view=None)
+
+        async with conn.transaction():
+            query = "DELETE FROM store WHERE id = $1;"
+            await conn.execute(query, self.id)
+            await user_data.give_item(self, item.id, amount, conn=conn)
+            user_data.gold -= price
+            trade_user_data.gold += price
+            await self.users.update_user(user_data, conn=conn)
+            await self.users.update_user(trade_user_data, conn=conn)
+        await self.release()
+
+        embed = embed_util.success_embed(
+            title="Successfully bought items!",
+            text=(
+                f"You bought **{amount}x {item.full_name}** from {seller_member.mention} for "
+                f"**{price}** {self.client.gold_emoji}\n"
+                "What a great trade you both just made! \N{HANDSHAKE}"
+            ),
+            cmd=self
+        )
+        await self.edit(embed=embed, view=None)
+
+        if not trade_user_data.notifications:
+            return
+
+        embed = embed_util.success_embed(
+            title="Congratulations! You just made a sale!",
+            text=(
+                f"Hey boss! I only came to say that {self.author.mention} just accepted your trade "
+                f"offer and bought your **{amount}x {item.full_name}** for **{price}** "
+                f"{self.client.gold_emoji}"
+            ),
+            cmd=self,
+            private=True
+        )
+        # User might have direct messages disabled
+        with suppress(discord.HTTPException):
+            await seller_member.send(embed=embed)
+
+
+class TradesDeleteCommand(
+    FarmSlashCommand,
+    name="delete",
+    description="\N{WASTEBASKET} Cancels your trade offer",
+    parent=TradesCommand
+):
+    """
+    This command is used to cancel a trade offer. You can only cancel your own trade offers.
+    Canceling a trade offer will return the items to your inventory.
+    """
+    _required_level: int = 5
+
+    id: int = discord.app.Option(
+        description="Trade ID of the trade to delete",
+        min=1,
+        max=2147483647  # PostgreSQL's max int value
+    )
+
+    async def callback(self):
+        conn = await self.acquire()
+        # It is fine if they delete their own trades from other guilds
+        query = "SELECT * FROM store WHERE id = $1 AND user_id = $2;"
+        trade_data = await conn.fetchrow(query, self.id, self.author.id)
+
+        if not trade_data:
+            await self.release()
+            embed = embed_util.error_embed(
+                title="Trade offer not found!",
+                text=(
+                    f"Hmm... I could not find your trade **ID: {self.id}**! You might have "
+                    "provided wrong ID or this trade that does not exist anymore. \N{THINKING FACE}"
+                    "\nCheck your created trades in this server with the **/trades list** command."
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        async with conn.transaction():
+            query = "DELETE FROM store WHERE id = $1;"
+            await conn.execute(query, self.id)
+            item_id, amount = trade_data['item_id'], trade_data['amount']
+            await self.user_data.give_item(self, item_id, amount, conn=conn)
+        await self.release()
+
+        item = self.items.find_item_by_id(trade_data['item_id'])
+        embed = embed_util.success_embed(
+            title="Trade offer canceled!",
+            text=(
+                f"\N{WASTEBASKET} Okay, I removed your trade offer: **{trade_data['amount']}x "
+                f"{item.full_name} for {trade_data['price']} {self.client.gold_emoji}**"
+            ),
+            footer="These items are now moved back to your /inventory",
+            cmd=self
+        )
+        await self.reply(embed=embed)
 
 
 def setup(client) -> list:
