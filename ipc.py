@@ -393,7 +393,7 @@ class NotificationsService(IPCService):
 
         item = self.ipc.item_pool.find_item_by_id(reminder.item_id)
 
-        url = f"https://discord.com/api/v9/channels/{reminder.channel_id}/messages"
+        url = f"https://discord.com/api/v10/channels/{reminder.channel_id}/messages"
         headers = {
             "Authorization": f"Bot {self.ipc.config['bot']['discord-token']}",
             "User-Agent": (
