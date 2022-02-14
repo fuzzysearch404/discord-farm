@@ -29,7 +29,7 @@ class ReportCrashModal(discord.ui.Modal):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.send_message(
-            "Thanks! We will look into this as soon as possible",
+            "Thanks! We will look into this as soon as possible.",
             ephemeral=True
         )
         embed = discord.Embed(title="Crash report", color=discord.Color.red())
@@ -39,6 +39,7 @@ class ReportCrashModal(discord.ui.Modal):
         embed.description = f"{self.children[0].value}\n\n```py\n{exc_fmt}```"
 
         embed.set_author(name=f"{interaction.user} ({interaction.user.id})")
+        embed.set_footer(text=f"Command: /{self.command.get_full_name()}")
         await self.command.client.log_to_discord("Crash report:", embed=embed)
 
 
