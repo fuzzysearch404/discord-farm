@@ -780,7 +780,8 @@ class FarmStealCommand(
     """
     You can try out your luck and attempt stealing some harvest from other player farms.
     You can only steal items that are fully grown, not rotten and not already stolen from.
-    You can't choose what items you will get, it is chosen randomly.
+    You can't choose what items you will get, it is chosen randomly. There is always
+    a small chance that the stealing attempt might fail and you get fined.
     If the targeted user has a dog booster, your chances of a successful robbery are lower.<br>
     \N{ELECTRIC LIGHT BULB} Use **/farm field @user** to check if some person has items that
     could be stolen. If there are items that could be stolen, it's going to be stated at the very
@@ -823,6 +824,35 @@ class FarmStealCommand(
                 footer=(
                     "The target user must have items ready for harvest and the items must not be "
                     "already robbed from by you or anyone else"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        # 5% chance to fail
+        if not random.randint(0, 19):
+            fail_message = (
+                "tripped over a wire",
+                "fell down the stairs",
+                "got lost",
+                "got ran over by horse",
+                "got caught by neighbor",
+                "fell into a trap"
+            )
+            penalty = 50 * self.user_data.level
+
+            if penalty <= self.user_data.gold:
+                self.user_data.gold -= penalty
+                await self.users.update_user(self.user_data)
+
+            target_name = self.player.nick or self.player.name
+            embed = embed_util.error_embed(
+                title="We failed to steal the items!",
+                text=(
+                    f"As we were approaching {target_name}, I {random.choice(fail_message)}, and "
+                    f"we got arrested by the police. \N{POLICE OFFICER}\nThey charged us both with "
+                    f"a penalty of {self.client.gold_emoji} **{penalty}**! "
+                    "I'm sorry, this was totally my fault! \N{DIZZY FACE}"
                 ),
                 cmd=self
             )
