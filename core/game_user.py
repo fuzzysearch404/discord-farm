@@ -2,9 +2,27 @@ import asyncpg
 import datetime
 import jsonpickle
 
-
 from bot.commands.util import exceptions
 from core.game_items import GameItem
+
+
+class UserNotifications:
+    FARM_HARVEST_READY: int = 1 << 0
+    FARM_ROBBED: int = 1 << 1
+    TRADE_ACCEPTED: int = 1 << 2
+
+    __slots__ = ("value", )
+
+    def __init__(self, value: int):
+        self.value = value
+
+    @classmethod
+    def all_enabled(cls):
+        return cls(0b111)
+
+    def is_enabled(self, notification: int) -> bool:
+        """Checks if notifications integer bit is set to one"""
+        return self.value & notification == notification
 
 
 class User:
@@ -34,7 +52,7 @@ class User:
         factory_slots: int,
         factory_level: int,
         store_slots: int,
-        notifications: bool,
+        notifications: int,
         registration_date: datetime.date
     ) -> None:
         self.user_id = user_id
@@ -45,7 +63,7 @@ class User:
         self.factory_slots = factory_slots
         self.factory_level = factory_level
         self.store_slots = store_slots
-        self.notifications = notifications
+        self.notifications = UserNotifications(notifications)
         self.registration_date = registration_date
         self.level, self.next_level_xp = self._calculate_user_level()
 
@@ -197,7 +215,7 @@ class User:
 
 class UserManager:
 
-    __slots__ = ('redis', 'db_pool')
+    __slots__ = ("redis", "db_pool")
 
     def __init__(self, redis, db_pool) -> None:
         self.redis = redis
@@ -253,8 +271,8 @@ class UserManager:
         else:
             release_required = False
 
-        query = "INSERT INTO profile (user_id) VALUES ($1);"
-        await conn.execute(query, user_id)
+        query = "INSERT INTO profile (user_id, notifications) VALUES ($1, $2);"
+        await conn.execute(query, user_id, UserNotifications.all_enabled().value)
 
         if release_required:
             await self.db_pool.release(conn)
@@ -289,7 +307,7 @@ class UserManager:
             user.factory_slots,
             user.factory_level,
             user.store_slots,
-            user.notifications,
+            user.notifications.value,
             user.user_id
         )
 

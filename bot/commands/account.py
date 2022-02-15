@@ -1,6 +1,7 @@
 import discord
 import datetime
 
+from core.game_user import UserNotifications
 from .clusters import get_cluster_collection
 from .util import exceptions
 from .util import views
@@ -159,17 +160,17 @@ class AccountManageCommand(
     it might take some time for them to take effect.
     """
 
-    async def send_disable_reminders_to_ipc(self, user_id: int) -> None:
+    async def send_disable_harvest_reminders_to_ipc(self, user_id: int) -> None:
         cluster_collection = get_cluster_collection(self.client)
         if cluster_collection:
             await cluster_collection.send_disable_reminders_message(user_id)
 
-    async def send_enable_reminders_to_ipc(self, user_id: int) -> None:
+    async def send_enable_harvest_reminders_to_ipc(self, user_id: int) -> None:
         cluster_collection = get_cluster_collection(self.client)
         if cluster_collection:
             await cluster_collection.send_enable_reminders_message(user_id)
 
-    async def send_delete_reminders_to_ipc(self, user_id: int) -> None:
+    async def send_delete_harvest_reminders_to_ipc(self, user_id: int) -> None:
         cluster_collection = get_cluster_collection(self.client)
         if cluster_collection:
             await cluster_collection.send_delete_reminders_message(user_id)
@@ -216,41 +217,45 @@ class AccountManageCommand(
             view=None
         )
         # Try to not bother the user with remaining reminders
-        await self.send_delete_reminders_to_ipc(self.author.id)
+        await self.send_delete_harvest_reminders_to_ipc(self.author.id)
 
-    async def manage_notifications(self) -> None:
-        enable = not(self.user_data.notifications)
-        self.user_data.notifications = enable
+    async def manage_notifications(self, notification_type: tuple) -> None:
+        enabled = self.user_data.notifications.is_enabled(notification_type[0])
+        if enabled:
+            self.user_data.notifications.value -= notification_type[0]
+        else:
+            self.user_data.notifications.value += notification_type[0]
+
         await self.users.update_user(self.user_data)
 
-        if not enable:
+        if enabled:
             embed = embed_util.success_embed(
-                title="Game notifications disabled",
+                title=f"{notification_type[3]} {notification_type[1]} notifications disabled!",
                 text=(
-                    "\N{WARNING SIGN} **It might take a few minutes for your new "
-                    "notification settings to take effect**.\n"
                     "\N{OPEN MAILBOX WITH LOWERED FLAG} Okay, so: I told the *mail man* **not to "
-                    "bother you** with all those messages."
+                    f"bother you** with all those **{notification_type[2].lower()}**"
                 ),
                 footer="He then said: \"Ehhh.. brrrhh.. Will do!\" \N{OLDER MAN}",
                 cmd=self
             )
-            await self.send_disable_reminders_to_ipc(self.author.id)
         else:
             embed = embed_util.success_embed(
-                title="Game notifications enabled",
+                title=f"{notification_type[3]} {notification_type[1]} notifications enabled!",
                 text=(
-                    "\N{WARNING SIGN} **It might take a few minutes for your new "
-                    "notification settings to take effect**.\n"
                     "\N{OPEN MAILBOX WITH RAISED FLAG} Okay, so: I told the *mail man* **to "
-                    "send you** messages about the game."
+                    f"send you {notification_type[2].lower()}**"
                 ),
                 footer="He then said: \"Ehhh.. brrrhh.. Will do!\" \N{OLDER MAN}",
                 cmd=self
             )
-            await self.send_enable_reminders_to_ipc(self.author.id)
 
         await self.edit(embed=embed, view=None)
+
+        if notification_type[0] == UserNotifications.FARM_HARVEST_READY:
+            if enabled:
+                await self.send_disable_harvest_reminders_to_ipc(self.author.id)
+            else:
+                await self.send_enable_harvest_reminders_to_ipc(self.author.id)
 
     async def callback(self) -> None:
         embed = discord.Embed(
@@ -259,41 +264,69 @@ class AccountManageCommand(
             color=discord.Color.fuchsia()
         )
 
-        if self.user_data.notifications:
-            notification_settings = f"{self.client.check_emoji} Enabled"
-            notification_action = "Disable game notifications"
-        else:
-            notification_settings = "\N{CROSS MARK} Disabled"
-            notification_action = "Enable game notifications"
-
-        embed.add_field(
-            name="\N{E-MAIL SYMBOL} Game notifications",
-            value=notification_settings
-        )
-
-        reg_date = datetime.datetime.combine(self.user_data.registration_date, datetime.time())
-        embed.add_field(
-            name="\N{SPIRAL CALENDAR PAD} Registration date",
-            value=discord.utils.format_dt(reg_date, style="D")
-        )
-
-        options = (
-            views.OptionButton(
-                option=self.manage_notifications,
-                style=discord.ButtonStyle.secondary,
-                emoji="\N{INCOMING ENVELOPE}",
-                label=notification_action
+        notification_types = (
+            (
+                UserNotifications.FARM_HARVEST_READY,
+                "Farm harvest",
+                "Chat notifications when your farm is ready to be harvested.",
+                "\N{ALARM CLOCK}"
             ),
-            views.OptionButton(
-                option=self.delete_account,
-                style=discord.ButtonStyle.secondary,
-                emoji="\N{SKULL AND CROSSBONES}",
-                label="Permanently delete account"
+            (
+                UserNotifications.FARM_ROBBED,
+                "Farm robbed",
+                "Direct Message notifications when your farm is robbed.",
+                "\N{SLEUTH OR SPY}"
+            ),
+            (
+                UserNotifications.TRADE_ACCEPTED,
+                "Trade accepted",
+                "Direct Message notifications when your trade is accepted.",
+                "\N{HANDSHAKE}"
             )
         )
-        result = await views.MultiOptionView(self, options, initial_embed=embed).prompt()
-        if result:
-            # Run the selected settings option
+
+        options = []
+        for n_type in notification_types:
+            now_enabled = self.user_data.notifications.is_enabled(n_type[0])
+            setting = f"{self.client.check_emoji}" if now_enabled else "\N{CROSS MARK}"
+            action = "Disable" if now_enabled else "Enable"
+
+            embed.add_field(
+                name=f"\N{INCOMING ENVELOPE} {n_type[1]} notifications: {setting}",
+                value=f"{n_type[3]} {n_type[2]}",
+                inline=False
+            )
+            options.append(views.OptionButton(
+                option=n_type,
+                style=discord.ButtonStyle.secondary,
+                emoji=n_type[3],
+                label=f"{action} {n_type[1].lower()} notifications"
+            ))
+
+        reg_date = datetime.datetime.combine(self.user_data.registration_date, datetime.time())
+        reg_date = discord.utils.format_dt(reg_date, style="D")
+        embed.add_field(name="\N{SPIRAL CALENDAR PAD} Registration date", value=reg_date)
+
+        options.append(views.OptionButton(
+            option=self.delete_account,
+            style=discord.ButtonStyle.secondary,
+            emoji="\N{SKULL AND CROSSBONES}",
+            label="Permanently delete account"
+        ))
+
+        result = await views.MultiOptionView(
+            self,
+            options,
+            initial_embed=embed,
+            deny_button=False
+        ).prompt()
+
+        if not result:
+            return
+
+        if isinstance(result, tuple):  # Notification setting changes
+            await self.manage_notifications(result)
+        else:  # Other methods
             await result()
 
 

@@ -8,6 +8,7 @@ from contextlib import suppress
 from core import game_items
 from core import ipc_classes
 from core import modifications
+from core.game_user import UserNotifications
 from .clusters import get_cluster_collection
 from .util import views
 from .util import time as time_util
@@ -961,7 +962,7 @@ class FarmStealCommand(
             )
             await self.reply(embed=embed)
 
-        if target_data.notifications:
+        if target_data.notifications.is_enabled(UserNotifications.FARM_ROBBED):
             embed = embed_util.error_embed(
                 title=f"{self.author} managed to steal items from your farm! \N{SLEUTH OR SPY}",
                 text=(

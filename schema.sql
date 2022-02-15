@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.profile(
     factory_slots integer DEFAULT 1,
     factory_level integer DEFAULT 0,
     store_slots integer DEFAULT 1,
-    notifications boolean DEFAULT true,
+    notifications smallint NOT NULL,
     registration_date date DEFAULT CURRENT_DATE
 );
 

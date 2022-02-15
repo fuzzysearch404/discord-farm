@@ -304,7 +304,9 @@ class NotificationsService(IPCService):
         }
 
         conn = await asyncpg.connect(**connect_args)
-        ignore_ids = await conn.fetch("SELECT user_id FROM profile WHERE notifications = false;")
+        # 1 << 0 = first bit is set to 1 for enabled harvest notifications
+        query = "SELECT user_id FROM profile WHERE notifications & 1 << 0 != 1 << 0;"
+        ignore_ids = await conn.fetch(query)
 
         for id in ignore_ids:
             self.reminder_ignore_ids.add(id['user_id'])
@@ -376,7 +378,7 @@ class NotificationsService(IPCService):
             self.reminder_deleted_keys.add(rem)
 
     async def _post_reminder_message(self, reminder: ipc_classes.Reminder) -> None:
-        random_names = ("Thomas", "Sophia", "Liam", "Emma")
+        random_names = ("Thomas", "Sophia", "Liam", "Emma", "Tom", "Mason", "Julia")
         random_messages = (
             "Hey, are you here? Are you awake? \N{WAVING HAND SIGN}",
             "It's harvest time! \N{ADULT}\N{ZERO WIDTH JOINER}\N{EAR OF RICE}",

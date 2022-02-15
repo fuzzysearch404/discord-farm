@@ -4,6 +4,7 @@ from contextlib import suppress
 from typing import Optional, Literal
 
 from core import game_items
+from core.game_user import UserNotifications
 from .util import views
 from .util import embeds as embed_util
 from .util.commands import FarmSlashCommand, FarmCommandCollection
@@ -1016,7 +1017,7 @@ class TradesAcceptCommand(
         )
         await self.edit(embed=embed, view=None)
 
-        if not trade_user_data.notifications:
+        if not trade_user_data.notifications.is_enabled(UserNotifications.TRADE_ACCEPTED):
             return
 
         embed = embed_util.success_embed(
