@@ -967,8 +967,8 @@ class FarmStealCommand(
                 title=f"{self.author} managed to steal items from your farm! \N{SLEUTH OR SPY}",
                 text=(
                     "Hey boss! \N{WAVING HAND SIGN}\n\nI am sorry to say, but someone named "
-                    f"\"{self.author.nick or self.author.name}\" managed to grab some items from "
-                    f"your farm: **{fmt}**!\n\n\N{ELECTRIC LIGHT BULB}Next time be a bit faster to "
+                    f"{self.author.mention} managed to grab some items from your farm: "
+                    f"**{fmt}**!\n\n\N{ELECTRIC LIGHT BULB}Next time be a bit faster to "
                     "harvest your farm or buy a dog booster for some protection!"
                 ),
                 private=True,
