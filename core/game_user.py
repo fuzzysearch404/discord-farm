@@ -128,46 +128,18 @@ class User:
 
         return existing_boosts
 
-    async def get_all_items(self, cmd, conn=None) -> list:
+    async def get_all_items(self, conn) -> list:
         """Fetches all items currently in inventory"""
-        if not conn:
-            release_required = True
-            conn = await cmd.acquire()
-        else:
-            release_required = False
-
         query = "SELECT * FROM inventory WHERE user_id = $1 ORDER BY item_id;"
-        items = await conn.fetch(query, self.user_id)
+        return await conn.fetch(query, self.user_id)
 
-        if release_required:
-            await cmd.release()
-
-        return items
-
-    async def get_item(self, cmd, item_id: int, conn=None) -> asyncpg.Record:
+    async def get_item(self, item_id: int, conn) -> asyncpg.Record:
         """Fetches a single item currently in inventory"""
-        if not conn:
-            release_required = True
-            conn = await cmd.acquire()
-        else:
-            release_required = False
-
         query = "SELECT * FROM inventory WHERE user_id = $1 AND item_id = $2;"
-        item = await conn.fetchrow(query, self.user_id, item_id)
+        return await conn.fetchrow(query, self.user_id, item_id)
 
-        if release_required:
-            await cmd.release()
-
-        return item
-
-    async def give_item(self, cmd, item_id: int, amount: int, conn=None) -> None:
+    async def give_item(self, item_id: int, amount: int, conn) -> None:
         """Adds a single type of items to inventory"""
-        if not conn:
-            release_required = True
-            conn = await cmd.acquire()
-        else:
-            release_required = False
-
         query = """
                 INSERT INTO inventory(user_id, item_id, amount)
                 VALUES ($1, $2, $3)
@@ -177,22 +149,13 @@ class User:
                 """
         await conn.execute(query, self.user_id, item_id, amount)
 
-        if release_required:
-            await cmd.release()
-
-    async def give_items(self, cmd, items: list, conn=None) -> None:
+    async def give_items(self, items: list, conn) -> None:
         """Adds items to user. Accepts a list of tuples with items IDs and amounts"""
         items_with_user_id = []
         for item, amount in items:
             if isinstance(item, GameItem):
                 item = item.id
             items_with_user_id.append((self.user_id, item, amount))
-
-        if not conn:
-            release_required = True
-            conn = await cmd.acquire()
-        else:
-            release_required = False
 
         query = """
                 INSERT INTO inventory(user_id, item_id, amount)
@@ -203,17 +166,8 @@ class User:
                 """
         await conn.executemany(query, items_with_user_id)
 
-        if release_required:
-            await cmd.release()
-
-    async def remove_item(self, cmd, item_id: int, amount: int, conn=None) -> None:
+    async def remove_item(self, item_id: int, amount: int, conn) -> None:
         """Removes a single type of items from inventory"""
-        if not conn:
-            release_required = True
-            conn = await cmd.acquire()
-        else:
-            release_required = False
-
         query = "SELECT id, amount FROM inventory WHERE user_id = $1 AND item_id = $2;"
         current_data = await conn.fetchrow(query, self.user_id, item_id)
 
@@ -225,56 +179,20 @@ class User:
                 query = "DELETE FROM inventory WHERE id = $1;"
                 await conn.execute(query, current_data['id'])
 
-        if release_required:
-            await cmd.release()
-
-    async def get_item_modification(self, cmd, item_id: int, conn=None) -> asyncpg.Record:
+    async def get_item_modification(self, item_id: int, conn) -> asyncpg.Record:
         """Fetches item modifications data for a single item"""
-        if not conn:
-            release_required = True
-            conn = await cmd.acquire()
-        else:
-            release_required = False
-
         query = "SELECT * FROM modifications WHERE user_id = $1 AND item_id = $2;"
-        data = await conn.fetchrow(query, self.user_id, item_id)
+        return await conn.fetchrow(query, self.user_id, item_id)
 
-        if release_required:
-            await cmd.release()
-
-        return data
-
-    async def get_farm_field(self, cmd, conn=None) -> list:
+    async def get_farm_field(self, conn) -> list:
         """Fetches all items currently in farm"""
-        if not conn:
-            release_required = True
-            conn = await cmd.acquire()
-        else:
-            release_required = False
-
         query = "SELECT * FROM farm WHERE user_id = $1 ORDER BY item_id;"
-        data = await conn.fetch(query, self.user_id)
+        return await conn.fetch(query, self.user_id)
 
-        if release_required:
-            await cmd.release()
-
-        return data
-
-    async def get_factory(self, cmd, conn=None) -> list:
+    async def get_factory(self, conn) -> list:
         """Fetches all items currently in factory"""
-        if not conn:
-            release_required = True
-            conn = await cmd.acquire()
-        else:
-            release_required = False
-
         query = "SELECT * from factory WHERE user_id = $1 ORDER by starts;"
-        data = await conn.fetch(query, self.user_id)
-
-        if release_required:
-            await cmd.release()
-
-        return data
+        return await conn.fetch(query, self.user_id)
 
 
 class UserManager:
@@ -341,8 +259,7 @@ class UserManager:
         if release_required:
             await self.db_pool.release(conn)
 
-        user = await self.get_user(user_id)
-        return user
+        return await self.get_user(user_id)
 
     async def update_user(self, user: User, conn=None) -> None:
         if not conn:

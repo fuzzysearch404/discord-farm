@@ -183,7 +183,7 @@ class FactoryQueueCommand(
                 user = await self.lookup_other_player(self.player, conn=conn)
                 target_user = self.player
 
-            factory_data = await user.get_factory(self, conn=conn)
+            factory_data = await user.get_factory(conn)
 
         if not factory_data:
             if not self.player:
@@ -300,7 +300,7 @@ class FactoryMakeCommand(
             )
             return await self.reply(embed=embed)
 
-        user_items = await self.user_data.get_all_items(self, conn=conn)
+        user_items = await self.user_data.get_all_items(conn)
         user_items_by_id = {item['item_id']: item for item in user_items}
 
         missing_items = []
@@ -332,7 +332,7 @@ class FactoryMakeCommand(
             for item_and_amount in item.made_from:
                 req_item_id = item_and_amount.item.id
                 req_item_amount = item_and_amount.amount * self.amount
-                await self.user_data.remove_item(self, req_item_id, req_item_amount, conn=conn)
+                await self.user_data.remove_item(req_item_id, req_item_amount, conn)
 
             query = "SELECT ends FROM factory WHERE user_id = $1 ORDER BY ends DESC LIMIT 1;"
             last_ends_in_queue = await conn.fetchval(query, self.author.id)
@@ -382,7 +382,7 @@ class FactoryCollectCommand(
 
     async def callback(self):
         conn = await self.acquire()
-        factory_data = await self.user_data.get_factory(self, conn=conn)
+        factory_data = await self.user_data.get_factory(conn)
 
         if not factory_data:
             await self.release()
@@ -429,7 +429,7 @@ class FactoryCollectCommand(
         async with conn.transaction():
             query = "DELETE FROM factory WHERE id = $1;"
             await conn.executemany(query, to_delete)
-            await self.user_data.give_items(self, to_award, conn=conn)
+            await self.user_data.give_items(to_award, conn)
             self.user_data.give_xp_and_level_up(self, xp_gain)
             await self.users.update_user(self.user_data, conn=conn)
         await self.release()

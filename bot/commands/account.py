@@ -88,7 +88,7 @@ class TutorialCommand(
                 "not get any profit at all. Be careful.\nExample for selling 20x lettuce: "
                 "**/market sell** `lettuce` `20`\n2) Doing order missions - these always will get "
                 "you some decent rewards, but they might be harder to complete.\n"
-                "Check them out with this command: **/missions orders**"
+                "Check them out with this command: **/missions orders view**"
             )
         )
         embed.add_field(

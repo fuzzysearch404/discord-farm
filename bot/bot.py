@@ -127,8 +127,7 @@ class BotClient(AutoShardedModularCommandClient):
             async with self.db_pool.acquire() as conn:
                 await conn.fetchrow("SELECT NOW();")
         except Exception as ex:
-            exc_info = (type(ex), ex, ex.__traceback__)
-            self.log.critical("Failed to connect to Postgres", exc_info=exc_info)
+            self.log.exception("Failed to connect to Postgres")
             raise ex
 
     async def _connect_redis(self) -> None:
@@ -143,8 +142,7 @@ class BotClient(AutoShardedModularCommandClient):
         try:
             await self.redis.time()
         except Exception as ex:
-            exc_info = (type(ex), ex, ex.__traceback__)
-            self.log.critical("Failed to connect to Redis", exc_info=exc_info)
+            self.log.exception("Failed to connect to Redis")
             raise ex
 
     async def is_owner(self, user: discord.User):
@@ -323,7 +321,7 @@ class BotClient(AutoShardedModularCommandClient):
                 return
 
             # TODO: Remove before release
-            if interaction.user.id not in (234622520739758080, 665906176264896533):
+            if interaction.user.id not in (234622520739758080, 665906176264896533, 303983361569980416):
                 await interaction.response.send_message(
                     "\N{CROSS MARK} Sorry, testing is currently disabled."
                 )

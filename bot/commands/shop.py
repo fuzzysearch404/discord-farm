@@ -653,7 +653,7 @@ class MarketSellCommand(
             return await self.reply(embed=embed)
 
         async with self.acquire() as conn:
-            item_data = await self.user_data.get_item(self, item.id, conn=conn)
+            item_data = await self.user_data.get_item(item.id, conn)
 
         if not item_data or item_data['amount'] < self.amount:
             return await self.reply(embed=embed_util.not_enough_items(self, item, self.amount))
@@ -684,14 +684,14 @@ class MarketSellCommand(
 
         conn = await self.acquire()
         # Must refetch or users can exploit the long prompts and duplicate selling
-        item_data = await self.user_data.get_item(self, item.id, conn=conn)
+        item_data = await self.user_data.get_item(item.id, conn)
         if not item_data or item_data['amount'] < self.amount:
             await self.release()
             embed = embed_util.not_enough_items(self, item, self.amount)
             return await self.edit(embed=embed, view=None)
 
         async with conn.transaction():
-            await self.user_data.remove_item(self, item.id, self.amount, conn=conn)
+            await self.user_data.remove_item(item.id, self.amount, conn)
             self.user_data.gold += total_reward
             await self.users.update_user(self.user_data, conn=conn)
         await self.release()
@@ -789,7 +789,7 @@ class TradesCreateCommand(
 
         conn = await self.acquire()
 
-        item_data = await self.user_data.get_item(self, item.id, conn=conn)
+        item_data = await self.user_data.get_item(item.id, conn)
         if not item_data or item_data['amount'] < self.amount:
             await self.release()
             return await self.reply(embed=embed_util.not_enough_items(self, item, self.amount))
@@ -824,7 +824,7 @@ class TradesCreateCommand(
             return await self.reply(embed=embed)
 
         async with conn.transaction():
-            await self.user_data.remove_item(self, item.id, self.amount, conn=conn)
+            await self.user_data.remove_item(item.id, self.amount, conn)
 
             # We store username, to avoid fetching the user from Discord's
             # API just to get the username every time someone wants to view
@@ -998,7 +998,7 @@ class TradesAcceptCommand(
         async with conn.transaction():
             query = "DELETE FROM store WHERE id = $1;"
             await conn.execute(query, self.id)
-            await user_data.give_item(self, item.id, amount, conn=conn)
+            await user_data.give_item(item.id, amount, conn)
             user_data.gold -= price
             trade_user_data.gold += price
             await self.users.update_user(user_data, conn=conn)
@@ -1075,7 +1075,7 @@ class TradesDeleteCommand(
             query = "DELETE FROM store WHERE id = $1;"
             await conn.execute(query, self.id)
             item_id, amount = trade_data['item_id'], trade_data['amount']
-            await self.user_data.give_item(self, item_id, amount, conn=conn)
+            await self.user_data.give_item(item_id, amount, conn)
         await self.release()
 
         item = self.items.find_item_by_id(trade_data['item_id'])

@@ -125,7 +125,8 @@ class SetItemCommand(
 
     async def callback(self) -> None:
         item = self.lookup_item(self.item)
-        await self.user_data.give_item(self, item.id, self.amount)
+        async with self.acquire() as conn:
+            await self.user_data.give_item(item.id, self.amount, conn)
         await self.reply(f"Obtained {self.amount}x {item.full_name}")
 
 
@@ -145,7 +146,8 @@ class SetChestCommand(
 
     async def callback(self) -> None:
         chest = self.lookup_chest(self.chest)
-        await self.user_data.give_item(self, chest.id, self.amount)
+        async with self.acquire() as conn:
+            await self.user_data.give_item(chest.id, self.amount, conn)
         await self.reply(f"Obtained {self.amount}x {chest.full_name} chests")
 
 

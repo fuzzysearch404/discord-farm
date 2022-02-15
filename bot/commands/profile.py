@@ -310,7 +310,7 @@ class InventoryCommand(
                 user = await self.lookup_other_player(self.player, conn=conn)
                 target_user = self.player
 
-            all_items_data = await user.get_all_items(self, conn=conn)
+            all_items_data = await user.get_all_items(conn)
 
         items_and_amounts_by_class = {}
         for data in all_items_data:
@@ -483,7 +483,7 @@ class ItemsInspectCommand(
             )
         if isinstance(item, game_items.PlantableItem):
             async with self.acquire() as conn:
-                mods = await self.user_data.get_item_modification(self, item.id, conn=conn)
+                mods = await self.user_data.get_item_modification(item.id, conn)
 
             growing_time = time_util.seconds_to_time(item.grow_time)
             harvest_time = time_util.seconds_to_time(item.collect_time)
@@ -615,7 +615,7 @@ class ChestsOpenCommand(
         chest = self.lookup_chest(self.chest)
 
         async with self.acquire() as conn:
-            chest_data = await self.user_data.get_item(self, chest.id, conn=conn)
+            chest_data = await self.user_data.get_item(chest.id, conn)
 
         if not chest_data or chest_data['amount'] < self.amount:
             embed = embed_util.error_embed(
@@ -724,12 +724,12 @@ class ChestsOpenCommand(
 
         async with self.acquire() as conn:
             async with conn.transaction():
-                await self.user_data.remove_item(self, chest.id, self.amount, conn=conn)
+                await self.user_data.remove_item(chest.id, self.amount, conn)
 
                 if gold_reward or gems_reward:
                     await self.users.update_user(self.user_data, conn=conn)
                 if items_won:
-                    await self.user_data.give_items(self, items_won, conn=conn)
+                    await self.user_data.give_items(items_won, conn)
 
         rewards, grouped = "", {}
         for item, amt in items_won:
@@ -787,7 +787,7 @@ class ChestsDailyCommand(
         )[0]
 
         async with self.acquire() as conn:
-            await self.user_data.give_item(self, chest, 1, conn=conn)
+            await self.user_data.give_item(chest, 1, conn)
 
         chest_data = self.items.find_chest_by_id(chest)
         embed = embed_util.congratulations_embed(
@@ -838,7 +838,7 @@ class ChestsHourlyCommand(
             amount = random.randint(min, max + 1)
 
         async with self.acquire() as conn:
-            await self.user_data.give_item(self, chest_id, amount, conn=conn)
+            await self.user_data.give_item(chest_id, amount, conn)
 
         chest_data = self.items.find_chest_by_id(chest_id)
         embed = embed_util.congratulations_embed(

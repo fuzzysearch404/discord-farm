@@ -259,7 +259,7 @@ class FarmFieldCommand(
                 user = await self.lookup_other_player(self.player, conn=conn)
                 target_user = self.player
 
-            field_data = await user.get_farm_field(self, conn=conn)
+            field_data = await user.get_farm_field(conn)
 
         if not field_data:
             if not self.player:
@@ -357,7 +357,8 @@ class FarmPlantCommand(
             )
             return await self.reply(embed=embed)
 
-        item_mods = await modifications.get_item_mods_for_user(self, item)
+        async with self.acquire() as conn:
+            item_mods = await modifications.get_item_mods_for_user(self, item, conn)
         grow_time, collect_time, max_volume = item_mods[0], item_mods[1], item_mods[2]
 
         total_cost = self.tiles * item.gold_price
@@ -521,7 +522,7 @@ class FarmHarvestCommand(
 
     async def callback(self):
         conn = await self.acquire()
-        field_data = await self.user_data.get_farm_field(self, conn=conn)
+        field_data = await self.user_data.get_farm_field(conn)
 
         if not field_data:
             await self.release()
@@ -548,11 +549,7 @@ class FarmHarvestCommand(
             if plant.iterations and plant.iterations > 1:  # Trees, bushes, animals
                 if plant.is_harvestable or (farm_guard_active and plant.state == PlantState.ROTTEN):
                     # Calculate the new growth cycle properties
-                    item_mods = await modifications.get_item_mods_for_user(
-                        self,
-                        plant.item,
-                        conn=conn
-                    )
+                    item_mods = await modifications.get_item_mods_for_user(self, plant.item, conn)
                     grow_time, collect_time, max_volume = item_mods[0], item_mods[1], item_mods[2]
                     ends = datetime.datetime.now() + datetime.timedelta(seconds=grow_time)
                     dies = ends + datetime.timedelta(seconds=collect_time)
@@ -609,7 +606,7 @@ class FarmHarvestCommand(
                 await conn.executemany(query, delete_rows)
 
             if to_reward:
-                await self.user_data.give_items(self, to_reward, conn=conn)
+                await self.user_data.give_items(to_reward, conn)
 
             self.user_data.give_xp_and_level_up(self, xp_gain)
             await self.users.update_user(self.user_data, conn=conn)
@@ -705,7 +702,7 @@ class FarmClearCommand(
 
     async def callback(self) -> None:
         async with self.acquire() as conn:
-            field_data = await self.user_data.get_farm_field(self, conn=conn)
+            field_data = await self.user_data.get_farm_field(conn)
 
         if not field_data:
             embed = embed_util.error_embed(
@@ -906,7 +903,7 @@ class FarmStealCommand(
                         """
 
                 await conn.executemany(query, to_update)
-                await self.user_data.give_items(self, to_reward, conn=conn)
+                await self.user_data.give_items(to_reward, conn)
 
         fmt = ", ".join(f"{item.full_name} x{amt}" for item, amt in won_items_and_amounts.items())
 
@@ -1008,7 +1005,7 @@ class FishCommand(
         async with self.acquire() as conn:
             async with conn.transaction():
                 await self.users.update_user(self.user_data, conn=conn)
-                await self.user_data.give_item(self, item.id, win_amount, conn=conn)
+                await self.user_data.give_item(item.id, win_amount, conn)
 
         embed = embed_util.congratulations_embed(
             title="Nice catch! You successfully caught some fish! \N{FISHING POLE AND FISH}",
