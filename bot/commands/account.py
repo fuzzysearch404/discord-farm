@@ -204,19 +204,17 @@ class AccountManageCommand(
 
         await self.users.delete_user(self.author.id)
 
-        await self.edit(
-            embed=embed_util.success_embed(
-                title=f"Goodbye, {self.author.name}! Thanks for playing! \N{WAVING HAND SIGN}",
-                text=(
-                    "Your account has been deleted! If you ever consider playing again, then just "
-                    "type **/account create** again and you are ready to go! "
-                    "Take care! Bye for now! :)"
-                ),
-                footer="We are going to miss you!",
-                cmd=self
+        embed = embed_util.success_embed(
+            title=f"Goodbye, {self.author.name}! Thanks for playing! \N{WAVING HAND SIGN}",
+            text=(
+                "Your account has been deleted! If you ever consider playing again, then just "
+                "type **/account create** again and you are ready to go! "
+                "Take care! Bye for now! :)"
             ),
-            view=None
+            footer="We are going to miss you!",
+            cmd=self
         )
+        await self.edit(embed=embed, view=None)
         # Try to not bother the user with remaining reminders
         await self.send_delete_harvest_reminders_to_ipc(self.author.id)
 
