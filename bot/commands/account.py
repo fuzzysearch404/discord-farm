@@ -123,26 +123,27 @@ class AccountCreateCommand(
     _requires_account: bool = False
 
     async def callback(self):
-        async with self.acquire() as conn:
-            try:
-                await self.users.get_user(self.author.id, conn=conn)
-            except exceptions.UserNotFoundException:
-                pass
-            else:
-                embed = embed_util.error_embed(
-                    title="You already own a farm!",
-                    text=(
-                        "What do you mean? \N{FLUSHED FACE} You already own a cool farm! "
-                        "It's time for you to get back working on the field. There's always "
-                        "lots of work to do! \N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE}"
-                    ),
-                    footer="Maybe you want to plant some lettuce? Carrots? \N{THINKING FACE}",
-                    cmd=self
-                )
-                return await self.reply(embed=embed, ephemeral=True)
+        conn = await self.acquire()
+        try:
+            await self.users.get_user(self.author.id, conn=conn)
+        except exceptions.UserNotFoundException:
+            pass
+        else:
+            await self.release()
+            embed = embed_util.error_embed(
+                title="You already own a farm!",
+                text=(
+                    "What do you mean? \N{FLUSHED FACE} You already own a cool farm! "
+                    "It's time for you to get back working on the field. There's always "
+                    "lots of work to do! \N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE}"
+                ),
+                footer="Maybe you want to plant some lettuce? Carrots? \N{THINKING FACE}",
+                cmd=self
+            )
+            return await self.reply(embed=embed, ephemeral=True)
 
-            await self.users.create_user(self.author.id, conn=conn)
-
+        await self.users.create_user(self.author.id, conn=conn)
+        await self.release()
         await TutorialCommand.callback(self)
 
 
