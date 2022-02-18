@@ -256,7 +256,8 @@ class FarmSlashCommand(discord.app.SlashCommand):
 
             await super().error(exception)
 
-    def _find_items_for_autocomplete(self, item_names_per_id: dict, query: str) -> dict:
+    @staticmethod
+    def _find_items_for_autocomplete(item_names_per_id: dict, query: str) -> dict:
         options = {}
 
         if len(query) == 0:
