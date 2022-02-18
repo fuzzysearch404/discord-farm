@@ -188,9 +188,8 @@ class FarmSlashCommand(discord.app.SlashCommand):
             if not await self.client.is_owner(self.author):
                 raise exceptions.GameIsInMaintenanceException()
 
-        if self._owner_only:
-            if not await self.client.is_owner(self.author):
-                raise exceptions.CommandOwnerOnlyException()
+        if self._owner_only and not await self.client.is_owner(self.author):
+            raise exceptions.CommandOwnerOnlyException()
 
         if self._requires_account:
             try:
@@ -294,18 +293,22 @@ class FarmSlashCommand(discord.app.SlashCommand):
                 "Maybe consider inviting them to join this game? \N{THINKING FACE}"
             )
 
+    @staticmethod
+    def _lookup_close_match(query: str, items: dict):
+        matches = difflib.get_close_matches(
+            query.lower(),
+            items.keys(),
+            n=1,
+            cutoff=AUTOCOMPLETE_CLOSE_MATCHES_CUTOFF
+        )
+        return items[matches[0]] if matches else None
+
     def lookup_item(self, item_id_or_name: str):
         try:  # Use only first 8 digits, because the ids will never be that huge
             query = int(item_id_or_name[:8])
         except ValueError:
             # Try search for close matches
-            matches = difflib.get_close_matches(
-                item_id_or_name.lower(),
-                self.items.all_item_ids_by_name.keys(),
-                n=1,
-                cutoff=AUTOCOMPLETE_CLOSE_MATCHES_CUTOFF
-            )
-            query = self.items.all_item_ids_by_name[matches[0]] if matches else None
+            query = self._lookup_close_match(item_id_or_name, self.items.all_item_ids_by_name)
 
         try:
             return self.items.find_item_by_id(query)
@@ -321,13 +324,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
             query = int(item_id_or_name[:8])
         except ValueError:
             # Try search for close matches
-            matches = difflib.get_close_matches(
-                item_id_or_name.lower(),
-                self.items.all_chest_ids_by_name.keys(),
-                n=1,
-                cutoff=AUTOCOMPLETE_CLOSE_MATCHES_CUTOFF
-            )
-            query = self.items.all_chest_ids_by_name[matches[0]] if matches else None
+            query = self._lookup_close_match(item_id_or_name, self.items.all_chest_ids_by_name)
 
         try:
             # Use only first 8 digits, because the ids will never be that huge
@@ -344,13 +341,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
             query = item_id_or_name
         else:
             # TODO: Boost names are case sensitive :(
-            matches = difflib.get_close_matches(
-                item_id_or_name.lower(),
-                self.items.all_boost_ids_by_name.keys(),
-                n=1,
-                cutoff=AUTOCOMPLETE_CLOSE_MATCHES_CUTOFF
-            )
-            query = self.items.all_boost_ids_by_name[matches[0]] if matches else None
+            query = self._lookup_close_match(item_id_or_name, self.items.all_boost_ids_by_name)
 
         try:
             return self.items.find_booster_by_id(query)
