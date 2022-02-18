@@ -159,17 +159,14 @@ class FarmSlashCommand(discord.app.SlashCommand):
         kwargs = self._inject_level_up_embed(**kwargs)
         return await self.interaction.edit_original_message(*args, **kwargs)
 
-    def get_full_name(self, _prev: str = None) -> str:
+    def get_full_name(self) -> str:
         """Concats the full name of the command"""
         fmt = self._name_
 
-        if _prev is not None:
-            fmt = f"{fmt} {_prev}"
-
         if self._parent_:
-            return self._parent_.get_full_name(self._parent_, _prev=fmt)
-        else:
-            return fmt
+            fmt = f"{self._parent_.get_full_name(self._parent_)} {fmt}"
+
+        return fmt
 
     def find_all_lowest_children(self) -> list:
         """Finds all lowest level subcommands for this command (might include self)"""
@@ -308,7 +305,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
         try:  # Use only first 8 digits, because the ids will never be that huge
             query = int(item_id_or_name[:8])
         except ValueError:
-            # Try search for close matches
+            # Try searching for close matches
             query = self._lookup_close_match(item_id_or_name, self.items.all_item_ids_by_name)
 
         try:
@@ -324,7 +321,7 @@ class FarmSlashCommand(discord.app.SlashCommand):
         try:  # Use only first 8 digits, because the ids will never be that huge
             query = int(item_id_or_name[:8])
         except ValueError:
-            # Try search for close matches
+            # Try searching for close matches
             query = self._lookup_close_match(item_id_or_name, self.items.all_chest_ids_by_name)
 
         try:
