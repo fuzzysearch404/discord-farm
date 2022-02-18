@@ -1,4 +1,5 @@
 import discord
+import difflib
 import traceback
 import itertools
 from discord.ext import modules
@@ -9,6 +10,7 @@ from bot.commands.util import exceptions
 
 
 AUTOCOMPLETE_RESULTS_LIMIT = 25
+AUTOCOMPLETE_CLOSE_MATCHES_CUTOFF = 0.75
 
 
 class ReportCrashModal(discord.ui.Modal):
@@ -259,11 +261,11 @@ class FarmSlashCommand(discord.app.SlashCommand):
         options = {}
 
         if len(query) == 0:
-            for name, id in item_names_per_id.items():
-                options[name] = str(id)
+            for tpl, _ in zip(item_names_per_id.items(), range(AUTOCOMPLETE_RESULTS_LIMIT)):
+                options[tpl[0]] = str(tpl[1])
         else:
             for name, id in item_names_per_id.items():
-                if name.startswith(query.lower()):
+                if name.lower().startswith(query.lower()):
                     options[name] = str(id)
 
         return dict(itertools.islice(options.items(), AUTOCOMPLETE_RESULTS_LIMIT))
@@ -292,35 +294,70 @@ class FarmSlashCommand(discord.app.SlashCommand):
                 "Maybe consider inviting them to join this game? \N{THINKING FACE}"
             )
 
-    def lookup_item(self, item_id_str: str):
-        try:
-            # Use only first 8 digits, because the ids will never be that huge
-            return self.items.find_item_by_id(int(item_id_str[:8]))
-        except (ValueError, exceptions.ItemNotFoundException):
-            raise exceptions.ItemNotFoundException(
-                f"Whoops. I could not find an item called \"{item_id_str}\". \N{WORRIED FACE}\n"
-                "\N{RIGHT-POINTING MAGNIFYING GLASS} Could you please take this magnifying glass "
-                "and try searching again?"
+    def lookup_item(self, item_id_or_name: str):
+        try:  # Use only first 8 digits, because the ids will never be that huge
+            query = int(item_id_or_name[:8])
+        except ValueError:
+            # Try search for close matches
+            matches = difflib.get_close_matches(
+                item_id_or_name.lower(),
+                self.items.all_item_ids_by_name.keys(),
+                n=1,
+                cutoff=AUTOCOMPLETE_CLOSE_MATCHES_CUTOFF
             )
+            query = self.items.all_item_ids_by_name[matches[0]] if matches else None
 
-    def lookup_chest(self, item_id_str: str):
         try:
-            # Use only first 8 digits, because the ids will never be that huge
-            return self.items.find_chest_by_id(int(item_id_str[:8]))
-        except (ValueError, exceptions.ItemNotFoundException):
-            raise exceptions.ItemNotFoundException(
-                f"Whoops. I could not find a chest called \"{item_id_str}\". \N{WORRIED FACE}\n"
-                "\N{RIGHT-POINTING MAGNIFYING GLASS} Could you please take this magnifying glass "
-                "and try searching again?"
-            )
-
-    def lookup_booster(self, item_id_str: str):
-        try:
-            return self.items.find_booster_by_id(item_id_str)
+            return self.items.find_item_by_id(query)
         except exceptions.ItemNotFoundException:
             raise exceptions.ItemNotFoundException(
-                f"Whoops. I could not find a booster called \"{item_id_str}\". \N{WORRIED FACE}\n"
+                f"Whoops. I could not find an item called \"{item_id_or_name}\". \N{WORRIED FACE}\n"
                 "\N{RIGHT-POINTING MAGNIFYING GLASS} Could you please take this magnifying glass "
+                "and try searching again?"
+            )
+
+    def lookup_chest(self, item_id_or_name: str):
+        try:  # Use only first 8 digits, because the ids will never be that huge
+            query = int(item_id_or_name[:8])
+        except ValueError:
+            # Try search for close matches
+            matches = difflib.get_close_matches(
+                item_id_or_name.lower(),
+                self.items.all_chest_ids_by_name.keys(),
+                n=1,
+                cutoff=AUTOCOMPLETE_CLOSE_MATCHES_CUTOFF
+            )
+            query = self.items.all_chest_ids_by_name[matches[0]] if matches else None
+
+        try:
+            # Use only first 8 digits, because the ids will never be that huge
+            return self.items.find_chest_by_id(query)
+        except exceptions.ItemNotFoundException:
+            raise exceptions.ItemNotFoundException(
+                f"Whoops. I could not find a chest called \"{item_id_or_name}\". \N{WORRIED FACE}\n"
+                "\N{RIGHT-POINTING MAGNIFYING GLASS} Could you please take this magnifying glass "
+                "and try searching again?"
+            )
+
+    def lookup_booster(self, item_id_or_name: str):
+        if item_id_or_name in self.items.all_boost_ids_by_name.values():
+            query = item_id_or_name
+        else:
+            # TODO: Boost names are case sensitive :(
+            matches = difflib.get_close_matches(
+                item_id_or_name.lower(),
+                self.items.all_boost_ids_by_name.keys(),
+                n=1,
+                cutoff=AUTOCOMPLETE_CLOSE_MATCHES_CUTOFF
+            )
+            query = self.items.all_boost_ids_by_name[matches[0]] if matches else None
+
+        try:
+            return self.items.find_booster_by_id(query)
+        except exceptions.ItemNotFoundException:
+            raise exceptions.ItemNotFoundException(
+                f"Whoops. I could not find a booster called \"{item_id_or_name}\". \N{WORRIED FACE}"
+                "\n\N{RIGHT-POINTING MAGNIFYING GLASS} Could you please take this magnifying glass "
                 "and try searching again?"
             )
 
