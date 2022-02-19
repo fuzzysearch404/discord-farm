@@ -60,8 +60,8 @@ async def complete_business_mission(
         embed = embed_util.error_embed(
             title="You are missing items for completing this mission!",
             text=(
-                "Unfortunately we can't deliver this package to our customer, because you are "
-                f"missing these requested items: **{fmt}**! "
+                "Unfortunately we can't deliver this package to the customer, because you are "
+                f"missing these requested items: **{fmt}**!"
             ),
             cmd=cmd
         )
@@ -94,8 +94,8 @@ async def complete_business_mission(
     embed = embed_util.success_embed(
         title="Mission completed! \N{CLAPPING HANDS SIGN}",
         text=(
-            "Well done! \N{SMILING FACE WITH SUNGLASSES} The customer was very satisfied with "
-            f"your services and sent these as for the reward: **{fmt}** \N{THUMBS UP SIGN}"
+            "Well done! \N{SMILING FACE WITH SUNGLASSES}\N{THUMBS UP SIGN} The customer was very "
+            f"satisfied with your services and sent these as for the reward: **{fmt}**"
         ),
         cmd=cmd
     )
@@ -221,6 +221,47 @@ class MissionsOrdersRefreshCommand(
             cmd=self
         )
         await self.reply(embed=embed)
+
+
+class MissionsOrdersUrgentCommand(
+    FarmSlashCommand,
+    name="urgent",
+    description="\N{LOWER LEFT FOUNTAIN PEN} Offers an urgent, limited time, order mission",
+    parent=MissionsOrdersCommand
+):
+    """
+    Similar to the **/missions orders view** command, but this command provides a single mission,
+    that is temporary - it can only be completed for a few seconds, after executing this
+    command. However, this mission provides better rewards than the regular order missions.
+    """
+    _invoke_cooldown: int = 3600
+
+    async def callback(self) -> None:
+        mission = game_missions.BusinessMission.generate(self, reward_multiplier=1.2)
+        mission.initialize_from_partial_data(self)
+
+        embed = discord.Embed(
+            title="\N{LOWER LEFT FOUNTAIN PEN} Urgent order offer!",
+            description=(
+                "\N{ALARM CLOCK} **You only have a few seconds to decide if you approve!**\n\n"
+                "\N{WOMAN}\N{ZERO WIDTH JOINER}\N{PERSONAL COMPUTER} Boss, quick! This business "
+                "partner is urgently looking for these items and is going to pay extra rewards:"
+            ),
+            color=discord.Color.from_rgb(198, 20, 9)
+        )
+        embed.add_field(name="The order:", value=mission.format_for_embed(self))
+
+        confirm = await views.ConfirmPromptView(
+            self,
+            initial_embed=embed,
+            emoji=self.client.check_emoji,
+            label="Complete the order"
+        ).prompt()
+
+        if not confirm:
+            return
+
+        await complete_business_mission(self, mission, -1)
 
 
 def setup(client) -> list:
