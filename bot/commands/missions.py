@@ -117,6 +117,13 @@ class MissionsOrdersViewCommand(
     parent=MissionsOrdersCommand
 ):
     """
+    Order missions are requests from businesses that require you to gather random items.
+    Upon completion, you will get rewarded with gold, experience points and sometimes
+    with a random chest. The amount of items required for completion is random, but
+    it is increased by your player level. Leveling up also affects how many order
+    missions you can choose from. These missions don't have a time limit.<br>
+    \N{ELECTRIC LIGHT BULB} You can replace all of your current order missions with new ones
+    every 5 hours with the **/missions orders refresh** command.
     """
 
     def get_mission_count(self) -> int:
@@ -194,7 +201,26 @@ class MissionsOrdersRefreshCommand(
     description="\N{PRINTER} Replaces current order missions with new ones",
     parent=MissionsOrdersCommand
 ):
-    pass
+    """
+    This command deletes all of your current order missions and assigns new ones.<br>
+    \N{ELECTRIC LIGHT BULB} To view your order missions, see the **/missions orders view** command.
+    """
+    _invoke_cooldown: int = 18000
+
+    async def callback(self):
+        async with self.acquire() as conn:
+            query = "DELETE FROM missions WHERE user_id = $1;"
+            await conn.execute(query, self.author.id)
+
+        embed = embed_util.success_embed(
+            title="Order missions refreshed!",
+            text=(
+                "Done! I've called some business partners and got some new jobs for you! "
+                "\N{BLACK TELEPHONE}\nCheck them out with **/missions orders view** \N{MEMO}"
+            ),
+            cmd=self
+        )
+        await self.reply(embed=embed)
 
 
 def setup(client) -> list:
