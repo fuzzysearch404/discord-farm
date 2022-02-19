@@ -1,22 +1,11 @@
 import json
 import random
-from dataclasses import dataclass
 
 from . import game_items
 
 
 with open("data/mission_names.json", "r") as file:
     MISSION_NAMES = json.load(file)
-
-
-@dataclass
-class PartialMissionRequest:
-    """Utility class for storing partial mission request data in the database"""
-
-    __slots__ = ("item_id", "amount")
-
-    item_id: int
-    amount: int
 
 
 class BusinessMission:
@@ -47,23 +36,23 @@ class BusinessMission:
     ):
         user_level = cmd.user_data.level
         if user_level < 3:
-            max_requests = 1
+            max_requests, max_products_requests = 1, 1
         elif user_level < 5:
-            max_requests, max_products_req = 2, 1
+            max_requests, max_products_requests = 2, 1
         elif user_level < 10:
-            max_requests, max_products_req = 2, 1
+            max_requests, max_products_requests = 2, 1
         elif user_level < 15:
-            max_requests, max_products_req = 3, 1
+            max_requests, max_products_requests = 3, 1
         elif user_level < 20:
-            max_requests, max_products_req = 3, 1
+            max_requests, max_products_requests = 3, 1
         elif user_level < 25:
-            max_requests, max_products_req = 3, 2
+            max_requests, max_products_requests = 3, 2
         else:
-            max_requests, max_products_req = 4, 2
+            max_requests, max_products_requests = 4, 2
 
+        request_items = []
         # Increase growables_multiplier for extra complexity
         multiplier = int(growables_multiplier * user_level)
-        request_items = []
         total_request_amount = random.randint(1, max_requests)
 
         # 1/3 chance to require products
@@ -71,39 +60,37 @@ class BusinessMission:
             # Default max product request amount is 1.
             # If multiplier, lower the chance to get more product requests
             product_amount_population = []
-            for i in range(max_products_req):
-                product_amount_population.extend([i + 1] * (max_products_req - i) * 3)
+            for i in range(max_products_requests):
+                product_amount_population.extend([i + 1] * (max_products_requests - i) * 3)
 
-            product_req_amount = random.choice(product_amount_population)
-            total_request_amount = total_request_amount - product_req_amount
+            product_request_amount = random.choice(product_amount_population)
+            total_request_amount = total_request_amount - product_request_amount
 
-            products = cmd.items.get_random_items(
+            products: dict = cmd.items.get_random_items(
                 user_level=user_level,
                 extra_luck=0.82,
-                total_draws=product_req_amount,
+                total_draws=product_request_amount,
                 products_multiplier=int(user_level / 12) or 1,
                 growables=False,
-                products=True,
-                specials=False
+                products=True
             )
-            request_items.extend(products)
+            request_items.extend(products.items())
 
         # If we still have requests to add
         if total_request_amount > 0:
-            growables = cmd.items.get_random_items(
+            growables: dict = cmd.items.get_random_items(
                 user_level=user_level,
                 extra_luck=0.62,
                 total_draws=total_request_amount,
                 growables_multiplier=multiplier,
                 growables=True,
-                products=False,
-                specials=False
+                products=False
             )
-            request_items.extend(growables)
+            request_items.extend(growables.items())
 
         total_worth, requests = 0, []
         for item, amount in request_items:
-            requests.append(PartialMissionRequest(item.id, amount))
+            requests.append((item.id, amount))
 
             extra_worth = random.randint(70, 115) / 100  # 0.7 - 1.15
             total_worth += int(item.max_market_price * amount * extra_worth)
@@ -116,12 +103,12 @@ class BusinessMission:
         chest_id = 0
         if add_chest and random.randint(1, 8) == 1:
             chests_and_rarities = {
-                1000: 450.0,  # Gold
-                1001: 1700.0,  # Common
+                1000: 750.0,  # Gold
+                1001: 2000.0,  # Common
                 1002: 950.0,  # Uncommon
-                1003: 400.0,  # Rare
-                1004: 125.0,  # Epic
-                1005: 15.0  # Legendary
+                1003: 420.0,  # Rare
+                1004: 150.0,  # Epic
+                1005: 25.0  # Legendary
             }
 
             chest_id = random.choices(
@@ -137,6 +124,32 @@ class BusinessMission:
             name=random.choice(MISSION_NAMES['businesses']),
             chest=chest_id
         )
+
+    def initialize_from_partial_data(self, cmd) -> None:
+        self.requests = [
+            (cmd.items.find_item_by_id(request[0]), request[1])
+            for request in self.requests
+        ]
+
+        if self.chest:
+            self.chest = cmd.items.find_chest_by_id(self.chest)
+
+    def format_for_embed(self, cmd) -> str:
+        fmt = f"\N{BOOKMARK TABS} {self.name}\nRequest:\n"
+
+        for req in self.requests:
+            item, amount = req[0], req[1]
+            fmt += f"**{item.full_name} x{amount}**\n"
+
+        fmt += "\n\N{MONEY BAG} Rewards:\n**"
+        if self.gold_reward:
+            fmt += f"{self.gold_reward} {cmd.client.gold_emoji} "
+        if self.xp_reward:
+            fmt += f"{self.xp_reward} {cmd.client.xp_emoji}"
+        if self.chest:
+            fmt += f"\n\N{WRAPPED PRESENT} Bonus: 1x {self.chest.emoji} "
+
+        return fmt + "**"
 
 
 class ExportMission:
@@ -179,9 +192,8 @@ class ExportMission:
             growables_multiplier=cmd.user_data.level,
             products_multiplier=int(cmd.user_data.level / 15) or 1,
             growables=True,
-            products=randomize_products,
-            specials=False
-        )[0]
+            products=randomize_products
+        ).items()[0]
 
         return cls(
             item=item,

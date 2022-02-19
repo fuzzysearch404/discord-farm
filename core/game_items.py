@@ -259,16 +259,6 @@ class Chest(GameItem):
         self.image_url = image_url
 
 
-@dataclass
-class ItemAndAmount:
-    """A helper class to store item and amount info in Product objects"""
-
-    __slots__ = ("item", "amount")
-
-    item: GameItem
-    amount: int
-
-
 class Product(GameItem, SellableItem, MarketItem):
     """Represents an item that can be produced in a factory."""
     inventory_name = "Factory products"
@@ -294,7 +284,7 @@ class Product(GameItem, SellableItem, MarketItem):
 
         self.xp = self._calculate_xp()
         # WARNING: Must manually init min, max market prices
-        # after the made_from list is parsed into list of ItemAndAmount objects
+        # after the made_from list is parsed from partial data.
         self.min_market_price = 0
         self.max_market_price = 0
 
@@ -306,16 +296,17 @@ class Product(GameItem, SellableItem, MarketItem):
         self.gold_reward = random.randint(self.min_market_price, self.max_market_price)
 
     def _calculate_total_value(self) -> int:
-        # Just to check if we have items at all and if there are ItemAndAmount instances, not dicts.
-        assert isinstance(self.made_from[0], ItemAndAmount), "Product made_from not initialized"
+        # Just to check if we have items at all and if there are object instances, not IDs.
+        assert isinstance(self.made_from[0][0], GameItem), "Product made_from not initialized"
 
         total_value = 0
         for item_and_amount in self.made_from:
-            if isinstance(item_and_amount.item, Product):
-                total_value += item_and_amount.item._calculate_total_value() \
-                    * item_and_amount.amount
+            item, amount = item_and_amount[0], item_and_amount[1]
+
+            if isinstance(item, Product):
+                total_value += item._calculate_total_value() * amount
             else:
-                total_value += item_and_amount.item.max_market_price * item_and_amount.amount
+                total_value += item.max_market_price * amount
 
         return total_value
 
@@ -489,21 +480,16 @@ class ItemPool:
         growables_multiplier: int = 1,
         products_multiplier: int = 1,
         growables: bool = True,
-        products: bool = True,
-        specials: bool = False
-    ) -> list:
-        items = self.find_all_items_by_level(user_level)
+        products: bool = True
+    ) -> dict:
+        max_weight, population, weights = 0, [], []
 
-        population, weights = [], []
-        max_weight = 0
-        for item in items:
+        for item in self.find_all_items_by_level(user_level):
             if not growables and isinstance(item, PlantableItem):
                 continue
-
             if not products and isinstance(item, Product):
                 continue
-
-            if not specials and isinstance(item, Special):
+            if isinstance(item, Special):  # Always ignore special items
                 continue
 
             if item.gold_reward > max_weight:
@@ -513,18 +499,14 @@ class ItemPool:
             weights.append(item.gold_reward)
 
         weights_size = len(weights)
-        new_weights = [0] * weights_size
+        new_weights = [0.0] * weights_size
 
         for i in range(weights_size):
-            current = weights[i]
             # If extra luck is 1 (max), then all items have equal weights
-            with_luck = current - (current * extra_luck)
-            new_weights[i] = (max_weight + 1) - with_luck
+            new_weights[i] = (max_weight + 1.0) - (weights[i] - (weights[i] * extra_luck))
 
-        items = random.choices(population, weights=new_weights, k=total_draws)
-
-        rewards = []
-        for item in items:
+        rewards = {}
+        for item in random.choices(population, weights=new_weights, k=total_draws):
             # Generate amounts
             # Hardcore to make it balanced by my liking
             if isinstance(item, PlantableItem):
@@ -538,12 +520,8 @@ class ItemPool:
                 else:
                     min, max = 1, 3
 
-                min *= growables_multiplier
-                max *= growables_multiplier
-
-                amount = random.randint(min, max)
+                amount = random.randint(min * growables_multiplier, max * growables_multiplier)
             else:
-                # Default product amount is 1.
                 # If multiplier, lower the chance to get more items
                 population = []
                 for i in range(products_multiplier):
@@ -552,12 +530,9 @@ class ItemPool:
                 amount = random.choice(population)
 
             try:
-                # Try to just change the existing amount if same item
-                existing = next(x for x in rewards if item == x[0])
-                rewards.remove(existing)
-                rewards.append((item, existing[1] + amount))
-            except StopIteration:
-                rewards.append((item, amount))
+                rewards[item] += amount
+            except KeyError:
+                rewards[item] = amount
 
         return rewards
 
@@ -676,7 +651,7 @@ def _load_craftables(all_loaded_items: list) -> None:
     # Add craftables to all items list
     all_loaded_items.extend(all_craftables)
 
-    # Initialize relations to other items
+    # Initialize relations to other items. (replace IDs with actual objects)
     for craftable in all_craftables:
         made_from_list = craftable.made_from
 
@@ -684,7 +659,7 @@ def _load_craftables(all_loaded_items: list) -> None:
         for requirement in made_from_list:
             for item, amount in requirement.items():
                 item_obj = next(obj for obj in all_loaded_items if obj.id == int(item))
-                made_from_new_list.append(ItemAndAmount(item_obj, amount))
+                made_from_new_list.append((item_obj, amount))
 
         craftable.made_from = made_from_new_list
 

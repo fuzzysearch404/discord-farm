@@ -150,5 +150,23 @@ BEGIN
 
     RETURN result_record;
 
-END
+END;
+$$ LANGUAGE plpgsql;
+
+-- Removes an item from the inventory
+CREATE PROCEDURE remove_item(user_id bigint, item_id smallint, amount integer)
+AS
+$$
+DECLARE
+    current integer;
+
+BEGIN
+    SELECT inventory.amount INTO current FROM inventory WHERE inventory.user_id = $1 AND inventory.item_id = $2;
+    IF (current - $3 > 0) THEN
+        UPDATE inventory SET amount = inventory.amount - $3 WHERE inventory.user_id = $1 AND inventory.item_id = $2;
+    ELSE
+        DELETE FROM inventory WHERE inventory.user_id = $1 AND inventory.item_id = $2;
+    END IF;
+
+END;
 $$ LANGUAGE plpgsql;

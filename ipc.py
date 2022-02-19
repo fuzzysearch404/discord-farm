@@ -435,7 +435,7 @@ class NotificationsService(IPCService):
                     try:
                         r.raise_for_status()
                     except aiohttp.ClientResponseError as e:
-                        # Don't want to get banned
+                        # Don't want to get banned. TODO: Better rate limit handling with bucketting
                         if e.status == 429:
                             retry_after = e.headers.get("X-RateLimit-Reset-After") or 0
                             retry_after = int(float(retry_after)) + 1

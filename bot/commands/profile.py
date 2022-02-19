@@ -57,8 +57,8 @@ class InventorySource(views.AbstractPaginatorSource):
         fmt, iteration = "", 0
         for item_and_amount in page:
             iteration += 1
-            item = item_and_amount.item
-            amount = item_and_amount.amount
+            item, amount = item_and_amount[0], item_and_amount[1]
+
             # 3 items per line
             if iteration <= 3:
                 fmt += f"{item.full_name} x{amount} "
@@ -320,7 +320,7 @@ class InventoryCommand(
                 # Could be a chest, we exclude those
                 continue
 
-            item_and_amt = game_items.ItemAndAmount(item, data['amount'])
+            item_and_amt = (item, data['amount'])
             try:
                 items_and_amounts_by_class[item.__class__].append(item_and_amt)
             except KeyError:
@@ -511,7 +511,7 @@ class ItemsInspectCommand(
             embed.add_field(name=f"{item.emoji} Grow", value=f"**/farm plant {item.name}**")
 
         if isinstance(item, game_items.Product):
-            made_from = "\n".join(f"{i.item.full_name} x{i.amount}" for i in item.made_from)
+            made_from = "\n".join(f"{i[0].full_name} x{i[1]}" for i in item.made_from)
             embed.add_field(name="\N{SCROLL} Required raw materials", value=made_from)
             embed.add_field(
                 name="\N{MANTELPIECE CLOCK} Production duration",
@@ -630,9 +630,8 @@ class ChestsOpenCommand(
             )
             return await self.reply(embed=embed)
 
-        user_level = self.user_data.level
+        user_level, items_won = self.user_data.level, []
         gold_reward = gems_reward = 0
-        items_won = []
         base_growables_multiplier = int(self.user_data.level / 4) + 1
 
         if chest.id == 1000:  # Gold chest
@@ -648,12 +647,12 @@ class ChestsOpenCommand(
 
             for _ in range(self.amount):
                 if bool(random.getrandbits(1)):
-                    items = self.items.get_random_items(
+                    items: dict = self.items.get_random_items(
                         user_level,
                         growables_multiplier=multiplier,
                         products=False
                     )
-                    items_won.extend(items)
+                    items_won.extend(items.items())
                 else:
                     gold_reward += self.ladder_random(min_gold, max_gold, 10)
         elif chest.id == 1002:  # Uncommon chest
@@ -661,14 +660,14 @@ class ChestsOpenCommand(
             max_gold = user_level * 4
 
             for _ in range(self.amount):
-                items = self.items.get_random_items(
+                items: dict = self.items.get_random_items(
                     user_level,
                     extra_luck=0.055,
                     growables_multiplier=base_growables_multiplier,
                     products=False,
                     total_draws=self.ladder_random(1, 2, 14)
                 )
-                items_won.extend(items)
+                items_won.extend(items.items())
 
                 if not random.randint(0, 6):
                     gold_reward += self.ladder_random(min_gold, max_gold, 8)
@@ -677,13 +676,13 @@ class ChestsOpenCommand(
             max_gold = user_level * 5
 
             for _ in range(self.amount):
-                items = self.items.get_random_items(
+                items: dict = self.items.get_random_items(
                     user_level,
                     extra_luck=0.1,
                     growables_multiplier=base_growables_multiplier + 2,
                     total_draws=self.ladder_random(1, 3, 12)
                 )
-                items_won.extend(items)
+                items_won.extend(items.items())
 
                 if not random.randint(0, 4):
                     gold_reward += self.ladder_random(min_gold, max_gold, 6)
@@ -692,13 +691,13 @@ class ChestsOpenCommand(
             max_gold = user_level * 25
 
             for _ in range(self.amount):
-                items = self.items.get_random_items(
+                items: dict = self.items.get_random_items(
                     user_level,
                     extra_luck=0.35,
                     growables_multiplier=base_growables_multiplier + 6,
                     total_draws=self.ladder_random(3, 4, 9)
                 )
-                items_won.extend(items)
+                items_won.extend(items.items())
 
                 gold_reward += self.ladder_random(min_gold, max_gold, 5)
         elif chest.id == 1005:  # Legendary chest
@@ -706,14 +705,14 @@ class ChestsOpenCommand(
             max_gold = user_level * 50
 
             for _ in range(self.amount):
-                items = self.items.get_random_items(
+                items: dict = self.items.get_random_items(
                     user_level,
                     extra_luck=0.85,
                     growables_multiplier=base_growables_multiplier + 12,
                     products_multiplier=2,
                     total_draws=self.ladder_random(4, 5, 6)
                 )
-                items_won.extend(items)
+                items_won.extend(items.items())
 
                 gold_reward += self.ladder_random(min_gold, max_gold, 3)
                 if not random.randint(0, 14):

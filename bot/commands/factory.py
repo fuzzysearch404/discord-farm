@@ -305,7 +305,7 @@ class FactoryMakeCommand(
 
         missing_items = []
         for item_and_amount in item.made_from:
-            req_item, req_amt = item_and_amount.item, item_and_amount.amount * self.amount
+            req_item, req_amt = item_and_amount[0], item_and_amount[1] * self.amount
             try:
                 item_data = user_items_by_id[req_item.id]
                 if item_data['amount'] < req_amt:
@@ -329,10 +329,8 @@ class FactoryMakeCommand(
             return await self.reply(embed=embed)
 
         async with conn.transaction():
-            for item_and_amount in item.made_from:
-                req_item_id = item_and_amount.item.id
-                req_item_amount = item_and_amount.amount * self.amount
-                await self.user_data.remove_item(req_item_id, req_item_amount, conn)
+            to_remove = [(iaa[0], iaa[1] * self.amount) for iaa in item.made_from]
+            await self.user_data.remove_items(to_remove, conn)
 
             query = "SELECT ends FROM factory WHERE user_id = $1 ORDER BY ends DESC LIMIT 1;"
             last_ends_in_queue = await conn.fetchval(query, self.author.id)

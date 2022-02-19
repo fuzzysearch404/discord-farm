@@ -108,6 +108,7 @@ class User:
 
         # If we somehow level up multiple levels at a time, give all gems
         self.gems += self.level - old_level
+        # This is going to inject level up embed in the next response
         cmd._level_up = True
 
     async def get_all_boosts(self, cmd) -> list:
@@ -167,10 +168,10 @@ class User:
                 """
         await conn.execute(query, self.user_id, item_id, amount)
 
-    async def give_items(self, items: list, conn) -> None:
+    async def give_items(self, items_and_amounts: list, conn) -> None:
         """Adds items to user. Accepts a list of tuples with items IDs and amounts"""
         items_with_user_id = []
-        for item, amount in items:
+        for item, amount in items_and_amounts:
             if isinstance(item, GameItem):
                 item = item.id
             items_with_user_id.append((self.user_id, item, amount))
@@ -186,16 +187,21 @@ class User:
 
     async def remove_item(self, item_id: int, amount: int, conn) -> None:
         """Removes a single type of items from inventory"""
-        query = "SELECT id, amount FROM inventory WHERE user_id = $1 AND item_id = $2;"
-        current_data = await conn.fetchrow(query, self.user_id, item_id)
+        # See schema.sql for the procedure
+        query = "CALL remove_item($1, $2, $3);"
+        await conn.execute(query, self.user_id, item_id, amount)
 
-        if current_data:
-            if current_data['amount'] - amount > 0:
-                query = "UPDATE inventory SET amount = inventory.amount - $2 WHERE id = $1;"
-                await conn.execute(query, current_data['id'], amount)
-            else:
-                query = "DELETE FROM inventory WHERE id = $1;"
-                await conn.execute(query, current_data['id'])
+    async def remove_items(self, items_and_amounts: list, conn) -> None:
+        """Removes multiple type of items from inventory"""
+        items_with_user_id = []
+        for item, amount in items_and_amounts:
+            if isinstance(item, GameItem):
+                item = item.id
+            items_with_user_id.append((self.user_id, item, amount))
+
+        # See schema.sql for the procedure
+        query = "CALL remove_item($1, $2, $3);"
+        await conn.executemany(query, items_with_user_id)
 
     async def get_item_modification(self, item_id: int, conn) -> asyncpg.Record:
         """Fetches item modifications data for a single item"""
