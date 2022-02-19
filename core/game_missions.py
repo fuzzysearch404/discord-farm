@@ -14,7 +14,7 @@ class BusinessMission:
 
     def __init__(
         self,
-        requests: list,
+        requests: list,  # Either tuples of (item_id, amount) or (item object, amount)
         gold_reward: int,
         xp_reward: int,
         name: str,
@@ -57,7 +57,6 @@ class BusinessMission:
 
         # 1/3 chance to require products
         if user_level >= 3 and random.randint(1, 3) == 1:
-            # Default max product request amount is 1.
             # If multiplier, lower the chance to get more product requests
             product_amount_population = []
             for i in range(max_products_requests):
@@ -216,5 +215,4 @@ class ExportMission:
 
         gold = self.base_gold * shipment
         xp = self.base_xp + self.base_xp * (shipment * 0.4)
-
         return (int(gold), int(xp), chest_id)

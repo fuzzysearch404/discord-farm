@@ -321,10 +321,17 @@ class InventoryCommand(
                 continue
 
             item_and_amt = (item, data['amount'])
+
+            # Group plantable items by base class
+            if isinstance(item, game_items.PlantableItem):
+                item_class = game_items.PlantableItem
+            else:
+                item_class = item.__class__
+
             try:
-                items_and_amounts_by_class[item.__class__].append(item_and_amt)
+                items_and_amounts_by_class[item_class].append(item_and_amt)
             except KeyError:
-                items_and_amounts_by_class[item.__class__] = [item_and_amt]
+                items_and_amounts_by_class[item_class] = [item_and_amt]
 
         if not items_and_amounts_by_class:
             await self.reply("\N{RAT} It's empty. There are only a few unfriendly rats in here...")

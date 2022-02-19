@@ -92,6 +92,8 @@ class MarketItem:
 
 class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
     """Represents an abstract game item, that can be planted on a farm field."""
+    inventory_name = "All harvest"
+    inventory_emoji = "\N{EAR OF RICE}"
 
     def __init__(
         self,
@@ -119,10 +121,7 @@ class PlantableItem(GameItem, PurchasableItem, SellableItem, MarketItem):
         self.xp = self._calculate_xp()
 
     def generate_new_price(self) -> None:
-        """
-        Generates a new price for the item.
-        This should be called outside of the class.
-        """
+        """Generates a new price for the item. This should be called outside of the class."""
         self.gold_reward = random.randint(self.min_market_price, self.max_market_price)
 
     def _calculate_xp(self) -> int:
@@ -244,10 +243,7 @@ class Special(GameItem, SellableItem, MarketItem):
         self.image_url = image_url
 
     def generate_new_price(self) -> None:
-        """
-        Generates a new price for the item.
-        This should be called outside of the class.
-        """
+        """Generates a new price for the item. This should be called outside of the class."""
         self.gold_reward = random.randint(self.min_market_price, self.max_market_price)
 
 
@@ -271,7 +267,7 @@ class Product(GameItem, SellableItem, MarketItem):
         emoji: str,
         name: str,
         amount: int,
-        made_from: list,
+        made_from: list,  # Before init. dicts of {item_id: amount}, then tuples (item obj, amount)
         craft_time: int,
         image_url: str
     ) -> None:
@@ -289,10 +285,7 @@ class Product(GameItem, SellableItem, MarketItem):
         self.max_market_price = 0
 
     def generate_new_price(self) -> None:
-        """
-        Generates a new price for the item.
-        This should be called outside of the class.
-        """
+        """Generates a new price for the item. This should be called outside of the class."""
         self.gold_reward = random.randint(self.min_market_price, self.max_market_price)
 
     def _calculate_total_value(self) -> int:
@@ -386,13 +379,11 @@ class Boost:
 
     def get_boost_price(self, duration: BoostDuration, user) -> int:
         price_per_day = self.base_price
-
         price_per_day += self.price_increase_per_farm_slots * user.farm_slots
         price_per_day += self.price_increase_per_factory_slots * user.factory_slots
         price_per_day += self.price_increase_per_user_level * user.level
 
-        if duration == BoostDuration.ONE_DAY:
-            # No discount
+        if duration == BoostDuration.ONE_DAY:  # No discount
             return price_per_day
         elif duration == BoostDuration.THREE_DAYS:
             total = price_per_day * 3
