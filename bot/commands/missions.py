@@ -301,6 +301,9 @@ class MissionsExportShipCommand(
                 cmd=self
             )
             return await self.reply(embed=embed)
+        else:
+            # Forbid from picking new contract for an hour.
+            await self.set_cooldown(3600, self.get_full_name())
 
         embed = discord.Embed(
             title="\N{PENCIL} Please choose an export contract",
@@ -338,9 +341,10 @@ class MissionsExportShipCommand(
             deny_label="Deny all"
         ).prompt()
 
-        if not result:  # Forbid from picking new contract for an hour.
-            return await self.set_cooldown(3600, self.get_full_name())
+        if not result:
+            return
 
+        result.convert_to_partial_data()
         await self.redis.execute_command(
             "SET", f"export:{self.author.id}", jsonpickle.encode(result),
             "EX", result.DURATION_SECONDS
@@ -348,6 +352,7 @@ class MissionsExportShipCommand(
         await self.show_current_export(result)
 
     async def show_current_export(self, export: game_missions.ExportMission):
+        export.initialize_from_partial_data(self)
         ttl = await self.redis.execute_command("TTL", f"export:{self.author.id}")
         leave_time = datetime.datetime.now() + datetime.timedelta(seconds=ttl)
 
@@ -389,7 +394,8 @@ class MissionsExportShipCommand(
         if not current_export:
             await self.start_new_mission()
         else:
-            await self.show_current_export(jsonpickle.decode(current_export))
+            export = jsonpickle.decode(current_export)
+            await self.show_current_export(export)
 
 
 class MissionsExportLoadCommand(
@@ -421,6 +427,7 @@ class MissionsExportLoadCommand(
             return await self.reply(embed=embed)
 
         export = jsonpickle.decode(export)
+        export.initialize_from_partial_data(self)
 
         if export.shipments >= export.MAX_SHIPMENTS:
             embed = embed_util.error_embed(
@@ -486,6 +493,7 @@ class MissionsExportLoadCommand(
         ttl = ttl if ttl > 0 else 1
 
         export.shipments += 1
+        export.convert_to_partial_data()
         await self.redis.execute_command(
             "SET", f"export:{self.author.id}", jsonpickle.encode(export),
             "EX", ttl

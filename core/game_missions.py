@@ -1,8 +1,6 @@
 import json
 import random
 
-from . import game_items
-
 
 with open("data/mission_names.json", "r") as file:
     MISSION_NAMES = json.load(file)
@@ -166,7 +164,7 @@ class ExportMission:
 
     def __init__(
         self,
-        item: game_items.MarketItem,
+        item,  # Either id or object
         amount: int,
         base_gold: int,
         base_xp: int,
@@ -204,6 +202,12 @@ class ExportMission:
             shipments=0,
             port_name=random.choice(MISSION_NAMES['ports'])
         )
+
+    def initialize_from_partial_data(self, cmd) -> None:
+        self.item = cmd.items.find_item_by_id(self.item)
+
+    def convert_to_partial_data(self) -> None:
+        self.item = self.item.id
 
     def rewards_for_shipment(self, shipment: int = 0) -> tuple:
         shipment = shipment or self.shipments + 1
