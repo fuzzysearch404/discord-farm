@@ -21,21 +21,19 @@ class BetaCollection(FarmCommandCollection):
 
 
 class BetaCommand(FarmSlashCommand, name="beta", guilds=static.DEVELOPMENT_GUILD_IDS):
-    pass
+    _owner_only: bool = True
 
 
-class SetCommand(FarmSlashCommand, name="set", parent=BetaCommand):
+class SetCommand(BetaCommand, name="set", parent=BetaCommand):
     pass
 
 
 class SetGoldCommand(
-    FarmSlashCommand,
+    SetCommand,
     name="gold",
     description="\N{TEST TUBE} [Beta only] Sets the gold amount",
     parent=SetCommand
 ):
-    _owner_only: bool = True
-
     gold: int = discord.app.Option(description="User's new gold amount")
 
     async def callback(self) -> None:
@@ -45,13 +43,11 @@ class SetGoldCommand(
 
 
 class SetGemsCommand(
-    FarmSlashCommand,
+    SetCommand,
     name="gems",
     description="\N{TEST TUBE} [Beta only] Sets the gems amount",
     parent=SetCommand
 ):
-    _owner_only: bool = True
-
     gems: int = discord.app.Option(description="User's new gems amount")
 
     async def callback(self) -> None:
@@ -61,13 +57,11 @@ class SetGemsCommand(
 
 
 class SetXPCommand(
-    FarmSlashCommand,
+    SetCommand,
     name="xp",
     description="\N{TEST TUBE} [Beta only] Sets the XP amount",
     parent=SetCommand
 ):
-    _owner_only: bool = True
-
     xp: int = discord.app.Option(description="User's new XP amount")
 
     async def callback(self) -> None:
@@ -78,13 +72,11 @@ class SetXPCommand(
 
 
 class SetFarmSizeCommand(
-    FarmSlashCommand,
+    SetCommand,
     name="farmsize",
     description="\N{TEST TUBE} [Beta only] Sets the farm size",
     parent=SetCommand
 ):
-    _owner_only: bool = True
-
     size: int = discord.app.Option(description="User's new farm size")
 
     async def callback(self) -> None:
@@ -94,13 +86,11 @@ class SetFarmSizeCommand(
 
 
 class SetFactorySizeCommand(
-    FarmSlashCommand,
+    SetCommand,
     name="factorysize",
     description="\N{TEST TUBE} [Beta only] Sets the factory size",
     parent=SetCommand
 ):
-    _owner_only: bool = True
-
     size: int = discord.app.Option(description="User's new factory size")
 
     async def callback(self) -> None:
@@ -110,13 +100,11 @@ class SetFactorySizeCommand(
 
 
 class SetItemCommand(
-    FarmSlashCommand,
+    SetCommand,
     name="item",
     description="\N{TEST TUBE} [Beta only] Gets game items",
     parent=SetCommand
 ):
-    _owner_only: bool = True
-
     item: str = discord.app.Option(description="Item to add", autocomplete=True)
     amount: int = discord.app.Option(description="How many items to add")
 
@@ -131,13 +119,11 @@ class SetItemCommand(
 
 
 class SetChestCommand(
-    FarmSlashCommand,
+    SetCommand,
     name="chest",
     description="\N{TEST TUBE} [Beta only] Gets chests",
     parent=SetCommand
 ):
-    _owner_only: bool = True
-
     chest: str = discord.app.Option(description="Chest to add", autocomplete=True)
     amount: int = discord.app.Option(description="How many chests to add")
 
@@ -152,13 +138,11 @@ class SetChestCommand(
 
 
 class SetBoosterCommand(
-    FarmSlashCommand,
+    SetCommand,
     name="booster",
     description="\N{TEST TUBE} [Beta only] Gets booster",
     parent=SetCommand
 ):
-    _owner_only: bool = True
-
     booster: str = discord.app.Option(description="Booster to add", autocomplete=True)
     duration: int = discord.app.Option(description="Duration in seconds")
 
@@ -173,19 +157,18 @@ class SetBoosterCommand(
         await self.reply(f"Obtained {booster.name} for {self.duration} seconds")
 
 
-class ActionsCommand(FarmSlashCommand, name="actions", parent=BetaCommand):
+class ActionsCommand(BetaCommand, name="actions", parent=BetaCommand):
     pass
 
 
 class ActionsFlushRedisCommand(
-    FarmSlashCommand,
+    ActionsCommand,
     name="flushredis",
     description="\N{TEST TUBE} [Beta only] Flushes the redis database",
     parent=ActionsCommand
 ):
     _avoid_maintenance: bool = False
     _requires_account: bool = False
-    _owner_only: bool = True
 
     async def callback(self) -> None:
         await self.client.redis.flushdb()

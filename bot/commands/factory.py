@@ -146,11 +146,11 @@ class FactorySource(views.AbstractPaginatorSource):
 
 
 class FactoryCommand(FarmSlashCommand, name="factory"):
-    pass
+    _required_level: int = 3
 
 
 class FactoryQueueCommand(
-    FarmSlashCommand,
+    FactoryCommand,
     name="queue",
     description="\N{FACTORY} Shows your or someone else's factory status",
     parent=FactoryCommand
@@ -168,8 +168,6 @@ class FactoryQueueCommand(
     __Icon descriptions:__<br>
     \N{OWL} - indicates that the factory size booster "Alice" is activated.<br>
     """
-    _required_level: int = 3
-
     player: Optional[discord.Member] = discord.app.Option(
         description="Other user, whose factory queue to view"
     )
@@ -222,7 +220,7 @@ class FactoryQueueCommand(
 
 
 class FactoryMakeCommand(
-    FarmSlashCommand,
+    FactoryCommand,
     name="make",
     description="\N{PACKAGE} Queues a product for manufacturing",
     parent=FactoryCommand
@@ -235,8 +233,6 @@ class FactoryMakeCommand(
     In the **/shop** you can buy more queue slots for your factory and upgrade your factory
     production speed, by buying the factory workers upgrade.
     """
-    _required_level: int = 3
-
     product: str = discord.app.Option(description="Product to manifacture", autocomplete=True)
     amount: Optional[int] = discord.app.Option(
         description="How many products of this type to manifacture",
@@ -365,7 +361,7 @@ class FactoryMakeCommand(
 
 
 class FactoryCollectCommand(
-    FarmSlashCommand,
+    FactoryCommand,
     name="collect",
     description="\N{DELIVERY TRUCK} Collects the manufactured products from your factory",
     parent=FactoryCommand
@@ -376,7 +372,6 @@ class FactoryCollectCommand(
     \N{ELECTRIC LIGHT BULB} Use **/factory queue** to check which of your products are ready to be
     collected.
     """
-    _required_level: int = 3
 
     async def callback(self):
         conn = await self.acquire()

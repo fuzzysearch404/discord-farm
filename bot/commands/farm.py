@@ -221,7 +221,7 @@ class FarmCommand(FarmSlashCommand, name="farm"):
 
 
 class FarmFieldCommand(
-    FarmSlashCommand,
+    FarmCommand,
     name="field",
     description="\N{EAR OF RICE} Shows your or someone else's farm field",
     parent=FarmCommand
@@ -295,7 +295,7 @@ class FarmFieldCommand(
 
 
 class FarmPlantCommand(
-    FarmSlashCommand,
+    FarmCommand,
     name="plant",
     description="\N{SEEDLING} Plants crops and trees, grows animals on your farm field",
     parent=FarmCommand
@@ -494,7 +494,7 @@ class FarmPlantCommand(
 
 
 class FarmHarvestCommand(
-    FarmSlashCommand,
+    FarmCommand,
     name="harvest",
     description="\N{MAN}\N{ZERO WIDTH JOINER}\N{EAR OF RICE} Harvests your farm field",
     parent=FarmCommand
@@ -679,7 +679,7 @@ class FarmHarvestCommand(
 
 
 class FarmClearCommand(
-    FarmSlashCommand,
+    FarmCommand,
     name="clear",
     description="\N{BROOM} Clears your farm field",
     parent=FarmCommand
@@ -773,7 +773,7 @@ class FarmClearCommand(
 
 
 class FarmStealCommand(
-    FarmSlashCommand,
+    FarmCommand,
     name="steal",
     description="\N{SLEUTH OR SPY} Steals someone else's farm harvest",
     parent=FarmCommand

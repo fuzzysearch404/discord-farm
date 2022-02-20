@@ -111,7 +111,7 @@ class MissionsOrdersCommand(MissionsCommand, name="orders", parent=MissionsComma
 
 
 class MissionsOrdersViewCommand(
-    FarmSlashCommand,
+    MissionsOrdersCommand,
     name="view",
     description="\N{MEMO} Lists your order missions",
     parent=MissionsOrdersCommand
@@ -196,7 +196,7 @@ class MissionsOrdersViewCommand(
 
 
 class MissionsOrdersRefreshCommand(
-    FarmSlashCommand,
+    MissionsOrdersCommand,
     name="refresh",
     description="\N{PRINTER} Replaces current order missions with new ones",
     parent=MissionsOrdersCommand
@@ -224,7 +224,7 @@ class MissionsOrdersRefreshCommand(
 
 
 class MissionsOrdersUrgentCommand(
-    FarmSlashCommand,
+    MissionsOrdersCommand,
     name="urgent",
     description="\N{LOWER LEFT FOUNTAIN PEN} Offers an urgent, limited time, order mission",
     parent=MissionsOrdersCommand

@@ -110,7 +110,7 @@ class AccountCommand(FarmSlashCommand, name="account"):
 
 
 class AccountCreateCommand(
-    FarmSlashCommand,
+    AccountCommand,
     name="create",
     description="\N{SQUARED NEW} Creates a new game account",
     parent=AccountCommand
@@ -148,7 +148,7 @@ class AccountCreateCommand(
 
 
 class AccountManageCommand(
-    FarmSlashCommand,
+    AccountCommand,
     name="manage",
     description="\N{PENCIL} Lists and manages your game account settings",
     parent=AccountCommand

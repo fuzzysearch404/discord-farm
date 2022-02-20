@@ -141,12 +141,12 @@ class ShopCommand(FarmSlashCommand, name="shop"):
     pass
 
 
-class ShopUpgradesCommand(FarmSlashCommand, name="upgrades", parent=ShopCommand):
+class ShopUpgradesCommand(ShopCommand, name="upgrades", parent=ShopCommand):
     pass
 
 
 class ShopUpgradesViewCommand(
-    FarmSlashCommand,
+    ShopUpgradesCommand,
     name="view",
     description="\N{WHITE MEDIUM STAR} Lists all upgrades available for purchase",
     parent=ShopUpgradesCommand
@@ -215,7 +215,7 @@ class ShopUpgradesViewCommand(
 
 
 class ShopUpgradesBuyCommand(
-    FarmSlashCommand,
+    ShopUpgradesCommand,
     name="buy",
     description="\N{SHOPPING TROLLEY} Purchases an upgrade",
     parent=ShopUpgradesCommand
@@ -396,12 +396,12 @@ class ShopUpgradesBuyCommand(
         await upgrade_methods[self.upgrade]()
 
 
-class ShopBoostersCommand(FarmSlashCommand, name="boosters", parent=ShopCommand):
-    pass
+class ShopBoostersCommand(ShopCommand, name="boosters", parent=ShopCommand):
+    _required_level: int = 7
 
 
 class ShopBoostersViewCommand(
-    FarmSlashCommand,
+    ShopBoostersCommand,
     name="view",
     description="\N{UPWARDS BLACK ARROW} Lists all boosters available for purchase",
     parent=ShopBoostersCommand
@@ -411,7 +411,6 @@ class ShopBoostersViewCommand(
     \N{ELECTRIC LIGHT BULB} For information about buying boosters, please see
     **/help "shop boosters buy"**.
     """
-    _required_level: int = 7
 
     async def callback(self):
         embed = discord.Embed(
@@ -435,7 +434,7 @@ class ShopBoostersViewCommand(
 
 
 class ShopBoostersBuyCommand(
-    FarmSlashCommand,
+    ShopBoostersCommand,
     name="buy",
     description="\N{SHOPPING TROLLEY} Purchases a booster",
     parent=ShopBoostersCommand
@@ -447,8 +446,6 @@ class ShopBoostersBuyCommand(
     Booster prices are dynamically calculated based on various, your current progression related,
     factors such as your experience level.
     """
-    _required_level: int = 7
-
     booster: str = discord.app.Option(description="The booster to activate", autocomplete=True)
 
     async def autocomplete(self, options, focused):
@@ -550,7 +547,7 @@ class ShopBoostersBuyCommand(
 
 
 class ShopItemsCommand(
-    FarmSlashCommand,
+    ShopCommand,
     name="items",
     description="\N{CONVENIENCE STORE} Lists all items available for purchase",
     parent=ShopCommand
@@ -583,7 +580,7 @@ class MarketCommand(FarmSlashCommand, name="market"):
 
 
 class MarketViewCommand(
-    FarmSlashCommand,
+    MarketCommand,
     name="view",
     description="\N{SCALES} Lists all items available for selling",
     parent=MarketCommand
@@ -623,7 +620,7 @@ class MarketViewCommand(
 
 
 class MarketSellCommand(
-    FarmSlashCommand,
+    MarketCommand,
     name="sell",
     description="\N{BANKNOTE WITH DOLLAR SIGN} Sells your items to the market",
     parent=MarketCommand
@@ -712,11 +709,11 @@ class MarketSellCommand(
 
 
 class TradesCommand(FarmSlashCommand, name="trades"):
-    pass
+    _required_level: int = 5
 
 
 class TradesListCommand(
-    FarmSlashCommand,
+    TradesCommand,
     name="list",
     description="\N{PAGE WITH CURL} Lists all active trades in this server",
     parent=TradesCommand
@@ -727,8 +724,6 @@ class TradesListCommand(
     more trading slots with gold from the **/shop**.<br>
     \N{ELECTRIC LIGHT BULB} To create a trade offer, use the **/trades create** command.
     """
-    _required_level: int = 5
-
     owned: Optional[bool] = discord.app.Option(
         description="Set to true, to only list your created trades",
         default=False
@@ -754,7 +749,7 @@ class TradesListCommand(
 
 
 class TradesCreateCommand(
-    FarmSlashCommand,
+    TradesCommand,
     name="create",
     description="\N{SQUARED NEW} Creates a new trade offer",
     parent=TradesCommand
@@ -767,8 +762,6 @@ class TradesCreateCommand(
     \N{ELECTRIC LIGHT BULB} To view already posted trade offers in this server, use the
     **/trades list** command.
     """
-    _required_level: int = 5
-
     item: str = discord.app.Option(description="Item to trade", autocomplete=True)
     amount: int = discord.app.Option(description="How many items to trade", min=1, max=2000)
     price: Literal["cheap", "average", "expensive", "very expensive"] = \
@@ -865,7 +858,7 @@ class TradesCreateCommand(
 
 
 class TradesAcceptCommand(
-    FarmSlashCommand,
+    TradesCommand,
     name="accept",
     description="\N{HANDSHAKE} Accepts someone else's trade offer",
     parent=TradesCommand
@@ -877,8 +870,6 @@ class TradesAcceptCommand(
     **/trades create** command.<br>
     You can't accept your own trades, but you can delete them with the **/trades delete** command.
     """
-    _required_level: int = 5
-
     id: int = discord.app.Option(
         description="Trade ID of the trade to accept",
         min=1,
@@ -1036,7 +1027,7 @@ class TradesAcceptCommand(
 
 
 class TradesDeleteCommand(
-    FarmSlashCommand,
+    TradesCommand,
     name="delete",
     description="\N{WASTEBASKET} Cancels your trade offer",
     parent=TradesCommand
@@ -1045,8 +1036,6 @@ class TradesDeleteCommand(
     This command is used to cancel a trade offer. You can only cancel your own trade offers.
     Canceling a trade offer will return the items to your inventory.
     """
-    _required_level: int = 5
-
     id: int = discord.app.Option(
         description="Trade ID of the trade to delete",
         min=1,

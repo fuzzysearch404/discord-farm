@@ -20,18 +20,17 @@ class AdminCollection(FarmCommandCollection):
 
 
 class RunCommand(FarmSlashCommand, name="run", guilds=static.DEVELOPMENT_GUILD_IDS):
-    pass
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
 
 class RunEvalCommand(
-    FarmSlashCommand,
+    RunCommand,
     name="eval",
     description="\N{WRENCH} [Developer only] Evaluates Python code",
     parent=RunCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
     # TODO: Use multi line text input, when possible
     body: str = discord.app.Option(description="Python code to execute")
 
@@ -51,15 +50,11 @@ class RunEvalCommand(
 
 
 class RunSQLCommand(
-    FarmSlashCommand,
+    RunCommand,
     name="sql",
     description="\N{WRENCH} [Developer only] Executes a SQL query",
     parent=RunCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
-
     query: str = discord.app.Option(description="SQL query to execute")
 
     async def callback(self):
@@ -98,15 +93,11 @@ class RunSQLCommand(
 
 
 class RunRedisCommand(
-    FarmSlashCommand,
+    RunCommand,
     name="redis",
     description="\N{WRENCH} [Developer only] Executes a Redis command",
     parent=RunCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
-
     command: str = discord.app.Option(description="Redis command to execute")
 
     async def callback(self):

@@ -320,18 +320,17 @@ def get_cluster_collection(client) -> ClustersCollection:
 
 
 class ClustersCommand(FarmSlashCommand, name="clusters", guilds=static.DEVELOPMENT_GUILD_IDS):
-    pass
+    _avoid_maintenance: bool = False
+    _requires_account: bool = False
+    _owner_only: bool = True
 
 
 class ClustersEvalCommand(
-    FarmSlashCommand,
+    ClustersCommand,
     name="eval",
     description="\N{SATELLITE} [Developer only] Runs Python code on all clusters",
     parent=ClustersCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
     # TODO: Use multi line text input, when possible
     body: str = discord.app.Option(description="Python code to execute")
 
@@ -344,14 +343,11 @@ class ClustersEvalCommand(
 
 
 class ClustersStatusCommand(
-    FarmSlashCommand,
+    ClustersCommand,
     name="status",
     description="\N{SATELLITE} [Developer only] Shows bot's all cluster statuses",
     parent=ClustersCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
 
     async def callback(self) -> None:
         embed = discord.Embed()
@@ -369,15 +365,11 @@ class ClustersStatusCommand(
 
 
 class ClustersLogoutCommand(
-    FarmSlashCommand,
+    ClustersCommand,
     name="logout",
     description="\N{SATELLITE} [Developer only] Logs off this or all bot instances",
     parent=ClustersCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
-
     run_locally: Optional[bool] = discord.app.Option(
         description="Set to True to logout only the current instance",
         default=False
@@ -392,20 +384,16 @@ class ClustersLogoutCommand(
             await get_cluster_collection(self.client).send_shutdown_message()
 
 
-class ClustersCommandsCommand(FarmSlashCommand, name="commands", parent=ClustersCommand):
+class ClustersCommandsCommand(ClustersCommand, name="commands", parent=ClustersCommand):
     pass
 
 
 class ClustersCommandsSyncCommand(
-    FarmSlashCommand,
+    ClustersCommandsCommand,
     name="sync",
     description="\N{SATELLITE} [Developer only] Synchronizes commands based on this instance",
     parent=ClustersCommandsCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
-
     global_commands: Optional[bool] = discord.app.Option(
         description="If set to True, global application commands are going to be synced",
         default=True
@@ -427,15 +415,11 @@ class ClustersCommandsSyncCommand(
 
 
 class ClustersCommandsLoadModuleCommand(
-    FarmSlashCommand,
+    ClustersCommandsCommand,
     name="load_module",
     description="\N{SATELLITE} [Developer only] Loads an extension",
     parent=ClustersCommandsCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
-
     extension: str = discord.app.Option(description="Extension name")
 
     async def callback(self) -> None:
@@ -450,15 +434,11 @@ class ClustersCommandsLoadModuleCommand(
 
 
 class ClustersCommandsUnloadModuleCommand(
-    FarmSlashCommand,
+    ClustersCommandsCommand,
     name="unload_module",
     description="\N{SATELLITE} [Developer only] Unloads an extension",
     parent=ClustersCommandsCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
-
     extension: str = discord.app.Option(description="Extension name")
 
     async def callback(self) -> None:
@@ -473,15 +453,11 @@ class ClustersCommandsUnloadModuleCommand(
 
 
 class ClustersCommandsReloadModuleCommand(
-    FarmSlashCommand,
+    ClustersCommandsCommand,
     name="reload_module",
     description="\N{SATELLITE} [Developer only] Reloads an extension",
     parent=ClustersCommandsCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
-
     extension: str = discord.app.Option(description="Extension name")
 
     async def callback(self) -> None:
@@ -495,19 +471,16 @@ class ClustersCommandsReloadModuleCommand(
             await clusters_collection.wait_and_publish_responses(self)
 
 
-class ClustersGameMasterCommand(FarmSlashCommand, name="game_master", parent=ClustersCommand):
+class ClustersGameMasterCommand(ClustersCommand, name="game_master", parent=ClustersCommand):
     pass
 
 
 class ClustersGameMasterReloadItemsCommand(
-    FarmSlashCommand,
+    ClustersGameMasterCommand,
     name="reload_items",
     description="\N{SATELLITE} [Developer only] Reloads game items data on all clusters",
     parent=ClustersGameMasterCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
 
     async def callback(self) -> None:
         await get_cluster_collection(self.client).send_set_items_message()
@@ -515,14 +488,11 @@ class ClustersGameMasterReloadItemsCommand(
 
 
 class ClustersGameMasterEditNewsCommand(
-    FarmSlashCommand,
+    ClustersGameMasterCommand,
     name="edit_news",
     description="\N{SATELLITE} [Developer only] Edits the game news",
     parent=ClustersGameMasterCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
     # TODO: Use multi line text input, when possible
     news: str = discord.app.Option(description="The news text to set")
 
@@ -535,15 +505,11 @@ class ClustersGameMasterEditNewsCommand(
 
 
 class ClustersGameMasterEditMaintenanceCommand(
-    FarmSlashCommand,
+    ClustersGameMasterCommand,
     name="edit_maintenance",
     description="\N{SATELLITE} [Developer only] Edits the bot's maintenance status",
     parent=ClustersGameMasterCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
-
     enabled: bool = discord.app.Option(description="Set to True to enable maintenance")
 
     async def callback(self) -> None:
@@ -555,15 +521,11 @@ class ClustersGameMasterEditMaintenanceCommand(
 
 
 class ClustersGameMasterFarmGuardCommand(
-    FarmSlashCommand,
+    ClustersGameMasterCommand,
     name="farm_guard",
     description="\N{SATELLITE} [Developer only] Enables the farm guard feature",
     parent=ClustersGameMasterCommand
 ):
-    _avoid_maintenance: bool = False
-    _requires_account: bool = False
-    _owner_only: bool = True
-
     duration: int = discord.app.Option(description="Duration in seconds", min=0)
 
     async def callback(self) -> None:

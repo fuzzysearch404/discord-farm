@@ -414,7 +414,7 @@ class ItemsCommand(FarmSlashCommand, name="items"):
 
 
 class ItemsUnlockedCommand(
-    FarmSlashCommand,
+    ItemsCommand,
     name="unlocked",
     description="\N{SPIRAL NOTE PAD} Lists all unlocked items for your level",
     parent=ItemsCommand
@@ -432,7 +432,7 @@ class ItemsUnlockedCommand(
 
 
 class ItemsInspectCommand(
-    FarmSlashCommand,
+    ItemsCommand,
     name="inspect",
     description="\N{LEFT-POINTING MAGNIFYING GLASS} Shows detailed information about a game item",
     parent=ItemsCommand
@@ -538,7 +538,7 @@ class ChestsCommand(FarmSlashCommand, name="chests"):
 
 
 class ChestsViewCommand(
-    FarmSlashCommand,
+    ChestsCommand,
     name="view",
     description="\N{TOOLBOX} Lists your owned chests",
     parent=ChestsCommand
@@ -588,7 +588,7 @@ class ChestsViewCommand(
 
 
 class ChestsOpenCommand(
-    FarmSlashCommand,
+    ChestsCommand,
     name="open",
     description="\N{CLOSED LOCK WITH KEY} Opens a chest",
     parent=ChestsCommand
@@ -766,7 +766,7 @@ class ChestsOpenCommand(
 
 
 class ChestsDailyCommand(
-    FarmSlashCommand,
+    ChestsCommand,
     name="daily",
     description="\N{SLOT MACHINE} Gets a free random chest every day",
     parent=ChestsCommand
@@ -810,7 +810,7 @@ class ChestsDailyCommand(
 
 
 class ChestsHourlyCommand(
-    FarmSlashCommand,
+    ChestsCommand,
     name="hourly",
     description="\N{CLOCK FACE TWELVE OCLOCK} Gets a free random chest every hour",
     parent=ChestsCommand

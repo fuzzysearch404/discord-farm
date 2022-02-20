@@ -228,9 +228,8 @@ class NewsCommand(
     description="\N{NEWSPAPER} Displays update and announcement information",
 ):
     """
-    Provides information about the latest bot updates.
-    As displaying long contents in commands is limited, for more information,
-    consider joining the bot's official support server.
+    Provides information about the latest bot updates. As displaying long contents in commands is
+    limited, for more information, consider joining the bot's official support server.
     """
     _avoid_maintenance: bool = False
     _requires_account: bool = False
