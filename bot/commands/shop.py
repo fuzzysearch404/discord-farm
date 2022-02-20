@@ -241,7 +241,7 @@ class ShopUpgradesBuyCommand(
         )
         await self.reply(embed=embed)
 
-    async def reject_for_being_maxed(self, edit_msg: bool):
+    async def reject_for_being_maxed(self):
         embed = embed_util.error_embed(
             title="\N{SHOOTING STAR} This upgrade is already maxed out!",
             text=(
@@ -251,7 +251,7 @@ class ShopUpgradesBuyCommand(
             ),
             cmd=self
         )
-        if not edit_msg:
+        if not self.interaction.response.is_done():
             await self.reply(embed=embed)
         else:
             await self.edit(embed=embed, view=None)
@@ -266,7 +266,7 @@ class ShopUpgradesBuyCommand(
         costs_gems: bool = True
     ):
         if check_if_upgrade_maxed(self.user_data, profile_attribute):
-            return await self.reject_for_being_maxed(False)
+            return await self.reject_for_being_maxed()
 
         embed = embed_util.prompt_embed(
             title=f"Purchase upgrade: \"{title}\"?",
@@ -297,7 +297,7 @@ class ShopUpgradesBuyCommand(
         self.user_data = await self.users.get_user(self.author.id, conn=conn)
         if check_if_upgrade_maxed(self.user_data, profile_attribute):
             await self.release()
-            return await self.reject_for_being_maxed(True)
+            return await self.reject_for_being_maxed()
 
         if costs_gems:
             if self.user_data.gems < price:
@@ -876,7 +876,7 @@ class TradesAcceptCommand(
         max=2147483647  # PostgreSQL's max int value
     )
 
-    async def reject_for_not_found(self, edit: bool):
+    async def reject_for_not_found(self):
         embed = embed_util.error_embed(
             title="Trade not found!",
             text=(
@@ -887,7 +887,7 @@ class TradesAcceptCommand(
             ),
             cmd=self
         )
-        if not edit:
+        if not self.interaction.response.is_done():
             await self.reply(embed=embed)
         else:
             await self.edit(embed=embed, view=None)
@@ -898,7 +898,7 @@ class TradesAcceptCommand(
             trade_data = await conn.fetchrow(query, self.id, self.guild.id)
 
         if not trade_data:
-            return await self.reject_for_not_found(False)
+            return await self.reject_for_not_found()
 
         if trade_data['user_id'] == self.author.id:
             embed = embed_util.error_embed(
@@ -978,7 +978,7 @@ class TradesAcceptCommand(
 
         if not trade_data:
             await self.release()
-            return await self.reject_for_not_found(True)
+            return await self.reject_for_not_found()
 
         user_data = await self.users.get_user(self.author.id, conn=conn)
         trade_user_data = await self.users.get_user(trade_data['user_id'], conn=conn)
