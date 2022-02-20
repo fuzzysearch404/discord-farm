@@ -302,8 +302,8 @@ class MissionsExportShipCommand(
             )
             return await self.reply(embed=embed)
         else:
-            # Forbid from picking new contract for an hour.
-            await self.set_cooldown(3600, self.get_full_name())
+            # Forbid picking a new contract for an hour.
+            await self.set_cooldown(self._inner_cooldown, self.get_full_name())
 
         embed = discord.Embed(
             title="\N{PENCIL} Please choose an export contract",
