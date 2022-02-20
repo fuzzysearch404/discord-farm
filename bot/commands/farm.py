@@ -447,9 +447,7 @@ class FarmPlantCommand(
             )
             return await self.edit(embed=embed, view=None)
 
-        iterations = None
-        if isinstance(item, game_items.ReplantableItem):
-            iterations = item.iterations
+        iterations = item.iterations if isinstance(item, game_items.ReplantableItem) else None
         now = datetime.datetime.now()
         ends = now + datetime.timedelta(seconds=grow_time)
         dies = ends + datetime.timedelta(seconds=collect_time)

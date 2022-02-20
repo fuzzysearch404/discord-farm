@@ -1,8 +1,10 @@
 import discord
+import datetime
 import jsonpickle
 
 from core import game_missions
 from .util import views
+from .util import time as time_util
 from .util import embeds as embed_util
 from .util.commands import FarmSlashCommand, FarmCommandCollection
 
@@ -188,7 +190,6 @@ class MissionsOrdersViewCommand(
             ))
 
         result = await views.MultiOptionView(self, buttons, initial_embed=embed).prompt()
-
         if not result:
             return
 
@@ -262,6 +263,251 @@ class MissionsOrdersUrgentCommand(
             return
 
         await complete_business_mission(self, mission, -1)
+
+
+class MissionsExportCommand(MissionsCommand, name="export", parent=MissionsCommand):
+    _required_level: int = 10
+
+
+class MissionsExportShipCommand(
+    MissionsExportCommand,
+    name="ship",
+    description="\N{SHIP} Starts a new export mission or displays the already active export",
+    parent=MissionsExportCommand
+):
+    """
+    These missions are different than the other mission types. You have to sign an export contract
+    and load the cargo ship with as much resources as you can, before ship leaves your port.
+    The more packages of items you load - the better the rewards get. If you don't sign
+    any of the offered export contracts, when first running this command, you will be on
+    a cooldown. If you already have chosen a contract, this command is going to show
+    information about the current contract and your current export progression.<br>
+    \N{ELECTRIC LIGHT BULB} To load a package to the ship, use the **/missions export load**
+    command.
+    """
+    _inner_cooldown: int = 3600
+
+    async def start_new_mission(self):
+        contract_cooldown = await self.get_cooldown_ttl(self.get_full_name())
+        if contract_cooldown:
+            ttl_fmt = time_util.seconds_to_time(contract_cooldown)
+            embed = embed_util.error_embed(
+                title="\N{SCROLL} Waiting for new export contracts",
+                text=(
+                    "You recently were offered a list of export contracts, but you didn't sign "
+                    f"any of them. New contracts are going to appear in: **{ttl_fmt}** "
+                    "\N{HOURGLASS WITH FLOWING SAND}"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        embed = discord.Embed(
+            title="\N{PENCIL} Please choose an export contract",
+            description=(
+                "\N{FERRY} Welcome to the port! \N{CONSTRUCTION WORKER} We have these three cargo "
+                "ships leaving to high seas today and they have the following offers:\n"
+                "\N{CLOCK FACE ONE OCLOCK} You can only choose one and if you don't choose any, "
+                "you will have to wait an hour for new contracts."
+            ),
+            color=discord.Color.from_rgb(217, 158, 130)
+        )
+        embed.set_footer(text=(
+            "\N{STOPWATCH} Choose a contract quickly, because you have limited time to do so"
+        ))
+
+        buttons = []
+        for num in range(3):
+            export = game_missions.ExportMission.generate(self)
+
+            embed.add_field(
+                name=f"\N{MEMO} Contract: #{num + 1}",
+                value=export.format_for_embed(self)
+            )
+            buttons.append(views.OptionButton(
+                option=export,
+                style=discord.ButtonStyle.secondary,
+                emoji="\N{PENCIL}",
+                label=f"Start contract #{num + 1}"
+            ))
+
+        result = await views.MultiOptionView(
+            self,
+            buttons,
+            initial_embed=embed,
+            deny_label="Deny all"
+        ).prompt()
+
+        if not result:  # Forbid from picking new contract for an hour.
+            return await self.set_cooldown(3600, self.get_full_name())
+
+        await self.redis.execute_command(
+            "SET", f"export:{self.author.id}", jsonpickle.encode(result),
+            "EX", result.DURATION_SECONDS
+        )
+        await self.show_current_export(result)
+
+    async def show_current_export(self, export: game_missions.ExportMission):
+        ttl = await self.redis.execute_command("TTL", f"export:{self.author.id}")
+        leave_time = datetime.datetime.now() + datetime.timedelta(seconds=ttl)
+
+        embed = discord.Embed(
+            title="\N{SHIP} Load the cargo ship",
+            description=(
+                "\N{PACKAGE} Load items into the cargo ship with the **/missions export load** "
+                "command!\n\N{ARROW POINTING RIGHTWARDS THEN CURVING UPWARDS} "
+                "You will get higher rewards for each package you load into the cargo ship.\n"
+                "\N{TIMER CLOCK} You can load a package every 15 minutes."
+            ),
+            color=discord.Color.from_rgb(34, 102, 153)
+        )
+        embed.add_field(name="\N{ANCHOR} Current contract", value=export.format_for_embed(self))
+        embed.add_field(
+            name="\N{PACKAGE} Loaded packages",
+            value=f"{export.shipments} of {export.MAX_SHIPMENTS}"
+        )
+        embed.add_field(
+            name="\N{CLOCK FACE ONE OCLOCK} Cargo ship will leave",
+            value=time_util.maybe_timestamp(leave_time)
+        )
+
+        load_cooldown = await self.get_cooldown_ttl("export_load")
+        if load_cooldown:
+            load_cooldown = datetime.datetime.now() + datetime.timedelta(seconds=load_cooldown)
+            time_fmt = time_util.maybe_timestamp(load_cooldown)
+            embed.description += (
+                f"\n\N{CONSTRUCTION WORKER} The cargo ship is going to be idle again: {time_fmt}."
+            )
+
+        if self.interaction.response.is_done():
+            await self.edit(embed=embed, view=None)
+        else:
+            await self.reply(embed=embed)
+
+    async def callback(self):
+        current_export = await self.client.redis.execute_command("GET", f"export:{self.author.id}")
+        if not current_export:
+            await self.start_new_mission()
+        else:
+            await self.show_current_export(jsonpickle.decode(current_export))
+
+
+class MissionsExportLoadCommand(
+    MissionsExportCommand,
+    name="load",
+    description="\N{PACKAGE} Loads a package into the cargo ship",
+    parent=MissionsExportCommand
+):
+    """
+    This command is going to load a single package onto your current export ship and
+    pay the rewards based on the amount of previously loaded packages.
+    You have to wait 15 minutes between each successful load.<br>
+    \N{ELECTRIC LIGHT BULB} For more help about export missions, please see help
+    for the **/missions export ship** command.
+    """
+    _inner_cooldown: int = 900
+
+    async def callback(self):
+        export = await self.client.redis.execute_command("GET", f"export:{self.author.id}")
+        if not export:
+            embed = embed_util.error_embed(
+                title="\N{SCROLL} No active export contract!",
+                text=(
+                    "You don't have an active export contract in this port. "
+                    "Sign a new contract with **/missions export ship** \N{ANCHOR}"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        export = jsonpickle.decode(export)
+
+        if export.shipments >= export.MAX_SHIPMENTS:
+            embed = embed_util.error_embed(
+                title="\N{PACKAGE} The cargo ship is already full!",
+                text=(
+                    "We can't load another package, because the cargo ship has reached it's "
+                    "maximum cargo capacity! \N{CONSTRUCTION WORKER}\nAnyways, well done! "
+                    "We now have to wait until it leaves the port! You don't have to do "
+                    "anything tho, you can just watch as it enters the sea, if you wish. "
+                    "\N{SUNRISE}"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        cooldown = await self.get_cooldown_ttl("export_load")
+        if cooldown:
+            time_fmt = time_util.seconds_to_time(cooldown)
+            embed = embed_util.error_embed(
+                title="Package loading onto cargo ship in progress! \N{SHIP}\N{PACKAGE}",
+                text=(
+                    "We have to wait for your last package to get loaded onto the cargo ship! "
+                    f"Please check back again in **{time_fmt}**. It should be done by that "
+                    "time. \N{CONSTRUCTION WORKER}"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        conn = await self.acquire()
+        item, amount = export.item, export.amount
+        item_data = await self.user_data.get_item(item.id, conn)
+
+        if not item_data or item_data['amount'] < amount:
+            await self.release()
+            missing_amount = amount - item_data['amount'] if item_data else amount
+            embed = embed_util.error_embed(
+                title="\N{PACKAGE} Not enough items for this package!",
+                text=(
+                    "We can't load this package onto the cargo ship! The cargo ship's capacity "
+                    "must be used effectively, so the package must be full to the top. "
+                    "\N{CONSTRUCTION WORKER}\N{ABACUS}\n\n"
+                    f"**You are missing: {missing_amount}x {item.full_name}**"
+                ),
+                cmd=self
+            )
+            return await self.reply(embed=embed)
+
+        rewards = export.rewards_for_shipment()  # gold, xp, chest_id
+        self.user_data.gold += rewards[0]
+        self.user_data.give_xp_and_level_up(self, rewards[1])
+
+        async with conn.transaction():
+            await self.user_data.remove_item(item.id, amount, conn)
+            await self.users.update_user(self.user_data, conn=conn)
+            # Award chest, if any. Always one.
+            if rewards[2]:
+                await self.user_data.give_item(rewards[2], 1, conn)
+        await self.release()
+
+        ttl = await self.redis.execute_command("TTL", f"export:{self.author.id}")
+        # Just in case if it somehow already ended
+        ttl = ttl if ttl > 0 else 1
+
+        export.shipments += 1
+        await self.redis.execute_command(
+            "SET", f"export:{self.author.id}", jsonpickle.encode(export),
+            "EX", ttl
+        )
+        await self.set_cooldown(self._inner_cooldown, "export_load")
+
+        if rewards[2]:
+            chest = self.items.find_chest_by_id(rewards[2])
+            chest_fmt = f"1x {chest.emoji} {chest.name.capitalize()}"
+        else:
+            chest_fmt = ""
+
+        embed = embed_util.success_embed(
+            title="Package is now being loaded onto the cargo ship!",
+            text=(
+                f"Well done! \N{THUMBS UP SIGN} We started loading your package: **{amount}x "
+                f"{item.full_name}** onto the cargo ship! **You received: {rewards[0]} "
+                f"{self.client.gold_emoji} {rewards[1]} {self.client.xp_emoji} {chest_fmt}**"
+            ),
+            cmd=self
+        )
+        await self.reply(embed=embed)
 
 
 def setup(client) -> list:

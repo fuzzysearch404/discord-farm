@@ -152,6 +152,8 @@ class BusinessMission:
 
 
 class ExportMission:
+    MAX_SHIPMENTS: int = 12
+    DURATION_SECONDS: int = 18000  # 5 hours
 
     __slots__ = (
         "item",
@@ -192,12 +194,12 @@ class ExportMission:
             products_multiplier=int(cmd.user_data.level / 15) or 1,
             growables=True,
             products=randomize_products
-        ).items()[0]
+        ).popitem()
 
         return cls(
             item=item,
             amount=amount,
-            base_gold=int(item.max_market_price / 5.11 * amount) or 1,
+            base_gold=int(item.max_market_price / 5.4 * amount) or 1,
             base_xp=int(item.xp * amount / 12) or 1,
             shipments=0,
             port_name=random.choice(MISSION_NAMES['ports'])
@@ -206,7 +208,7 @@ class ExportMission:
     def rewards_for_shipment(self, shipment: int = 0) -> tuple:
         shipment = shipment or self.shipments + 1
 
-        chests_per_shipments = {3: 1001, 7: 1003, 10: 1004}
+        chests_per_shipments = {3: 1001, 6: 1002, 9: 1003, 12: 1004}
 
         try:
             chest_id = chests_per_shipments[shipment]
@@ -216,3 +218,38 @@ class ExportMission:
         gold = self.base_gold * shipment
         xp = self.base_xp + self.base_xp * (shipment * 0.4)
         return (int(gold), int(xp), chest_id)
+
+    def _format_export_reward(self, cmd, level: int) -> str:
+        rewards = self.rewards_for_shipment(level)
+        fmt = f"{rewards[0]} {cmd.client.gold_emoji} {rewards[1]} {cmd.client.xp_emoji}"
+
+        chest = rewards[2]
+        if chest:
+            chest = cmd.items.find_chest_by_id(chest)
+            fmt += f" 1x {chest.emoji}"
+
+        return fmt
+
+    def format_for_embed(self, cmd) -> str:
+        text = (
+            f"{self.port_name}\n{self.item.full_name}\n"
+            f"\N{PACKAGE} Package size: {self.amount}x {self.item.emoji}\n\n"
+        )
+
+        if self.shipments < self.MAX_SHIPMENTS:
+            next_fmt = self._format_export_reward(cmd, self.shipments + 1)
+            if self.shipments:
+                text += f"\N{MONEY BAG} __**Next reward:**__\n{next_fmt}\n"
+            else:
+                text += f"\N{MONEY BAG} **First reward:**\n{next_fmt}\n"
+
+            if self.shipments != self.MAX_SHIPMENTS - 1:
+                last_fmt = self._format_export_reward(cmd, self.MAX_SHIPMENTS)
+                text += f"\N{MONEY BAG} **Final reward:**\n{last_fmt}\n"
+        else:
+            text += (
+                "**The cargo ship is already fully loaded! \N{OK HAND SIGN}**\n"
+                "It's waiting for the departure to the high seas! \N{TIMER CLOCK}"
+            )
+
+        return text
