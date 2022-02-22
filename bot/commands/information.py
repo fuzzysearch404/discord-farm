@@ -298,9 +298,9 @@ class InviteCommand(
 class StatusCommand(
     commands.FarmSlashCommand,
     name="status",
-    description="\N{HEAVY BLACK HEART} Shows the bot's status, version and credits"
+    description="\N{HEAVY BLACK HEART} Shows status and version of the bot"
 ):
-    """Thanks to Aneteee for helping out with the documentation for bot commands."""
+    """Thanks to Aneteee for helping out with the bot documentation and testing."""
     _avoid_maintenance: bool = False
     _requires_account: bool = False
 
@@ -309,8 +309,8 @@ class StatusCommand(
             title="\N{EAR OF MAIZE} Discord Farm",
             description=(
                 "The original, most advanced farming strategy game bot on Discord.\n"
-                "If you want to help to cover hosting costs, see the buttons below. "
-                "Huge thanks to everyone who have contributed to this bot."
+                "If you want to help to cover the hosting costs - see the buttons below. "
+                "Huge thanks to everyone who have in any way contributed to this bot."
             ),
             color=discord.Color.random()
         )

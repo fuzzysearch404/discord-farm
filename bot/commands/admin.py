@@ -1,3 +1,4 @@
+import io
 import time
 import discord
 
@@ -41,10 +42,8 @@ class RunEvalCommand(
             return await self.reply(f"{self.client.check_emoji} Executed with no output.")
 
         if len(results) > 2000:
-            # TODO: Send as a file, when it's going to be possible
-            await self.reply("Output too long...")
-            #  fp = io.BytesIO(results.encode("utf-8"))
-            #  await self.reply("Output too long...", file=discord.File(fp, "data.txt"))
+            fp = io.BytesIO(results.encode("utf-8"))
+            await self.reply("Output too long...", file=discord.File(fp, "data.txt"))
         else:
             await self.reply(f"```py\n{results}\n```")
 
@@ -84,10 +83,8 @@ class RunSQLCommand(
         fmt += f"```\n*Returned {rows} rows in {dt:.3f}ms*"
 
         if len(fmt) > 2000:
-            # TODO: Send as a file, when it's going to be possible
-            await self.reply("Output too long...")
-            #  fp = io.BytesIO(results.encode("utf-8"))
-            #  await self.reply("Output too long...", file=discord.File(fp, "data.txt"))
+            fp = io.BytesIO(results.encode("utf-8"))
+            await self.reply("Output too long...", file=discord.File(fp, "data.txt"))
         else:
             await self.reply(fmt)
 
@@ -112,10 +109,8 @@ class RunRedisCommand(
         results = str(results)
 
         if len(results) > 2000:
-            # TODO: Send as a file, when it's going to be possible
-            await self.reply("Output too long...")
-            #  fp = io.BytesIO(results.encode("utf-8"))
-            #  await self.reply("Output too long...", file=discord.File(fp, "data.txt"))
+            fp = io.BytesIO(results.encode("utf-8"))
+            await self.reply("Output too long...", file=discord.File(fp, "data.txt"))
         else:
             await self.reply(f"```py\n{results}\n```")
 

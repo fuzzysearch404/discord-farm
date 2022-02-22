@@ -1,3 +1,4 @@
+import io
 import asyncio
 import datetime
 import discord
@@ -303,10 +304,8 @@ class ClustersCollection(FarmCommandCollection):
             fmt += f"{cluster_name}: {result}\n"
 
         if len(fmt) > 1994:  # 2000 - 6 for code block
-            # TODO: Send as a file, when it's going to be possible
-            await cmd.edit("Output too long...")
-            #  fp = io.BytesIO(fmt.encode("utf-8"))
-            #  await cmd.edit(content="Output too long...", file=discord.File(fp, "data.txt"))
+            fp = io.BytesIO(fmt.encode("utf-8"))
+            await cmd.edit(content="Output too long...", file=discord.File(fp, "data.txt"))
         else:
             await cmd.edit(content=f"```{fmt}```")
 

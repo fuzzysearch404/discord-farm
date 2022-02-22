@@ -179,7 +179,7 @@ class ProfileCommand(
         has_lab_unlocked: bool = user.level > 1
         if has_lab_unlocked:
             lab_cd = await self.get_cooldown_ttl("recent_research", other_user_id=user.user_id)
-            lab_info = f"\N{RIGHT-POINTING MAGNIFYING GLASS} **/laboratory** {mention}"
+            lab_info = f"\N{RIGHT-POINTING MAGNIFYING GLASS} **/laboratory view** {mention}"
 
             if lab_cd:
                 lab_cd_ends = datetime_now + datetime.timedelta(seconds=lab_cd)

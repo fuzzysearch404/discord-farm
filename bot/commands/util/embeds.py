@@ -154,7 +154,7 @@ def level_up(cmd) -> Embed:
     )
 
     features_per_level = {
-        2: "\N{DNA DOUBLE HELIX} Laboratory - You can now upgrade your items!",
+        2: "\N{TEST TUBE} Laboratory - You can now upgrade your items!",
         3: "\N{FACTORY} Factory - You can now craft products!",
         5: "\N{HANDSHAKE} Server trades - You can now trade with other players!",
         7: "\N{UPWARDS BLACK ARROW} Boosters - You can now purchase boosters!",
