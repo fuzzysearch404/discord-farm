@@ -29,9 +29,6 @@ class ClustersCollection(FarmCommandCollection):
             "enable_guard",
             "eval",
             "result",
-            "reload",
-            "load",
-            "unload",
             "shutdown"
         )
         self.responses = {}
@@ -100,12 +97,6 @@ class ClustersCollection(FarmCommandCollection):
                 await self._handle_maintenance(ipc_message)
             elif ipc_message.action == "enable_guard":
                 await self._handle_farm_guard(ipc_message)
-            elif ipc_message.action == "reload":
-                await self._handle_reload_extension(ipc_message)
-            elif ipc_message.action == "load":
-                await self._handle_load_extension(ipc_message)
-            elif ipc_message.action == "unload":
-                await self._handle_unload_extension(ipc_message)
             elif ipc_message.action == "eval":
                 await self._handle_eval_command(ipc_message)
             elif ipc_message.action == "result":
@@ -181,33 +172,6 @@ class ClustersCollection(FarmCommandCollection):
         result = await self.client.eval_code(message.data)
         await self.send_results(result)
 
-    async def _handle_reload_extension(self, message: ipc_classes.IPCMessage) -> None:
-        try:
-            self.client.reload_extension(message.data)
-        except Exception as e:
-            await self.send_results(str(e))
-            return
-
-        await self.send_results("\N{WHITE HEAVY CHECK MARK}")
-
-    async def _handle_load_extension(self, message: ipc_classes.IPCMessage) -> None:
-        try:
-            self.client.load_extension(message.data)
-        except Exception as e:
-            await self.send_results(str(e))
-            return
-
-        await self.send_results("\N{WHITE HEAVY CHECK MARK}")
-
-    async def _handle_unload_extension(self, message: ipc_classes.IPCMessage) -> None:
-        try:
-            self.client.unload_extension(message.data)
-        except Exception as e:
-            await self.send_results(str(e))
-            return
-
-        await self.send_results("\N{WHITE HEAVY CHECK MARK}")
-
     def _handle_shutdown(self) -> None:
         self.client.loop.create_task(self.client.close())
 
@@ -281,15 +245,6 @@ class ClustersCollection(FarmCommandCollection):
 
     async def send_results(self, result: str) -> None:
         await self.send_ipc_message("result", True, result, global_channel=True)
-
-    async def send_reload_message(self, extension: str) -> None:
-        await self.send_ipc_message("reload", True, extension, global_channel=True)
-
-    async def send_load_message(self, extension: str) -> None:
-        await self.send_ipc_message("load", True, extension, global_channel=True)
-
-    async def send_unload_message(self, extension: str) -> None:
-        await self.send_ipc_message("unload", True, extension, global_channel=True)
 
     async def send_shutdown_message(self) -> None:
         await self.send_ipc_message("shutdown", True, None, global_channel=True)
@@ -381,93 +336,6 @@ class ClustersLogoutCommand(
         else:
             await self.reply("\N{WHITE HEAVY CHECK MARK} Logging off all instances...")
             await get_cluster_collection(self.client).send_shutdown_message()
-
-
-class ClustersCommandsCommand(ClustersCommand, name="commands", parent=ClustersCommand):
-    pass
-
-
-class ClustersCommandsSyncCommand(
-    ClustersCommandsCommand,
-    name="sync",
-    description="\N{SATELLITE} [Developer only] Synchronizes commands based on this instance",
-    parent=ClustersCommandsCommand
-):
-    global_commands: Optional[bool] = discord.app.Option(
-        description="If set to True, global application commands are going to be synced",
-        default=True
-    )
-    guild_commands: Optional[bool] = discord.app.Option(
-        description="If set to True, guild application commands are going to be synced",
-        default=True
-    )
-
-    async def callback(self) -> None:
-        await self.defer()
-
-        if self.global_commands:
-            await self.client.upload_global_application_commands()
-        if self.guild_commands:
-            await self.client.upload_guild_application_commands()
-
-        await self.edit(content="\N{WHITE HEAVY CHECK MARK} Sync request sent to Discord!")
-
-
-class ClustersCommandsLoadModuleCommand(
-    ClustersCommandsCommand,
-    name="load_module",
-    description="\N{SATELLITE} [Developer only] Loads an extension",
-    parent=ClustersCommandsCommand
-):
-    extension: str = discord.app.Option(description="Extension name")
-
-    async def callback(self) -> None:
-        if not self.extension.startswith("bot.commands."):
-            self.extension = "bot.commands." + self.extension
-
-        clusters_collection = get_cluster_collection(self.client)
-        async with clusters_collection.response_lock:
-            clusters_collection.responses = {}
-            await clusters_collection.send_load_message(self.extension)
-            await clusters_collection.wait_and_publish_responses(self)
-
-
-class ClustersCommandsUnloadModuleCommand(
-    ClustersCommandsCommand,
-    name="unload_module",
-    description="\N{SATELLITE} [Developer only] Unloads an extension",
-    parent=ClustersCommandsCommand
-):
-    extension: str = discord.app.Option(description="Extension name")
-
-    async def callback(self) -> None:
-        if not self.extension.startswith("bot.commands."):
-            self.extension = "bot.commands." + self.extension
-
-        clusters_collection = get_cluster_collection(self.client)
-        async with clusters_collection.response_lock:
-            clusters_collection.responses = {}
-            await clusters_collection.send_unload_message(self.extension)
-            await clusters_collection.wait_and_publish_responses(self)
-
-
-class ClustersCommandsReloadModuleCommand(
-    ClustersCommandsCommand,
-    name="reload_module",
-    description="\N{SATELLITE} [Developer only] Reloads an extension",
-    parent=ClustersCommandsCommand
-):
-    extension: str = discord.app.Option(description="Extension name")
-
-    async def callback(self) -> None:
-        if not self.extension.startswith("bot.commands."):
-            self.extension = "bot.commands." + self.extension
-
-        clusters_collection = get_cluster_collection(self.client)
-        async with clusters_collection.response_lock:
-            clusters_collection.responses = {}
-            await clusters_collection.send_reload_message(self.extension)
-            await clusters_collection.wait_and_publish_responses(self)
 
 
 class ClustersGameMasterCommand(ClustersCommand, name="game_master", parent=ClustersCommand):

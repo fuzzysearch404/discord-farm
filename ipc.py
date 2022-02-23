@@ -61,9 +61,6 @@ class IPC:
             "enable_guard",
             "eval",
             "result",
-            "reload",
-            "load",
-            "unload",
             "shutdown"
         )
 
