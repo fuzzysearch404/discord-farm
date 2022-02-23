@@ -200,6 +200,7 @@ class LaboratoryResearchCommand(
                     DO UPDATE SET {upgrade_type} = modifications.{upgrade_type} + $3;
                     """
             await conn.execute(query, self.user_data.user_id, item.id, 1)
+        await self.release()
 
         cooldown = self.calculate_modification_cooldown(current_level + 1)
         await self.set_cooldown(cooldown, "recent_research")
