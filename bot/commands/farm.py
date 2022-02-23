@@ -412,8 +412,8 @@ class FarmPlantCommand(
             return
 
         boosts = await self.user_data.get_all_boosts(self)
-        has_slots_boost = "farm_slots" in [x.id for x in boosts]
-        has_cat_boost = "cat" in [x.id for x in boosts]
+        has_slots_boost = "farm_slots" in [b.id for b in boosts]
+        has_cat_boost = "cat" in [b.id for b in boosts]
 
         conn = await self.acquire()
         # Refetch user data, because user could have no money after prompt
@@ -860,7 +860,7 @@ class FarmStealCommand(
         caught_chance, caught = 0, False
         target_boosts = await target_data.get_all_boosts(self)
         if target_boosts:
-            boost_ids = [boost.id for boost in target_boosts]
+            boost_ids = [b.id for b in target_boosts]
             if "dog_3" in boost_ids:
                 embed = embed_util.error_embed(
                     title="Harvest stealing attempt failed!",

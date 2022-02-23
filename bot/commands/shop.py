@@ -49,14 +49,12 @@ class ShopSource(views.AbstractPaginatorSource):
         self.section = section
 
     async def format_page(self, page, view):
-        fmt = ""
-        for item in page:
-            fmt += (
-                f"**[\N{TRIDENT EMBLEM} {item.level}] {item.full_name}** - **{item.gold_price} "
-                f"{view.command.client.gold_emoji} / farm tile** \n\N{SHOPPING TROLLEY} "
-                f"Start growing in your farm: **/farm plant \"{item.name}\"**\n\n"
-            )
-
+        fmt = "\n\n".join(
+            f"**[\N{TRIDENT EMBLEM} {item.level}] {item.full_name}** - **{item.gold_price} "
+            f"{view.command.client.gold_emoji} / farm tile** \n\N{SHOPPING TROLLEY} "
+            f"Start growing in your farm: **/farm plant \"{item.name}\"**"
+            for item in page
+        )
         return discord.Embed(
             title=f"\N{CONVENIENCE STORE} Shop: {self.section}",
             color=discord.Color.from_rgb(70, 145, 4),
@@ -78,13 +76,12 @@ class MarketSource(views.AbstractPaginatorSource):
         refresh_fmt = discord.utils.format_dt(next_refresh, style="t")
 
         fmt = f"\N{ALARM CLOCK} Market prices are going to change at: **{refresh_fmt}**\n\n"
-        for item in page:
-            fmt += (
-                f"**{item.full_name}** - Market is buying for: "
-                f"**{item.gold_reward} {view.command.client.gold_emoji} / unit**\n"
-                f"\N{SCALES} Sell to the market: **/market sell \"{item.name}\"**\n\n"
-            )
-
+        fmt += "\n\n".join(
+            f"**{item.full_name}** - Market is buying for: "
+            f"**{item.gold_reward} {view.command.client.gold_emoji} / unit**\n"
+            f"\N{SCALES} Sell to the market: **/market sell \"{item.name}\"**"
+            for item in page
+        )
         return discord.Embed(
             title=f"\N{SCALES} Market: {self.section}",
             color=discord.Color.from_rgb(255, 149, 0),
@@ -166,7 +163,7 @@ class ShopUpgradesViewCommand(
             description="\N{BRICK} Purchase upgrades to make your game progression more dynamic!",
             color=discord.Color.from_rgb(255, 162, 0)
         )
-        if not check_if_upgrade_maxed(self.user_data, PROFILE_ATTR_FARM_SLOTS):
+        if not check_if_upgrade_maxed(user_data, PROFILE_ATTR_FARM_SLOTS):
             embed.add_field(
                 name=f"{self.client.tile_emoji} Farm: Expand size",
                 value=(
@@ -177,7 +174,7 @@ class ShopUpgradesViewCommand(
                     "\N{SHOPPING TROLLEY} **/shop upgrades buy \"farm size\"**"
                 )
             )
-        if not check_if_upgrade_maxed(self.user_data, PROFILE_ATTR_FACTORY_SLOTS):
+        if not check_if_upgrade_maxed(user_data, PROFILE_ATTR_FACTORY_SLOTS):
             embed.add_field(
                 name="\N{FACTORY} Factory: Larger capacity",
                 value=(
@@ -188,7 +185,7 @@ class ShopUpgradesViewCommand(
                     "\N{SHOPPING TROLLEY} **/shop upgrades buy \"factory capacity\"**"
                 )
             )
-        if not check_if_upgrade_maxed(self.user_data, PROFILE_ATTR_FACTORY_LEVEL):
+        if not check_if_upgrade_maxed(user_data, PROFILE_ATTR_FACTORY_LEVEL):
             embed.add_field(
                 name="\N{MAN}\N{ZERO WIDTH JOINER}\N{COOKING} Factory: Hire more workers",
                 value=(
@@ -199,7 +196,7 @@ class ShopUpgradesViewCommand(
                     "\n\n\N{SHOPPING TROLLEY} **/shop upgrades buy \"factory workers\"**"
                 )
             )
-        if not check_if_upgrade_maxed(self.user_data, PROFILE_ATTR_STORE_SLOTS):
+        if not check_if_upgrade_maxed(user_data, PROFILE_ATTR_STORE_SLOTS):
             embed.add_field(
                 name="\N{HANDSHAKE} Trading: More deals",
                 value=(
@@ -782,7 +779,6 @@ class TradesCreateCommand(
             return await self.reply(embed=embed)
 
         conn = await self.acquire()
-
         item_data = await self.user_data.get_item(item.id, conn)
         if not item_data or item_data['amount'] < self.amount:
             await self.release()
@@ -801,7 +797,6 @@ class TradesCreateCommand(
         used_slots = await conn.fetchval(query, self.author.id, self.guild.id)
         if used_slots >= self.user_data.store_slots:
             await self.release()
-
             embed = embed_util.error_embed(
                 title="You have reached maximum active trade offers in this server!",
                 text=(
@@ -819,7 +814,6 @@ class TradesCreateCommand(
 
         async with conn.transaction():
             await self.user_data.remove_item(item.id, self.amount, conn)
-
             # We store username, to avoid fetching the user from Discord's
             # API just to get the username every time someone wants to view
             # the trades. (we don't store members data in bot's cache)
@@ -838,7 +832,6 @@ class TradesCreateCommand(
                 self.amount,
                 total_price
             )
-
         await self.release()
 
         embed = embed_util.success_embed(

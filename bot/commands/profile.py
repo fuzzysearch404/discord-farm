@@ -42,15 +42,13 @@ class InventorySource(views.AbstractPaginatorSource):
         inventory_emoji: str
     ):
         super().__init__(entries, per_page=30)
-        self.target = target_user
+        self.target_name = target_user.nick or target_user.name
         self.inventory_category = inventory_category
         self.inventory_emoji = inventory_emoji
 
     async def format_page(self, page, view):
-        target = self.target
-
         embed = discord.Embed(
-            title=f"{view.command.client.warehouse_emoji} {target.nick or target.name}'s warehouse",
+            title=f"{view.command.client.warehouse_emoji} {self.target_name}'s warehouse",
             color=discord.Color.from_rgb(234, 231, 231)
         )
 
@@ -69,11 +67,6 @@ class InventorySource(views.AbstractPaginatorSource):
         embed.description = fmt
         view.select_source.placeholder = f"{self.inventory_emoji} {self.inventory_category}"
 
-        if target != view.command.author:
-            embed.set_footer(
-                text="These items can only be accessed by their owner",
-                icon_url=target.display_avatar.url
-            )
         return embed
 
 
@@ -133,7 +126,7 @@ class ProfileCommand(
         has_boosters_unlocked: bool = user.level > 6
         if has_boosters_unlocked:
             all_boosts = await user.get_all_boosts(self)
-            all_active_boost_ids = [x.id for x in all_boosts]
+            all_active_boost_ids = [b.id for b in all_boosts]
 
             if "farm_slots" in all_active_boost_ids:
                 total_farm_slots += 2
@@ -183,9 +176,8 @@ class ProfileCommand(
 
             if lab_cd:
                 lab_cd_ends = datetime_now + datetime.timedelta(seconds=lab_cd)
-                lab_info = (
-                    f"\N{BROOM} Available again: {time_util.maybe_timestamp(lab_cd_ends)}\n"
-                ) + lab_info
+                lab_cd_ends = time_util.maybe_timestamp(lab_cd_ends)
+                lab_info = f"\N{BROOM} Available again: {lab_cd_ends}\n" + lab_info
 
         embed = discord.Embed(
             title=f"\N{HOUSE WITH GARDEN} {target_user.nick or target_user.name}'s profile",
@@ -317,7 +309,7 @@ class InventoryCommand(
             try:
                 item = self.items.find_item_by_id(data['item_id'])
             except exceptions.ItemNotFoundException:
-                # Could be a chest, we exclude those
+                # Could be a chest, we exclude those here
                 continue
 
             item_and_amt = (item, data['amount'])
@@ -374,7 +366,6 @@ class BoostersCommand(
             target_user = self.player
 
         all_boosts = await user.get_all_boosts(self)
-
         buy_tip = "\N{SHOPPING BAGS} Purchase boosters with the **/shop boosters** command."
         name = target_user.nick or target_user.name
 
@@ -569,10 +560,7 @@ class ChestsViewCommand(
             )
         )
 
-        chest_ids_and_amounts = {}
-        for chest in chest_data:
-            chest_ids_and_amounts[chest['item_id']] = chest['amount']
-
+        chest_ids_and_amounts = {chest['item_id']: chest['amount'] for chest in chest_data}
         for chest in self.items.all_chests_by_id.values():
             try:
                 amount = chest_ids_and_amounts[chest.id]

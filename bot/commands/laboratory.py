@@ -332,14 +332,15 @@ class LaboratoryResearchCommand(
             ("harvesting duration", "time2"),
             ("maximum volume", "volume")
         )
-        buttons = []
-        for option in options:
-            buttons.append(views.OptionButton(
+        buttons = [
+            views.OptionButton(
                 option=option[1],
                 style=discord.ButtonStyle.primary,
                 emoji=self.client.gold_emoji,
                 label=f"Upgrade {option[0]}"
-            ))
+            )
+            for option in options
+        ]
 
         result = await views.MultiOptionView(self, buttons, initial_embed=embed).prompt()
         if not result:

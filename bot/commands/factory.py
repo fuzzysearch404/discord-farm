@@ -102,8 +102,6 @@ class FactorySource(views.AbstractPaginatorSource):
         self.last_item_timestamp = last_item_timestamp
 
     def format_product_info(self, factory_item: FactoryItem) -> str:
-        item = factory_item.item
-
         if factory_item.state == ProductState.PRODUCING:
             delta_secs = (factory_item.ends - datetime.datetime.now()).total_seconds()
             state = f"Manufacturing: {time_util.seconds_to_time(delta_secs)}"
@@ -112,7 +110,7 @@ class FactorySource(views.AbstractPaginatorSource):
         else:
             state = "Ready to be collected"
 
-        return f"**{item.full_name}** - {state}"
+        return f"**{factory_item.item.full_name}** - {state}"
 
     async def format_page(self, page, view):
         embed = discord.Embed(
@@ -137,11 +135,10 @@ class FactorySource(views.AbstractPaginatorSource):
                 f"{self.last_item_timestamp}"
             )
 
-        fmt = "\n\n"
-        for product in page:
-            fmt += self.format_product_info(product) + "\n"
-
-        embed.description = header + fmt
+        embed.description = header + "\n\n" + "\n".join(
+            self.format_product_info(product)
+            for product in page
+        )
         return embed
 
 
@@ -311,7 +308,6 @@ class FactoryMakeCommand(
 
         if missing_items:
             await self.release()
-
             fmt = ", ".join(f"{req_itm.full_name} x{req_amt}" for req_itm, req_amt in missing_items)
             embed = embed_util.error_embed(
                 title="You are missing raw materials for this product!",

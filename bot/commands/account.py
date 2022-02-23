@@ -3,8 +3,8 @@ import datetime
 
 from core.game_user import UserNotifications
 from .clusters import get_cluster_collection
-from .util import exceptions
 from .util import views
+from .util import exceptions
 from .util import embeds as embed_util
 from .util.commands import FarmSlashCommand, FarmCommandCollection
 
@@ -38,7 +38,6 @@ class TutorialCommand(
             ),
             cmd=self
         )
-
         embed.add_field(
             name="\N{HOUSE WITH GARDEN} Your farm profile",
             value=(
@@ -116,9 +115,9 @@ class AccountCreateCommand(
     parent=AccountCommand
 ):
     """
-    You can't have multiple game accounts for a single Discord account.
-    If you want to reset your progress, you can delete your game account
-    with **/account manage**, and then create a new one with this command.
+    You can't have multiple game accounts for a single Discord account. If you want to reset your
+    progress, you can delete your game account with **/account manage**, and then create a new one
+    with this command.
     """
     _requires_account: bool = False
 
@@ -247,7 +246,6 @@ class AccountManageCommand(
                 footer="He then said: \"Ehhh.. brrrhh.. Will do!\" \N{OLDER MAN}",
                 cmd=self
             )
-
         await self.edit(embed=embed, view=None)
 
         if notification_type[0] == UserNotifications.FARM_HARVEST_READY:
