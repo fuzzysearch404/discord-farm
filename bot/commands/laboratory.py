@@ -25,12 +25,8 @@ class LaboratoryCollection(FarmCommandCollection):
 
 
 class LaboratorySource(views.AbstractPaginatorSource):
-    def __init__(
-        self,
-        entries: list,
-        target_user: discord.Member,
-        lab_cooldown: str
-    ):
+
+    def __init__(self, entries: list, target_user: discord.Member, lab_cooldown: str):
         super().__init__(entries, per_page=12)
         self.target_name = target_user.nick or target_user.name
         self.lab_cooldown = lab_cooldown
@@ -148,6 +144,12 @@ class LaboratoryResearchCommand(
             f"\N{SQUARED NEW} Next level: **{upgrade}**\n\n"
             f"\N{TIMER CLOCK} Research cooldown:\n**{cooldown_fmt}**\n"
             f"\N{MONEY BAG} Research costs:\n**{cost} {self.client.gold_emoji}**"
+        )
+
+    def format_upgrade_status(self, level: int, current: str, costs: str) -> str:
+        return (
+            f"\N{TEST TUBE} Upgrades: {level}/10\n"
+            f"\N{DNA DOUBLE HELIX} Current: **{current}**\n{costs}"
         )
 
     async def perform_upgrade(self, upgrade_type: str, item: game_items.PlantableItem) -> None:
@@ -288,10 +290,7 @@ class LaboratoryResearchCommand(
 
         embed.add_field(
             name="\N{MANTELPIECE CLOCK} Growing duration",
-            value=(
-                f"\N{TEST TUBE} Upgrades: {time1_mod}/10\n"
-                f"\N{DNA DOUBLE HELIX} Current: **{grow_time}**\n{fmt}"
-            )
+            value=self.format_upgrade_status(time1_mod, grow_time, fmt)
         )
 
         if time2_mod < 10:
@@ -306,10 +305,7 @@ class LaboratoryResearchCommand(
 
         embed.add_field(
             name="\N{MANTELPIECE CLOCK} Harvestable for",
-            value=(
-                f"\N{TEST TUBE} Upgrades: {time2_mod}/10\n"
-                f"\N{DNA DOUBLE HELIX} Current: **{collect_time}**\n{fmt}"
-            )
+            value=self.format_upgrade_status(time2_mod, collect_time, fmt)
         )
 
         if vol_mod < 10:
@@ -321,13 +317,10 @@ class LaboratoryResearchCommand(
         else:
             fmt = max_level_fmt
 
-        vol_amount_fmt = f"{item.amount} - {max_volume}" if vol_mod else str(max_volume)
+        vol_amount_fmt = f"{item.amount} - {max_volume} items" if vol_mod else f"{max_volume} items"
         embed.add_field(
             name="\N{SCALES} Max. harvest volume",
-            value=(
-                f"\N{TEST TUBE} Upgrades: {vol_mod}/10\n"
-                f"\N{DNA DOUBLE HELIX} Current: **{vol_amount_fmt} items**\n{fmt}"
-            )
+            value=self.format_upgrade_status(vol_mod, vol_amount_fmt, fmt)
         )
 
         embed.set_footer(text=(
