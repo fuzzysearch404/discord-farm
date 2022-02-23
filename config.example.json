@@ -20,12 +20,13 @@
         "initial-extensions" : [
             "bot.commands.admin",
             "bot.commands.clusters",
-            "bot.commands.account",
             "bot.commands.profile",
             "bot.commands.farm",
             "bot.commands.shop",
             "bot.commands.missions",
+            "bot.commands.laboratory",
             "bot.commands.factory",
+            "bot.commands.account",
             "bot.commands.information"
         ],
         "activity-status" : "Now with slash commands!!1"

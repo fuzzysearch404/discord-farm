@@ -20,7 +20,7 @@ class InformationCollection(commands.FarmCommandCollection):
         super().__init__(
             client,
             [HelpCommand, NewsCommand, InviteCommand, StatusCommand],
-            name="Information"
+            name="Miscellaneous"
         )
         self.activity_status = client.config['bot']['activity-status']
         self.presence_task = self.client.loop.create_task(self.update_presence_task())
