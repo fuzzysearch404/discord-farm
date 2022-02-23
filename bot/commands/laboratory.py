@@ -208,9 +208,9 @@ class LaboratoryResearchCommand(
         await self.set_cooldown(cooldown, "recent_research")
 
         embed = embeds_util.congratulations_embed(
-            title="Modification successful!",
+            title="Upgrade successful!",
             text=(
-                "Our experiments went smoothly and we are happy to tell you that the modification "
+                "Our experiments went smoothly and we are happy to tell you that the upgrade "
                 f"has been applied to your **{item.full_name}**! \N{CONFETTI BALL}\n If you are "
                 "ready to try these out, go ahead, you can already start growing some! "
                 "\N{FACE WITH COWBOY HAT}"
