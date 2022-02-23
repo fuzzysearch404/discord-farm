@@ -806,6 +806,9 @@ class FarmStealCommand(
                     SELECT * FROM farm
                     WHERE ends < $1 AND dies > $1
                     AND robbed_fields < fields_used
+                    AND user_id = $2
+                    OR dies < $1 AND cat_boost = true
+                    AND robbed_fields < fields_used
                     AND user_id = $2;
                     """
             target_field = await conn.fetch(query, datetime.datetime.now(), self.player.id)

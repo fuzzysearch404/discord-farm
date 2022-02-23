@@ -132,8 +132,7 @@ class HelpCommand(
                 ephemeral=True
             )
 
-        command_signature = ""
-        param_descriptions = []
+        command_signature, param_descriptions = "", []
         for option in command._arguments_:
             # Checks if the option is typing.Optional
             if typing.get_origin(option.type) is typing.Union \
