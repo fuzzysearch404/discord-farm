@@ -6,7 +6,7 @@ https://top.gg/bot/526436949481881610
 https://discord.bots.gg/bots/526436949481881610  
 
 Or directly:  
-https://discord.com/oauth2/authorize?client_id=526436949481881610&scope=bot+applications.commands&permissions=274878295104  
+https://discord.com/oauth2/authorize?client_id=526436949481881610&scope=bot+applications.commands&permissions=274878221376  
 
 Official Discord server:  
 https://discord.gg/MwpxKjF  
