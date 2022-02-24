@@ -119,11 +119,11 @@ class User:
 
         boosts = jsonpickle.decode(boosts)
         # Removes expired boosts
-        return [x for x in boosts if x.duration > datetime.datetime.now()]
+        return [b for b in boosts if b.duration > datetime.datetime.now()]
 
     async def is_boost_active(self, cmd, boost_id: str) -> bool:
         all_boosts = await self.get_all_boosts(cmd)
-        return boost_id in [x.id for x in all_boosts]
+        return boost_id in [b.id for b in all_boosts]
 
     async def give_boost(self, cmd, partial_boost) -> list:
         existing_boosts = await self.get_all_boosts(cmd)

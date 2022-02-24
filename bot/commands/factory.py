@@ -340,7 +340,6 @@ class FactoryMakeCommand(
 
             query = "INSERT INTO factory (user_id, item_id, starts, ends) VALUES ($1, $2, $3, $4);"
             await conn.executemany(query, to_insert)
-
         await self.release()
 
         embed = embed_util.success_embed(

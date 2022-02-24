@@ -250,11 +250,10 @@ class LaboratoryResearchCommand(
             )
             return await self.reply(embed=embed)
 
-        time1_mod = time2_mod = vol_mod = 0
-
         async with self.acquire() as conn:
             current_modifications = await self.user_data.get_item_modification(item.id, conn)
 
+        time1_mod = time2_mod = vol_mod = 0
         if current_modifications:
             time1_mod = current_modifications['time1']
             time2_mod = current_modifications['time2']

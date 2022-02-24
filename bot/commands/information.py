@@ -245,7 +245,6 @@ class NewsCommand(
             label="Join the official support server for more information",
             url=static.DISCORD_COMMUNITY_INVITE
         ))
-
         await self.reply(embed=embed, view=view)
 
 
@@ -287,7 +286,6 @@ class InviteCommand(
             label="Join the official support server",
             url=static.DISCORD_COMMUNITY_INVITE
         ))
-
         await self.reply(
             "Here you go! Also consider joining the official support server \N{WINKING FACE}",
             view=view
@@ -348,7 +346,6 @@ class StatusCommand(
             label="Help to cover hosting expenses via PayPal",
             url="https://paypal.me/fuzzysearch"
         ))
-
         await self.reply(embed=embed, view=view)
 
 

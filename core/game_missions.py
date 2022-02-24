@@ -88,7 +88,6 @@ class BusinessMission:
         total_worth, requests = 0, []
         for item, amount in request_items:
             requests.append((item.id, amount))
-
             extra_worth = random.randint(70, 115) / 100  # 0.7 - 1.15
             total_worth += int(item.max_market_price * amount * extra_worth)
 
@@ -213,7 +212,6 @@ class ExportMission:
         shipment = shipment or self.shipments + 1
 
         chests_per_shipments = {3: 1001, 6: 1002, 9: 1003, 12: 1004}
-
         try:
             chest_id = chests_per_shipments[shipment]
         except KeyError:

@@ -475,7 +475,6 @@ class FarmPlantCommand(
 
         end_fmt = time_util.maybe_timestamp(ends, since=now)
         dies_fmt = discord.utils.format_dt(dies, style="f")
-
         embed = embed_util.success_embed(
             title=f"Successfully started growing {item.full_name}!",
             text=(
@@ -609,7 +608,6 @@ class FarmHarvestCommand(
 
             self.user_data.give_xp_and_level_up(self, xp_gain)
             await self.users.update_user(self.user_data, conn=conn)
-
         await self.release()
 
         def group_plants(plants: list) -> dict:

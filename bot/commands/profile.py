@@ -64,9 +64,8 @@ class InventorySource(views.AbstractPaginatorSource):
                 fmt += f"\n{item.full_name} x{amount} "
                 iteration = 1
 
-        embed.description = fmt
         view.select_source.placeholder = f"{self.inventory_emoji} {self.inventory_category}"
-
+        embed.description = fmt
         return embed
 
 
@@ -171,9 +170,8 @@ class ProfileCommand(
 
         has_lab_unlocked: bool = user.level > 1
         if has_lab_unlocked:
-            lab_cd = await self.get_cooldown_ttl("recent_research", other_user_id=user.user_id)
             lab_info = f"\N{RIGHT-POINTING MAGNIFYING GLASS} **/laboratory view** {mention}"
-
+            lab_cd = await self.get_cooldown_ttl("recent_research", other_user_id=user.user_id)
             if lab_cd:
                 lab_cd_ends = datetime_now + datetime.timedelta(seconds=lab_cd)
                 lab_cd_ends = time_util.maybe_timestamp(lab_cd_ends)
@@ -733,7 +731,6 @@ class ChestsOpenCommand(
                 grouped[item] = amt
 
         rewards += "".join(f"**{item.full_name}**: {amt} " for item, amt in grouped.items())
-
         if gold_reward:
             rewards += f"**{self.client.gold_emoji} {gold_reward} gold** "
         if gems_reward:
@@ -749,7 +746,6 @@ class ChestsOpenCommand(
             footer="These items are now moved to your inventory",
             cmd=self
         )
-
         await self.reply(embed=embed)
 
 
@@ -793,7 +789,6 @@ class ChestsDailyCommand(
             footer=f"Use the \"/chests open {chest_data.name}\" command, to open",
             cmd=self
         )
-
         await self.reply(embed=embed)
 
 
@@ -844,7 +839,6 @@ class ChestsHourlyCommand(
             footer=f"Use the \"/chests open {chest_data.name}\" command, to open",
             cmd=self
         )
-
         await self.reply(embed=embed)
 
 
