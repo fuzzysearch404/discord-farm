@@ -320,13 +320,6 @@ class BotClient(AutoShardedModularCommandClient):
                 )
                 return
 
-            # TODO: Remove before release
-            if interaction.user.id not in (234622520739758080, 665906176264896533, 303983361569980416):
-                await interaction.response.send_message(
-                    "\N{CROSS MARK} Sorry, testing is currently disabled."
-                )
-                return
-
         await super().on_interaction(interaction)
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
