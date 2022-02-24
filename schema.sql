@@ -104,8 +104,11 @@ CREATE TABLE IF NOT EXISTS public.guilds(
 
 -- Profile statistics for the profile command
 CREATE TYPE profile_stats AS (
-    inventory_size integer, nearest_harvest timestamp, farm_slots_used integer,
-    nearest_factory_production timestamp, store_slots_used integer
+    inventory_size integer,
+    nearest_harvest timestamp,
+    farm_slots_used integer,
+    nearest_factory_production timestamp,
+    store_slots_used integer
 );
 
 CREATE OR REPLACE FUNCTION get_profile_stats(user_id bigint, guild_id bigint) 
