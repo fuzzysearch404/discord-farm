@@ -1,26 +1,9 @@
 import json
 import random
-from dataclasses import dataclass
-
-from . import game_items
 
 
 with open("data/mission_names.json", "r") as file:
     MISSION_NAMES = json.load(file)
-
-
-@dataclass
-class MissionRequest:
-    """
-    Used to store less data in DB.
-    We could just jsonpickle it, but why should we store all
-    item data? Also item properties might change any time.
-    """
-
-    __slots__ = ("item_id", "amount")
-
-    item_id: int
-    amount: int
 
 
 class BusinessMission:
@@ -29,7 +12,7 @@ class BusinessMission:
 
     def __init__(
         self,
-        requests: list,
+        requests: list,  # Either tuples of (item_id, amount) or (item object, amount)
         gold_reward: int,
         xp_reward: int,
         name: str,
@@ -44,91 +27,84 @@ class BusinessMission:
     @classmethod
     def generate(
         cls,
-        ctx,
+        cmd,
         growables_multiplier: float = 1.0,
         reward_multiplier: float = 1.0,
         add_chest: bool = True
     ):
-        user_level = ctx.user_data.level
+        user_level = cmd.user_data.level
         if user_level < 3:
-            max_requests = 1
+            max_requests, max_products_requests = 1, 1
         elif user_level < 5:
-            max_requests, max_products_req = 2, 1
+            max_requests, max_products_requests = 2, 1
         elif user_level < 10:
-            max_requests, max_products_req = 2, 1
+            max_requests, max_products_requests = 2, 1
         elif user_level < 15:
-            max_requests, max_products_req = 3, 1
+            max_requests, max_products_requests = 3, 1
         elif user_level < 20:
-            max_requests, max_products_req = 3, 1
+            max_requests, max_products_requests = 3, 1
         elif user_level < 25:
-            max_requests, max_products_req = 3, 2
+            max_requests, max_products_requests = 3, 2
         else:
-            max_requests, max_products_req = 4, 2
-
-        # Increase growables_multiplier for extra complexity
-        multiplier = int(growables_multiplier * user_level)
+            max_requests, max_products_requests = 4, 2
 
         request_items = []
-        request_amount = random.randint(1, max_requests)
+        # Increase growables_multiplier for extra complexity
+        multiplier = int(growables_multiplier * user_level)
+        total_request_amount = random.randint(1, max_requests)
 
         # 1/3 chance to require products
         if user_level >= 3 and random.randint(1, 3) == 1:
-            # Default max product request amount is 1.
-            # If multiplier, lower the chance to get more requests
-            population = []
-            for i in range(max_products_req):
-                population.extend([i + 1] * (max_products_req - i) * 3)
+            # If multiplier, lower the chance to get more product requests
+            product_amount_population = []
+            for i in range(max_products_requests):
+                product_amount_population.extend([i + 1] * (max_products_requests - i) * 3)
 
-            product_req_amount = random.choice(population)
-            request_amount = request_amount - product_req_amount
+            product_request_amount = random.choice(product_amount_population)
+            total_request_amount = total_request_amount - product_request_amount
 
-            products = ctx.items.get_random_items(
+            products: dict = cmd.items.get_random_items(
                 user_level=user_level,
                 extra_luck=0.82,
-                total_draws=product_req_amount,
+                total_draws=product_request_amount,
                 products_multiplier=int(user_level / 12) or 1,
                 growables=False,
-                products=True,
-                specials=False
+                products=True
             )
-            request_items.extend(products)
+            request_items.extend(products.items())
 
         # If we still have requests to add
-        if request_amount > 0:
-            growables = ctx.items.get_random_items(
+        if total_request_amount > 0:
+            growables: dict = cmd.items.get_random_items(
                 user_level=user_level,
                 extra_luck=0.62,
-                total_draws=request_amount,
+                total_draws=total_request_amount,
                 growables_multiplier=multiplier,
                 growables=True,
-                products=False,
-                specials=False
+                products=False
             )
-            request_items.extend(growables)
+            request_items.extend(growables.items())
 
         total_worth, requests = 0, []
         for item, amount in request_items:
-            requests.append(MissionRequest(item.id, amount))
-
+            requests.append((item.id, amount))
             extra_worth = random.randint(70, 115) / 100  # 0.7 - 1.15
             total_worth += int(item.max_market_price * amount * extra_worth)
 
         total_worth = int(total_worth * reward_multiplier)
-        xp_reward = random.randint(
-            int(total_worth / 20), int(total_worth / 18)
-        )
+        xp_reward = random.randint(int(total_worth / 17), int(total_worth / 16))
         gold_reward = total_worth - xp_reward
 
         # Add chest in every 8th mission
         chest_id = 0
         if add_chest and random.randint(1, 8) == 1:
             chests_and_rarities = {
-                1000: 450.0,  # Gold
-                1001: 1700.0,  # Common
+                1000: 750.0,  # Gold
+                1001: 2000.0,  # Common
                 1002: 950.0,  # Uncommon
-                1003: 400.0,  # Rare
-                1004: 125.0,  # Epic
-                1005: 15.0  # Legendary
+                1003: 420.0,  # Rare
+                1004: 150.0,  # Epic
+                1005: 25.0  # Legendary
             }
 
             chest_id = random.choices(
@@ -145,8 +121,36 @@ class BusinessMission:
             chest=chest_id
         )
 
+    def initialize_from_partial_data(self, cmd) -> None:
+        self.requests = [
+            (cmd.items.find_item_by_id(request[0]), request[1])
+            for request in self.requests
+        ]
+
+        if self.chest:
+            self.chest = cmd.items.find_chest_by_id(self.chest)
+
+    def format_for_embed(self, cmd) -> str:
+        fmt = f"\N{BOOKMARK TABS} {self.name}\nRequest:\n"
+
+        for req in self.requests:
+            item, amount = req[0], req[1]
+            fmt += f"**{item.full_name} x{amount}**\n"
+
+        fmt += "\n\N{MONEY BAG} Rewards:\n**"
+        if self.gold_reward:
+            fmt += f"{self.gold_reward} {cmd.client.gold_emoji} "
+        if self.xp_reward:
+            fmt += f"{self.xp_reward} {cmd.client.xp_emoji}"
+        if self.chest:
+            fmt += f"\n\N{WRAPPED PRESENT} Bonus: 1x {self.chest.emoji} "
+
+        return fmt + "**"
+
 
 class ExportMission:
+    MAX_SHIPMENTS: int = 12
+    DURATION_SECONDS: int = 18000  # 5 hours
 
     __slots__ = (
         "item",
@@ -159,7 +163,7 @@ class ExportMission:
 
     def __init__(
         self,
-        item: game_items.MarketItem,
+        item,  # Either id or object
         amount: int,
         base_gold: int,
         base_xp: int,
@@ -174,44 +178,80 @@ class ExportMission:
         self.port_name = port_name
 
     @classmethod
-    def generate(cls, ctx):
+    def generate(cls, cmd):
         # Small chance to randomize with products
         # Because we have more products than other items
-        randomize_products = random.randint(1, 3) == 1
+        randomize_products: bool = random.randint(1, 3) == 1
 
-        item, amount = ctx.items.get_random_items(
-            user_level=ctx.user_data.level,
+        item, amount = cmd.items.get_random_items(
+            user_level=cmd.user_data.level,
             extra_luck=0.75,
             total_draws=1,
-            growables_multiplier=ctx.user_data.level,
-            products_multiplier=int(ctx.user_data.level / 10) or 1,
+            growables_multiplier=cmd.user_data.level,
+            products_multiplier=int(cmd.user_data.level / 15) or 1,
             growables=True,
-            products=randomize_products,
-            specials=False
-        )[0]
+            products=randomize_products
+        ).popitem()
 
         return cls(
             item=item,
             amount=amount,
-            base_gold=int(item.max_market_price / 6.2 * amount) or 1,
+            base_gold=int(item.max_market_price / 5.4 * amount) or 1,
             base_xp=int(item.xp * amount / 12) or 1,
             shipments=0,
             port_name=random.choice(MISSION_NAMES['ports'])
         )
 
+    def initialize_from_partial_data(self, cmd) -> None:
+        self.item = cmd.items.find_item_by_id(self.item)
+
+    def convert_to_partial_data(self) -> None:
+        self.item = self.item.id
+
     def rewards_for_shipment(self, shipment: int = 0) -> tuple:
         shipment = shipment or self.shipments + 1
 
-        chests_per_shipments = {
-            3: 1001, 7: 1003, 10: 1004
-        }
-
+        chests_per_shipments = {3: 1001, 6: 1002, 9: 1003, 12: 1004}
         try:
             chest_id = chests_per_shipments[shipment]
         except KeyError:
             chest_id = None
 
         gold = self.base_gold * shipment
-        xp = self.base_xp + self.base_xp * (shipment * 0.28)
-
+        xp = self.base_xp + self.base_xp * (shipment * 0.4)
         return (int(gold), int(xp), chest_id)
+
+    def _format_export_reward(self, cmd, level: int) -> str:
+        rewards = self.rewards_for_shipment(level)
+        fmt = f"{rewards[0]} {cmd.client.gold_emoji} {rewards[1]} {cmd.client.xp_emoji}"
+
+        chest = rewards[2]
+        if chest:
+            chest = cmd.items.find_chest_by_id(chest)
+            fmt += f" 1x {chest.emoji}"
+
+        return fmt
+
+    def format_for_embed(self, cmd) -> str:
+        text = (
+            f"{self.port_name}\n{self.item.full_name}\n"
+            f"\N{PACKAGE} Package size: {self.amount}x {self.item.emoji}\n\n"
+        )
+
+        if self.shipments < self.MAX_SHIPMENTS:
+            next_fmt = self._format_export_reward(cmd, self.shipments + 1)
+            if self.shipments:
+                text += f"\N{MONEY BAG} __**Next reward:**__\n{next_fmt}\n"
+            else:
+                text += f"\N{MONEY BAG} **First reward:**\n{next_fmt}\n"
+
+            if self.shipments != self.MAX_SHIPMENTS - 1:
+                last_fmt = self._format_export_reward(cmd, self.MAX_SHIPMENTS)
+                text += f"\N{MONEY BAG} **Final reward:**\n{last_fmt}\n"
+        else:
+            text += (
+                "**The cargo ship is already fully loaded! \N{OK HAND SIGN}**\n"
+                "It's waiting for the departure to the high seas! \N{TIMER CLOCK}"
+            )
+
+        return text

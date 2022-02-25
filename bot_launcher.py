@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import json
 import aiohttp
@@ -9,17 +8,17 @@ import multiprocessing
 import signal
 
 from bot.bot import BotClient
+from core import static
 
-LOG_FORMATTER = logging.Formatter(
-    "[%(asctime)s %(name)s/%(levelname)s] %(message)s"
-)
+
+LOG_FORMATTER = logging.Formatter("[%(asctime)s %(name)s/%(levelname)s] %(message)s")
 log = logging.getLogger("Launcher")
 log.setLevel(logging.DEBUG)
-hdlr = logging.StreamHandler()
-hdlr.setFormatter(LOG_FORMATTER)
-fhdlr = logging.FileHandler("launcher.log", encoding='utf-8')
-fhdlr.setFormatter(LOG_FORMATTER)
-log.handlers = [hdlr, fhdlr]
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(LOG_FORMATTER)
+file_handler = logging.FileHandler("./logs/launcher.log", encoding="utf-8")
+file_handler.setFormatter(LOG_FORMATTER)
+log.handlers = [stream_handler, file_handler]
 
 
 CLUSTER_NAMES = (
@@ -36,7 +35,7 @@ NAMES = iter(CLUSTER_NAMES)
 class Launcher:
     def __init__(self, loop) -> None:
         log.info("Launching...")
-        self._config = self._load_config()
+        self.config = self._load_config()
 
         self.cluster_queue = []
         self.clusters = []
@@ -46,38 +45,30 @@ class Launcher:
         self.alive = True
 
         self.keep_alive = None
-
         self.init_time = time.perf_counter()
 
     def _load_config(self) -> dict:
-        with open("config.json", "r") as file:
+        with open(static.CONFIG_PATH, "r") as file:
             return json.load(file)
 
     async def get_shard_count(self) -> int:
         headers = {
-            "Authorization": "Bot " + self._config['bot']['discord-token'],
-            "User-Agent": (
-                f"Discord Farm Bot {self._config['bot']['version']}"
-                "(https://github.com/fuzzysearch404/discord-farm/)"
-            )
+            "Authorization": "Bot " + self.config['bot']['discord-token'],
+            "User-Agent": f"Discord Farm Bot {self.config['bot']['version']} ({static.GIT_REPO})"
         }
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://discord.com/api/gateway/bot",
-                headers=headers
-            ) as response:
-                json_body = await response.json()
+            async with session.get("https://discord.com/api/gateway/bot", headers=headers) as resp:
+                json_body = await resp.json()
 
-        if response.status != 200:
-            log.critical(f"Discord returned: {response.status}")
+        if resp.status != 200:
+            log.critical(f"Discord returned: {resp.status}")
             self.loop.stop()
 
         log.info(
-            f"Successfully got shard count of {json_body['shards']}"
-            f"({response.status}, {response.reason})"
+            f"Successfully got shard count of {json_body['shards']} "
+            f"({resp.status}, {resp.reason})"
         )
-
         return json_body['shards']
 
     def start(self) -> None:
@@ -92,9 +83,6 @@ class Launcher:
 
     def cleanup(self) -> None:
         self.loop.stop()
-        if sys.platform == "win32":
-            print("press ^C again")
-        self.loop.close()
 
     def task_complete(self, task) -> None:
         if task.exception():
@@ -105,26 +93,19 @@ class Launcher:
     async def startup(self) -> None:
         shards = list(range(await self.get_shard_count()))
         size = [shards[x:x + 4] for x in range(0, len(shards), 4)]
-
         log.info(f"Preparing {len(size)} clusters")
 
         for shard_ids in size:
-            self.cluster_queue.append(
-                Cluster(self, next(NAMES), shard_ids, len(shards))
-            )
+            self.cluster_queue.append(Cluster(self, next(NAMES), shard_ids, len(shards)))
 
         await self.start_cluster()
 
         self.keep_alive = self.loop.create_task(self.rebooter())
         self.keep_alive.add_done_callback(self.task_complete)
-
-        log.info(
-            f"Startup completed in {time.perf_counter() - self.init_time}s"
-        )
+        log.info(f"Startup completed in {time.perf_counter() - self.init_time}s")
 
     async def shutdown(self) -> None:
         log.info("Shutting down clusters")
-
         self.alive = False
 
         if self.keep_alive:
@@ -166,7 +147,6 @@ class Launcher:
     async def start_cluster(self) -> None:
         if self.cluster_queue:
             cluster = self.cluster_queue.pop(0)
-
             log.info(f"Starting Cluster#{cluster.name}")
             await cluster.start()
             self.clusters.append(cluster)
@@ -184,22 +164,19 @@ class Cluster:
         self.kwargs = dict(
             shard_ids=shard_ids,
             shard_count=max_shards,
-            cluster_name=name
+            cluster_name=name,
+            config=launcher.config
         )
         self.name = name
 
         self.log = logging.getLogger(f"Cluster#{name}")
         self.log.setLevel(logging.DEBUG)
-        hdlr = logging.StreamHandler()
-        hdlr.setFormatter(LOG_FORMATTER)
-        fhdlr = logging.FileHandler("cluster-Launcher.log", encoding='utf-8')
-        fhdlr.setFormatter(LOG_FORMATTER)
-        self.log.handlers = [hdlr, fhdlr]
-
-        self.log.info(
-            f"Initialized with shard ids {shard_ids}, "
-            f"total shards {max_shards}"
-        )
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(LOG_FORMATTER)
+        file_handler = logging.FileHandler("./logs/cluster-Launcher.log", encoding="utf-8")
+        file_handler.setFormatter(LOG_FORMATTER)
+        self.log.handlers = [stream_handler, file_handler]
+        self.log.info(f"Initialized with shard ids {shard_ids}, total shards {max_shards}")
 
     def wait_close(self) -> None:
         self.process.join()
@@ -208,8 +185,7 @@ class Cluster:
         if self.process and self.process.is_alive():
             if not force:
                 self.log.warning(
-                    "Start called with already running cluster, pass "
-                    "`force=True` to override"
+                    "Start called with already running cluster, pass `force=True` to override"
                 )
                 return False
 
@@ -218,15 +194,10 @@ class Cluster:
             self.process.close()
 
         stdout, stdin = multiprocessing.Pipe()
-        kw = self.kwargs
-        kw['pipe'] = stdin
+        kwargs = self.kwargs
+        kwargs['pipe'] = stdin
 
-        self.process = multiprocessing.Process(
-            target=BotClient,
-            kwargs=kw,
-            daemon=True
-        )
-
+        self.process = multiprocessing.Process(target=BotClient, kwargs=kwargs, daemon=True)
         self.process.start()
         self.log.info(f"Process started with PID {self.process.pid}")
 
@@ -238,7 +209,6 @@ class Cluster:
 
     def stop(self, sign=signal.SIGINT) -> None:
         self.log.info(f"Shutting down with signal {sign!r}")
-
         try:
             os.kill(self.process.pid, sign)
         except ProcessLookupError:

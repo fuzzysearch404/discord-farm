@@ -5,6 +5,7 @@
             "name":"Squealer Mike",
             "info":"Protects your farm's field. Or does it?",
             "emoji":"\ud83d\udc29",
+            "required_level":0,
             "base_price":30,
             "price_increase_per_farm_slots":20,
             "price_increase_per_factory_slots":0,
@@ -15,6 +16,7 @@
             "name":"Saliva Toby",
             "info":"Protects your farm, but sometimes likes to play around",
             "emoji":"\ud83d\udc36",
+            "required_level":0,
             "base_price":100,
             "price_increase_per_farm_slots":150,
             "price_increase_per_factory_slots":0,
@@ -25,6 +27,7 @@
             "name":"Guard Rex",
             "info":"Protects your farm and your conscience",
             "emoji":"\ud83d\udc15",
+            "required_level":0,
             "base_price":225,
             "price_increase_per_farm_slots":240,
             "price_increase_per_factory_slots":0,
@@ -35,6 +38,7 @@
             "name":"Leo",
             "info":"Keeps your harvest fresh and collectable forever. Don't ask me how...",
             "emoji":"\ud83d\udc31",
+            "required_level":0,
             "base_price":240,
             "price_increase_per_farm_slots":750,
             "price_increase_per_factory_slots":0,
@@ -45,6 +49,7 @@
             "name":"Susan",
             "info":"Temporarily adds 2 more farm tiles",
             "emoji":"\ud83d\udc39",
+            "required_level":0,
             "base_price":195,
             "price_increase_per_farm_slots":580,
             "price_increase_per_factory_slots":0,
@@ -55,10 +60,22 @@
             "name":"Alice",
             "info":"Temporarily adds 2 more factory slots",
             "emoji":"\ud83e\udd89",
+            "required_level":3,
             "base_price":45,
             "price_increase_per_farm_slots":0,
             "price_increase_per_factory_slots":100,
             "price_increase_per_user_level":210
+        },
+        {
+            "id":"fish_doubler",
+            "name":"Archie",
+            "info":"Doubles the fish you catch",
+            "emoji":"\ud83d\udc3b",
+            "required_level":17,
+            "base_price":2500,
+            "price_increase_per_farm_slots":0,
+            "price_increase_per_factory_slots":0,
+            "price_increase_per_user_level":50
         }
     ]
 }

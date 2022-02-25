@@ -13,13 +13,10 @@ def get_volume(item: game_items.PlantableItem, mod_level: int) -> int:
     return item.amount + int(item.amount / 100 * (mod_level * 10))
 
 
-async def get_item_mods(ctx, item: game_items.GameItem, conn=None) -> tuple:
-    grow_time = item.grow_time
-    collect_time = item.collect_time
-    base_volume = item.amount
+async def get_item_mods_for_user(cmd, item: game_items.GameItem, conn) -> tuple:
+    grow_time, collect_time, base_volume = item.grow_time, item.collect_time, item.amount
 
-    mods = await ctx.user_data.get_item_modification(ctx, item.id, conn=conn)
-
+    mods = await cmd.user_data.get_item_modification(item.id, conn)
     if mods:
         grow_time = get_growing_time(item, mods['time1'])
         collect_time = get_harvest_time(item, mods['time2'])

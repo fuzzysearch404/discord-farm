@@ -1,8 +1,9 @@
 .vscode
-__pycache__
-backups
-botsettings.py
+__pycache__/
+backups/
+logs/
 config.json
 news.txt
 *.log
+*.log.*
 dump.rdb
