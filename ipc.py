@@ -613,7 +613,7 @@ class TopGGService(IPCService):
         self.post_stats_delay = ipc.ipc_config['post-bot-stats-delay']
         self.bot_id = ipc.ipc_config['bot-id']
 
-        self.task = self.loop.create_task(self.update_topgg_stats())
+        self.task = self.loop.create_task(self.send_topgg_stats())
 
     def stop(self) -> None:
         super().stop()
