@@ -83,7 +83,7 @@ class RunSQLCommand(
         fmt += f"```\n*Returned {rows} rows in {dt:.3f}ms*"
 
         if len(fmt) > 2000:
-            fp = io.BytesIO(results.encode("utf-8"))
+            fp = io.BytesIO(fmt.encode("utf-8"))
             await self.reply("Output too long...", file=discord.File(fp, "data.txt"))
         else:
             await self.reply(fmt)
