@@ -807,8 +807,8 @@ class ChestsHourlyCommand(
     async def callback(self):
         chests_and_rarities = {
             1000: 80.5,  # Gold
-            1001: 250.0,  # Common
-            1002: 115.0,  # Uncommon
+            1001: 600.0,  # Common
+            1002: 250.0,  # Uncommon
             1003: 70.0,  # Rare
             1004: 20.0,  # Epic
             1005: 2.5  # Legendary
