@@ -474,18 +474,22 @@ class FarmPlantCommand(
         await self.release()
 
         end_fmt = time_util.maybe_timestamp(ends, since=now)
-        dies_fmt = discord.utils.format_dt(dies, style="f")
         embed = embed_util.success_embed(
-            title=f"Successfully started growing {item.full_name}!",
+            title=f"Successfully started to grow {item.full_name}!",
             text=(
-                f"Nicely done! You are now growing {item.full_name}! \N{FACE WITH COWBOY HAT}\n"
-                f"You will be able to collect it: **{end_fmt}**. Just remember to harvest in time, "
-                "because you will only have limited time to do so - **items are going to be rotten "
-                f"at {dies_fmt}** \N{ALARM CLOCK}"
+                f"**Nicely done! You are now growing {total_items}x {item.full_name} "
+                f"(in {self.tiles} farm tiles). You are going be able to collect items: "
+                f"{end_fmt}**. \N{FACE WITH COWBOY HAT}"
             ),
             footer="Track your item growth with the \"/farm field\" command",
             cmd=self
         )
+        if not has_cat_boost:
+            dies_fmt = discord.utils.format_dt(dies, style="f")
+            embed.description += (
+                "\nJust remember to harvest in time, because you will only have a limited time to "
+                f"do so - items are going to be rotten at {dies_fmt} \N{ALARM CLOCK}"
+            )
         await self.edit(embed=embed, view=None)
         await self.send_reminder_to_ipc(item.id, total_items, ends)
 
