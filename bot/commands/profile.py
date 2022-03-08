@@ -658,21 +658,22 @@ class ChestsOpenCommand(
                     extra_luck=0.055,
                     growables_multiplier=base_growables_multiplier,
                     products=False,
-                    total_draws=self.ladder_random(1, 2, 14)
+                    total_draws=self.ladder_random(1, 2, 15)
                 )
                 items_won.extend(items.items())
 
                 if not random.randint(0, 6):
                     gold_reward += self.ladder_random(min_gold, max_gold, 8)
         elif chest.id == 1003:  # Rare chest
-            min_gold = user_level * 4
-            max_gold = user_level * 5
+            min_gold = user_level * 6
+            max_gold = user_level * 7
 
             for _ in range(self.amount):
                 items: dict = self.items.get_random_items(
                     user_level,
-                    extra_luck=0.1,
-                    growables_multiplier=base_growables_multiplier + 2,
+                    extra_luck=0.15,
+                    growables_multiplier=base_growables_multiplier + 4,
+                    products=False,
                     total_draws=self.ladder_random(1, 3, 12)
                 )
                 items_won.extend(items.items())
@@ -687,7 +688,7 @@ class ChestsOpenCommand(
                 items: dict = self.items.get_random_items(
                     user_level,
                     extra_luck=0.35,
-                    growables_multiplier=base_growables_multiplier + 6,
+                    growables_multiplier=base_growables_multiplier + 7,
                     total_draws=self.ladder_random(3, 4, 9)
                 )
                 items_won.extend(items.items())
