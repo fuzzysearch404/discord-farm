@@ -37,7 +37,7 @@
           "name":"wheat",
           "grow_time":1200,
           "gold_price":50,
-          "amount":18,
+          "amount":15,
           "image_url":"https://failiem.lv/thumb_show.php?i=g35by9jdc"
        },
        {
@@ -135,9 +135,9 @@
           "level":18,
           "emoji":"\ud83c\udf3e",
           "name":"rice",
-          "grow_time":11700,
+          "grow_time":1800,
           "gold_price":3500,
-          "amount":26,
+          "amount":17,
           "image_url":"https://failiem.lv/thumb_show.php?i=6h5sy93e"
        },
        {
