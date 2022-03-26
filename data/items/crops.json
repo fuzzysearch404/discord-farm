@@ -8,7 +8,7 @@
           "grow_time":120,
           "gold_price":15,
           "amount":10,
-          "image_url":"https://failiem.lv/thumb_show.php?i=tqjxqefh"
+          "image_url":"https://failiem.lv/thumb.php?i=tqjxqefh"
        },
        {
           "id":2,
@@ -18,7 +18,7 @@
           "grow_time":200,
           "gold_price":15,
           "amount":11,
-          "image_url":"https://failiem.lv/thumb_show.php?i=xv79gcsr"
+          "image_url":"https://failiem.lv/thumb.php?i=xv79gcsr"
        },
        {
           "id":3,
@@ -28,7 +28,7 @@
           "grow_time":600,
           "gold_price":30,
           "amount":14,
-          "image_url":"https://failiem.lv/thumb_show.php?i=7hv84cqm"
+          "image_url":"https://failiem.lv/thumb.php?i=7hv84cqm"
        },
        {
           "id":4,
@@ -38,7 +38,7 @@
           "grow_time":1200,
           "gold_price":50,
           "amount":15,
-          "image_url":"https://failiem.lv/thumb_show.php?i=g35by9jdc"
+          "image_url":"https://failiem.lv/thumb.php?i=g35by9jdc"
        },
        {
           "id":5,
@@ -48,7 +48,7 @@
           "grow_time":3600,
           "gold_price":140,
           "amount":18,
-          "image_url":"https://failiem.lv/thumb_show.php?i=kkhp2mxq"
+          "image_url":"https://failiem.lv/thumb.php?i=kkhp2mxq"
        },
        {
           "id":6,
@@ -58,7 +58,7 @@
           "grow_time":5400,
           "gold_price":180,
           "amount":20,
-          "image_url":"https://failiem.lv/thumb_show.php?i=xg47evjw"
+          "image_url":"https://failiem.lv/thumb.php?i=xg47evjw"
        },
        {
           "id":7,
@@ -68,7 +68,7 @@
           "grow_time":10800,
           "gold_price":350,
           "amount":26,
-          "image_url":"https://failiem.lv/thumb_show.php?i=ddb9yqmu"
+          "image_url":"https://failiem.lv/thumb.php?i=ddb9yqmu"
        },
        {
           "id":8,
@@ -78,7 +78,7 @@
           "grow_time":16200,
           "gold_price":600,
           "amount":33,
-          "image_url":"https://failiem.lv/thumb_show.php?i=baahfnpy"
+          "image_url":"https://failiem.lv/thumb.php?i=baahfnpy"
        },
        {
           "id":9,
@@ -88,7 +88,7 @@
           "grow_time":5400,
           "gold_price":800,
           "amount":16,
-          "image_url":"https://failiem.lv/thumb_show.php?i=ey7nzsa3"
+          "image_url":"https://failiem.lv/thumb.php?i=ey7nzsa3"
        },
        {
           "id":10,
@@ -98,7 +98,7 @@
           "grow_time":5400,
           "gold_price":800,
           "amount":18,
-          "image_url":"https://failiem.lv/thumb_show.php?i=b6jj83ey"
+          "image_url":"https://failiem.lv/thumb.php?i=b6jj83ey"
        },
        {
           "id":11,
@@ -108,7 +108,7 @@
           "grow_time":14400,
           "gold_price":1000,
           "amount":25,
-          "image_url":"https://failiem.lv/thumb_show.php?i=zvv8kt5f"
+          "image_url":"https://failiem.lv/thumb.php?i=zvv8kt5f"
        },
        {
           "id":12,
@@ -118,7 +118,7 @@
           "grow_time":28800,
           "gold_price":2000,
           "amount":42,
-          "image_url":"https://failiem.lv/thumb_show.php?i=j7paxvba"
+          "image_url":"https://failiem.lv/thumb.php?i=j7paxvba"
        },
        {
           "id":13,
@@ -128,7 +128,7 @@
           "grow_time":43200,
           "gold_price":3000,
           "amount":56,
-          "image_url":"https://failiem.lv/thumb_show.php?i=m8ygtf64"
+          "image_url":"https://failiem.lv/thumb.php?i=m8ygtf64"
        },
        {
           "id":14,
@@ -138,7 +138,7 @@
           "grow_time":1800,
           "gold_price":3500,
           "amount":17,
-          "image_url":"https://failiem.lv/thumb_show.php?i=6h5sy93e"
+          "image_url":"https://failiem.lv/thumb.php?i=6h5sy93e"
        },
        {
           "id":15,
@@ -148,7 +148,7 @@
           "grow_time":21600,
           "gold_price":4000,
           "amount":40,
-          "image_url":"https://failiem.lv/thumb_show.php?i=wywmhzxk5"
+          "image_url":"https://failiem.lv/thumb.php?i=wywmhzxk5"
        },
        {
           "id":16,
@@ -158,7 +158,7 @@
           "grow_time":38700,
           "gold_price":6500,
           "amount":51,
-          "image_url":"https://failiem.lv/thumb_show.php?i=frwkhhpz4"
+          "image_url":"https://failiem.lv/thumb.php?i=frwkhhpz4"
        }
     ]
  }

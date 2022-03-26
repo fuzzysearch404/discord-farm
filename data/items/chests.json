@@ -6,7 +6,7 @@
             "emoji":"<:gold_chest:843489541062393907>",
             "level":1,
             "amount":1,
-            "image_url":"https://failiem.lv/thumb_show.php?i=ra7a6mahs"
+            "image_url":"https://failiem.lv/thumb.php?i=ra7a6mahs"
         },
         {
             "id":1001,
@@ -14,7 +14,7 @@
             "emoji":"<:common_chest:844647328974897182>",
             "level":1,
             "amount":1,
-            "image_url":"https://failiem.lv/thumb_show.php?i=ja6amtmtn"
+            "image_url":"https://failiem.lv/thumb.php?i=ja6amtmtn"
         },
         {
             "id":1002,
@@ -22,7 +22,7 @@
             "emoji":"<:uncommon_chest:843489540911136778>",
             "level":1,
             "amount":1,
-            "image_url":"https://failiem.lv/thumb_show.php?i=979bdfutc"
+            "image_url":"https://failiem.lv/thumb.php?i=979bdfutc"
         },
         {
             "id":1003,
@@ -30,7 +30,7 @@
             "emoji":"<:rare_chest:843489540756078592>",
             "level":1,
             "amount":1,
-            "image_url":"https://failiem.lv/thumb_show.php?i=t6smwgyrx"
+            "image_url":"https://failiem.lv/thumb.php?i=t6smwgyrx"
         },
         {
             "id":1004,
@@ -38,7 +38,7 @@
             "emoji":"<:epic_chest:844647328726908939>",
             "level":1,
             "amount":1,
-            "image_url":"https://failiem.lv/thumb_show.php?i=qc6p9szbk"
+            "image_url":"https://failiem.lv/thumb.php?i=qc6p9szbk"
         },
         {
             "id":1005,
@@ -46,7 +46,7 @@
             "emoji":"<:legendary_chest:843489540931846155>",
             "level":1,
             "amount":1,
-            "image_url":"https://failiem.lv/thumb_show.php?i=pr84k64g4"
+            "image_url":"https://failiem.lv/thumb.php?i=pr84k64g4"
         }
     ]
 }

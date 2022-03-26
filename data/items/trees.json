@@ -9,7 +9,7 @@
           "gold_price":120,
           "amount":10,
           "iterations":3,
-          "image_url":"https://failiem.lv/thumb_show.php?i=ayrez6dx"
+          "image_url":"https://failiem.lv/thumb.php?i=ayrez6dx"
        },
        {
           "id":202,
@@ -20,7 +20,7 @@
           "gold_price":480,
           "amount":12,
           "iterations":4,
-          "image_url":"https://failiem.lv/thumb_show.php?i=rmcmnavs"
+          "image_url":"https://failiem.lv/thumb.php?i=rmcmnavs"
        },
        {
           "id":203,
@@ -31,7 +31,7 @@
           "gold_price":1000,
           "amount":29,
           "iterations":3,
-          "image_url":"https://failiem.lv/thumb_show.php?i=weg8hny7"
+          "image_url":"https://failiem.lv/thumb.php?i=weg8hny7"
        },
        {
           "id":204,
@@ -42,7 +42,7 @@
           "gold_price":2000,
           "amount":24,
           "iterations":5,
-          "image_url":"https://failiem.lv/thumb_show.php?i=pftbuxn4"
+          "image_url":"https://failiem.lv/thumb.php?i=pftbuxn4"
        },
        {
           "id":205,
@@ -53,7 +53,7 @@
           "gold_price":2500,
           "amount":16,
           "iterations":4,
-          "image_url":"https://failiem.lv/thumb_show.php?i=8ea6w37n"
+          "image_url":"https://failiem.lv/thumb.php?i=8ea6w37n"
        },
        {
           "id":206,
@@ -64,7 +64,7 @@
           "gold_price":3000,
           "amount":34,
           "iterations":3,
-          "image_url":"https://failiem.lv/thumb_show.php?i=eb9mjrme"
+          "image_url":"https://failiem.lv/thumb.php?i=eb9mjrme"
        },
        {
           "id":207,
@@ -75,7 +75,7 @@
           "gold_price":4000,
           "amount":36,
           "iterations":2,
-          "image_url":"https://failiem.lv/thumb_show.php?i=rn2metwf"
+          "image_url":"https://failiem.lv/thumb.php?i=rn2metwf"
        },
        {
           "id":208,
@@ -86,7 +86,7 @@
           "gold_price":4500,
           "amount":45,
           "iterations":2,
-          "image_url":"https://failiem.lv/thumb_show.php?i=p3rs5bk59"
+          "image_url":"https://failiem.lv/thumb.php?i=p3rs5bk59"
        },
        {
           "id":209,
@@ -97,7 +97,7 @@
           "gold_price":4500,
           "amount":26,
           "iterations":3,
-          "image_url":"https://failiem.lv/thumb_show.php?i=2x4wqhzrz"
+          "image_url":"https://failiem.lv/thumb.php?i=2x4wqhzrz"
        },
        {
           "id":210,
@@ -108,7 +108,7 @@
           "gold_price":6000,
           "amount":27,
           "iterations":4,
-          "image_url":"https://failiem.lv/thumb_show.php?i=87hd8vtyy"
+          "image_url":"https://failiem.lv/thumb.php?i=87hd8vtyy"
        },
        {
           "id":211,
@@ -119,7 +119,7 @@
           "gold_price":7000,
           "amount":50,
           "iterations":2,
-          "image_url":"https://failiem.lv/thumb_show.php?i=c29mmeg7q"
+          "image_url":"https://failiem.lv/thumb.php?i=c29mmeg7q"
        },
        {
           "id":212,
@@ -130,7 +130,7 @@
           "gold_price":8000,
           "amount":58,
           "iterations":2,
-          "image_url":"https://failiem.lv/thumb_show.php?i=qfgp5wgky"
+          "image_url":"https://failiem.lv/thumb.php?i=qfgp5wgky"
        }
     ]
  }

@@ -6,7 +6,7 @@
           "name":"green salad",
           "amount":1,
           "level":3,
-          "image_url":"https://failiem.lv/thumb_show.php?i=mrx6q5aj",
+          "image_url":"https://failiem.lv/thumb.php?i=mrx6q5aj",
           "made_from":[
              {
                 "1":50
@@ -26,7 +26,7 @@
           "name":"popcorn",
           "amount":1,
           "level":3,
-          "image_url":"https://failiem.lv/thumb_show.php?i=d4wbbzr7",
+          "image_url":"https://failiem.lv/thumb.php?i=d4wbbzr7",
           "made_from":[
              {
                 "3":80
@@ -40,7 +40,7 @@
           "name":"cooked eggs",
           "amount":1,
           "level":4,
-          "image_url":"https://failiem.lv/thumb_show.php?i=qr88nngm",
+          "image_url":"https://failiem.lv/thumb.php?i=qr88nngm",
           "made_from":[
              {
                 "401":110
@@ -54,7 +54,7 @@
           "name":"bottled milk",
           "amount":1,
           "level":5,
-          "image_url":"https://failiem.lv/thumb_show.php?i=ngrzhvcb",
+          "image_url":"https://failiem.lv/thumb.php?i=ngrzhvcb",
           "made_from":[
              {
                 "402":88
@@ -68,7 +68,7 @@
           "name":"bread",
           "amount":1,
           "level":6,
-          "image_url":"https://failiem.lv/thumb_show.php?i=xm68e72g",
+          "image_url":"https://failiem.lv/thumb.php?i=xm68e72g",
           "made_from":[
              {
                 "4":100
@@ -85,7 +85,7 @@
           "name":"cherry beer",
           "amount":1,
           "level":6,
-          "image_url":"https://failiem.lv/thumb_show.php?i=x7987mdg",
+          "image_url":"https://failiem.lv/thumb.php?i=x7987mdg",
           "made_from":[
              {
                 "4":120
@@ -102,7 +102,7 @@
           "name":"butter",
           "amount":1,
           "level":7,
-          "image_url":"https://failiem.lv/thumb_show.php?i=fvatua83",
+          "image_url":"https://failiem.lv/thumb.php?i=fvatua83",
           "made_from":[
              {
                 "402":140
@@ -116,7 +116,7 @@
           "name":"waffles",
           "amount":1,
           "level":7,
-          "image_url":"https://failiem.lv/thumb_show.php?i=ry785umq",
+          "image_url":"https://failiem.lv/thumb.php?i=ry785umq",
           "made_from":[
              {
                 "4":85
@@ -136,7 +136,7 @@
           "name":"apple pancakes",
           "amount":1,
           "level":7,
-          "image_url":"https://failiem.lv/thumb_show.php?i=vzv7sr7d",
+          "image_url":"https://failiem.lv/thumb.php?i=vzv7sr7d",
           "made_from":[
              {
                 "4":85
@@ -156,7 +156,7 @@
           "name":"onion rings",
           "amount":1,
           "level":8,
-          "image_url":"https://failiem.lv/thumb_show.php?i=x9a449ghb",
+          "image_url":"https://failiem.lv/thumb.php?i=x9a449ghb",
           "made_from":[
              {
                 "6":108
@@ -170,7 +170,7 @@
           "name":"pickles",
           "amount":1,
           "level":9,
-          "image_url":"https://failiem.lv/thumb_show.php?i=5e8aysbdm",
+          "image_url":"https://failiem.lv/thumb.php?i=5e8aysbdm",
           "made_from":[
              {
                 "5":69
@@ -187,7 +187,7 @@
           "name":"pear tea",
           "amount":1,
           "level":10,
-          "image_url":"https://failiem.lv/thumb_show.php?i=je24vvdj",
+          "image_url":"https://failiem.lv/thumb.php?i=je24vvdj",
           "made_from":[
              {
                 "203":130
@@ -201,7 +201,7 @@
           "name":"red candies",
           "amount":1,
           "level":11,
-          "image_url":"https://failiem.lv/thumb_show.php?i=d5aukcxr",
+          "image_url":"https://failiem.lv/thumb.php?i=d5aukcxr",
           "made_from":[
              {
                 "8":80
@@ -221,7 +221,7 @@
           "name":"wine",
           "amount":1,
           "level":12,
-          "image_url":"https://failiem.lv/thumb_show.php?i=vcxdswfz",
+          "image_url":"https://failiem.lv/thumb.php?i=vcxdswfz",
           "made_from":[
              {
                 "204":190
@@ -235,7 +235,7 @@
           "name":"bouquet",
           "amount":1,
           "level":14,
-          "image_url":"https://failiem.lv/thumb_show.php?i=krd7verp",
+          "image_url":"https://failiem.lv/thumb.php?i=krd7verp",
           "made_from":[
              {
                 "9":60
@@ -255,7 +255,7 @@
           "name":"french fries",
           "amount":1,
           "level":15,
-          "image_url":"https://failiem.lv/thumb_show.php?i=2e8gf2t7",
+          "image_url":"https://failiem.lv/thumb.php?i=2e8gf2t7",
           "made_from":[
              {
                 "12":138
@@ -269,7 +269,7 @@
           "name":"vegetable soup",
           "amount":1,
           "level":16,
-          "image_url":"https://failiem.lv/thumb_show.php?i=amjaatdz",
+          "image_url":"https://failiem.lv/thumb.php?i=amjaatdz",
           "made_from":[
              {
                 "2":320
@@ -289,7 +289,7 @@
           "name":"fish cake",
           "amount":1,
           "level":17,
-          "image_url":"https://failiem.lv/thumb_show.php?i=r3gbrw25",
+          "image_url":"https://failiem.lv/thumb.php?i=r3gbrw25",
           "made_from":[
              {
                 "600":55
@@ -303,7 +303,7 @@
           "name":"rice crackers",
           "amount":1,
           "level":18,
-          "image_url":"https://failiem.lv/thumb_show.php?i=5sh7w3r7",
+          "image_url":"https://failiem.lv/thumb.php?i=5sh7w3r7",
           "made_from":[
              {
                 "14":162
@@ -317,7 +317,7 @@
           "name":"sushi",
           "amount":1,
           "level":19,
-          "image_url":"https://failiem.lv/thumb_show.php?i=mz4jkv47",
+          "image_url":"https://failiem.lv/thumb.php?i=mz4jkv47",
           "made_from":[
              {
                 "14":96
@@ -337,7 +337,7 @@
           "name":"lemonade",
           "amount":1,
           "level":20,
-          "image_url":"https://failiem.lv/thumb_show.php?i=tprdkvt3",
+          "image_url":"https://failiem.lv/thumb.php?i=tprdkvt3",
           "made_from":[
              {
                 "206":190
@@ -351,7 +351,7 @@
           "name":"honey pie",
           "amount":1,
           "level":21,
-          "image_url":"https://failiem.lv/thumb_show.php?i=6efp5rek",
+          "image_url":"https://failiem.lv/thumb.php?i=6efp5rek",
           "made_from":[
              {
                 "401":100
@@ -368,7 +368,7 @@
           "name":"summer pudding",
           "amount":1,
           "level":22,
-          "image_url":"https://failiem.lv/thumb_show.php?i=qm7bzd23",
+          "image_url":"https://failiem.lv/thumb.php?i=qm7bzd23",
           "made_from":[
              {
                 "8":60
@@ -385,7 +385,7 @@
           "name":"dango",
           "amount":1,
           "level":23,
-          "image_url":"https://failiem.lv/thumb_show.php?i=vpx4qbpp",
+          "image_url":"https://failiem.lv/thumb.php?i=vpx4qbpp",
           "made_from":[
              {
                 "14":89
@@ -402,7 +402,7 @@
           "name":"canned olives",
           "amount":1,
           "level":24,
-          "image_url":"https://failiem.lv/thumb_show.php?i=n4y78vqgc",
+          "image_url":"https://failiem.lv/thumb.php?i=n4y78vqgc",
           "made_from":[
              {
                 "208":160
@@ -416,7 +416,7 @@
           "name":"blue tea",
           "amount":1,
           "level":25,
-          "image_url":"https://failiem.lv/thumb_show.php?i=m32zxr4xe",
+          "image_url":"https://failiem.lv/thumb.php?i=m32zxr4xe",
           "made_from":[
              {
                 "204":80
@@ -433,7 +433,7 @@
           "name":"juice",
           "amount":1,
           "level":26,
-          "image_url":"https://failiem.lv/thumb_show.php?i=nxj3a2fwn",
+          "image_url":"https://failiem.lv/thumb.php?i=nxj3a2fwn",
           "made_from":[
              {
                 "210":212
@@ -447,7 +447,7 @@
           "name":"spicy sandwich",
           "amount":1,
           "level":27,
-          "image_url":"https://failiem.lv/thumb_show.php?i=pkmv9huwk",
+          "image_url":"https://failiem.lv/thumb.php?i=pkmv9huwk",
           "made_from":[
              {
                 "16":200
@@ -464,7 +464,7 @@
           "name":"cheese",
           "amount":1,
           "level":28,
-          "image_url":"https://failiem.lv/thumb_show.php?i=kz62f79kd",
+          "image_url":"https://failiem.lv/thumb.php?i=kz62f79kd",
           "made_from":[
              {
                 "402":240
@@ -478,7 +478,7 @@
           "name":"hamburger",
           "amount":1,
           "level":28,
-          "image_url":"https://failiem.lv/thumb_show.php?i=czxmgvq8u",
+          "image_url":"https://failiem.lv/thumb.php?i=czxmgvq8u",
           "made_from":[
              {
                 "1":500
@@ -501,7 +501,7 @@
           "name":"tropical drink",
           "amount":1,
           "level":29,
-          "image_url":"https://failiem.lv/thumb_show.php?i=tpxmp6ytu",
+          "image_url":"https://failiem.lv/thumb.php?i=tpxmp6ytu",
           "made_from":[
              {
                 "211":180
@@ -518,7 +518,7 @@
           "name":"lollipop",
           "amount":1,
           "level":30,
-          "image_url":"https://failiem.lv/thumb_show.php?i=yjff3p9wv",
+          "image_url":"https://failiem.lv/thumb.php?i=yjff3p9wv",
           "made_from":[
              {
                 "207":128
