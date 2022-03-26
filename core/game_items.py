@@ -383,6 +383,10 @@ class Boost:
         price_per_day += self.price_increase_per_factory_slots * user.factory_slots
         price_per_day += self.price_increase_per_user_level * user.level
 
+        # At high levels the prices are too low without this
+        global_boost_price_multiplier = int(user.level / 8)
+        price_per_day *= global_boost_price_multiplier
+
         if duration == BoostDuration.ONE_DAY:  # No discount
             return price_per_day
         elif duration == BoostDuration.THREE_DAYS:

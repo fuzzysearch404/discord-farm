@@ -11,7 +11,7 @@
         "host" : "127.0.0.1"
     },
     "bot" : {
-        "version" : "3.0.1",
+        "version" : "3.1.0",
         "beta": true,
         "discord-token" : "please_never_leak_this",
         "start-in-maintenance" : false,

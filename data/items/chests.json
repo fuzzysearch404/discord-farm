@@ -1,52 +1,52 @@
 {
-    "chests" : [
+    "chests": [
         {
-            "id":1000,
-            "name":"gold chest",
-            "emoji":"<:gold_chest:843489541062393907>",
-            "level":1,
-            "amount":1,
-            "image_url":"https://failiem.lv/thumb.php?i=ra7a6mahs"
+            "id": 1000,
+            "name": "gold chest",
+            "emoji": "<:gold_chest:843489541062393907>",
+            "level": 1,
+            "amount": 1,
+            "image_url": "https://failiem.lv/thumb.php?i=ra7a6mahs"
         },
         {
-            "id":1001,
-            "name":"common chest",
-            "emoji":"<:common_chest:844647328974897182>",
-            "level":1,
-            "amount":1,
-            "image_url":"https://failiem.lv/thumb.php?i=ja6amtmtn"
+            "id": 1001,
+            "name": "common chest",
+            "emoji": "<:common_chest:844647328974897182>",
+            "level": 1,
+            "amount": 1,
+            "image_url": "https://failiem.lv/thumb.php?i=ja6amtmtn"
         },
         {
-            "id":1002,
-            "name":"uncommon chest",
-            "emoji":"<:uncommon_chest:843489540911136778>",
-            "level":1,
-            "amount":1,
-            "image_url":"https://failiem.lv/thumb.php?i=979bdfutc"
+            "id": 1002,
+            "name": "uncommon chest",
+            "emoji": "<:uncommon_chest:843489540911136778>",
+            "level": 1,
+            "amount": 1,
+            "image_url": "https://failiem.lv/thumb.php?i=979bdfutc"
         },
         {
-            "id":1003,
-            "name":"rare chest",
-            "emoji":"<:rare_chest:843489540756078592>",
-            "level":1,
-            "amount":1,
-            "image_url":"https://failiem.lv/thumb.php?i=t6smwgyrx"
+            "id": 1003,
+            "name": "rare chest",
+            "emoji": "<:rare_chest:843489540756078592>",
+            "level": 1,
+            "amount": 1,
+            "image_url": "https://failiem.lv/thumb.php?i=t6smwgyrx"
         },
         {
-            "id":1004,
-            "name":"epic chest",
-            "emoji":"<:epic_chest:844647328726908939>",
-            "level":1,
-            "amount":1,
-            "image_url":"https://failiem.lv/thumb.php?i=qc6p9szbk"
+            "id": 1004,
+            "name": "epic chest",
+            "emoji": "<:epic_chest:844647328726908939>",
+            "level": 1,
+            "amount": 1,
+            "image_url": "https://failiem.lv/thumb.php?i=qc6p9szbk"
         },
         {
-            "id":1005,
-            "name":"legendary chest",
-            "emoji":"<:legendary_chest:843489540931846155>",
-            "level":1,
-            "amount":1,
-            "image_url":"https://failiem.lv/thumb.php?i=pr84k64g4"
+            "id": 1005,
+            "name": "legendary chest",
+            "emoji": "<:legendary_chest:843489540931846155>",
+            "level": 1,
+            "amount": 1,
+            "image_url": "https://failiem.lv/thumb.php?i=pr84k64g4"
         }
     ]
 }
