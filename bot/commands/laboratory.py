@@ -134,10 +134,10 @@ class LaboratoryResearchCommand(
     item: str = discord.app.Option(description="Item to upgrade", autocomplete=True)
 
     def calculate_modification_cost(self, item: game_items.PurchasableItem, level: int) -> int:
-        return int(round(item.gold_price * (level ** 1.55), -1))
+        return int(round(item.gold_price * (level ** 1.25), -1))
 
     def calculate_modification_cooldown(self, level: int) -> int:
-        return 60 + int(round((level ** 4.9362), -1))  # Max (10): 1 day
+        return 60 + int(round((level ** 4.1567), -1))  # Max (10): 4 hours
 
     def format_upgrade_costs(self, upgrade: str, cooldown_fmt: str, cost: int) -> str:
         return (

@@ -313,12 +313,12 @@ class BotClient(AutoShardedModularCommandClient):
         )
 
     async def on_interaction(self, interaction: discord.Interaction):
-        if interaction.type == discord.InteractionType.application_command:
-            if interaction.guild_id is None:
-                await interaction.response.send_message(
-                    "\N{CROSS MARK} Sorry, you can only interact with this bot in Discord servers!"
-                )
-                return
+        if interaction.type == discord.InteractionType.application_command \
+                and interaction.guild_id is None:
+            await interaction.response.send_message(
+                "\N{CROSS MARK} Sorry, you can only interact with this bot in Discord servers!"
+            )
+            return
 
         await super().on_interaction(interaction)
 

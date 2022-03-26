@@ -150,8 +150,8 @@ class MissionsOrdersViewCommand(
                 encoded = jsonpickle.encode(new_mission)
 
                 query = "INSERT INTO missions (user_id, payload) VALUES ($1, $2) RETURNING id;"
-                id = await conn.fetchval(query, self.author.id, encoded)
-                new_missions.append((id, new_mission))
+                new_mission_id = await conn.fetchval(query, self.author.id, encoded)
+                new_missions.append((new_mission_id, new_mission))
 
         for existing in existing_missions:
             decoded = jsonpickle.decode(existing['payload'])

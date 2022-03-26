@@ -823,9 +823,9 @@ class ChestsHourlyCommand(
         amount = 1
         # If common chest, give multiple
         if chest_id == 1001:
-            min = int(self.user_data.level / 20) or 1
-            max = int(self.user_data.level / 10) or 1
-            amount = random.randint(min, max + 1)
+            min_amount = int(self.user_data.level / 20) or 1
+            max_amount = int(self.user_data.level / 10) or 1
+            amount = random.randint(min_amount, max_amount + 1)
 
         async with self.acquire() as conn:
             await self.user_data.give_item(chest_id, amount, conn)

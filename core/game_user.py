@@ -69,20 +69,20 @@ class User:
 
     def _calculate_user_level(self) -> tuple:
         """Calculates current player level and xp to the next level."""
-        if self.xp < 11_500_000:
-            # Levels 1 - 15
-            if self.xp < 200000:
+        level_thirty_xp = 9_675_000
+
+        if self.xp < level_thirty_xp:
+            if self.xp < 200_000:  # Levels 1 - 15
                 limits = (
                     0, 20, 250, 750, 2000, 4500, 8000, 15000, 24000, 34000,
-                    49000, 69420, 100000, 140000, 200000
+                    49000, 69420, 100_000, 140_000, 200_000
                 )
                 level = 0
-            # Levels 15 - 30
-            else:
+            else:  # Levels 15 - 30
                 limits = (
-                    280000, 380000, 500000, 650000, 900000,
-                    1_200_000, 1_600_000, 2_100_000, 2_850_000, 3_850_000,
-                    5_000_000, 6_500_000, 8_000_000, 9_500_000, 11_500_000
+                    280_000, 380_000, 500_000, 650_000, 835_000,
+                    1_075_000, 1_395_000, 1_815_000, 2_360_000, 3_060_000,
+                    3_925_000, 5_000_000, 6_300_000, 7_850_000, level_thirty_xp
                 )
                 level = 15
 
@@ -92,11 +92,22 @@ class User:
                 else:
                     return level, points
 
-        # User has reached high levels with a constant XP growth,
-        # that is 2.5 million XP per level.
-        remaining = self.xp - 11_500_000
-        lev = int(remaining / 2_500_000)
-        return 30 + lev, 11_500_000 + ((lev + 1) * 2_500_000)
+        # User has reached high levels with a constant XP growth
+        level = 30
+        remaining_xp = self.xp - level_thirty_xp
+        xp_seen = level_thirty_xp
+        # 2m + (every 2 levels * 45k)
+        while True:
+            # Add +1 so that there isn't multiplication by zero
+            multiplier = (int((level - 30) / 2) + 1)
+            xp_increase = 2_000_000 + (multiplier * 45_000)
+
+            if remaining_xp < xp_increase:
+                return level, xp_seen + xp_increase
+
+            xp_seen += xp_increase
+            remaining_xp -= xp_increase
+            level += 1
 
     def give_xp_and_level_up(self, cmd, xp: int) -> None:
         old_level = self.level

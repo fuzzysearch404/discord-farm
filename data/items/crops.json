@@ -1,164 +1,234 @@
 {
-    "crops" : [
-       {
-          "id":1,
-          "level":1,
-          "emoji":"\ud83e\udd6c",
-          "name":"lettuce",
-          "grow_time":120,
-          "gold_price":15,
-          "amount":10,
-          "image_url":"https://failiem.lv/thumb_show.php?i=tqjxqefh"
-       },
-       {
-          "id":2,
-          "level":2,
-          "emoji":"\ud83e\udd55",
-          "name":"carrots",
-          "grow_time":200,
-          "gold_price":15,
-          "amount":11,
-          "image_url":"https://failiem.lv/thumb_show.php?i=xv79gcsr"
-       },
-       {
-          "id":3,
-          "level":3,
-          "emoji":"\ud83c\udf3d",
-          "name":"corn",
-          "grow_time":600,
-          "gold_price":30,
-          "amount":14,
-          "image_url":"https://failiem.lv/thumb_show.php?i=7hv84cqm"
-       },
-       {
-          "id":4,
-          "level":5,
-          "emoji":"<:wheat:923651539405533204>",
-          "name":"wheat",
-          "grow_time":1200,
-          "gold_price":50,
-          "amount":18,
-          "image_url":"https://failiem.lv/thumb_show.php?i=g35by9jdc"
-       },
-       {
-          "id":5,
-          "level":8,
-          "emoji":"\ud83e\uddc4",
-          "name":"garlic",
-          "grow_time":3600,
-          "gold_price":140,
-          "amount":18,
-          "image_url":"https://failiem.lv/thumb_show.php?i=kkhp2mxq"
-       },
-       {
-          "id":6,
-          "level":8,
-          "emoji":"\ud83e\uddc5",
-          "name":"onions",
-          "grow_time":5400,
-          "gold_price":180,
-          "amount":20,
-          "image_url":"https://failiem.lv/thumb_show.php?i=xg47evjw"
-       },
-       {
-          "id":7,
-          "level":9,
-          "emoji":"\ud83e\udd52",
-          "name":"cucumbers",
-          "grow_time":10800,
-          "gold_price":350,
-          "amount":26,
-          "image_url":"https://failiem.lv/thumb_show.php?i=ddb9yqmu"
-       },
-       {
-          "id":8,
-          "level":11,
-          "emoji":"\ud83c\udf53",
-          "name":"strawberries",
-          "grow_time":16200,
-          "gold_price":600,
-          "amount":33,
-          "image_url":"https://failiem.lv/thumb_show.php?i=baahfnpy"
-       },
-       {
-          "id":9,
-          "level":13,
-          "emoji":"\ud83c\udf37",
-          "name":"tulips",
-          "grow_time":5400,
-          "gold_price":800,
-          "amount":16,
-          "image_url":"https://failiem.lv/thumb_show.php?i=ey7nzsa3"
-       },
-       {
-          "id":10,
-          "level":13,
-          "emoji":"\ud83c\udf3a",
-          "name":"hibiscus",
-          "grow_time":5400,
-          "gold_price":800,
-          "amount":18,
-          "image_url":"https://failiem.lv/thumb_show.php?i=b6jj83ey"
-       },
-       {
-          "id":11,
-          "level":14,
-          "emoji":"\ud83c\udf39",
-          "name":"roses",
-          "grow_time":14400,
-          "gold_price":1000,
-          "amount":25,
-          "image_url":"https://failiem.lv/thumb_show.php?i=zvv8kt5f"
-       },
-       {
-          "id":12,
-          "level":15,
-          "emoji":"\ud83e\udd54",
-          "name":"potatoes",
-          "grow_time":28800,
-          "gold_price":2000,
-          "amount":42,
-          "image_url":"https://failiem.lv/thumb_show.php?i=j7paxvba"
-       },
-       {
-          "id":13,
-          "level":16,
-          "emoji":"\ud83e\udd66",
-          "name":"broccoli",
-          "grow_time":43200,
-          "gold_price":3000,
-          "amount":56,
-          "image_url":"https://failiem.lv/thumb_show.php?i=m8ygtf64"
-       },
-       {
-          "id":14,
-          "level":18,
-          "emoji":"\ud83c\udf3e",
-          "name":"rice",
-          "grow_time":11700,
-          "gold_price":2500,
-          "amount":26,
-          "image_url":"https://failiem.lv/thumb_show.php?i=6h5sy93e"
-       },
-       {
-          "id":15,
-          "level":23,
-          "emoji":"<:redbeans:923671677114675220>",
-          "name":"red beans",
-          "grow_time":21600,
-          "gold_price":4000,
-          "amount":40,
-          "image_url":"https://failiem.lv/thumb_show.php?i=wywmhzxk5"
-       },
-       {
-          "id":16,
-          "level":27,
-          "emoji":"\ud83e\uded1",
-          "name":"bell peppers",
-          "grow_time":38700,
-          "gold_price":6500,
-          "amount":51,
-          "image_url":"https://failiem.lv/thumb_show.php?i=frwkhhpz4"
-       }
+    "crops": [
+        {
+            "id": 1,
+            "level": 1,
+            "emoji": "\ud83e\udd6c",
+            "name": "lettuce",
+            "grow_time": 120,
+            "gold_price": 15,
+            "amount": 10,
+            "image_url": "https://failiem.lv/thumb.php?i=tqjxqefh"
+        },
+        {
+            "id": 2,
+            "level": 2,
+            "emoji": "\ud83e\udd55",
+            "name": "carrots",
+            "grow_time": 200,
+            "gold_price": 15,
+            "amount": 11,
+            "image_url": "https://failiem.lv/thumb.php?i=xv79gcsr"
+        },
+        {
+            "id": 3,
+            "level": 3,
+            "emoji": "\ud83c\udf3d",
+            "name": "corn",
+            "grow_time": 600,
+            "gold_price": 30,
+            "amount": 14,
+            "image_url": "https://failiem.lv/thumb.php?i=7hv84cqm"
+        },
+        {
+            "id": 4,
+            "level": 5,
+            "emoji": "<:wheat:923651539405533204>",
+            "name": "wheat",
+            "grow_time": 1200,
+            "gold_price": 50,
+            "amount": 15,
+            "image_url": "https://failiem.lv/thumb.php?i=g35by9jdc"
+        },
+        {
+            "id": 5,
+            "level": 8,
+            "emoji": "\ud83e\uddc4",
+            "name": "garlic",
+            "grow_time": 3600,
+            "gold_price": 140,
+            "amount": 18,
+            "image_url": "https://failiem.lv/thumb.php?i=kkhp2mxq"
+        },
+        {
+            "id": 6,
+            "level": 8,
+            "emoji": "\ud83e\uddc5",
+            "name": "onions",
+            "grow_time": 5400,
+            "gold_price": 180,
+            "amount": 20,
+            "image_url": "https://failiem.lv/thumb.php?i=xg47evjw"
+        },
+        {
+            "id": 7,
+            "level": 9,
+            "emoji": "\ud83e\udd52",
+            "name": "cucumbers",
+            "grow_time": 10800,
+            "gold_price": 350,
+            "amount": 26,
+            "image_url": "https://failiem.lv/thumb.php?i=ddb9yqmu"
+        },
+        {
+            "id": 8,
+            "level": 11,
+            "emoji": "\ud83c\udf53",
+            "name": "strawberries",
+            "grow_time": 16200,
+            "gold_price": 600,
+            "amount": 33,
+            "image_url": "https://failiem.lv/thumb.php?i=baahfnpy"
+        },
+        {
+            "id": 9,
+            "level": 13,
+            "emoji": "\ud83c\udf37",
+            "name": "tulips",
+            "grow_time": 5400,
+            "gold_price": 800,
+            "amount": 16,
+            "image_url": "https://failiem.lv/thumb.php?i=ey7nzsa3"
+        },
+        {
+            "id": 10,
+            "level": 13,
+            "emoji": "\ud83c\udf3a",
+            "name": "hibiscus",
+            "grow_time": 5400,
+            "gold_price": 800,
+            "amount": 18,
+            "image_url": "https://failiem.lv/thumb.php?i=b6jj83ey"
+        },
+        {
+            "id": 11,
+            "level": 14,
+            "emoji": "\ud83c\udf39",
+            "name": "roses",
+            "grow_time": 14400,
+            "gold_price": 1000,
+            "amount": 25,
+            "image_url": "https://failiem.lv/thumb.php?i=zvv8kt5f"
+        },
+        {
+            "id": 12,
+            "level": 15,
+            "emoji": "\ud83e\udd54",
+            "name": "potatoes",
+            "grow_time": 28800,
+            "gold_price": 2000,
+            "amount": 42,
+            "image_url": "https://failiem.lv/thumb.php?i=j7paxvba"
+        },
+        {
+            "id": 13,
+            "level": 16,
+            "emoji": "\ud83e\udd66",
+            "name": "broccoli",
+            "grow_time": 43200,
+            "gold_price": 3000,
+            "amount": 56,
+            "image_url": "https://failiem.lv/thumb.php?i=m8ygtf64"
+        },
+        {
+            "id": 14,
+            "level": 18,
+            "emoji": "\ud83c\udf3e",
+            "name": "rice",
+            "grow_time": 1800,
+            "gold_price": 3500,
+            "amount": 17,
+            "image_url": "https://failiem.lv/thumb.php?i=6h5sy93e"
+        },
+        {
+            "id": 15,
+            "level": 23,
+            "emoji": "<:redbeans:923671677114675220>",
+            "name": "red beans",
+            "grow_time": 21600,
+            "gold_price": 4000,
+            "amount": 40,
+            "image_url": "https://failiem.lv/thumb.php?i=wywmhzxk5"
+        },
+        {
+            "id": 16,
+            "level": 27,
+            "emoji": "\ud83e\uded1",
+            "name": "bell peppers",
+            "grow_time": 38700,
+            "gold_price": 6500,
+            "amount": 51,
+            "image_url": "https://failiem.lv/thumb.php?i=frwkhhpz4"
+        },
+        {
+            "id": 17,
+            "level": 31,
+            "emoji": "\ud83c\udf60",
+            "name": "sweet potatoes",
+            "grow_time": 32400,
+            "gold_price": 9000,
+            "amount": 47,
+            "image_url": "https://failiem.lv/thumb.php?i=2rkt8hu9a"
+        },
+        {
+            "id": 18,
+            "level": 33,
+            "emoji": "\ud83c\udf45",
+            "name": "tomatoes",
+            "grow_time": 50400,
+            "gold_price": 12000,
+            "amount": 70,
+            "image_url": "https://failiem.lv/thumb.php?i=mtsxedurc"
+        },
+        {
+            "id": 19,
+            "level": 36,
+            "emoji": "\ud83c\udf36\ufe0f",
+            "name": "hot peppers",
+            "grow_time": 7200,
+            "gold_price": 18000,
+            "amount": 24,
+            "image_url": "https://failiem.lv/thumb.php?i=b9tya84xy"
+        },
+        {
+            "id": 20,
+            "level": 38,
+            "emoji": "\ud83c\udf49",
+            "name": "watermelons",
+            "grow_time": 12600,
+            "gold_price": 22000,
+            "amount": 28,
+            "image_url": "https://failiem.lv/thumb.php?i=6enm5ntds"
+        },
+        {
+            "id": 21,
+            "level": 41,
+            "emoji": "<:cotton:947559770024452136>",
+            "name": "cotton",
+            "grow_time": 18000,
+            "gold_price": 28000,
+            "amount": 30,
+            "image_url": "https://failiem.lv/thumb.php?i=az724qbts"
+        },
+        {
+            "id": 22,
+            "level": 43,
+            "emoji": "\ud83c\udf46",
+            "name": "eggplants",
+            "grow_time": 25200,
+            "gold_price": 32000,
+            "amount": 44,
+            "image_url": "https://failiem.lv/thumb.php?i=8ym7uyptb"
+        },
+        {
+            "id": 23,
+            "level": 45,
+            "emoji": "\ud83c\udf48",
+            "name": "melons",
+            "grow_time": 19800,
+            "gold_price": 36000,
+            "amount": 40,
+            "image_url": "https://failiem.lv/thumb.php?i=gydgnxwwm"
+        }
     ]
- }
+}

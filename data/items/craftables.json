@@ -1,536 +1,782 @@
 {
-    "craftables" : [
-       {
-          "id":701,
-          "emoji":"\ud83e\udd57",
-          "name":"green salad",
-          "amount":1,
-          "level":3,
-          "image_url":"https://failiem.lv/thumb_show.php?i=mrx6q5aj",
-          "made_from":[
-             {
-                "1":50
-             },
-             {
-                "2":20
-             },
-             {
-                "3":16
-             }
-          ],
-          "craft_time":600
-       },
-       {
-          "id":702,
-          "emoji":"\ud83c\udf7f",
-          "name":"popcorn",
-          "amount":1,
-          "level":3,
-          "image_url":"https://failiem.lv/thumb_show.php?i=d4wbbzr7",
-          "made_from":[
-             {
-                "3":80
-             }
-          ],
-          "craft_time":600
-       },
-       {
-          "id":703,
-          "emoji":"\ud83c\udf73",
-          "name":"cooked eggs",
-          "amount":1,
-          "level":4,
-          "image_url":"https://failiem.lv/thumb_show.php?i=qr88nngm",
-          "made_from":[
-             {
-                "401":110
-             }
-          ],
-          "craft_time":600
-       },
-       {
-          "id":704,
-          "emoji":"\ud83c\udf7c",
-          "name":"bottled milk",
-          "amount":1,
-          "level":5,
-          "image_url":"https://failiem.lv/thumb_show.php?i=ngrzhvcb",
-          "made_from":[
-             {
-                "402":88
-             }
-          ],
-          "craft_time":600
-       },
-       {
-          "id":705,
-          "emoji":"\ud83c\udf5e",
-          "name":"bread",
-          "amount":1,
-          "level":6,
-          "image_url":"https://failiem.lv/thumb_show.php?i=xm68e72g",
-          "made_from":[
-             {
-                "4":128
-             },
-             {
-                "402":50
-             }
-          ],
-          "craft_time":600
-       },
-       {
-          "id":706,
-          "emoji":"\ud83c\udf7a",
-          "name":"cherry beer",
-          "amount":1,
-          "level":6,
-          "image_url":"https://failiem.lv/thumb_show.php?i=x7987mdg",
-          "made_from":[
-             {
-                "4":140
-             },
-             {
-                "202":80
-             }
-          ],
-          "craft_time":600
-       },
-       {
-          "id":707,
-          "emoji":"\ud83e\uddc8",
-          "name":"butter",
-          "amount":1,
-          "level":7,
-          "image_url":"https://failiem.lv/thumb_show.php?i=fvatua83",
-          "made_from":[
-             {
-                "402":140
-             }
-          ],
-          "craft_time":600
-       },
-       {
-          "id":708,
-          "emoji":"\ud83e\uddc7",
-          "name":"waffles",
-          "amount":1,
-          "level":7,
-          "image_url":"https://failiem.lv/thumb_show.php?i=ry785umq",
-          "made_from":[
-             {
-                "4":100
-             },
-             {
-                "401":40
-             },
-             {
-                "707":2
-             }
-          ],
-          "craft_time":1800
-       },
-       {
-          "id":709,
-          "emoji":"\ud83e\udd5e",
-          "name":"apple pancakes",
-          "amount":1,
-          "level":7,
-          "image_url":"https://failiem.lv/thumb_show.php?i=vzv7sr7d",
-          "made_from":[
-             {
-                "4":100
-             },
-             {
-                "201":80
-             },
-             {
-                "401":32
-             },
-             {
-                "707":1
-             }
-          ],
-          "craft_time":1800
-       },
-       {
-          "id":710,
-          "emoji":"<:onionrings:923668860702457977>",
-          "name":"onion rings",
-          "amount":1,
-          "level":8,
-          "image_url":"https://failiem.lv/thumb_show.php?i=x9a449ghb",
-          "made_from":[
-             {
-                "6":108
-             }
-          ],
-          "craft_time":1800
-       },
-       {
-          "id":711,
-          "emoji":"<:pickles:923660688470192158>",
-          "name":"pickles",
-          "amount":1,
-          "level":9,
-          "image_url":"https://failiem.lv/thumb_show.php?i=5e8aysbdm",
-          "made_from":[
-             {
-                "5":69
-             },
-             {
-                "7":100
-             }
-          ],
-          "craft_time":1800
-       },
-       {
-          "id":712,
-          "emoji":"\ud83c\udf75",
-          "name":"pear tea",
-          "amount":1,
-          "level":10,
-          "image_url":"https://failiem.lv/thumb_show.php?i=je24vvdj",
-          "made_from":[
-             {
-                "203":130
-             }
-          ],
-          "craft_time":1800
-       },
-       {
-          "id":713,
-          "emoji":"\ud83c\udf6c",
-          "name":"red candies",
-          "amount":1,
-          "level":11,
-          "image_url":"https://failiem.lv/thumb_show.php?i=d5aukcxr",
-          "made_from":[
-             {
-                "8":80
-             },
-             {
-                "201":225
-             },
-             {
-                "202":50
-             }
-          ],
-          "craft_time":3600
-       },
-       {
-          "id":714,
-          "emoji":"\ud83c\udf77",
-          "name":"wine",
-          "amount":1,
-          "level":12,
-          "image_url":"https://failiem.lv/thumb_show.php?i=vcxdswfz",
-          "made_from":[
-             {
-                "204":190
-             }
-          ],
-          "craft_time":3600
-       },
-       {
-          "id":715,
-          "emoji":"\ud83d\udc90",
-          "name":"bouquet",
-          "amount":1,
-          "level":14,
-          "image_url":"https://failiem.lv/thumb_show.php?i=krd7verp",
-          "made_from":[
-             {
-                "9":60
-             },
-             {
-                "10":60
-             },
-             {
-                "11":40
-             }
-          ],
-          "craft_time":3600
-       },
-       {
-          "id":716,
-          "emoji":"\ud83c\udf5f",
-          "name":"french fries",
-          "amount":1,
-          "level":15,
-          "image_url":"https://failiem.lv/thumb_show.php?i=2e8gf2t7",
-          "made_from":[
-             {
-                "12":138
-             }
-          ],
-          "craft_time":3600
-       },
-       {
-          "id":717,
-          "emoji":"\ud83e\udd58",
-          "name":"vegetable soup",
-          "amount":1,
-          "level":16,
-          "image_url":"https://failiem.lv/thumb_show.php?i=amjaatdz",
-          "made_from":[
-             {
-                "2":320
-             },
-             {
-                "12":50
-             },
-             {
-                "13":100
-             }
-          ],
-          "craft_time":3600
-       },
-       {
-          "id":718,
-          "emoji":"\ud83c\udf65",
-          "name":"fish cake",
-          "amount":1,
-          "level":17,
-          "image_url":"https://failiem.lv/thumb_show.php?i=r3gbrw25",
-          "made_from":[
-             {
-                "600":55
-             }
-          ],
-          "craft_time":3600
-       },
-       {
-          "id":719,
-          "emoji":"\ud83c\udf58",
-          "name":"rice crackers",
-          "amount":1,
-          "level":18,
-          "image_url":"https://failiem.lv/thumb_show.php?i=5sh7w3r7",
-          "made_from":[
-             {
-                "14":144
-             }
-          ],
-          "craft_time":3600
-       },
-       {
-          "id":720,
-          "emoji":"\ud83c\udf63",
-          "name":"sushi",
-          "amount":1,
-          "level":19,
-          "image_url":"https://failiem.lv/thumb_show.php?i=mz4jkv47",
-          "made_from":[
-             {
-                "14":60
-             },
-             {
-                "205":184
-             },
-             {
-                "600":35
-             }
-          ],
-          "craft_time":3600
-       },
-       {
-          "id":721,
-          "emoji":"\ud83e\udd64",
-          "name":"lemonade",
-          "amount":1,
-          "level":20,
-          "image_url":"https://failiem.lv/thumb_show.php?i=tprdkvt3",
-          "made_from":[
-             {
-                "206":190
-             }
-          ],
-          "craft_time":7200
-       },
-       {
-          "id":722,
-          "emoji":"\ud83e\udd67",
-          "name":"honey pie",
-          "amount":1,
-          "level":21,
-          "image_url":"https://failiem.lv/thumb_show.php?i=6efp5rek",
-          "made_from":[
-             {
-                "401":100
-             },
-             {
-                "403":70
-             }
-          ],
-          "craft_time":7200
-       },
-       {
-          "id":723,
-          "emoji":"\ud83c\udf6e",
-          "name":"summer pudding",
-          "amount":1,
-          "level":22,
-          "image_url":"https://failiem.lv/thumb_show.php?i=qm7bzd23",
-          "made_from":[
-             {
-                "8":60
-             },
-             {
-                "207":122
-             }
-          ],
-          "craft_time":7200
-       },
-       {
-          "id":724,
-          "emoji":"\ud83c\udf61",
-          "name":"dango",
-          "amount":1,
-          "level":23,
-          "image_url":"https://failiem.lv/thumb_show.php?i=vpx4qbpp",
-          "made_from":[
-             {
-                "14":50
-             },
-             {
-                "15":150
-             }
-          ],
-          "craft_time":7200
-       },
-       {
-          "id":725,
-          "emoji":"\ud83e\udd6b",
-          "name":"canned olives",
-          "amount":1,
-          "level":24,
-          "image_url":"https://failiem.lv/thumb_show.php?i=n4y78vqgc",
-          "made_from":[
-             {
-                "208":160
-             }
-          ],
-          "craft_time":7200
-       },
-       {
-          "id":726,
-          "emoji":"\ud83e\uded6",
-          "name":"blue tea",
-          "amount":1,
-          "level":25,
-          "image_url":"https://failiem.lv/thumb_show.php?i=m32zxr4xe",
-          "made_from":[
-             {
-                "204":80
-             },
-             {
-                "209":230
-             }
-          ],
-          "craft_time":7200
-       },
-       {
-          "id":727,
-          "emoji":"\ud83e\uddc3",
-          "name":"juice",
-          "amount":1,
-          "level":26,
-          "image_url":"https://failiem.lv/thumb_show.php?i=nxj3a2fwn",
-          "made_from":[
-             {
-                "210":212
-             }
-          ],
-          "craft_time":7200
-       },
-       {
-          "id":728,
-          "emoji":"\ud83e\udd6a",
-          "name":"spicy sandwich",
-          "amount":1,
-          "level":27,
-          "image_url":"https://failiem.lv/thumb_show.php?i=pkmv9huwk",
-          "made_from":[
-             {
-                "16":200
-             },
-             {
-                "705":8
-             }
-          ],
-          "craft_time":7200
-       },
-       {
-          "id":729,
-          "emoji":"\ud83e\uddc0",
-          "name":"cheese",
-          "amount":1,
-          "level":28,
-          "image_url":"https://failiem.lv/thumb_show.php?i=kz62f79kd",
-          "made_from":[
-             {
-                "402":240
-             }
-          ],
-          "craft_time":1800
-       },
-       {
-          "id":730,
-          "emoji":"\ud83c\udf54",
-          "name":"hamburger",
-          "amount":1,
-          "level":28,
-          "image_url":"https://failiem.lv/thumb_show.php?i=czxmgvq8u",
-          "made_from":[
-             {
-                "1":500
-             },
-             {
-                "404":80
-             },
-             {
-                "705":2
-             },
-             {
-                "729":2
-             }
-          ],
-          "craft_time":7200
-       },
-       {
-          "id":731,
-          "emoji":"\ud83c\udf79",
-          "name":"tropical drink",
-          "amount":1,
-          "level":29,
-          "image_url":"https://failiem.lv/thumb_show.php?i=tpxmp6ytu",
-          "made_from":[
-             {
-                "211":180
-             },
-             {
-                "727":1
-             }
-          ],
-          "craft_time":7200
-       },
-       {
-          "id":732,
-          "emoji":"\ud83c\udf6d",
-          "name":"lollipop",
-          "amount":1,
-          "level":30,
-          "image_url":"https://failiem.lv/thumb_show.php?i=yjff3p9wv",
-          "made_from":[
-             {
-                "207":128
-             },
-             {
-                "211":290
-             }
-          ],
-          "craft_time":7200
-       }
+    "craftables": [
+        {
+            "id": 701,
+            "emoji": "\ud83e\udd57",
+            "name": "green salad",
+            "amount": 1,
+            "level": 3,
+            "image_url": "https://failiem.lv/thumb.php?i=mrx6q5aj",
+            "made_from": [
+                {
+                    "1": 50
+                },
+                {
+                    "2": 20
+                },
+                {
+                    "3": 16
+                }
+            ],
+            "craft_time": 600
+        },
+        {
+            "id": 702,
+            "emoji": "\ud83c\udf7f",
+            "name": "popcorn",
+            "amount": 1,
+            "level": 3,
+            "image_url": "https://failiem.lv/thumb.php?i=d4wbbzr7",
+            "made_from": [
+                {
+                    "3": 80
+                }
+            ],
+            "craft_time": 600
+        },
+        {
+            "id": 703,
+            "emoji": "\ud83c\udf73",
+            "name": "cooked eggs",
+            "amount": 1,
+            "level": 4,
+            "image_url": "https://failiem.lv/thumb.php?i=qr88nngm",
+            "made_from": [
+                {
+                    "401": 110
+                }
+            ],
+            "craft_time": 600
+        },
+        {
+            "id": 704,
+            "emoji": "\ud83c\udf7c",
+            "name": "bottled milk",
+            "amount": 1,
+            "level": 5,
+            "image_url": "https://failiem.lv/thumb.php?i=ngrzhvcb",
+            "made_from": [
+                {
+                    "402": 88
+                }
+            ],
+            "craft_time": 600
+        },
+        {
+            "id": 705,
+            "emoji": "\ud83c\udf5e",
+            "name": "bread",
+            "amount": 1,
+            "level": 6,
+            "image_url": "https://failiem.lv/thumb.php?i=xm68e72g",
+            "made_from": [
+                {
+                    "4": 100
+                },
+                {
+                    "402": 50
+                }
+            ],
+            "craft_time": 600
+        },
+        {
+            "id": 706,
+            "emoji": "\ud83c\udf7a",
+            "name": "cherry beer",
+            "amount": 1,
+            "level": 6,
+            "image_url": "https://failiem.lv/thumb.php?i=x7987mdg",
+            "made_from": [
+                {
+                    "4": 120
+                },
+                {
+                    "202": 66
+                }
+            ],
+            "craft_time": 600
+        },
+        {
+            "id": 707,
+            "emoji": "\ud83e\uddc8",
+            "name": "butter",
+            "amount": 1,
+            "level": 7,
+            "image_url": "https://failiem.lv/thumb.php?i=fvatua83",
+            "made_from": [
+                {
+                    "402": 140
+                }
+            ],
+            "craft_time": 600
+        },
+        {
+            "id": 708,
+            "emoji": "\ud83e\uddc7",
+            "name": "waffles",
+            "amount": 1,
+            "level": 7,
+            "image_url": "https://failiem.lv/thumb.php?i=ry785umq",
+            "made_from": [
+                {
+                    "4": 85
+                },
+                {
+                    "401": 40
+                },
+                {
+                    "707": 2
+                }
+            ],
+            "craft_time": 1800
+        },
+        {
+            "id": 709,
+            "emoji": "\ud83e\udd5e",
+            "name": "apple pancakes",
+            "amount": 1,
+            "level": 7,
+            "image_url": "https://failiem.lv/thumb.php?i=vzv7sr7d",
+            "made_from": [
+                {
+                    "4": 85
+                },
+                {
+                    "201": 80
+                },
+                {
+                    "401": 32
+                }
+            ],
+            "craft_time": 1800
+        },
+        {
+            "id": 710,
+            "emoji": "<:onionrings:923668860702457977>",
+            "name": "onion rings",
+            "amount": 1,
+            "level": 8,
+            "image_url": "https://failiem.lv/thumb.php?i=x9a449ghb",
+            "made_from": [
+                {
+                    "6": 108
+                }
+            ],
+            "craft_time": 1800
+        },
+        {
+            "id": 711,
+            "emoji": "<:pickles:923660688470192158>",
+            "name": "pickles",
+            "amount": 1,
+            "level": 9,
+            "image_url": "https://failiem.lv/thumb.php?i=5e8aysbdm",
+            "made_from": [
+                {
+                    "5": 69
+                },
+                {
+                    "7": 100
+                }
+            ],
+            "craft_time": 1800
+        },
+        {
+            "id": 712,
+            "emoji": "\ud83c\udf75",
+            "name": "pear tea",
+            "amount": 1,
+            "level": 10,
+            "image_url": "https://failiem.lv/thumb.php?i=je24vvdj",
+            "made_from": [
+                {
+                    "203": 130
+                }
+            ],
+            "craft_time": 1800
+        },
+        {
+            "id": 713,
+            "emoji": "\ud83c\udf6c",
+            "name": "red candies",
+            "amount": 1,
+            "level": 11,
+            "image_url": "https://failiem.lv/thumb.php?i=d5aukcxr",
+            "made_from": [
+                {
+                    "8": 80
+                },
+                {
+                    "201": 225
+                },
+                {
+                    "202": 43
+                }
+            ],
+            "craft_time": 3600
+        },
+        {
+            "id": 714,
+            "emoji": "\ud83c\udf77",
+            "name": "wine",
+            "amount": 1,
+            "level": 12,
+            "image_url": "https://failiem.lv/thumb.php?i=vcxdswfz",
+            "made_from": [
+                {
+                    "204": 190
+                }
+            ],
+            "craft_time": 3600
+        },
+        {
+            "id": 715,
+            "emoji": "\ud83d\udc90",
+            "name": "bouquet",
+            "amount": 1,
+            "level": 14,
+            "image_url": "https://failiem.lv/thumb.php?i=krd7verp",
+            "made_from": [
+                {
+                    "9": 60
+                },
+                {
+                    "10": 60
+                },
+                {
+                    "11": 40
+                }
+            ],
+            "craft_time": 3600
+        },
+        {
+            "id": 716,
+            "emoji": "\ud83c\udf5f",
+            "name": "french fries",
+            "amount": 1,
+            "level": 15,
+            "image_url": "https://failiem.lv/thumb.php?i=2e8gf2t7",
+            "made_from": [
+                {
+                    "12": 138
+                }
+            ],
+            "craft_time": 3600
+        },
+        {
+            "id": 717,
+            "emoji": "\ud83e\udd58",
+            "name": "vegetable soup",
+            "amount": 1,
+            "level": 16,
+            "image_url": "https://failiem.lv/thumb.php?i=amjaatdz",
+            "made_from": [
+                {
+                    "2": 320
+                },
+                {
+                    "12": 50
+                },
+                {
+                    "13": 100
+                }
+            ],
+            "craft_time": 3600
+        },
+        {
+            "id": 718,
+            "emoji": "\ud83c\udf65",
+            "name": "fish cake",
+            "amount": 1,
+            "level": 17,
+            "image_url": "https://failiem.lv/thumb.php?i=r3gbrw25",
+            "made_from": [
+                {
+                    "600": 55
+                }
+            ],
+            "craft_time": 3600
+        },
+        {
+            "id": 719,
+            "emoji": "\ud83c\udf58",
+            "name": "rice crackers",
+            "amount": 1,
+            "level": 18,
+            "image_url": "https://failiem.lv/thumb.php?i=5sh7w3r7",
+            "made_from": [
+                {
+                    "14": 162
+                }
+            ],
+            "craft_time": 3600
+        },
+        {
+            "id": 720,
+            "emoji": "\ud83c\udf63",
+            "name": "sushi",
+            "amount": 1,
+            "level": 19,
+            "image_url": "https://failiem.lv/thumb.php?i=mz4jkv47",
+            "made_from": [
+                {
+                    "14": 96
+                },
+                {
+                    "205": 184
+                },
+                {
+                    "600": 35
+                }
+            ],
+            "craft_time": 3600
+        },
+        {
+            "id": 721,
+            "emoji": "\ud83e\udd64",
+            "name": "lemonade",
+            "amount": 1,
+            "level": 20,
+            "image_url": "https://failiem.lv/thumb.php?i=tprdkvt3",
+            "made_from": [
+                {
+                    "206": 190
+                }
+            ],
+            "craft_time": 7200
+        },
+        {
+            "id": 722,
+            "emoji": "\ud83e\udd67",
+            "name": "honey pie",
+            "amount": 1,
+            "level": 21,
+            "image_url": "https://failiem.lv/thumb.php?i=6efp5rek",
+            "made_from": [
+                {
+                    "401": 100
+                },
+                {
+                    "403": 70
+                }
+            ],
+            "craft_time": 7200
+        },
+        {
+            "id": 723,
+            "emoji": "\ud83c\udf6e",
+            "name": "summer pudding",
+            "amount": 1,
+            "level": 22,
+            "image_url": "https://failiem.lv/thumb.php?i=qm7bzd23",
+            "made_from": [
+                {
+                    "8": 60
+                },
+                {
+                    "207": 122
+                }
+            ],
+            "craft_time": 7200
+        },
+        {
+            "id": 724,
+            "emoji": "\ud83c\udf61",
+            "name": "dango",
+            "amount": 1,
+            "level": 23,
+            "image_url": "https://failiem.lv/thumb.php?i=vpx4qbpp",
+            "made_from": [
+                {
+                    "14": 89
+                },
+                {
+                    "15": 150
+                }
+            ],
+            "craft_time": 7200
+        },
+        {
+            "id": 725,
+            "emoji": "\ud83e\udd6b",
+            "name": "canned olives",
+            "amount": 1,
+            "level": 24,
+            "image_url": "https://failiem.lv/thumb.php?i=n4y78vqgc",
+            "made_from": [
+                {
+                    "208": 160
+                }
+            ],
+            "craft_time": 7200
+        },
+        {
+            "id": 726,
+            "emoji": "\ud83e\uded6",
+            "name": "blue tea",
+            "amount": 1,
+            "level": 25,
+            "image_url": "https://failiem.lv/thumb.php?i=m32zxr4xe",
+            "made_from": [
+                {
+                    "204": 80
+                },
+                {
+                    "209": 230
+                }
+            ],
+            "craft_time": 7200
+        },
+        {
+            "id": 727,
+            "emoji": "\ud83e\uddc3",
+            "name": "juice",
+            "amount": 1,
+            "level": 26,
+            "image_url": "https://failiem.lv/thumb.php?i=nxj3a2fwn",
+            "made_from": [
+                {
+                    "210": 212
+                }
+            ],
+            "craft_time": 3600
+        },
+        {
+            "id": 728,
+            "emoji": "\ud83e\udd6a",
+            "name": "spicy sandwich",
+            "amount": 1,
+            "level": 27,
+            "image_url": "https://failiem.lv/thumb.php?i=pkmv9huwk",
+            "made_from": [
+                {
+                    "16": 200
+                },
+                {
+                    "705": 8
+                }
+            ],
+            "craft_time": 7200
+        },
+        {
+            "id": 729,
+            "emoji": "\ud83e\uddc0",
+            "name": "cheese",
+            "amount": 1,
+            "level": 28,
+            "image_url": "https://failiem.lv/thumb.php?i=kz62f79kd",
+            "made_from": [
+                {
+                    "402": 240
+                }
+            ],
+            "craft_time": 1800
+        },
+        {
+            "id": 730,
+            "emoji": "\ud83c\udf54",
+            "name": "hamburger",
+            "amount": 1,
+            "level": 28,
+            "image_url": "https://failiem.lv/thumb.php?i=czxmgvq8u",
+            "made_from": [
+                {
+                    "1": 500
+                },
+                {
+                    "404": 80
+                },
+                {
+                    "705": 2
+                },
+                {
+                    "729": 2
+                }
+            ],
+            "craft_time": 7200
+        },
+        {
+            "id": 731,
+            "emoji": "\ud83c\udf79",
+            "name": "tropical drink",
+            "amount": 1,
+            "level": 29,
+            "image_url": "https://failiem.lv/thumb.php?i=tpxmp6ytu",
+            "made_from": [
+                {
+                    "211": 180
+                },
+                {
+                    "727": 1
+                }
+            ],
+            "craft_time": 7200
+        },
+        {
+            "id": 732,
+            "emoji": "\ud83c\udf6d",
+            "name": "lollipop",
+            "amount": 1,
+            "level": 30,
+            "image_url": "https://failiem.lv/thumb.php?i=yjff3p9wv",
+            "made_from": [
+                {
+                    "207": 128
+                },
+                {
+                    "212": 290
+                }
+            ],
+            "craft_time": 7200
+        },
+        {
+            "id": 733,
+            "emoji": "\ud83c\udf2e",
+            "name": "sweet taco",
+            "amount": 1,
+            "level": 31,
+            "image_url": "https://failiem.lv/thumb.php?i=brpmx2vrf",
+            "made_from": [
+                {
+                    "1": 400
+                },
+                {
+                    "3": 265
+                },
+                {
+                    "17": 184
+                }
+            ],
+            "craft_time": 10800
+        },
+        {
+            "id": 734,
+            "emoji": "\u2615",
+            "name": "chestnut coffee",
+            "amount": 1,
+            "level": 32,
+            "image_url": "https://failiem.lv/thumb.php?i=qbabtvkp9",
+            "made_from": [
+                {
+                    "213": 164
+                }
+            ],
+            "craft_time": 10800
+        },
+        {
+            "id": 735,
+            "emoji": "\ud83c\udf5d",
+            "name": "spaghetti",
+            "amount": 1,
+            "level": 33,
+            "image_url": "https://failiem.lv/thumb.php?i=quxsp8xqz",
+            "made_from": [
+                {
+                    "4": 300
+                },
+                {
+                    "18": 260
+                }
+            ],
+            "craft_time": 10800
+        },
+        {
+            "id": 736,
+            "emoji": "\ud83c\udf66",
+            "name": "pineapple ice cream",
+            "amount": 1,
+            "level": 34,
+            "image_url": "https://failiem.lv/thumb.php?i=gtafuxsn8",
+            "made_from": [
+                {
+                    "214": 135
+                },
+                {
+                    "704": 4
+                }
+            ],
+            "craft_time": 10800
+        },
+        {
+            "id": 737,
+            "emoji": "\ud83e\udde6",
+            "name": "blue socks",
+            "amount": 1,
+            "level": 35,
+            "image_url": "https://failiem.lv/thumb.php?i=qjnsjx9vz",
+            "made_from": [
+                {
+                    "209": 64
+                },
+                {
+                    "405": 174
+                }
+            ],
+            "craft_time": 10800
+        },
+        {
+            "id": 738,
+            "emoji": "\ud83c\udf5b",
+            "name": "curry",
+            "amount": 1,
+            "level": 36,
+            "image_url": "https://failiem.lv/thumb.php?i=xf6hj8ha2",
+            "made_from": [
+                {
+                    "14": 81
+                },
+                {
+                    "19": 102
+                }
+            ],
+            "craft_time": 10800
+        },
+        {
+            "id": 739,
+            "emoji": "\ud83e\uddc1",
+            "name": "peanut cupcake",
+            "amount": 1,
+            "level": 37,
+            "image_url": "https://failiem.lv/thumb.php?i=khqbj7847",
+            "made_from": [
+                {
+                    "215": 160
+                },
+                {
+                    "707": 5
+                }
+            ],
+            "craft_time": 10800
+        },
+        {
+            "id": 740,
+            "emoji": "\ud83c\udf78",
+            "name": "watermelon cocktail",
+            "amount": 1,
+            "level": 38,
+            "image_url": "https://failiem.lv/thumb.php?i=nbsemepmc",
+            "made_from": [
+                {
+                    "20": 111
+                }
+            ],
+            "craft_time": 10800
+        },
+        {
+            "id": 741,
+            "emoji": "\ud83c\udf6b",
+            "name": "chocolate bar",
+            "amount": 1,
+            "level": 39,
+            "image_url": "https://failiem.lv/thumb.php?i=ufv7mtwb3",
+            "made_from": [
+                {
+                    "216": 162
+                }
+            ],
+            "craft_time": 10800
+        },
+        {
+            "id": 742,
+            "emoji": "\ud83c\udf2f",
+            "name": "burrito",
+            "amount": 1,
+            "level": 40,
+            "image_url": "https://failiem.lv/thumb.php?i=uvbjzkxah",
+            "made_from": [
+                {
+                    "19": 48
+                },
+                {
+                    "406": 143
+                }
+            ],
+            "craft_time": 14400
+        },
+        {
+            "id": 743,
+            "emoji": "\ud83e\ude73",
+            "name": "green shorts",
+            "amount": 1,
+            "level": 41,
+            "image_url": "https://failiem.lv/thumb.php?i=d8dt32q37",
+            "made_from": [
+                {
+                    "13": 50
+                },
+                {
+                    "21": 125
+                }
+            ],
+            "craft_time": 14400
+        },
+        {
+            "id": 744,
+            "emoji": "\ud83c\udf67",
+            "name": "shaved ice",
+            "amount": 1,
+            "level": 42,
+            "image_url": "https://failiem.lv/thumb.php?i=jbt6kgf6n",
+            "made_from": [
+                {
+                    "20": 60
+                },
+                {
+                    "217": 156
+                }
+            ],
+            "craft_time": 14400
+        },
+        {
+            "id": 745,
+            "emoji": "\ud83c\udf72",
+            "name": "stew",
+            "amount": 1,
+            "level": 43,
+            "image_url": "https://failiem.lv/thumb.php?i=ah68tnsca",
+            "made_from": [
+                {
+                    "2": 1000
+                },
+                {
+                    "22": 170
+                },
+                {
+                    "208": 64
+                }
+            ],
+            "craft_time": 14400
+        },
+        {
+            "id": 746,
+            "emoji": "\ud83e\uddcb",
+            "name": "coconut bubble tea",
+            "amount": 1,
+            "level": 44,
+            "image_url": "https://failiem.lv/thumb.php?i=562vc46er",
+            "made_from": [
+                {
+                    "218": 186
+                }
+            ],
+            "craft_time": 14400
+        },
+        {
+            "id": 747,
+            "emoji": "\ud83c\udf7e",
+            "name": "melon champagne",
+            "amount": 1,
+            "level": 45,
+            "image_url": "https://failiem.lv/thumb.php?i=xuvvwd9ex",
+            "made_from": [
+                {
+                    "23": 200
+                },
+                {
+                    "204": 100
+                }
+            ],
+            "craft_time": 14400
+        }
     ]
- }
+}

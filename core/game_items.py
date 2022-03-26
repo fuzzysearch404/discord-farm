@@ -383,6 +383,10 @@ class Boost:
         price_per_day += self.price_increase_per_factory_slots * user.factory_slots
         price_per_day += self.price_increase_per_user_level * user.level
 
+        # At high levels the prices are too low without this
+        global_boost_price_multiplier = int(user.level / 8)
+        price_per_day *= global_boost_price_multiplier
+
         if duration == BoostDuration.ONE_DAY:  # No discount
             return price_per_day
         elif duration == BoostDuration.THREE_DAYS:
@@ -503,15 +507,17 @@ class ItemPool:
             if isinstance(item, PlantableItem):
                 gold_reward = item.gold_reward
                 if gold_reward <= 10:
-                    min, max = 5, 14
+                    min_amount, max_amount = 5, 14
                 elif gold_reward <= 30:
-                    min, max = 3, 8
+                    min_amount, max_amount = 3, 8
                 elif gold_reward <= 50:
-                    min, max = 2, 6
+                    min_amount, max_amount = 2, 6
                 else:
-                    min, max = 1, 3
+                    min_amount, max_amount = 1, 3
 
-                amount = random.randint(min * growables_multiplier, max * growables_multiplier)
+                min_amount *= growables_multiplier
+                max_amount *= growables_multiplier
+                amount = random.randint(min_amount, max_amount)
             else:
                 # If multiplier, lower the chance to get more items
                 population = []

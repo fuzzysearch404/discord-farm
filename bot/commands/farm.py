@@ -1009,9 +1009,9 @@ class FishCommand(
         elif self.location == "Lake":
             base_min_amount, base_max_amount, fail_chance = 2, 10, 1
         elif self.location == "River":
-            base_min_amount, base_max_amount, fail_chance = 5, 25, 2
+            base_min_amount, base_max_amount, fail_chance = 5, 25, 3
         elif self.location == "Sea":
-            base_min_amount, base_max_amount, fail_chance = 12, 64, 4
+            base_min_amount, base_max_amount, fail_chance = 12, 64, 5
 
         if random.randint(0, fail_chance) != 0:
             embed = embed_util.error_embed(
