@@ -32,7 +32,6 @@ class BotClient(AutoShardedModularCommandClient):
         self.maintenance_mode = config['bot']['start-in-maintenance']
         self.is_beta = config['bot']['beta']
         self.ipc_ping = 0
-        self.custom_prefixes = {}  # TODO: For removal in May 2022
         self.owner_ids = set()
         self.process_info = psutil.Process()
 
@@ -70,9 +69,8 @@ class BotClient(AutoShardedModularCommandClient):
         loop.run_until_complete(self._connect_redis())
         self.user_cache = UserManager(self.redis, self.db_pool)
 
-        # TODO: guild_messages for removal in May 2022
         super().__init__(
-            intents=discord.Intents(guilds=True, guild_messages=True),
+            intents=discord.Intents(guilds=True),
             chunk_guilds_at_startup=False,
             **kwargs,
             loop=loop
@@ -221,74 +219,6 @@ class BotClient(AutoShardedModularCommandClient):
                 username=self.user.name
             )
 
-    # TODO: For removal in May 2022
-    async def fetch_custom_prefixes(self):
-        all_guild_ids = [x.id for x in self.guilds]
-
-        guild_data = await self.db_pool.fetch("SELECT * FROM guilds;")
-        for row in guild_data:
-            try:
-                if row['guild_id'] in all_guild_ids:
-                    self.custom_prefixes[row['guild_id']] = row['prefix']
-            except KeyError:
-                pass
-
-        self.log.info(f"Fetched {len(self.custom_prefixes)} custom prefixes")
-
-    # TODO: For removal in May 2022
-    def get_custom_prefix(self, bot, message):
-        try:
-            return self.custom_prefixes[message.guild.id]
-        except KeyError:
-            return "%"
-
-    # TODO: For removal in May 2022
-    async def on_message(self, message) -> None:
-        author = message.author
-
-        if author == self.user or author.bot:
-            return
-
-        if not message.channel.permissions_for(message.guild.me).send_messages:
-            return
-
-        prefix = self.get_custom_prefix(self, message)
-        if not message.content.startswith(prefix):
-            return
-
-        # Dirty nested for loop, but as this is only temporary, it's fine
-        all_commands = []
-        for collection in self.command_collections.values():
-            for command in collection.commands:
-                all_commands.append(command._name_)
-        # Include common aliases
-        aliases = {
-            "prof": "profile",
-            "inv": "inventory",
-            "p": "plant",
-            "i": "item",
-            "h": "harvest",
-            "mi": "missions",
-            "f": "farm",
-            "fa": "factory"
-        }
-
-        cmd = message.content[len(prefix):].strip().split(" ")[0].lower()
-        if cmd in aliases:
-            cmd = aliases[cmd]
-        elif cmd not in all_commands:
-            return
-
-        await message.reply(
-            "This bot is now using slash commands, as they are required "
-            "by Discord for all bots from May 2022.\n"
-            "You can now see my commands, by starting to type the **/** symbol in chat.\n"
-            "For example, the command you just wanted to use, is now accessible with "
-            f"**/{cmd}**\n\n**If you don't see any slash commands, please reinvite the bot "
-            "to your server with the \"Add to server\" button in "
-            "my profile.**\nSorry, there is no way we can keep the old command system."
-        )
-
     async def on_shard_ready(self, shard_id: int) -> None:
         self.log.info(f"Shard {shard_id} ready")
 
@@ -303,9 +233,6 @@ class BotClient(AutoShardedModularCommandClient):
 
         if not hasattr(self, "launch_time"):
             self.launch_time = datetime.datetime.now()
-
-        # TODO: For removal in May 2022
-        await self.fetch_custom_prefixes()
 
         await self.log_to_discord(
             f"\N{LARGE GREEN CIRCLE} Ready! Maintenance mode: `{self.maintenance_mode}` "

@@ -95,11 +95,6 @@ CREATE TABLE IF NOT EXISTS public.modifications(
 ALTER TABLE ONLY public.modifications
     ADD CONSTRAINT modifications_user_fkey FOREIGN KEY (user_id) REFERENCES public.profile(user_id) ON DELETE CASCADE;
 
-CREATE TABLE IF NOT EXISTS public.guilds(
-    guild_id bigint PRIMARY KEY,
-    prefix VARCHAR (6) NOT NULL
-);
-
 -- FUNCTIONS
 
 -- Profile statistics for the profile command
